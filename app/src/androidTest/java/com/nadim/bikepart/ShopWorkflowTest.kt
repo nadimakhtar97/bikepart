@@ -95,6 +95,9 @@ class ShopWorkflowTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Special").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Manage fields").performScrollTo().performClick()
         compose.onNodeWithText("Manage custom Finish").performScrollTo().performClick()
+        compose.onNodeWithText("Replace field type").performScrollTo().performClick()
+        compose.onNodeWithText("Promote to category").assertDoesNotExist()
+        compose.onNodeWithText("Replace field type").performScrollTo().performClick()
         compose.onNodeWithText("Promote to category").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("That category field already exists.", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Category field name").assert(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.Error))

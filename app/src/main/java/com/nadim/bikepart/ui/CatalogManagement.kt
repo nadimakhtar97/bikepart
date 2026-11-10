@@ -35,14 +35,15 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                 Text((if (field.productId == null) "Category field" else "Product custom field") + " · " + field.type.label + if (field.retired) " · retired" else "", style = MaterialTheme.typography.bodyMedium)
                 if (!field.retired) {
                     var expanded by rememberSaveable { mutableStateOf(false) }
-                    OutlinedButton(onClick = { expanded = !expanded }, enabled = !busy,
+                    var replacing by rememberSaveable { mutableStateOf(false) }
+                    OutlinedButton(onClick = { expanded = !expanded; onChange() }, enabled = !busy,
                         modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.productId == null) "Manage ${field.name}" else "Manage custom ${field.name}") }
                     if (expanded) {
                         OutlinedButton(onClick = { actions.required(field.id, !field.required) }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.required) "Make optional" else "Make required") }
                         OutlinedButton(onClick = { actions.retire(field.id) }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire field") }
-                        if (field.productId != null) {
+                        if (field.productId != null && !replacing) {
                             var name by rememberSaveable { mutableStateOf(field.name) }
                             val nameError = error?.takeIf { it.definitionId == field.id && it.field == ProductField.DefinitionName }
                             OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text("Category field name") },
@@ -55,8 +56,7 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                             else OutlinedButton(onClick = { actions.retireOption(option.id) }, enabled = !busy,
                                 modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire option: ${option.name}") }
                         }
-                        var replacing by rememberSaveable { mutableStateOf(false) }
-                        OutlinedButton(onClick = { replacing = !replacing }, enabled = !busy,
+                        OutlinedButton(onClick = { replacing = !replacing; onChange() }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Replace field type") }
                         if (replacing) {
                             Text("Use a distinct name and a new type. The original field is retired and its values remain unchanged.", style = MaterialTheme.typography.bodyMedium)
