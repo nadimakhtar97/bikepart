@@ -19,20 +19,22 @@ internal data class OpeningRow(@PrimaryKey val productId: String, val quantity: 
 @Entity(tableName = "shop_state")
 internal data class StateRow(@PrimaryKey val id: Int = 1, val datasetId: String, val revision: Long = 0, val appearance: String = "System", @ColumnInfo(defaultValue = "1") val normalizerVersion: Int = LookupNames.VERSION)
 
-@Entity(tableName = "category_attributes", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT)], indices = [Index(value = ["categoryId", "normalizedName"], unique = true)])
-internal data class AttributeRow(@PrimaryKey val id: String, val categoryId: String, val name: String, val normalizedName: String, val type: String, val required: Boolean, val unit: String)
+@Entity(tableName = "category_attributes", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT), ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId"), Index("productId"), Index(value = ["ownerKey", "normalizedName"], unique = true)])
+internal data class AttributeRow(@PrimaryKey val id: String, val categoryId: String, val name: String, val normalizedName: String, val type: String, val required: Boolean, val unit: String, val productId: String? = null, @ColumnInfo(defaultValue = "''") val ownerKey: String = "category:$categoryId", @ColumnInfo(defaultValue = "0") val retired: Boolean = false)
 
 @Entity(tableName = "attribute_options", foreignKeys = [ForeignKey(entity = AttributeRow::class, parentColumns = ["id"], childColumns = ["definitionId"], onDelete = ForeignKey.RESTRICT)], indices = [Index(value = ["definitionId", "normalizedName"], unique = true)])
-internal data class OptionRow(@PrimaryKey val id: String, val definitionId: String, val name: String, val normalizedName: String)
+internal data class OptionRow(@PrimaryKey val id: String, val definitionId: String, val name: String, val normalizedName: String, @ColumnInfo(defaultValue = "0") val retired: Boolean = false)
 
-@Entity(tableName = "attribute_values", primaryKeys = ["productId", "definitionId"], foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT), ForeignKey(entity = AttributeRow::class, parentColumns = ["id"], childColumns = ["definitionId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("definitionId")])
-internal data class AttributeValueRow(val productId: String, val definitionId: String, val textValue: String?, val decimalValue: String?, val choiceIds: String?)
+@Entity(tableName = "attribute_values", primaryKeys = ["productId", "definitionId", "historyId"], foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT), ForeignKey(entity = AttributeRow::class, parentColumns = ["id"], childColumns = ["definitionId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("definitionId")])
+internal data class AttributeValueRow(val productId: String, val definitionId: String, val textValue: String?, val decimalValue: String?, val choiceIds: String?, @ColumnInfo(defaultValue = "''") val historyId: String = "")
 
 @Dao
 internal interface ShopDao {
     @Query("SELECT * FROM category_attributes ORDER BY name, id") suspend fun attributes(): List<AttributeRow>
     @Query("SELECT * FROM attribute_options ORDER BY name, id") suspend fun options(): List<OptionRow>
-    @Query("SELECT * FROM attribute_values") suspend fun values(): List<AttributeValueRow>
+    @Query("SELECT * FROM attribute_values ORDER BY productId, definitionId, historyId") suspend fun values(): List<AttributeValueRow>
+    @Update suspend fun updateAttribute(row: AttributeRow)
+    @Update suspend fun updateOption(row: OptionRow)
     @Insert suspend fun insertAttribute(row: AttributeRow)
     @Insert suspend fun insertOption(row: OptionRow)
     @Insert suspend fun insertValues(rows: List<AttributeValueRow>)
@@ -52,5 +54,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class], version = 2, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class], version = 3, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }

@@ -11,6 +11,66 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CategoryMigrationTest {
+    @Test fun versionTwoUpgradePreservesTypedValuesAndSupportsEvolutionAfterReopen() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
+        val path = context.getDatabasePath(name)
+        path.parentFile!!.mkdirs()
+        try {
+            val schema = InstrumentationRegistry.getInstrumentation().context.assets.open("com.nadim.bikepart.shop.ShopDatabase/2.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
+            SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->
+                val entities = schema.getJSONArray("entities")
+                for (index in 0 until entities.length()) {
+                    val entity = entities.getJSONObject(index)
+                    val table = entity.getString("tableName")
+                    db.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+                    val indices = entity.optJSONArray("indices")
+                    if (indices != null) for (i in 0 until indices.length()) db.execSQL(indices.getJSONObject(i).getString("createSql").replace("\${TABLE_NAME}", table))
+                }
+                val setup = schema.getJSONArray("setupQueries")
+                for (index in 0 until setup.length()) db.execSQL(setup.getString(index))
+                db.execSQL("INSERT INTO categories VALUES ('c', 'Bolts', 'bolts', 0)")
+                db.execSQL("INSERT INTO products VALUES ('p', 'BP-stable', 'Bolt', 'c', 'Original', 80)")
+                db.execSQL("INSERT INTO balances VALUES ('p', 12)")
+                db.execSQL("INSERT INTO opening_stock VALUES ('p', 12, 123456)")
+                db.execSQL("INSERT INTO shop_state VALUES (1, 'stable-dataset', 7, 'Dark', 1)")
+                db.execSQL("INSERT INTO category_attributes VALUES ('d', 'c', 'Diameter', 'diameter', 'Decimal', 0, 'mm')")
+                db.execSQL("INSERT INTO category_attributes VALUES ('f', 'c', 'Finish', 'finish', 'MultipleChoice', 0, '')")
+                db.execSQL("INSERT INTO attribute_options VALUES ('o', 'f', 'Zinc', 'zinc')")
+                db.execSQL("INSERT INTO attribute_values VALUES ('p', 'd', NULL, '008.00', NULL)")
+                db.execSQL("INSERT INTO attribute_values VALUES ('p', 'f', NULL, NULL, '[\"o\"]')")
+                db.version = 2
+            }
+            val values = mapOf("d" to AttributeValue.Decimal("008.00"), "f" to AttributeValue.Choices(setOf("o")))
+            Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                assertEquals("stable-dataset", before.datasetId)
+                assertEquals(7L, before.revision)
+                assertEquals(Appearance.Dark, before.appearance)
+                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values), before.products.single())
+                assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
+                shop.retireOption("o")
+                shop.replaceAttribute("d", "New diameter", AttributeType.Text)
+                val target = shop.createCategory("Other")
+                shop.editProduct("p", "Bolt", target, "Original")
+            }
+            Shop.open(context, name).use { shop ->
+                val after = shop.snapshot()
+                assertEquals(11L, after.revision)
+                assertEquals(values, after.products.single().historicalAttributes.associate { it.definitionId to it.value })
+                assertTrue(after.options.single().retired)
+                assertTrue(after.attributes.single { it.id == "d" }.retired)
+                assertEquals(12L, after.products.single().quantity)
+                assertEquals(80L, after.products.single().priceRupees)
+                assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
+            }
+            SQLiteDatabase.openDatabase(path.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+                db.rawQuery("PRAGMA foreign_key_check", null).use { assertFalse(it.moveToFirst()) }
+                db.rawQuery("PRAGMA integrity_check", null).use { assertTrue(it.moveToFirst()); assertEquals("ok", it.getString(0)) }
+            }
+        } finally { context.deleteDatabase(name) }
+    }
+
     @Test fun versionOneUpgradePreservesCatalogIdentityStockHistorySettingsAndRevision() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-${java.util.UUID.randomUUID()}.db"

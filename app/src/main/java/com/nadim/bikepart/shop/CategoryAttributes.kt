@@ -17,8 +17,8 @@ enum class AttributeType(val label: String) {
     val isChoice: Boolean get() = this == SingleChoice || this == MultipleChoice
 }
 data class CategoryAttribute(val id: String, val categoryId: String, val name: String,
-    val type: AttributeType, val required: Boolean, val unit: String)
-data class AttributeOption(val id: String, val definitionId: String, val name: String)
+    val type: AttributeType, val required: Boolean, val unit: String, val productId: String? = null, val retired: Boolean = false)
+data class AttributeOption(val id: String, val definitionId: String, val name: String, val retired: Boolean = false)
 
 sealed interface AttributeValue {
     data class Text(val text: String) : AttributeValue
@@ -41,3 +41,18 @@ fun productsByDecimal(products: List<Product>, definitionId: String): List<Produ
         (it.attributes[definitionId] as? AttributeValue.Decimal)?.let { value -> exactDecimal(value.exact) }
     }.thenBy { it.id }
 )
+
+fun CategoryAttribute.appliesTo(categoryId: String, productId: String?): Boolean =
+    if (this.productId == null) this.categoryId == categoryId else this.productId == productId
+
+fun ShopSnapshot.missingRequired(productId: String): Set<String> {
+    val product = products.single { it.id == productId }
+    return attributes.filter { !it.retired && it.required && it.appliesTo(product.categoryId, productId) }.filter {
+        when (val value = product.attributes[it.id]) {
+            null -> true
+            is AttributeValue.Text -> value.text.isBlank()
+            is AttributeValue.Choices -> value.optionIds.isEmpty()
+            is AttributeValue.Decimal -> false
+        }
+    }.map { it.id }.toSet()
+}

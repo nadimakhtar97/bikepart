@@ -38,7 +38,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     var route by rememberSaveable { mutableStateOf("main") }
     var selectedId by rememberSaveable { mutableStateOf("") }
     val product = state?.products?.find { it.id == selectedId }
-    fun back() { route = if (route == "edit") "detail" else "main"; model.error.value = null }
+    fun back() { route = if (route == "edit" || route == "fields") "detail" else "main"; model.error.value = null }
     fun addProduct() { model.error.value = null; route = "create" }
     BackHandler(route != "main") { if (!busy) back() }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
@@ -49,7 +49,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                 CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "categories" -> "Categories"; else -> destination
+                        "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
@@ -96,7 +96,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 save = { input ->
                                     val editing = if (route == "edit") product else null
                                     model.write({
-                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes)
+                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes, input.categoryMappings)
                                         else selectedId = createProduct(title = input.title, categoryId = input.categoryId,
                                             description = input.description, openingPieces = input.openingPieces,
                                             priceRupees = input.priceRupees, allowSimilar = input.allowSimilar, attributes = input.attributes)
@@ -104,7 +104,15 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 },
                             )
                         }
-                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" })
+                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" })
+                        "fields" -> if (product != null) CatalogManagement(shop, product, busy, CatalogActions(
+                            custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
+                            promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
+                            retire = { id -> model.write({ retireAttribute(id) }) },
+                            retireOption = { id -> model.write({ retireOption(id) }) },
+                            required = { id, required -> model.write({ setAttributeRequired(id, required) }) },
+                            replace = { id, input, done -> model.write({ replaceAttribute(id, input.name, input.type, input.required, input.unit) }, done) },
+                        ))
                         "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
                         else -> when (destination) {
                             "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = { destination = "Stock" })

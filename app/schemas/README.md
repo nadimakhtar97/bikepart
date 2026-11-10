@@ -69,3 +69,40 @@ Future changes to these rules require a new normalizer version and migration.
 
 ICU4J is deliberately pinned: [ICU 76 release / Unicode 16](https://unicode-org.github.io/icu/download/76.html).
 Dependency updates must preserve these tables or introduce a normalizer migration.
+
+## Version 3 — catalog definition evolution
+
+The explicit 2 → 3 migration adds product ownership and retirement to definitions,
+retirement to options, and stable historical-value identities. The value-table
+rebuild copies every version-2 value without conversion. Both version-1 and
+version-2 file-backed fixtures exercise upgrades to the current schema, retaining
+identity, prices, balances, opening history, settings, exact values and revisions.
+
+Definition names are unique by normalized name within `category:<id>` or
+`product:<id>` ownership. Retired names remain reserved. Promotion changes scope
+only on explicit request and rejects every category-name collision, even when
+types happen to match. Staff must choose a distinct name and meaning; no field or
+option identities are merged. Custom definitions follow their product across
+category changes. Independent lookup creation survives cancelling an edit.
+
+Retired definitions and options stay in snapshots for readable existing values.
+An edit may retain a retired field unchanged, or omit it; a retired option may
+only remain in a product that already selected it. No newly selected retired
+meaning is accepted. Required validation uses applicable active definitions;
+`missingRequired` flags older incomplete records without changing their stock,
+price or availability. There is no sales implementation yet in this slice.
+
+A type replacement creates a new definition under a distinct name and retires
+the old one in one revision. It never converts values or shares choice options.
+Category changes retain previous category values with immutable history IDs;
+repeated moves preserve each occurrence, including when returning to a category.
+Staff may explicitly copy text/decimal values with matching type and unit to
+active target definitions. Choices require explicit selection in the new field
+because option identities are definition-owned. Both the original historical
+value and the copied value survive. Product custom values remain current.
+
+Every business write advances the durable revision in its transaction. Reusing
+lookups, repeating retirement and setting an unchanged required flag are no-ops.
+Revision-commit interruption tests verify rollback of creation, promotion,
+retirement, required changes, replacement and category moves through public
+snapshots and close/reopen checks. Backup/restore has not landed yet.

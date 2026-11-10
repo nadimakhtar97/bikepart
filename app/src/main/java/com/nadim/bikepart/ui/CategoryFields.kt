@@ -53,17 +53,19 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
 
 @Composable
 internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<String, AttributeValue>, busy: Boolean,
-    error: ShopError?, lookups: ProductLookups, onValue: (String, AttributeValue?) -> Unit) {
+    error: ShopError?, lookups: ProductLookups, productId: String? = null, onValue: (String, AttributeValue?) -> Unit) {
     ShopSection("Category fields") {
         var search by rememberSaveable(categoryId) { mutableStateOf("") }
         var creating by rememberSaveable(categoryId) { mutableStateOf(false) }
         OutlinedTextField(search, { search = it }, enabled = !busy, label = { Text("Search fields") }, modifier = Modifier.fillMaxWidth())
-        shop.attributes.filter { it.categoryId == categoryId && (LookupNames.key(it.name).contains(LookupNames.key(search)) || error?.definitionId == it.id) }.forEach { definition ->
+        shop.attributes.filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) && (LookupNames.key(it.name).contains(LookupNames.key(search)) || error?.definitionId == it.id) }.forEach { definition ->
             key(definition.id) {
                 val value = values[definition.id]
-                val label = definition.name + (if (definition.unit.isBlank()) "" else " (" + definition.unit + ")") + if (definition.required) " (required)" else " (optional)"
+                val label = definition.name + (if (definition.unit.isBlank()) "" else " (" + definition.unit + ")") + (if (definition.required) " (required)" else " (optional)") + if (definition.productId != null) " · product only" else ""
                 val fieldError = error?.takeIf { it.definitionId == definition.id }
-                when (definition.type) {
+                if (definition.retired) {
+                    Text(definition.name + " (retired): " + attributeDisplay(shop, value), style = MaterialTheme.typography.bodyMedium)
+                } else when (definition.type) {
                     AttributeType.Text, AttributeType.Decimal -> {
                         val text = when (value) { is AttributeValue.Text -> value.text; is AttributeValue.Decimal -> value.exact; else -> "" }
                         OutlinedTextField(text, { input -> onValue(definition.id, if (definition.type == AttributeType.Text) AttributeValue.Text(input) else if (input.isBlank()) null else AttributeValue.Decimal(input)) },
@@ -80,7 +82,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                                 else if (id in selected) selected - id else selected + id
                             onValue(definition.id, AttributeValue.Choices(next))
                         }
-                        LookupSelector("Search or add " + definition.name + " option", "Add option", shop.options.filter { it.definitionId == definition.id }.map { it.id to it.name }, selected, busy,
+                        LookupSelector("Search or add " + definition.name + " option", "Add option", shop.options.filter { it.definitionId == definition.id && (!it.retired || it.id in selected) }.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, selected, busy,
                             onSelect = { select(it) }, onCreate = { name -> lookups.option(definition.id, name) { id ->
                                 onValue(definition.id, AttributeValue.Choices(if (definition.type == AttributeType.SingleChoice) setOf(id) else selected + id))
                             } })
@@ -90,24 +92,39 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
             }
         }
         OutlinedButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add category field") }
-        if (creating) {
-            var name by rememberSaveable(categoryId) { mutableStateOf("") }
-            var type by rememberSaveable(categoryId) { mutableStateOf(AttributeType.Text) }
-            var unit by rememberSaveable(categoryId) { mutableStateOf("") }
-            var required by rememberSaveable(categoryId) { mutableStateOf(false) }
-            OutlinedTextField(name, { name = it }, enabled = !busy, label = { Text("Field name") }, modifier = Modifier.fillMaxWidth())
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                AttributeType.entries.forEach { item -> FilterChip(selected = type == item, onClick = { type = item }, enabled = !busy,
-                    label = { Text(item.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) }
-            }
-            OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text("Unit label") }, modifier = Modifier.fillMaxWidth())
-            Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(required, enabled = !busy, role = Role.Checkbox, onValueChange = { required = it }), verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(required, onCheckedChange = null)
-                Text("Required field", modifier = Modifier.padding(ShopSpacing.small))
-            }
-            ShopPrimaryButton("Create field", enabled = !busy) {
-                lookups.attribute(AttributeSetup(categoryId, name, type, required, unit)) { creating = false; search = "" }
-            }
+        if (creating) FieldCreator(categoryId, busy) { setup ->
+            lookups.attribute(setup) { creating = false; search = "" }
         }
     }
 }
+
+@Composable
+internal fun FieldCreator(categoryId: String, busy: Boolean, create: (AttributeSetup) -> Unit) {
+    var name by rememberSaveable { mutableStateOf("") }
+    var type by rememberSaveable { mutableStateOf(AttributeType.Text) }
+    var unit by rememberSaveable { mutableStateOf("") }
+    var required by rememberSaveable { mutableStateOf(false) }
+    OutlinedTextField(name, { name = it }, enabled = !busy, label = { Text("Field name") }, modifier = Modifier.fillMaxWidth())
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+        AttributeType.entries.forEach { item -> FilterChip(selected = type == item, onClick = { type = item }, enabled = !busy,
+            label = { Text(item.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) }
+    }
+    OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text("Unit label") }, modifier = Modifier.fillMaxWidth())
+    Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(required, enabled = !busy, role = Role.Checkbox, onValueChange = { required = it }), verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(required, onCheckedChange = null)
+        Text("Required field", modifier = Modifier.padding(ShopSpacing.small))
+    }
+    ShopPrimaryButton("Create field", enabled = !busy) { create(AttributeSetup(categoryId, name, type, required, unit)) }
+}
+
+internal fun attributeDisplay(shop: ShopSnapshot, value: AttributeValue?): String = when (value) {
+    is AttributeValue.Text -> value.text
+    is AttributeValue.Decimal -> value.exact
+    is AttributeValue.Choices -> shop.options.filter { it.id in value.optionIds }.joinToString { it.name + if (it.retired) " (retired)" else "" }
+    null -> "Not provided"
+}
+
+internal val mappingDraftSaver = listSaver<Map<String, String>, String>(
+    save = { it.flatMap { (source, target) -> listOf(source, target) } },
+    restore = { it.chunked(2).associate { (source, target) -> source to target } },
+)

@@ -20,6 +20,105 @@ class ShopWorkflowTest {
     @Before fun launchApp() { scenario = ActivityScenario.launch(MainActivity::class.java) }
     @After fun closeApp() { scenario.close() }
 
+    @Test fun evolutionScreensRemainReadableInBothThemesAtNormalAndDoubleFontScale() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val original = Settings.System.getFloat(context.contentResolver, Settings.System.FONT_SCALE, 1f)
+        val title = "Evolution visual ${System.nanoTime()}"
+        fun shell(command: String) { instrumentation.uiAutomation.executeShellCommand(command).use { android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() } }
+        fun screenshot(name: String) {
+            java.io.File(context.getExternalFilesDir(null), "$name.png").outputStream().buffered().use {
+                compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+            }
+        }
+        scenario.close()
+        kotlinx.coroutines.runBlocking {
+            com.nadim.bikepart.shop.Shop.open(context).use { shop ->
+                val source = shop.createCategory("Visual source ${System.nanoTime()}")
+                val target = shop.createCategory("Visual target ${System.nanoTime()}")
+                val old = shop.createAttribute(source, "Original diameter", com.nadim.bikepart.shop.AttributeType.Decimal, unit = "mm")
+                val id = shop.createProduct(title, source, "", "12", "9223372036854775807", attributes = mapOf(old to com.nadim.bikepart.shop.AttributeValue.Decimal("008.00")))
+                shop.editProduct(id, title, target, "")
+                shop.createCustomAttribute(id, "Workshop specification for unusual replacement parts", com.nadim.bikepart.shop.AttributeType.Text)
+            }
+        }
+        try {
+            for (scale in listOf("1.0", "2.0")) for (mode in com.nadim.bikepart.shop.Appearance.entries.filter { it != com.nadim.bikepart.shop.Appearance.System }) {
+                shell("settings put system font_scale $scale")
+                kotlinx.coroutines.runBlocking { com.nadim.bikepart.shop.Shop.open(context).use { it.setAppearance(mode) } }
+                scenario = ActivityScenario.launch(MainActivity::class.java)
+                compose.waitUntil(15_000) { compose.onAllNodesWithText("Stock").fetchSemanticsNodes().isNotEmpty() }
+                compose.onNodeWithText("Stock").performClick()
+                compose.onNodeWithText(title).performScrollTo().performClick()
+                compose.onNodeWithText("Historical attributes").performScrollTo().assertExists()
+                compose.onNodeWithText("Original diameter: 008.00 mm").performScrollTo().assertExists()
+                screenshot("evolution-history-${mode.name.lowercase()}-$scale")
+                compose.onNodeWithText("Manage fields").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                compose.onNodeWithText("Manage custom Workshop specification for unusual replacement parts").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                compose.onNodeWithText("Category field name").performScrollTo().performTextReplacement("Workshop specification for unusual replacement parts")
+                compose.onNodeWithText("Promote to category").performScrollTo().assertHeightIsAtLeast(48.dp)
+                screenshot("evolution-manage-${mode.name.lowercase()}-$scale")
+                scenario.close()
+            }
+        } finally {
+            shell("settings put system font_scale $original")
+        }
+    }
+
+    @Test fun staffCanPromoteCustomFieldsResolveCollisionsAndCompleteRequiredEdits() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val title = "Evolution part ${System.nanoTime()}"
+        scenario.close()
+        kotlinx.coroutines.runBlocking {
+            com.nadim.bikepart.shop.Shop.open(context).use { shop ->
+                val category = shop.createCategory("Evolution ${System.nanoTime()}")
+                shop.createProduct(title, category, "", "12", "80")
+                shop.createAttribute(category, "Finish", com.nadim.bikepart.shop.AttributeType.Text)
+            }
+        }
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Stock").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Stock").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText(title).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(title).performScrollTo().performClick()
+        compose.onNodeWithText("Manage fields").performScrollTo().performClick()
+        compose.onNodeWithText("Add product custom field").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+        compose.onNodeWithText("Field name").performScrollTo().performTextInput("Finish")
+        compose.onNodeWithText("Create field").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Create field").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithText("Back").performClick()
+        compose.onNodeWithText("Edit details").performScrollTo().performClick()
+        compose.onNodeWithText("Finish (optional) · product only").performScrollTo().performTextInput("Special")
+        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Special").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Manage fields").performScrollTo().performClick()
+        compose.onNodeWithText("Manage custom Finish").performScrollTo().performClick()
+        compose.onNodeWithText("Promote to category").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("That category field already exists.", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Category field name").performScrollTo().performTextReplacement("Special finish")
+        compose.onNodeWithText("Promote to category").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Manage Special finish").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Make required").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Make optional").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Retire field").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Category field · Text · retired").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Manage Finish").performScrollTo().performClick()
+        compose.onNodeWithText("Make required").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Make optional").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Back").performClick()
+        compose.onNodeWithText("Special finish (retired): Special").performScrollTo().assertExists()
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Catalog incomplete", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("12 pieces").performScrollTo().assertExists()
+        compose.onNodeWithText("Edit details").performScrollTo().performClick()
+        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Required").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Finish (required)").performScrollTo().performTextInput("Zinc")
+        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Zinc").fetchSemanticsNodes().isNotEmpty() }
+        scenario.recreate()
+        compose.onNodeWithText("Special finish (retired): Special").performScrollTo().assertExists()
+    }
+
     @Test fun labelledControlsAndValidationRemainUsableInBothThemesAtDoubleTextSize() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext

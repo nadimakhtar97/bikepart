@@ -24,7 +24,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
     val title: String, val categoryId: String, val description: String,
-    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>,
+    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>, val categoryMappings: Map<String, String>,
 )
 
 @Composable
@@ -93,6 +93,7 @@ internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String)
                     Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
                     Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
                     Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
+                    if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete", style = MaterialTheme.typography.labelLarge)
                     Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -101,7 +102,7 @@ internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String)
 }
 
 @Composable
-internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit) {
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit) {
     Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
     Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
     ShopSection("Stock and selling price") {
@@ -109,23 +110,26 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
         Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
     }
+    if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete · complete required fields when editing. Stock and selling price remain available.", style = MaterialTheme.typography.bodyMedium)
     ShopSection("Product details") {
         Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
-        shop.attributes.filter { it.categoryId == product.categoryId }.forEach { definition ->
+        shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && (!it.retired || it.id in product.attributes) }.forEach { definition ->
             val value = product.attributes[definition.id]
-            val display = when (value) {
-                is AttributeValue.Text -> value.text
-                is AttributeValue.Decimal -> value.exact
-                is AttributeValue.Choices -> shop.options.filter { it.id in value.optionIds }.joinToString { it.name }
-                null -> if (definition.required) "Required · missing" else "Not provided"
-            }
-            Text(definition.name + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
+            val display = if (value == null && definition.required && !definition.retired) "Required · missing" else attributeDisplay(shop, value)
+            Text(definition.name + (if (definition.retired) " (retired)" else "") + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
         }
         Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodyMedium)
         Text("Opening stock: ${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.bodyMedium)
         if (product.quantity == 0L) Text("No stock movements", style = MaterialTheme.typography.bodyMedium)
     }
+    if (product.historicalAttributes.isNotEmpty()) ShopSection("Historical attributes") {
+        product.historicalAttributes.forEach { (_, definitionId, value) ->
+            val definition = shop.attributes.single { it.id == definitionId }
+            Text(definition.name + ": " + attributeDisplay(shop, value) + " " + definition.unit, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
     ShopPrimaryButton("Edit details", onClick = onEdit)
+    OutlinedButton(onClick = onManage, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fields") }
 }
 
 @Composable
@@ -172,17 +176,19 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     var quantity by rememberSaveable { mutableStateOf("0") }
     var price by rememberSaveable { mutableStateOf("") }
     var distinct by rememberSaveable { mutableStateOf(false) }
+    var mappings by rememberSaveable(stateSaver = mappingDraftSaver) { mutableStateOf(emptyMap<String, String>()) }
     var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: emptyMap()) }
     ShopSection("Basic details") {
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text("Category (required)", style = MaterialTheme.typography.labelLarge)
         LookupSelector("Search or add category", "Add category", shop.categories.map { it.id to it.name }, setOf(category), busy,
-            onSelect = { category = it; distinct = false; onChange() },
-            onCreate = { name -> lookups.category(name) { category = it; distinct = false; onChange() } })
+            onSelect = { category = it; mappings = emptyMap(); distinct = false; onChange() },
+            onCreate = { name -> lookups.category(name) { category = it; mappings = emptyMap(); distinct = false; onChange() } })
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
-    if (category.isNotEmpty()) CategoryFields(shop, category, values, busy, error, lookups,
+    if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
+    if (category.isNotEmpty()) CategoryFields(shop, category, values, busy, error, lookups, product?.id,
         onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
     if (product == null) ShopSection("Opening stock and price") {
         ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
@@ -200,7 +206,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         Text("Save as a distinct product", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
     }
     ShopPrimaryButton(if (busy) "Saving…" else "Save product", enabled = !busy) {
-        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.categoryId == category } }))
+        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.appliesTo(category, product?.id) } }, mappings))
     }
 }
 
@@ -218,4 +224,24 @@ internal fun FormError(message: String) {
     LaunchedEffect(message) { requester.bringIntoView() }
     Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.bringIntoViewRequester(requester).semantics { liveRegion = LiveRegionMode.Assertive; error(message) })
+}
+
+@Composable
+private fun CategoryMapping(shop: ShopSnapshot, product: Product, categoryId: String, mappings: Map<String, String>, busy: Boolean, onChange: (Map<String, String>) -> Unit) {
+    ShopSection("Category change") {
+        Text("Previous category values will be kept as historical attributes. Optionally copy compatible text or decimal values below.", style = MaterialTheme.typography.bodyMedium)
+        shop.attributes.filter { it.productId == null && it.categoryId == product.categoryId && it.id in product.attributes }.forEach { source ->
+            val targets = shop.attributes.filter { it.productId == null && it.categoryId == categoryId && !it.retired && it.type == source.type && it.unit == source.unit && !it.type.isChoice }
+            if (targets.isNotEmpty()) {
+                Text("Copy " + source.name, style = MaterialTheme.typography.labelLarge)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                    targets.forEach { target ->
+                        FilterChip(selected = mappings[source.id] == target.id, enabled = !busy,
+                            onClick = { onChange(if (mappings[source.id] == target.id) mappings - source.id else mappings + (source.id to target.id)) },
+                            label = { Text(target.name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+                    }
+                }
+            }
+        }
+    }
 }
