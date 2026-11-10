@@ -27,9 +27,11 @@ class ShopWorkflowTest {
         val title = "Evolution visual ${System.nanoTime()}"
         fun shell(command: String) { instrumentation.uiAutomation.executeShellCommand(command).use { android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() } }
         fun screenshot(name: String) {
-            java.io.File(context.getExternalFilesDir(null), "$name.png").outputStream().buffered().use {
+            val file = java.io.File(context.getExternalFilesDir(null), "$name.png")
+            file.outputStream().buffered().use {
                 compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
             }
+            shell("cp ${file.absolutePath} /data/local/tmp/$name.png")
         }
         scenario.close()
         kotlinx.coroutines.runBlocking {
@@ -95,6 +97,7 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Manage custom Finish").performScrollTo().performClick()
         compose.onNodeWithText("Promote to category").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("That category field already exists.", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Category field name").assert(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.Error))
         compose.onNodeWithText("Category field name").performScrollTo().performTextReplacement("Special finish")
         compose.onNodeWithText("Promote to category").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Manage Special finish").fetchSemanticsNodes().isNotEmpty() }

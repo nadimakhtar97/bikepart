@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
@@ -18,13 +19,13 @@ internal class CatalogActions(
 )
 
 @Composable
-internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boolean, actions: CatalogActions) {
+internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, actions: CatalogActions) {
     ShopSection("Product custom fields") {
         Text("Custom fields belong only to ${product.title}. Promote a field explicitly to share it with this category.", style = MaterialTheme.typography.bodyMedium)
         var creating by rememberSaveable { mutableStateOf(false) }
         OutlinedButton(onClick = { creating = !creating }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add product custom field") }
-        if (creating) FieldCreator(product.categoryId, busy) { setup -> actions.custom(setup) { creating = false } }
+        if (creating) FieldCreator(product.categoryId, busy, error?.takeIf { it.definitionId == null }, onChange) { setup -> actions.custom(setup) { creating = false } }
     }
     var search by rememberSaveable { mutableStateOf("") }
     OutlinedTextField(search, { search = it }, enabled = !busy, label = { Text("Find definition") }, modifier = Modifier.fillMaxWidth())
@@ -43,7 +44,9 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire field") }
                         if (field.productId != null) {
                             var name by rememberSaveable { mutableStateOf(field.name) }
-                            OutlinedTextField(name, { name = it }, enabled = !busy, label = { Text("Category field name") }, modifier = Modifier.fillMaxWidth())
+                            val nameError = error?.takeIf { it.definitionId == field.id && it.field == ProductField.DefinitionName }
+                            OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text("Category field name") },
+                                isError = nameError != null, supportingText = nameError?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
                             Text("If the name conflicts, choose a distinct name and meaning. Promotion never merges fields.", style = MaterialTheme.typography.bodyMedium)
                             ShopPrimaryButton("Promote to category", enabled = !busy) { actions.promote(field.id, name) }
                         }
@@ -57,7 +60,7 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Replace field type") }
                         if (replacing) {
                             Text("Use a distinct name and a new type. The original field is retired and its values remain unchanged.", style = MaterialTheme.typography.bodyMedium)
-                            FieldCreator(product.categoryId, busy) { setup -> actions.replace(field.id, setup) { replacing = false } }
+                            FieldCreator(product.categoryId, busy, error?.takeIf { it.definitionId == field.id }, onChange) { setup -> actions.replace(field.id, setup) { replacing = false } }
                         }
                     }
                 }

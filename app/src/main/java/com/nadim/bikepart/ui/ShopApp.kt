@@ -105,7 +105,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             )
                         }
                         "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" })
-                        "fields" -> if (product != null) CatalogManagement(shop, product, busy, CatalogActions(
+                        "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
                             custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
                             promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
                             retire = { id -> model.write({ retireAttribute(id) }) },
@@ -122,7 +122,8 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" })
                         }
                     }
-                    if (error != null && route != "create" && route != "edit") FormError(requireNotNull(error).message)
+                    if (error != null && route != "create" && route != "edit" &&
+                        !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
                 }
             }
         }

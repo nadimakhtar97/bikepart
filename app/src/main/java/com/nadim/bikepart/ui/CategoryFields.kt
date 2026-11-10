@@ -92,23 +92,26 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
             }
         }
         OutlinedButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add category field") }
-        if (creating) FieldCreator(categoryId, busy) { setup ->
+        if (creating) FieldCreator(categoryId, busy, error) { setup ->
             lookups.attribute(setup) { creating = false; search = "" }
         }
     }
 }
 
 @Composable
-internal fun FieldCreator(categoryId: String, busy: Boolean, create: (AttributeSetup) -> Unit) {
+internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? = null, onChange: () -> Unit = {}, create: (AttributeSetup) -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableStateOf(AttributeType.Text) }
     var unit by rememberSaveable { mutableStateOf("") }
     var required by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(name, { name = it }, enabled = !busy, label = { Text("Field name") }, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text("Field name") },
+        isError = error?.field == ProductField.DefinitionName,
+        supportingText = error?.takeIf { it.field == ProductField.DefinitionName }?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        AttributeType.entries.forEach { item -> FilterChip(selected = type == item, onClick = { type = item }, enabled = !busy,
+        AttributeType.entries.forEach { item -> FilterChip(selected = type == item, onClick = { type = item; onChange() }, enabled = !busy,
             label = { Text(item.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) }
     }
+    if (error?.field == ProductField.DefinitionType) FormError(error.message)
     OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text("Unit label") }, modifier = Modifier.fillMaxWidth())
     Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(required, enabled = !busy, role = Role.Checkbox, onValueChange = { required = it }), verticalAlignment = Alignment.CenterVertically) {
         Checkbox(required, onCheckedChange = null)

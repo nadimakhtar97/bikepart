@@ -35,3 +35,18 @@ at normal and 200% font scale, including a long name, large price and keyboard.
 Captures are local verification artifacts, not shipped assets.
 
 Manual TalkBack traversal and physical-device checks have not been performed.
+
+## Review
+
+The code-review skill ran independent Standards and Spec reviews against starting
+commit `e376eef`. The Spec reviewer found no missing requirements, correctness
+issues or scope creep. The Standards reviewer found one field-validation issue:
+definition setup announced failures without marking the offending control.
+Definition names and replacement types now produce typed `ShopValidation` errors,
+and the definition forms display those errors with the existing announced,
+scrolling `FormError` pattern. The app test checks the invalid field's semantics.
+
+The review also suggested consolidating owner-scoped definition creation; category
+and custom creation now share that transaction-internal implementation. A broader
+ownership type was an optional design observation and is deferred while the
+existing nullable product owner and persisted scope key remain explicit.

@@ -14,7 +14,7 @@ data class HistoricalAttribute(val id: String, val definitionId: String, val val
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
 data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "")
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field") }
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase) : AutoCloseable {
@@ -106,17 +106,23 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
 
     suspend fun createAttribute(categoryId: String, name: String, type: AttributeType, required: Boolean = false, unit: String = ""): String = database.withTransaction {
         require(dao.categories().any { it.id == categoryId }) { "Choose a category" }
+        createDefinition(categoryId, null, name, type, required, unit)
+    }
+
+    private suspend fun createDefinition(categoryId: String, productId: String?, name: String, type: AttributeType, required: Boolean, unit: String): String {
         val display = LookupNames.display(name)
-        require(display.isNotEmpty()) { "Enter a field name" }
-        val existing = dao.attributes().find { it.productId == null && it.categoryId == categoryId && it.normalizedName == LookupNames.key(display) }
+        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a field name")
+        val ownerKey = if (productId == null) "category:$categoryId" else "product:$productId"
+        val existing = dao.attributes().find { it.ownerKey == ownerKey && it.normalizedName == LookupNames.key(display) }
         if (existing != null) {
-            require(!existing.retired && existing.type == type.name && existing.required == required && existing.unit == unit.trim()) { "A field with that name has different settings. Select the existing field." }
-            existing.id
+            if (existing.retired || existing.type != type.name || existing.required != required || existing.unit != unit.trim())
+                throw ShopValidation(ProductField.DefinitionName, "A field with that name has different settings or is retired. Choose a distinct name.")
+            return existing.id
         } else {
             val id = UUID.randomUUID().toString()
-            dao.insertAttribute(AttributeRow(id, categoryId, display, LookupNames.key(display), type.name, required, unit.trim()))
+            dao.insertAttribute(AttributeRow(id, categoryId, display, LookupNames.key(display), type.name, required, unit.trim(), productId, ownerKey))
             advanceRevision()
-            id
+            return id
         }
     }
 
@@ -138,10 +144,11 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
 
     suspend fun replaceAttribute(id: String, name: String, type: AttributeType, required: Boolean = false, unit: String = ""): String = database.withTransaction {
         val field = dao.attributes().single { it.id == id }
-        require(!field.retired && field.type != type.name) { "Choose a new field type for replacement" }
+        if (field.retired || field.type == type.name) throw ShopValidation(ProductField.DefinitionType, "Choose a new field type for replacement", id)
         val display = LookupNames.display(name)
-        require(display.isNotEmpty()) { "Enter a replacement name" }
-        require(dao.attributes().none { it.ownerKey == field.ownerKey && it.normalizedName == LookupNames.key(display) }) { "Choose a distinct replacement name; the original meaning is retained" }
+        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a replacement name", id)
+        if (dao.attributes().any { it.ownerKey == field.ownerKey && it.normalizedName == LookupNames.key(display) })
+            throw ShopValidation(ProductField.DefinitionName, "Choose a distinct replacement name; the original meaning is retained", id)
         val replacement = UUID.randomUUID().toString()
         dao.insertAttribute(field.copy(id = replacement, name = display, normalizedName = LookupNames.key(display), type = type.name, required = required, unit = unit.trim()))
         dao.updateAttribute(field.copy(retired = true))
@@ -151,18 +158,7 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
 
     suspend fun createCustomAttribute(productId: String, name: String, type: AttributeType, required: Boolean = false, unit: String = ""): String = database.withTransaction {
         val product = dao.products().single { it.id == productId }
-        val display = LookupNames.display(name)
-        require(display.isNotEmpty()) { "Enter a field name" }
-        val existing = dao.attributes().find { it.productId == productId && it.normalizedName == LookupNames.key(display) }
-        if (existing != null) {
-            require(!existing.retired && existing.type == type.name && existing.required == required && existing.unit == unit.trim()) { "A custom field with that name has different settings or is retired" }
-            existing.id
-        } else {
-            val id = UUID.randomUUID().toString()
-            dao.insertAttribute(AttributeRow(id, product.categoryId, display, LookupNames.key(display), type.name, required, unit.trim(), productId, "product:$productId"))
-            advanceRevision()
-            id
-        }
+        createDefinition(product.categoryId, productId, name, type, required, unit)
     }
 
     suspend fun promoteCustomAttribute(definitionId: String, name: String) = database.withTransaction {
@@ -170,8 +166,9 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
         require(field.productId != null && !field.retired) { "Choose an active product custom field" }
         val categoryId = dao.products().single { it.id == field.productId }.categoryId
         val display = LookupNames.display(name)
-        require(display.isNotEmpty()) { "Enter a category field name" }
-        require(dao.attributes().none { it.productId == null && it.categoryId == categoryId && it.normalizedName == LookupNames.key(display) }) { "That category field already exists. Choose a distinct name and meaning; fields are never merged." }
+        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a category field name", definitionId)
+        if (dao.attributes().any { it.productId == null && it.categoryId == categoryId && it.normalizedName == LookupNames.key(display) })
+            throw ShopValidation(ProductField.DefinitionName, "That category field already exists. Choose a distinct name and meaning; fields are never merged.", definitionId)
         dao.updateAttribute(field.copy(categoryId = categoryId, productId = null, ownerKey = "category:$categoryId", name = display, normalizedName = LookupNames.key(display)))
         advanceRevision()
     }
