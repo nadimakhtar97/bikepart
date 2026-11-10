@@ -100,6 +100,7 @@ class ShopWorkflowTest {
     @Test fun allTypedControlsAndInlineOptionsPersistThroughCancellationAndEditing() {
         val category = "Typed parts " + System.nanoTime()
         fun field(name: String, type: String) {
+            compose.waitUntil(10_000) { compose.onAllNodes(hasText("Add category field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Add category field").performScrollTo().performClick()
             compose.onNodeWithText("Field name").performScrollTo().performTextInput(name)
             compose.onNodeWithText(type, useUnmergedTree = true).performScrollTo().performClick()
@@ -155,6 +156,7 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Search or add category").performTextInput(category)
         compose.onNodeWithText("Add category").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText(category).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Add category field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add category field").performScrollTo().performClick()
         compose.onNodeWithText("Field name").performScrollTo().performTextInput("Diameter")
         compose.onNodeWithText("Decimal number", useUnmergedTree = true).performScrollTo().performClick()
