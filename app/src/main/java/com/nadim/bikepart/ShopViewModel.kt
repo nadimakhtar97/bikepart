@@ -6,7 +6,7 @@ import com.nadim.bikepart.shop.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false)
+data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private var shop: Shop? = null
     val state = kotlinx.coroutines.flow.MutableStateFlow<ShopSnapshot?>(null)
@@ -28,7 +28,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             try { action(requireNotNull(shop)); state.value = requireNotNull(shop).snapshot(); done() }
             catch (e: CancellationException) { throw e }
             catch (e: SimilarProduct) { error.value = ShopError(requireNotNull(e.message), similar = true) }
-            catch (e: ShopValidation) { error.value = ShopError(requireNotNull(e.message), field = e.field) }
+            catch (e: ShopValidation) { error.value = ShopError(requireNotNull(e.message), field = e.field, definitionId = e.definitionId) }
             catch (e: IllegalArgumentException) { error.value = ShopError(e.message ?: "Check the entered values") }
             catch (e: Exception) { error.value = ShopError("Could not save. Try again.") }
             finally { busy.value = false }

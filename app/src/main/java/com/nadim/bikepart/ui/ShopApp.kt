@@ -88,13 +88,18 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                         "create", "edit" -> key(route, selectedId) {
                             ProductForm(shop, if (route == "edit") product else null, busy, error,
                                 onChange = { model.error.value = null },
+                                lookups = ProductLookups(
+                                    category = { name, selected -> model.write({ val id = createCategory(name); selected(id) }) },
+                                    attribute = { category, name, type, required, unit, done -> model.write({ createAttribute(category, name, type, required, unit) }, done) },
+                                    option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
+                                ),
                                 save = { input ->
                                     val editing = if (route == "edit") product else null
                                     model.write({
-                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description)
+                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes)
                                         else selectedId = createProduct(title = input.title, categoryId = input.categoryId,
                                             description = input.description, openingPieces = input.openingPieces,
-                                            priceRupees = input.priceRupees, allowSimilar = input.allowSimilar)
+                                            priceRupees = input.priceRupees, allowSimilar = input.allowSimilar, attributes = input.attributes)
                                     }, { route = "detail" })
                                 },
                             )

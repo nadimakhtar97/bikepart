@@ -24,7 +24,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
     val title: String, val categoryId: String, val description: String,
-    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean,
+    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>,
 )
 
 @Composable
@@ -33,7 +33,7 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun ShopSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+internal fun ShopSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(shape = MaterialTheme.shapes.medium, color = colors.primary.copy(alpha = .08f).compositeOver(colors.surface)) {
         Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
@@ -44,7 +44,7 @@ private fun ShopSection(title: String, content: @Composable ColumnScope.() -> Un
 }
 
 @Composable
-private fun ShopPrimaryButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun ShopPrimaryButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(onClick = onClick, enabled = enabled,
         modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.inverseSurface,
@@ -111,6 +111,16 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     }
     ShopSection("Product details") {
         Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
+        shop.attributes.filter { it.categoryId == product.categoryId }.forEach { definition ->
+            val value = product.attributes[definition.id]
+            val display = when (value) {
+                is AttributeValue.Text -> value.text
+                is AttributeValue.Decimal -> value.exact
+                is AttributeValue.Choices -> shop.options.filter { it.id in value.optionIds }.joinToString { it.name }
+                null -> if (definition.required) "Required · missing" else "Not provided"
+            }
+            Text(definition.name + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
+        }
         Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodyMedium)
         Text("Opening stock: ${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.bodyMedium)
         if (product.quantity == 0L) Text("No stock movements", style = MaterialTheme.typography.bodyMedium)
@@ -155,27 +165,25 @@ internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (Stri
 }
 
 @Composable
-internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (ProductFormInput) -> Unit) {
+internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, save: (ProductFormInput) -> Unit) {
     var title by rememberSaveable { mutableStateOf(product?.title ?: "") }
     var category by rememberSaveable { mutableStateOf(product?.categoryId ?: "") }
     var description by rememberSaveable { mutableStateOf(product?.description ?: "") }
     var quantity by rememberSaveable { mutableStateOf("0") }
     var price by rememberSaveable { mutableStateOf("") }
     var distinct by rememberSaveable { mutableStateOf(false) }
+    var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: emptyMap()) }
     ShopSection("Basic details") {
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text("Category (required)", style = MaterialTheme.typography.labelLarge)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-            shop.categories.forEach { item ->
-                FilterChip(selected = category == item.id, onClick = { category = item.id; distinct = false; onChange() },
-                    enabled = !busy, label = { Text(item.name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer))
-            }
-        }
+        LookupSelector("Search or add category", "Add category", shop.categories.map { it.id to it.name }, setOf(category), busy,
+            onSelect = { category = it; distinct = false; onChange() },
+            onCreate = { name -> lookups.category(name) { category = it; distinct = false; onChange() } })
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
+    if (category.isNotEmpty()) CategoryFields(shop, category, values, busy, error, lookups,
+        onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
     if (product == null) ShopSection("Opening stock and price") {
         ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
             error?.takeIf { it.field == ProductField.OpeningStock }, number = true)
@@ -192,7 +200,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         Text("Save as a distinct product", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
     }
     ShopPrimaryButton(if (busy) "Saving…" else "Save product", enabled = !busy) {
-        save(ProductFormInput(title, category, description, quantity, price, distinct))
+        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.categoryId == category } }))
     }
 }
 
