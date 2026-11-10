@@ -86,8 +86,13 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Manage fields").performScrollTo().performClick()
         compose.onNodeWithText("Add product custom field").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
         compose.onNodeWithText("Field name").performScrollTo().performTextInput("Finish")
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Create field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Create field").performScrollTo().performClick()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Create field").fetchSemanticsNodes().isEmpty() }
+        try {
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("Create field").fetchSemanticsNodes().isEmpty() }
+        } catch (failure: AssertionError) {
+            throw AssertionError(compose.onRoot().printToString(), failure)
+        }
         compose.onNodeWithText("Back").performClick()
         compose.onNodeWithText("Edit details").performScrollTo().performClick()
         compose.onNodeWithText("Finish (optional) · product only").performScrollTo().performTextInput("Special")

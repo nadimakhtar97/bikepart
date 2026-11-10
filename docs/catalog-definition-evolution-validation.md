@@ -50,3 +50,29 @@ The review also suggested consolidating owner-scoped definition creation; catego
 and custom creation now share that transaction-internal implementation. A broader
 ownership type was an optional design observation and is deferred while the
 existing nullable product owner and persisted scope key remain explicit.
+
+Follow-up review found ambiguous error targeting when promotion and replacement
+editors were both open for one custom definition. The editors are now mutually
+exclusive, editor switches clear stale errors, and the app test checks that
+visibility. Final source re-review found no remaining actionable Standards or
+Spec findings.
+
+## Verification
+
+Inspected all eight API 37 emulator captures under
+`.scratch/catalog-evolution-visual/`: history and management in light/dark at
+normal and 200% font size. Exact historical decimals and maximum whole-rupee
+prices remain readable; long names wrap, forms scroll above the keyboard, and
+the checked actions meet 48dp targets. Screenshots exclude the system keyboard
+but retain its inset in the app layout. The theme validator passes all 94 checks,
+with minimum normal-text contrast 4.55:1.
+
+The first complete-suite run passed the persistence, migration and visual checks
+but exposed a custom-field workflow timing failure. That test now waits for its
+save control to be enabled; the corrected focused workflow passes. The final
+complete-suite command is:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest :app:connectedDebugAndroidTest :app:lintDebug --console=plain --no-configuration-cache
+node tools/theme/validate.mjs
+```
