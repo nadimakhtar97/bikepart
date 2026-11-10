@@ -1,9 +1,14 @@
-# Fixed Shop teal
+# Now in Android Default theme
 
 From the repository root, run `npm ci --prefix tools/theme`, then
 `node tools/theme/generate.mjs`. The locked Google Material color utilities
-generate light/dark Material roles from `#006A6A`, including neutral surface
-containers and fixed accent roles. Wallpaper colors are never consulted.
+generate light/dark Material roles from the inspected `figma-tokens.json`,
+including neutral surface containers and fixed accent roles missing from the
+older reference. Wallpaper colors are never consulted for this Default theme.
+
+The current bound variables in the user's Figma phone/settings nodes override
+older palette swatches. See [UI guidelines](../../docs/ui-guidelines.md) for the
+exact source nodes, discrepancies and shop-specific adaptations.
 
 Run `node tools/theme/validate.mjs` to check text/background and essential outline
 contrast in the generated Kotlin roles. Device UI coverage remains separate;

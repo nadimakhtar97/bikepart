@@ -1,0 +1,214 @@
+package com.nadim.bikepart.ui
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.nadim.bikepart.R
+import com.nadim.bikepart.ShopError
+import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.ui.theme.ShopSpacing
+
+internal data class ProductFormInput(
+    val title: String, val categoryId: String, val description: String,
+    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean,
+)
+
+@Composable
+private fun SectionTitle(title: String) {
+    Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+}
+
+@Composable
+private fun ShopSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(shape = MaterialTheme.shapes.medium, color = colors.primary.copy(alpha = .08f).compositeOver(colors.surface)) {
+        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+            SectionTitle(title)
+            content()
+        }
+    }
+}
+
+@Composable
+private fun ShopPrimaryButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Button(onClick = onClick, enabled = enabled,
+        modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.inverseSurface,
+            contentColor = MaterialTheme.colorScheme.inverseOnSurface)) { Text(label) }
+}
+
+@Composable
+internal fun ShopEmptyState(title: String, description: String, icon: Int) {
+    Column(Modifier.fillMaxWidth().padding(vertical = ShopSpacing.section),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.primaryContainer) {
+            Icon(painterResource(icon), contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(ShopSpacing.content).size(24.dp))
+        }
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        Text(description, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: () -> Unit) {
+    ShopSection("Your parts counter") {
+        Text("${shop.products.size} stocked products", style = MaterialTheme.typography.headlineSmall)
+        Text("Work offline. Your stock stays on this phone.", style = MaterialTheme.typography.bodyMedium)
+        ShopPrimaryButton("Add product", onClick = onAdd)
+        OutlinedButton(onClick = onStock, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("View stock") }
+    }
+    if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
+        "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
+    val empty = shop.products.filter { it.quantity == 0L }
+    if (empty.isNotEmpty()) ShopSection("Stock attention") {
+        empty.forEach { Text("Out of stock: ${it.title}", style = MaterialTheme.typography.bodyMedium) }
+    }
+}
+
+@Composable
+internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit) {
+    ShopPrimaryButton("Add product", onClick = onAdd)
+    if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
+    else Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+        shop.products.forEach { product ->
+            Surface(onClick = { onOpen(product.id) }, shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                    Text(product.title, style = MaterialTheme.typography.titleMedium)
+                    Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
+                    Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
+                    Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
+                    Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit) {
+    Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+    Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
+    ShopSection("Stock and selling price") {
+        Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
+        Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
+        Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
+    }
+    ShopSection("Product details") {
+        Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
+        Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodyMedium)
+        Text("Opening stock: ${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.bodyMedium)
+        if (product.quantity == 0L) Text("No stock movements", style = MaterialTheme.typography.bodyMedium)
+    }
+    ShopPrimaryButton("Edit details", onClick = onEdit)
+}
+
+@Composable
+internal fun AppearanceSettings(appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit, onCategories: () -> Unit) {
+    ShopSection("Appearance") {
+        Text("Now in Android · Default theme", style = MaterialTheme.typography.bodyMedium)
+        Column(Modifier.selectableGroup()) {
+            Appearance.entries.forEach { mode ->
+                Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+                    .selectable(appearance == mode, enabled = !busy, role = Role.RadioButton, onClick = { onAppearance(mode) })
+                    .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = appearance == mode, onClick = null)
+                    Text(mode.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.content))
+                }
+            }
+        }
+        Text("System follows your phone’s light or dark appearance.", style = MaterialTheme.typography.bodyMedium)
+    }
+    ShopSection("Catalog setup") {
+        OutlinedButton(onClick = onCategories, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Edit categories") }
+    }
+}
+
+@Composable
+internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (String, String) -> Unit) {
+    Text("Rename your starter categories to suit the shop.", style = MaterialTheme.typography.bodyMedium)
+    shop.categories.forEach { category ->
+        key(category.id) {
+            var name by rememberSaveable(category.name) { mutableStateOf(category.name) }
+            ShopSection(category.name) {
+                OutlinedTextField(name, { name = it }, enabled = !busy, label = { Text("Category name") }, modifier = Modifier.fillMaxWidth())
+                OutlinedButton(enabled = !busy && name != category.name, onClick = { onRename(category.id, name) },
+                    modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Save ${category.name}") }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (ProductFormInput) -> Unit) {
+    var title by rememberSaveable { mutableStateOf(product?.title ?: "") }
+    var category by rememberSaveable { mutableStateOf(product?.categoryId ?: "") }
+    var description by rememberSaveable { mutableStateOf(product?.description ?: "") }
+    var quantity by rememberSaveable { mutableStateOf("0") }
+    var price by rememberSaveable { mutableStateOf("") }
+    var distinct by rememberSaveable { mutableStateOf(false) }
+    ShopSection("Basic details") {
+        ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
+        Text("Category (required)", style = MaterialTheme.typography.labelLarge)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+            shop.categories.forEach { item ->
+                FilterChip(selected = category == item.id, onClick = { category = item.id; distinct = false; onChange() },
+                    enabled = !busy, label = { Text(item.name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer))
+            }
+        }
+        if (error?.field == ProductField.Category) FormError(error.message)
+        ProductTextField(description, { description = it; onChange() }, "Description", !busy)
+    }
+    if (product == null) ShopSection("Opening stock and price") {
+        ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
+            error?.takeIf { it.field == ProductField.OpeningStock }, number = true)
+        ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
+            error?.takeIf { it.field == ProductField.SellingPrice }, number = true)
+        Text("Stock is counted in whole pieces. Prices use whole rupees.", style = MaterialTheme.typography.bodyMedium)
+    }
+    if (error != null && error.field == null) FormError(error.message)
+    if (error?.similar == true) Row(
+        Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(distinct, role = Role.Checkbox, onValueChange = { distinct = it }),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = distinct, onCheckedChange = null)
+        Text("Save as a distinct product", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
+    }
+    ShopPrimaryButton(if (busy) "Saving…" else "Save product", enabled = !busy) {
+        save(ProductFormInput(title, category, description, quantity, price, distinct))
+    }
+}
+
+@Composable
+private fun ProductTextField(value: String, onChange: (String) -> Unit, label: String, enabled: Boolean, error: ShopError? = null, number: Boolean = false) {
+    OutlinedTextField(value, onChange, enabled = enabled, label = { Text(label) }, isError = error != null,
+        supportingText = if (error == null) null else ({ FormError(error.message) }),
+        keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Number else KeyboardType.Text),
+        modifier = Modifier.fillMaxWidth())
+}
+
+@Composable
+internal fun FormError(message: String) {
+    val requester = remember { BringIntoViewRequester() }
+    LaunchedEffect(message) { requester.bringIntoView() }
+    Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.bringIntoViewRequester(requester).semantics { liveRegion = LiveRegionMode.Assertive; error(message) })
+}
