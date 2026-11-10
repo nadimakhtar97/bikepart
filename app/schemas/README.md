@@ -54,7 +54,10 @@ converted to empty text or zero. `productsByDecimal` compares `BigDecimal` value
 sorts missing measurements last and uses product identity for deterministic ties.
 Quantity and money continue to use signed 64-bit whole-number integer columns.
 
-Lookup normalizer version 1 applies NFKC, collapses Unicode White_Space to one
+Lookup normalizer version 1 pins ICU4J 76.1 / Unicode 16 tables for NFKC and
+case folding, independent of Android or Java runtime versions. Its explicit
+Unicode 16 White_Space character set avoids platform regex Unicode properties.
+It applies NFKC, collapses Unicode White_Space to one
 ASCII space, trims it, then uses locale-independent full default Unicode case
 folding. Readable display labels retain case. Category names are shop-scoped,
 definition names category-scoped, and options definition-scoped. A same-name
@@ -63,3 +66,6 @@ Legacy category keys are preserved on migration: category creation/rename compar
 normalized display names inside the transaction, so pre-existing keys cannot
 allow new equivalent duplicates. Existing category identities are not merged.
 Future changes to these rules require a new normalizer version and migration.
+
+ICU4J is deliberately pinned: [ICU 76 release / Unicode 16](https://unicode-org.github.io/icu/download/76.html).
+Dependency updates must preserve these tables or introduce a normalizer migration.

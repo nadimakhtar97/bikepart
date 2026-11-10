@@ -15,9 +15,11 @@ import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
+internal data class AttributeSetup(val categoryId: String, val name: String, val type: AttributeType, val required: Boolean, val unit: String)
+
 internal class ProductLookups(
     val category: (String, (String) -> Unit) -> Unit,
-    val attribute: (String, String, AttributeType, Boolean, String, () -> Unit) -> Unit,
+    val attribute: (AttributeSetup, () -> Unit) -> Unit,
     val option: (String, String, (String) -> Unit) -> Unit,
 )
 
@@ -104,7 +106,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                 Text("Required field", modifier = Modifier.padding(ShopSpacing.small))
             }
             ShopPrimaryButton("Create field", enabled = !busy) {
-                lookups.attribute(categoryId, name, type, required, unit) { creating = false; search = "" }
+                lookups.attribute(AttributeSetup(categoryId, name, type, required, unit)) { creating = false; search = "" }
             }
         }
     }

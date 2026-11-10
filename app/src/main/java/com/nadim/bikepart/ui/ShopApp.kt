@@ -90,7 +90,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 onChange = { model.error.value = null },
                                 lookups = ProductLookups(
                                     category = { name, selected -> model.write({ val id = createCategory(name); selected(id) }) },
-                                    attribute = { category, name, type, required, unit, done -> model.write({ createAttribute(category, name, type, required, unit) }, done) },
+                                    attribute = { input, done -> model.write({ createAttribute(categoryId = input.categoryId, name = input.name, type = input.type, required = input.required, unit = input.unit) }, done) },
                                     option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
                                 ),
                                 save = { input ->

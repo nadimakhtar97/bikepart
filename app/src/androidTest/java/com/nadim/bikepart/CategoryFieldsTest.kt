@@ -28,7 +28,9 @@ class CategoryFieldsTest {
             val otherCategory = shop.createCategory("Other category")
             assertNotEquals(field, shop.createAttribute(otherCategory, "Finish", AttributeType.SingleChoice))
             assertEquals("Fasteners hardware", shop.snapshot().categories.single { it.id == category }.name)
-            assertEquals(7L, shop.snapshot().revision)
+            val cyrillic = shop.createAttribute(category, "\uD838\uDC30", AttributeType.Text)
+            assertEquals(cyrillic, shop.createAttribute(category, "а", AttributeType.Text))
+            assertEquals(8L, shop.snapshot().revision)
             assertTrue(shop.snapshot().products.isEmpty())
         }
     }

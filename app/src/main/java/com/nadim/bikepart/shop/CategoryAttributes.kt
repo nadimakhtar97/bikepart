@@ -1,14 +1,14 @@
 package com.nadim.bikepart.shop
 
-import android.icu.lang.UCharacter
+import com.ibm.icu.lang.UCharacter
+import com.ibm.icu.text.Normalizer2
 import java.math.BigDecimal
-import java.text.Normalizer
 
-/** Lookup normalization v1: NFKC, Unicode whitespace folding, full default case folding. */
+/** Lookup normalization v1: ICU4J 76.1 / Unicode 16 NFKC, whitespace folding and default case folding. */
 object LookupNames {
     const val VERSION = 1
-    fun display(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKC)
-        .replace(Regex("[\\s\\p{Z}\\u0085]+"), " ").trim()
+    fun display(value: String): String = Normalizer2.getNFKCInstance().normalize(value)
+        .replace(Regex("[\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]+"), " ").trim(' ')
     fun key(value: String): String = UCharacter.foldCase(display(value), true)
 }
 
