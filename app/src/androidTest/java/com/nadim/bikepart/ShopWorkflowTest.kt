@@ -1,18 +1,24 @@
 package com.nadim.bikepart
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
+import androidx.test.core.app.ActivityScenario
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import android.provider.Settings
 
 class ShopWorkflowTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule val compose = createEmptyComposeRule()
+    private lateinit var scenario: ActivityScenario<MainActivity>
+    @Before fun launchApp() { scenario = ActivityScenario.launch(MainActivity::class.java) }
+    @After fun closeApp() { scenario.close() }
 
     @Test fun labelledControlsAndValidationRemainUsableInBothThemesAtDoubleTextSize() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -27,7 +33,7 @@ class ShopWorkflowTest {
         }
         try {
             shell("settings put system font_scale 2.0")
-            compose.activityRule.scenario.recreate()
+            scenario.recreate()
             compose.waitUntil(15_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             for (mode in listOf("Light", "Dark")) {
                 compose.onNodeWithText("More").performClick()
@@ -71,12 +77,15 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Description").performScrollTo().performTextInput("Zinc finish")
         compose.onNodeWithText("Save product").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Zinc finish").fetchSemanticsNodes().isNotEmpty() }
-        compose.activityRule.scenario.recreate()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Zinc finish").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Back").performClick()
+        scenario.close()
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Stock").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Stock").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText(title).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText(title).performScrollTo().performClick()
         compose.onNodeWithText(sku).assertExists()
         compose.onNodeWithText("Zinc finish").assertExists()
+        compose.onNodeWithText("12 pieces").assertExists()
+        compose.onNodeWithText("Selling price: ₹1,20,000").assertExists()
     }
 }

@@ -1,7 +1,7 @@
 import {themeFromSourceColor,argbFromHex,hexFromArgb} from './node_modules/@material/material-color-utilities/index.js';
 import fs from 'node:fs';
 const theme=themeFromSourceColor(argbFromHex('#006A6A'));
-let out=`package com.nadim.bikepart.ui.theme\n\nimport androidx.compose.foundation.isSystemInDarkTheme\nimport androidx.compose.material3.*\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.graphics.Color\nimport com.nadim.bikepart.shop.Appearance\n\n// Generated from #006A6A using @material/material-color-utilities 0.3.0.\n`;
+let out=`package com.nadim.bikepart.ui.theme\n\nimport android.app.Activity\nimport androidx.core.view.WindowCompat\nimport androidx.compose.ui.platform.LocalContext\nimport androidx.compose.runtime.SideEffect\nimport androidx.compose.foundation.isSystemInDarkTheme\nimport androidx.compose.material3.*\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.graphics.Color\nimport com.nadim.bikepart.shop.Appearance\n\n// Generated from #006A6A using @material/material-color-utilities 0.3.0.\n`;
 for(const mode of ['light','dark']){
  const roles=theme.schemes[mode].toJSON();
  delete roles.shadow;
@@ -19,5 +19,5 @@ for(const mode of ['light','dark']){
  }
  out+=')\n\n';
 }
-out+=`@Composable\nfun BikepartTheme(appearance: Appearance = Appearance.System, content: @Composable () -> Unit) {\n    val dark = when (appearance) { Appearance.System -> isSystemInDarkTheme(); Appearance.Light -> false; Appearance.Dark -> true }\n    MaterialTheme(colorScheme = if (dark) darkShopColors else lightShopColors, typography = Typography, content = content)\n}\n`;
+out+=`@Composable\nfun BikepartTheme(appearance: Appearance = Appearance.System, content: @Composable () -> Unit) {\n    val dark = when (appearance) { Appearance.System -> isSystemInDarkTheme(); Appearance.Light -> false; Appearance.Dark -> true }\n    val context = LocalContext.current\n    SideEffect {\n        (context as? Activity)?.window?.let { window ->\n            WindowCompat.getInsetsController(window, window.decorView).apply {\n                isAppearanceLightStatusBars = !dark\n                isAppearanceLightNavigationBars = !dark\n            }\n        }\n    }\n    MaterialTheme(colorScheme = if (dark) darkShopColors else lightShopColors, typography = Typography, content = content)\n}\n`;
 fs.writeFileSync('app/src/main/java/com/nadim/bikepart/ui/theme/Theme.kt',out);

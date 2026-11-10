@@ -13,6 +13,8 @@ data class Product(val id: String, val sku: String, val title: String, val categ
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
 data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance)
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price") }
+class ShopValidation(val field: ProductField, message: String) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase) : AutoCloseable {
     private val dao = database.dao()
@@ -36,10 +38,9 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
     }
 
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false): String = database.withTransaction {
-        require(title.isNotBlank()) { "Enter a product title" }
-        require(dao.categories().any { it.id == categoryId }) { "Choose a category" }
-        val quantity = parseWhole(openingPieces, "Opening stock")
-        val price = parseWhole(priceRupees, "Selling price")
+        validateProduct(title, categoryId)
+        val quantity = parseWhole(openingPieces, ProductField.OpeningStock)
+        val price = parseWhole(priceRupees, ProductField.SellingPrice)
         if (!allowSimilar && dao.products().any { normalize(it.title) == normalize(title) && it.categoryId == categoryId }) throw SimilarProduct()
         val id = UUID.randomUUID().toString()
         dao.insertProduct(ProductRow(id, "BP-${id.uppercase(Locale.ROOT)}", title.trim(), categoryId, description.trim(), price))
@@ -50,8 +51,7 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
     }
 
     suspend fun editProduct(id: String, title: String, categoryId: String, description: String) = database.withTransaction {
-        require(title.isNotBlank()) { "Enter a product title" }
-        require(dao.categories().any { it.id == categoryId }) { "Choose a category" }
+        validateProduct(title, categoryId)
         val product = dao.products().single { it.id == id }
         dao.updateProduct(product.copy(title = title.trim(), categoryId = categoryId, description = description.trim()))
         advanceRevision()
@@ -71,6 +71,11 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
     }
 
     suspend fun openingHistory(id: String): List<OpeningStock> = dao.openings(id).map { OpeningStock(it.quantity, it.recordedAt) }
+
+    private suspend fun validateProduct(title: String, categoryId: String) {
+        if (title.isBlank()) throw ShopValidation(ProductField.Title, "Enter a product title")
+        if (dao.categories().none { it.id == categoryId }) throw ShopValidation(ProductField.Category, "Choose a category")
+    }
 
     private suspend fun advanceRevision() {
         val state = requireNotNull(dao.state())
@@ -92,10 +97,10 @@ class SimilarProduct : IllegalArgumentException("A similar product already exist
 internal fun normalize(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKC)
     .replace(Regex("[\\s\\p{Z}]+"), " ").trim().lowercase(Locale.ROOT)
 
-fun parseWhole(value: String, label: String): Long {
+private fun parseWhole(value: String, field: ProductField): Long {
     val text = value.trim()
-    require(text.matches(Regex("[0-9]+"))) { "$label must be a nonnegative whole number" }
-    return requireNotNull(text.toLongOrNull()) { "$label exceeds the supported whole-number limit" }
+    if (!text.matches(Regex("[0-9]+"))) throw ShopValidation(field, "${field.label} must be a nonnegative whole number")
+    return text.toLongOrNull() ?: throw ShopValidation(field, "${field.label} exceeds the supported whole-number limit")
 }
 
 fun indianNumber(value: Long): String {

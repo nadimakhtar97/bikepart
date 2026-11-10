@@ -1,5 +1,9 @@
 package com.nadim.bikepart.ui.theme
 
+import android.app.Activity
+import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.SideEffect
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -110,5 +114,14 @@ internal val darkShopColors = darkColorScheme(
 @Composable
 fun BikepartTheme(appearance: Appearance = Appearance.System, content: @Composable () -> Unit) {
     val dark = when (appearance) { Appearance.System -> isSystemInDarkTheme(); Appearance.Light -> false; Appearance.Dark -> true }
+    val context = LocalContext.current
+    SideEffect {
+        (context as? Activity)?.window?.let { window ->
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
     MaterialTheme(colorScheme = if (dark) darkShopColors else lightShopColors, typography = Typography, content = content)
 }
