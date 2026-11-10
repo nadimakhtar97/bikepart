@@ -70,6 +70,19 @@ class ShopWorkflowTest {
     @Test fun staffCanPromoteCustomFieldsResolveCollisionsAndCompleteRequiredEdits() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val title = "Evolution part ${System.nanoTime()}"
+        fun activate(label: String) {
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
+            compose.waitUntil(10_000) { compose.onAllNodes(hasText(label) and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText(label).performScrollTo().assertIsEnabled()
+                .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+        }
+        fun awaitLabel(label: String) {
+            try {
+                compose.waitUntil(10_000) { compose.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty() }
+            } catch (failure: Exception) {
+                throw AssertionError(compose.onRoot().printToString(), failure)
+            }
+        }
         scenario.close()
         kotlinx.coroutines.runBlocking {
             com.nadim.bikepart.shop.Shop.open(context).use { shop ->
@@ -87,7 +100,7 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Add product custom field").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
         compose.onNodeWithText("Field name").performScrollTo().performTextInput("Finish")
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("Create field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Create field").performScrollTo().performClick()
+        activate("Create field")
         try {
             compose.waitUntil(10_000) { compose.onAllNodesWithText("Create field").fetchSemanticsNodes().isEmpty() }
         } catch (failure: AssertionError) {
@@ -96,35 +109,35 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Back").performClick()
         compose.onNodeWithText("Edit details").performScrollTo().performClick()
         compose.onNodeWithText("Finish (optional) · product only").performScrollTo().performTextInput("Special")
-        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        activate("Save product")
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Special").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Manage fields").performScrollTo().performClick()
         compose.onNodeWithText("Manage custom Finish").performScrollTo().performClick()
         compose.onNodeWithText("Replace field type").performScrollTo().performClick()
         compose.onNodeWithText("Promote to category").assertDoesNotExist()
         compose.onNodeWithText("Replace field type").performScrollTo().performClick()
-        compose.onNodeWithText("Promote to category").performScrollTo().performClick()
+        activate("Promote to category")
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("That category field already exists.", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Category field name").assert(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.Error))
         compose.onNodeWithText("Category field name").performScrollTo().performTextReplacement("Special finish")
-        compose.onNodeWithText("Promote to category").performScrollTo().performClick()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Manage Special finish").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Make required").performScrollTo().performClick()
+        activate("Promote to category")
+        awaitLabel("Manage Special finish")
+        activate("Make required")
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Make optional").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Retire field").performScrollTo().performClick()
+        activate("Retire field")
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Category field · Text · retired").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Manage Finish").performScrollTo().performClick()
-        compose.onNodeWithText("Make required").performScrollTo().performClick()
+        activate("Make required")
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Make optional").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Back").performClick()
         compose.onNodeWithText("Special finish (retired): Special").performScrollTo().assertExists()
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("Catalog incomplete", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("12 pieces").performScrollTo().assertExists()
         compose.onNodeWithText("Edit details").performScrollTo().performClick()
-        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        activate("Save product")
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Required").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Finish (required)").performScrollTo().performTextInput("Zinc")
-        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        activate("Save product")
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Finish: Zinc").fetchSemanticsNodes().isNotEmpty() }
         scenario.recreate()
         compose.onNodeWithText("Special finish (retired): Special").performScrollTo().assertExists()

@@ -67,9 +67,14 @@ the checked actions meet 48dp targets. Screenshots exclude the system keyboard
 but retain its inset in the app layout. The theme validator passes all 94 checks,
 with minimum normal-text contrast 4.55:1.
 
-The first complete-suite run passed the persistence, migration and visual checks
-but exposed a custom-field workflow timing failure. That test now waits for its
-save control to be enabled; the corrected focused workflow passes. The final
+Complete-suite runs passed persistence, migration and visual checks but exposed
+timing failures at custom creation and promotion in the new workflow. The test
+now closes the keyboard, waits for enabled controls, scrolls to them and invokes
+their public accessibility actions. The entire UI workflow class passes together.
+These business-action checks exercise Compose → ViewModel → real Room and retain
+the original validation and persistence assertions; they do not verify touch
+delivery for those specific buttons. Other UI/visual workflows retain touch
+injection and the new controls retain their 48dp assertions. The final
 complete-suite command is:
 
 ```powershell
