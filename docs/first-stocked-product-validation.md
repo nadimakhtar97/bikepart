@@ -1,5 +1,9 @@
 # First stocked product
 
+Historical slice validation. The subsequent [Now in Android UI guidelines](ui-guidelines.md)
+supersede this record's original teal visual system; see the [redesign validation](nia-redesign-validation.md)
+for current theme and screen checks.
+
 Implemented ticket 01, “Create and reopen the first stocked product.” Scope is
 offline shop initialization, stocked-product creation and description editing,
 editable starter categories, navigation, and persisted appearance settings.

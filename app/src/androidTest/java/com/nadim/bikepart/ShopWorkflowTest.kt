@@ -62,16 +62,16 @@ class ShopWorkflowTest {
     }
 
     @Test fun createEditAndReopenProductThroughTheApp() {
-        val title = "Bolt ${System.nanoTime()}"
+        val title = "Stainless steel hex bolt M8 x 30 for the workshop's replacement fastener bins ${System.nanoTime()}"
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
         compose.onNodeWithText("Title (required)").performTextInput(title)
         compose.onNodeWithText("Bolts", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Opening stock (pieces)").performScrollTo().performTextReplacement("12")
-        compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("120000")
+        compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("9223372036854775807")
         compose.onNodeWithText("Save product").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("12 pieces").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Selling price: ₹1,20,000").assertExists()
+        compose.onNodeWithText("Selling price: ₹92,23,37,20,36,85,47,75,807").performScrollTo().assertIsDisplayed()
         val sku = compose.onAllNodes(hasText("SKU:", substring = true)).fetchSemanticsNodes().single().config[androidx.compose.ui.semantics.SemanticsProperties.Text].single().text
         compose.onNodeWithText("Edit details").performScrollTo().performClick()
         compose.onNodeWithText("Description").performScrollTo().performTextInput("Zinc finish")
@@ -86,6 +86,6 @@ class ShopWorkflowTest {
         compose.onNodeWithText(sku).assertExists()
         compose.onNodeWithText("Zinc finish").assertExists()
         compose.onNodeWithText("12 pieces").assertExists()
-        compose.onNodeWithText("Selling price: ₹1,20,000").assertExists()
+        compose.onNodeWithText("Selling price: ₹92,23,37,20,36,85,47,75,807").performScrollTo().assertIsDisplayed()
     }
 }

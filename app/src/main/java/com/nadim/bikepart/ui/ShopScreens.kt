@@ -1,6 +1,5 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -186,7 +185,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     }
     if (error != null && error.field == null) FormError(error.message)
     if (error?.similar == true) Row(
-        Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(distinct, role = Role.Checkbox, onValueChange = { distinct = it }),
+        Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(distinct, enabled = !busy, role = Role.Checkbox, onValueChange = { distinct = it }),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = distinct, onCheckedChange = null)
