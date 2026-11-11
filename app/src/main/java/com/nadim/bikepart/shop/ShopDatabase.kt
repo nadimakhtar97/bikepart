@@ -53,8 +53,28 @@ internal data class TemplateRow(@PrimaryKey val id: String, val categoryId: Stri
 @Entity(tableName = "stock_corrections", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
 internal data class CorrectionRow(@PrimaryKey val operationId: String, val productId: String, val kind: String, val quantity: Long, val reason: String, val previousBalance: Long, val resultingBalance: Long, val movement: Long?, val recordedAt: Long, val revision: Long)
 
+@Entity(tableName = "carts", indices = [Index(value = ["number"], unique = true)])
+internal data class CartRow(@PrimaryKey val id: String, val number: Long, val customer: String, val editVersion: Long)
+
+@Entity(tableName = "cart_lines", primaryKeys = ["cartId", "productId"], foreignKeys = [ForeignKey(entity = CartRow::class, parentColumns = ["id"], childColumns = ["cartId"], onDelete = ForeignKey.CASCADE), ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
+internal data class CartLineRow(val cartId: String, val productId: String, val quantity: Long, val quotedPriceRupees: Long)
+
+// A durable counter prevents name reuse after discarding the most recent cart.
+@Entity(tableName = "cart_sequence")
+internal data class CartSequenceRow(@PrimaryKey val id: Int = 1, val lastNumber: Long)
+
 @Dao
 internal interface ShopDao {
+    @Query("SELECT * FROM carts ORDER BY number DESC") suspend fun carts(): List<CartRow>
+    @Query("SELECT * FROM carts WHERE id = :id") suspend fun cart(id: String): CartRow?
+    @Query("SELECT * FROM cart_lines ORDER BY cartId, productId") suspend fun cartLines(): List<CartLineRow>
+    @Query("SELECT * FROM cart_sequence WHERE id = 1") suspend fun cartSequence(): CartSequenceRow?
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putCartSequence(row: CartSequenceRow)
+    @Insert suspend fun insertCart(row: CartRow)
+    @Update suspend fun updateCart(row: CartRow)
+    @Query("DELETE FROM carts WHERE id = :id") suspend fun deleteCart(id: String)
+    @Query("DELETE FROM cart_lines WHERE cartId = :id") suspend fun deleteCartLines(id: String)
+    @Insert suspend fun insertCartLines(rows: List<CartLineRow>)
     @Query("SELECT * FROM stock_corrections ORDER BY revision") suspend fun corrections(): List<CorrectionRow>
     @Query("SELECT * FROM stock_corrections WHERE operationId = :id") suspend fun correction(id: String): CorrectionRow?
     @Insert suspend fun insertCorrection(row: CorrectionRow)
@@ -105,5 +125,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class], version = 8, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class], version = 9, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }

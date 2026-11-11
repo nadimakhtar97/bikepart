@@ -23,6 +23,8 @@ class CategoryMigrationTest {
 
     @Test fun versionSevenUpgradePreservesCorrectionsAndSupportsThresholds() = runBlocking { verifyTypedUpgrade(7) }
 
+    @Test fun versionEightUpgradePreservesCatalogAndSupportsCarts() = runBlocking { verifyTypedUpgrade(8) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -42,7 +44,8 @@ class CategoryMigrationTest {
                 val setup = schema.getJSONArray("setupQueries")
                 for (index in 0 until setup.length()) db.execSQL(setup.getString(index))
                 db.execSQL("INSERT INTO categories VALUES ('c', 'Bolts', 'bolts', 0)")
-                db.execSQL("INSERT INTO products VALUES ('p', 'BP-stable', 'Bolt', 'c', 'Original', 80)")
+                db.execSQL("INSERT INTO products (id, sku, title, categoryId, description, priceRupees) VALUES ('p', 'BP-stable', 'Bolt', 'c', 'Original', 80)")
+                if (version >= 8) db.execSQL("UPDATE products SET lowStockThreshold = 7 WHERE id = 'p'")
                 db.execSQL("INSERT INTO balances VALUES ('p', 12)")
                 db.execSQL("INSERT INTO opening_stock VALUES ('p', 12, 123456)")
                 db.execSQL("INSERT INTO shop_state VALUES (1, 'stable-dataset', 7, 'Dark', 1)")
@@ -62,7 +65,7 @@ class CategoryMigrationTest {
                 assertEquals("stable-dataset", before.datasetId)
                 assertEquals(7L, before.revision)
                 assertEquals(Appearance.Dark, before.appearance)
-                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values, photo = if (version >= 5) PhotoReference("a".repeat(64), 3) else null), before.products.single())
+                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values, photo = if (version >= 5) PhotoReference("a".repeat(64), 3) else null, lowStockThreshold = if (version >= 8) 7 else null), before.products.single())
                 assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
                 assertTrue(before.makes.isEmpty())
                 assertTrue(before.models.isEmpty())
@@ -105,12 +108,24 @@ class CategoryMigrationTest {
                 assertEquals("Recount after upgrade", shop.correctionHistory(shop.snapshot().products.single().id).last().reason)
             }
             Shop.open(context, name).use { shop ->
-                assertNull(shop.snapshot().products.single().lowStockThreshold)
+                assertEquals(if (version >= 8) 7L else null, shop.snapshot().products.single().lowStockThreshold)
                 shop.setLowStockThreshold("p", "10")
             }
             Shop.open(context, name).use { shop ->
                 assertEquals(10L, shop.snapshot().products.single().lowStockThreshold)
                 assertEquals(StockHealth.LowStock, shop.snapshot().products.single().stockHealth)
+            }
+            Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                assertTrue(before.carts.isEmpty())
+                val cart = shop.createCart()
+                shop.saveCart(cart, 0, "Upgrade customer", mapOf("p" to "2"))
+                assertEquals(before.revision + 2, shop.snapshot().revision)
+            }
+            Shop.open(context, name).use { shop ->
+                assertEquals("Upgrade customer", shop.snapshot().carts.single().customer)
+                assertEquals(160L, shop.snapshot().carts.single().totalRupees)
+                assertEquals(10L, shop.snapshot().products.single().quantity)
             }
             SQLiteDatabase.openDatabase(path.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
                 db.rawQuery("PRAGMA foreign_key_check", null).use { assertFalse(it.moveToFirst()) }

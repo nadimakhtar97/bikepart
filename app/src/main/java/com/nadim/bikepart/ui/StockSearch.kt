@@ -130,8 +130,8 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
 }
 
 @Composable
-private fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: PhotoLoader, onOpen: () -> Unit) {
-    Surface(onClick = onOpen, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow,
+internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: PhotoLoader, enabled: Boolean = true, onOpen: () -> Unit) {
+    Surface(onClick = onOpen, enabled = enabled, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
         Row(Modifier.padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
             ProductPhoto(product.photo, loadPhoto, Modifier.size(ShopSpacing.touchTarget))

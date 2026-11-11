@@ -71,6 +71,9 @@ grouping and whole rupees.
 - Category chips wrap and retain the required single-category selection. Use
   labelled fields, useful keyboards, typed errors, announced feedback and
   automatic scrolling to validation errors. Disable edits during a pending save.
+  Autosaved cart text uses the [buffered draft pattern](quoted-carts.md#persistence-and-save-behavior)
+  to preserve typing and the keyboard session; structural actions and leaving the
+  cart wait for all pending drafts to commit.
 - Product rows show title, category, combined quantity/price, stock status and
   permanent SKU. Detail screens distinguish current stock/price from descriptive
   information. Empty states use truthful shop copy and bundled shop icons.

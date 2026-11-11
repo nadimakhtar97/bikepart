@@ -34,7 +34,12 @@ class ShopWorkflowTest {
         }
         fun click(text: String) {
             val node = compose.onNodeWithText(text)
-            node.performScrollTo()
+            // Keyboard insets can still be animating after text input. Scroll against
+            // the settled viewport before asserting that the actual target is visible.
+            compose.waitUntil(5_000) {
+                node.performScrollTo()
+                node.isDisplayed()
+            }
             node.assertIsDisplayed().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
         }
         fun capture(name: String) {

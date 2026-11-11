@@ -81,3 +81,14 @@ internal val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("ALTER TABLE products ADD COLUMN lowStockThreshold INTEGER")
     }
 }
+
+/** Unfinished quotes are separate from the stock ledger. */
+internal val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE carts (id TEXT NOT NULL, number INTEGER NOT NULL, customer TEXT NOT NULL, editVersion INTEGER NOT NULL, PRIMARY KEY(id))")
+        db.execSQL("CREATE UNIQUE INDEX index_carts_number ON carts(number)")
+        db.execSQL("CREATE TABLE cart_lines (cartId TEXT NOT NULL, productId TEXT NOT NULL, quantity INTEGER NOT NULL, quotedPriceRupees INTEGER NOT NULL, PRIMARY KEY(cartId, productId), FOREIGN KEY(cartId) REFERENCES carts(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX index_cart_lines_productId ON cart_lines(productId)")
+        db.execSQL("CREATE TABLE cart_sequence (id INTEGER NOT NULL, lastNumber INTEGER NOT NULL, PRIMARY KEY(id))")
+    }
+}

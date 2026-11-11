@@ -238,3 +238,37 @@ zero is always Out of stock, including with no threshold. Status is derived from
 the current combined balance, never stored as a second mutable fact. Thresholds
 belong to stock management and are not copied into descriptive templates.
 Backup/restore has not landed yet.
+
+## Version 9 — persistent quoted carts
+
+The additive 8 → 9 migration adds `carts`, `cart_lines` and `cart_sequence`.
+Existing catalog identities, prices, balances, history, settings, thresholds and
+revisions are untouched. Cart lines reference products and cascade only when
+their owning cart is discarded. The durable sequence prevents reusing an
+automatic cart number after discarding a bill. No cart operation writes stock.
+
+`Shop.saveCart` compares the expected edit version inside the transaction before
+changing customer labels or lines. A changed cart advances its edit version and
+the business revision together. A stale edit or discard is rejected; it never
+recreates a discarded cart. An unchanged save is a no-op. Snapshot reads include
+all carts and lines in the same transaction as the catalog and balances.
+
+New lines capture the transaction-current selling price. Existing lines retain
+their quote through quantity edits and catalog price changes. Removing a line
+commits the end of that quote; re-adding captures the then-current price.
+Quantities, line multiplication, cart-total addition, cart numbering, edit
+versions and business revisions use checked signed 64-bit arithmetic. Invalid
+input or overflow rolls the whole transaction back. Informational demand across
+other carts uses an arbitrary-precision sum because independent valid carts may
+together exceed a single 64-bit quantity; it never becomes a stock reservation.
+
+The ViewModel debounces cart field edits and reports saved state only after
+commit. Returning to the list flushes pending edits through the same write
+boundary. Structural actions and navigation are disabled during the commit;
+further text input stays buffered and saves serially against the exact committed
+cart version before navigation continues. Raw field text and the input session
+survive successful autosaves. A failed or
+stale draft remains visible for correction, retry or explicit reload. New lines,
+removal and discard appear as committed outcomes. Cash checkout remains ticket
+11; its entry must use the same pending-edit barrier. Backup/restore has not
+landed yet.

@@ -13,8 +13,8 @@ data class HistoricalAttribute(val id: String, val definitionId: String, val val
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
-data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap())
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold") }
+data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap(), val carts: List<Cart> = emptyList())
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos) : AutoCloseable {
@@ -39,6 +39,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val values = dao.values().groupBy { it.productId }
         val fitments = dao.fitments().groupBy { it.productId }
         val locations = dao.productLocations().groupBy { it.productId }
+        val cartLines = dao.cartLines().groupBy { it.cartId }
         ShopSnapshot(dao.categories().map { Category(it.id, it.name) }, dao.products().map {
             Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet(), photoRows[it.id]?.let { row -> PhotoReference(row.sha256, row.sizeBytes) }, it.lowStockThreshold)
         }, state.revision, Appearance.valueOf(state.appearance),
@@ -47,7 +48,8 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.makes().map { MotorcycleMake(it.id, it.name, it.retired) },
             dao.models().map { MotorcycleModel(it.id, it.makeId, it.name, it.retired) },
             dao.locations().map { StorageLocation(it.id, it.name, it.retired) },
-            dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) }, dao.corrections().map { it.toCorrection() }, dao.allOpenings().associate { it.productId to OpeningStock(it.quantity, it.recordedAt) })
+            dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) }, dao.corrections().map { it.toCorrection() }, dao.allOpenings().associate { it.productId to OpeningStock(it.quantity, it.recordedAt) },
+            dao.carts().map { cart -> Cart(cart.id, cart.number, cart.customer, cart.editVersion, cartLines[cart.id].orEmpty().map { CartLine(it.productId, it.quantity, it.quotedPriceRupees) }) })
     }
 
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
@@ -438,6 +440,74 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         advanceRevision()
     }
 
+    suspend fun createCart(): String = database.withTransaction {
+        val number = Math.addExact(dao.cartSequence()?.lastNumber ?: 0L, 1L)
+        val id = UUID.randomUUID().toString()
+        dao.putCartSequence(CartSequenceRow(lastNumber = number))
+        dao.insertCart(CartRow(id, number, "", 0))
+        advanceRevision()
+        id
+    }
+
+    /** Compare versions within the transaction; only new lines acquire current prices. */
+    suspend fun saveCart(id: String, expectedVersion: Long, customer: String, quantities: Map<String, String>): Long = database.withTransaction {
+        val cart = requireCurrentCart(id, expectedVersion)
+        val old = dao.cartLines().filter { it.cartId == id }.associateBy { it.productId }
+        val products = dao.products().associateBy { it.id }
+        val lines = quantities.map { (productId, input) ->
+            val product = requireNotNull(products[productId]) { "Choose an existing stocked product" }
+            val quantity = parseCartQuantity(input, productId)
+            CartLineRow(id, productId, quantity, old[productId]?.quotedPriceRupees ?: product.priceRupees)
+        }
+        try {
+            lines.fold(0L) { total, line -> Math.addExact(total, Math.multiplyExact(line.quantity, line.quotedPriceRupees)) }
+        } catch (_: ArithmeticException) {
+            throw ShopValidation(ProductField.CartQuantity, "Cart total exceeds the supported whole-rupee limit")
+        }
+        val label = customer.trim()
+        val changed = cart.customer != label || old.values.toSet() != lines.toSet()
+        val version = if (changed) Math.addExact(cart.editVersion, 1) else cart.editVersion
+        if (changed) {
+            dao.deleteCartLines(id)
+            dao.insertCartLines(lines)
+            dao.updateCart(cart.copy(customer = label, editVersion = version))
+            advanceRevision()
+        }
+        version
+    }
+
+    suspend fun addCartProduct(id: String, expectedVersion: Long, productId: String, pieces: String) = database.withTransaction {
+        val cart = requireCurrentCart(id, expectedVersion)
+        val amount = parseCartQuantity(pieces, productId)
+        val lines = dao.cartLines().filter { it.cartId == id }
+        val quantities = lines.associate { it.productId to it.quantity.toString() }.toMutableMap()
+        val quantity = try { Math.addExact(lines.find { it.productId == productId }?.quantity ?: 0L, amount) }
+            catch (_: ArithmeticException) { throw ShopValidation(ProductField.CartQuantity, "Cart quantity exceeds the supported whole-number limit", productId) }
+        quantities[productId] = quantity.toString()
+        saveCart(id, expectedVersion, cart.customer, quantities)
+    }
+
+    suspend fun discardCart(id: String, expectedVersion: Long) = database.withTransaction {
+        requireCurrentCart(id, expectedVersion)
+        dao.deleteCart(id)
+        advanceRevision()
+    }
+
+    private suspend fun requireCurrentCart(id: String, version: Long): CartRow {
+        val cart = dao.cart(id) ?: throw StaleCart()
+        if (cart.editVersion != version) throw StaleCart()
+        return cart
+    }
+
+    suspend fun setSellingPrice(id: String, rupees: String) = database.withTransaction {
+        val price = parseWhole(rupees, ProductField.SellingPrice)
+        val product = dao.products().single { it.id == id }
+        if (product.priceRupees != price) {
+            dao.updateProduct(product.copy(priceRupees = price))
+            advanceRevision()
+        }
+    }
+
     suspend fun correctionHistory(productId: String): List<StockCorrection> = dao.corrections().filter { it.productId == productId }.map { it.toCorrection() }
 
     suspend fun openingHistory(id: String): List<OpeningStock> = dao.openings(id).map { OpeningStock(it.quantity, it.recordedAt) }
@@ -456,7 +526,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
             return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }
@@ -464,6 +534,12 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 }
 
 class SimilarProduct : IllegalArgumentException("A similar product already exists. Open it from Stock or save a distinct product.")
+
+private fun parseCartQuantity(value: String, productId: String): Long {
+    val quantity = try { parseWhole(value, ProductField.CartQuantity) } catch (_: ShopValidation) { null }
+    if (quantity == null || quantity == 0L) throw ShopValidation(ProductField.CartQuantity, "Cart quantity must be a positive whole number within the supported limit", productId)
+    return quantity
+}
 
 private fun parseWhole(value: String, field: ProductField): Long {
     val text = value.trim()

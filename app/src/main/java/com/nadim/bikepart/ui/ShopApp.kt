@@ -38,6 +38,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     val state by model.state.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
+    val cartDraft by model.cartDraft.collectAsStateWithLifecycle()
     var stockHealth by rememberSaveable { mutableStateOf<String?>(null) }
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf("Home") }
@@ -45,13 +46,21 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
     var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(state != null, route) {
+        if (state != null && route in listOf("cart", "cart-products") && cartDraft == null) model.openCart(selectedId)
+    }
     var catalogPayload by rememberSaveable { mutableStateOf<String?>(null) }
     var templateId by rememberSaveable { mutableStateOf<String?>(null) }
     val catalog = catalogPayload?.let { decodeCatalog(it) }
     val template = state?.templates?.find { it.id == templateId }
     fun beginCatalog(draft: CatalogDraft, target: String, id: String? = null) { model.error.value = null; catalogPayload = draft.encode(); templateId = id; route = target }
     val product = state?.products?.find { it.id == selectedId }
-    fun back() { route = when (route) { "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }; model.error.value = null }
+    fun back() {
+        if (route == "cart") { model.flushCart { route = "main"; destination = "Carts" }; return }
+        route = when (route) { "cart-products" -> "cart"; "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }
+        model.error.value = null
+    }
+    fun newCart() { model.write({ selectedId = createCart() }, { model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
     fun addProduct() { model.error.value = null; catalogPayload = null; route = "create" }
     fun openStock(health: StockHealth?) {
         stockState.removeState("stock:$stockSession")
@@ -69,7 +78,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                 CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "templates" -> "Product templates"; "template-detail" -> "Template"; "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        "cart" -> "Unfinished bill"; "cart-products" -> "Add to cart"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
@@ -105,6 +114,19 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                     val shop = state
                     if (shop == null) { Text(error?.message ?: "Opening your shop…"); return@Column }
                     when (route) {
+                        "cart" -> CartEditor(shop, cartDraft, busy, error,
+                            edit = model::editCart, pause = ::back, add = { route = "cart-products" },
+                            retry = { model.flushCart() }, reload = model::reloadCart,
+                            remove = { productId -> cartDraft?.let { draft ->
+                                model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
+                            } },
+                            discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { route = "main"; destination = "Carts" }) } })
+                        "cart-products" -> cartDraft?.let { draft ->
+                            CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
+                                onChange = { model.error.value = null }, add = { productId, pieces ->
+                                    model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, productId, pieces) }, { model.openCart(draft.cart.id); route = "cart" })
+                                })
+                        }
                         "create", "edit", "template-form" -> key(route, selectedId, catalogPayload) {
                             if (route == "create" && catalog == null) OutlinedButton(onClick = { route = "templates" }, enabled = !busy) { Text("Choose template") }
                             ProductForm(shop, if (route == "edit") product else null, busy, error,
@@ -169,11 +191,11 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             retireLocation = { model.write({ retireLocation(it) }) })
                         "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
                         else -> when (destination) {
-                            "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock)
+                            "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock, onNewSale = ::newCart, onCarts = { destination = "Carts" }, busy = busy)
                             "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
                                 StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth)
                             }
-                            "Carts" -> ShopEmptyState("No unfinished carts", "Your unfinished customer bills will appear here.", R.drawable.ic_carts)
+                            "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
                             "More" -> {
                                 OutlinedButton(onClick = { route = "templates" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Product templates") }
                                 AppearanceSettings(shop.appearance, busy,
@@ -181,7 +203,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             }
                         }
                     }
-                    if (error != null && !(route == "detail" && error?.field == ProductField.LowStockThreshold) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
+                    if (error != null && route != "cart" && route != "cart-products" && !(route == "detail" && error?.field == ProductField.LowStockThreshold) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
                         !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
                 }
             }

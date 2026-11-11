@@ -66,10 +66,12 @@ internal fun ShopEmptyState(title: String, description: String, icon: Int) {
 }
 
 @Composable
-internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit) {
+internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit, onNewSale: () -> Unit, onCarts: () -> Unit, busy: Boolean) {
     ShopSection("Your parts counter") {
         Text("${shop.products.size} stocked products", style = MaterialTheme.typography.headlineSmall)
         Text("Work offline. Your stock stays on this phone.", style = MaterialTheme.typography.bodyMedium)
+        ShopPrimaryButton("New sale", enabled = !busy, onClick = onNewSale)
+        OutlinedButton(onClick = onCarts, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Unfinished carts: ${shop.carts.size}") }
         ShopPrimaryButton("Add product", onClick = onAdd)
         OutlinedButton(onClick = { onStock(null) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("View stock") }
     }
