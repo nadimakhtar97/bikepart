@@ -17,7 +17,7 @@ internal data class BalanceRow(@PrimaryKey val productId: String, val quantity: 
 internal data class OpeningRow(@PrimaryKey val productId: String, val quantity: Long, val recordedAt: Long)
 
 @Entity(tableName = "shop_state")
-internal data class StateRow(@PrimaryKey val id: Int = 1, val datasetId: String, val revision: Long = 0, val appearance: String = "System", @ColumnInfo(defaultValue = "1") val normalizerVersion: Int = LookupNames.VERSION)
+internal data class StateRow(@PrimaryKey val id: Int = 1, val datasetId: String, val revision: Long = 0, val appearance: String = "System", @ColumnInfo(defaultValue = "1") val normalizerVersion: Int = LookupNames.VERSION, @ColumnInfo(defaultValue = "'Package'") val labelMedia: String = "Package", @ColumnInfo(defaultValue = "1") val labelCopies: Long = 1)
 
 @Entity(tableName = "category_attributes", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT), ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId"), Index("productId"), Index(value = ["ownerKey", "normalizedName"], unique = true)])
 internal data class AttributeRow(@PrimaryKey val id: String, val categoryId: String, val name: String, val normalizedName: String, val type: String, val required: Boolean, val unit: String, val productId: String? = null, @ColumnInfo(defaultValue = "''") val ownerKey: String = "category:$categoryId", @ColumnInfo(defaultValue = "0") val retired: Boolean = false)
@@ -148,7 +148,7 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class, BarcodeAliasRow::class, BarcodeAssignmentRow::class], version = 13, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class, BarcodeAliasRow::class, BarcodeAssignmentRow::class], version = 14, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }
 
 @Entity(tableName = "barcode_aliases", primaryKeys = ["namespace", "code"])

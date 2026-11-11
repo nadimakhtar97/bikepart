@@ -33,6 +33,8 @@ class CategoryMigrationTest {
 
     @Test fun versionTwelveUpgradePreservesShopAndSupportsBarcodeAliases() = runBlocking { verifyTypedUpgrade(12) }
 
+    @Test fun versionThirteenUpgradePreservesShopAndSupportsLabelPreferences() = runBlocking { verifyTypedUpgrade(13) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -189,6 +191,13 @@ class CategoryMigrationTest {
                 after
             }
             Shop.open(context, name).use { assertEquals(aliased, it.snapshot()) }
+            Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                assertEquals(LabelPreferences(), before.labelPreferences)
+                shop.setLabelPreferences(LabelMedia.SharedBin, "3")
+                assertEquals(before.copy(revision = before.revision + 1, labelPreferences = LabelPreferences(LabelMedia.SharedBin, 3)), shop.snapshot())
+            }
+            Shop.open(context, name).use { assertEquals(LabelPreferences(LabelMedia.SharedBin, 3), it.snapshot().labelPreferences) }
             val archived = Shop.open(context, name).use { shop ->
                 val before = shop.snapshot()
                 before.carts.forEach { shop.discardCart(it.id, it.editVersion) }

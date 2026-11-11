@@ -1,5 +1,28 @@
 # Shop schema history
 
+## Version 14 — durable label preferences
+
+The additive 13 → 14 migration adds `shop_state.labelMedia` and `labelCopies`,
+defaulting to Package (50 × 30 mm) and one copy. Existing dataset/product
+identities, catalog, stock, histories, carts, aliases, appearance and revisions
+remain unchanged. Historical fixtures for versions 1–13 verify preservation,
+SQLite integrity, preference changes and reopen.
+
+`Shop.setLabelPreferences` validates positive ASCII whole-number copies within
+the signed 64-bit range and commits changed media/copies with one checked
+business revision. Unchanged preferences are a no-op. Commit interruption and
+revision overflow preserve the previous settings across reopen. Preferences
+belong to the durable business state exposed by `ShopSnapshot`, alongside
+appearance; a future backup codec must include them. Backup/restore has not
+landed yet.
+
+Preview generation is read-only. Both media profiles render the existing
+dataset-qualified product QR in black on white with four quiet-zone modules,
+an adjacent title of up to three lines and the complete wrapped permanent SKU.
+The screen also shows the full title. Price, stock, locations and copy count
+never enter the QR or artwork. Changing the physical roll/calibration and
+USB printing acceptance remain separate printer work.
+
 ## Version 13 — exact external barcode aliases
 
 The additive 12 → 13 migration adds `barcode_aliases` and append-only

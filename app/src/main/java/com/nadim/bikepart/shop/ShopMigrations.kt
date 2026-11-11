@@ -3,6 +3,13 @@ package com.nadim.bikepart.shop
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+internal val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE shop_state ADD COLUMN labelMedia TEXT NOT NULL DEFAULT 'Package'")
+        db.execSQL("ALTER TABLE shop_state ADD COLUMN labelCopies INTEGER NOT NULL DEFAULT 1")
+    }
+}
+
 internal val MIGRATION_12_13 = object : Migration(12, 13) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE TABLE barcode_aliases (namespace TEXT NOT NULL, code TEXT NOT NULL, kind TEXT NOT NULL, targetId TEXT NOT NULL, revision INTEGER NOT NULL, PRIMARY KEY(namespace, code))")
