@@ -66,3 +66,11 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_product_templates_categoryId ON product_templates(categoryId)")
     }
 }
+
+/** Correction audit and optional signed movement are one row, committed with the balance. */
+internal val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE stock_corrections (operationId TEXT NOT NULL, productId TEXT NOT NULL, kind TEXT NOT NULL, quantity INTEGER NOT NULL, reason TEXT NOT NULL, previousBalance INTEGER NOT NULL, resultingBalance INTEGER NOT NULL, movement INTEGER, recordedAt INTEGER NOT NULL, revision INTEGER NOT NULL, PRIMARY KEY(operationId), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX index_stock_corrections_productId ON stock_corrections(productId)")
+    }
+}

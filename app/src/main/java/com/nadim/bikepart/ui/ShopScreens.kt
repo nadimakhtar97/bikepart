@@ -106,7 +106,7 @@ internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String)
 }
 
 @Composable
-internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit) {
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit) {
     Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
     Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
     ProductPhoto(product.photo, loadPhoto, Modifier.fillMaxWidth().height(160.dp))
@@ -114,6 +114,11 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
         Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
         Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
+    }
+    ShopSection("Correct stock") {
+        CorrectionKind.entries.forEach { kind ->
+            OutlinedButton(onClick = { onCorrection(kind) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Record ${kind.label.lowercase()}") }
+        }
     }
     if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete · complete required fields when editing. Stock and selling price remain available.", style = MaterialTheme.typography.bodyMedium)
     ShopSection("Product details") {
@@ -124,8 +129,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             Text(definition.name + (if (definition.retired) " (retired)" else "") + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
         }
         Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodyMedium)
-        Text("Opening stock: ${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.bodyMedium)
-        if (product.quantity == 0L) Text("No stock movements", style = MaterialTheme.typography.bodyMedium)
+        Text("Opening stock: ${indianNumber(shop.openings[product.id]?.quantity ?: 0L)} pieces", style = MaterialTheme.typography.bodyMedium)
     }
     if (product.historicalAttributes.isNotEmpty()) ShopSection("Historical attributes") {
         product.historicalAttributes.forEach { (_, definitionId, value) ->
@@ -133,6 +137,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             Text(definition.name + ": " + attributeDisplay(shop, value) + " " + definition.unit, style = MaterialTheme.typography.bodyMedium)
         }
     }
+    CorrectionHistory(shop.corrections.filter { it.productId == product.id })
     FindingSummary(shop, product)
     ShopPrimaryButton("Copy catalog details", enabled = !busy, onClick = onCopy)
     OutlinedButton(onTemplate, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Create template from product") }

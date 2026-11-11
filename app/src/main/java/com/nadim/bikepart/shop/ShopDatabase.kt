@@ -49,8 +49,16 @@ internal data class ProductPhotoRow(@PrimaryKey val productId: String, val sha25
 @Entity(tableName = "product_templates", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId")])
 internal data class TemplateRow(@PrimaryKey val id: String, val categoryId: String, val catalog: String, val retired: Boolean = false)
 
+// A count with no difference retains an audit row and has no movement.
+@Entity(tableName = "stock_corrections", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
+internal data class CorrectionRow(@PrimaryKey val operationId: String, val productId: String, val kind: String, val quantity: Long, val reason: String, val previousBalance: Long, val resultingBalance: Long, val movement: Long?, val recordedAt: Long, val revision: Long)
+
 @Dao
 internal interface ShopDao {
+    @Query("SELECT * FROM stock_corrections ORDER BY revision") suspend fun corrections(): List<CorrectionRow>
+    @Query("SELECT * FROM stock_corrections WHERE operationId = :id") suspend fun correction(id: String): CorrectionRow?
+    @Insert suspend fun insertCorrection(row: CorrectionRow)
+    @Update suspend fun updateBalance(row: BalanceRow)
     @Query("SELECT * FROM product_templates ORDER BY id") suspend fun templates(): List<TemplateRow>
     @Insert suspend fun insertTemplate(row: TemplateRow)
     @Update suspend fun updateTemplate(row: TemplateRow)
@@ -84,6 +92,7 @@ internal interface ShopDao {
     @Query("SELECT * FROM categories ORDER BY position, name") suspend fun categories(): List<CategoryRow>
     @Query("SELECT * FROM products ORDER BY title, id") suspend fun products(): List<ProductRow>
     @Query("SELECT * FROM balances") suspend fun balances(): List<BalanceRow>
+    @Query("SELECT * FROM opening_stock") suspend fun allOpenings(): List<OpeningRow>
     @Query("SELECT * FROM opening_stock WHERE productId = :id") suspend fun openings(id: String): List<OpeningRow>
     @Query("SELECT * FROM shop_state WHERE id = 1") suspend fun state(): StateRow?
     @Query("SELECT revision FROM shop_state WHERE id = 1") fun revisions(): Flow<Long>
@@ -96,5 +105,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class], version = 6, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class], version = 7, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }

@@ -19,6 +19,8 @@ class CategoryMigrationTest {
 
     @Test fun versionFiveUpgradePreservesTypedCatalogAndSupportsTemplates() = runBlocking { verifyTypedUpgrade(5) }
 
+    @Test fun versionSixUpgradePreservesTypedCatalogAndSupportsCorrections() = runBlocking { verifyTypedUpgrade(6) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -48,6 +50,7 @@ class CategoryMigrationTest {
                 db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'd', NULL, '008.00', NULL)")
                 db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'f', NULL, NULL, '[\"o\"]')")
                 if (version >= 5) db.execSQL("INSERT INTO product_photos VALUES ('p', '${"a".repeat(64)}', 3)")
+                if (version >= 6) db.execSQL("INSERT INTO product_templates VALUES ('t', 'c', ?, 0)", arrayOf(CatalogDraft("Template bolt", "c", "Original template").encode()))
                 db.version = version
             }
             val values = mapOf("d" to AttributeValue.Decimal("008.00"), "f" to AttributeValue.Choices(setOf("o")))
@@ -61,6 +64,7 @@ class CategoryMigrationTest {
                 assertTrue(before.makes.isEmpty())
                 assertTrue(before.models.isEmpty())
                 assertTrue(before.locations.isEmpty())
+                if (version >= 6) assertEquals(listOf(ProductTemplate("t", CatalogDraft("Template bolt", "c", "Original template"), false)), before.templates)
                 val make = shop.createMake("Workshop make")
                 val model = shop.createModel(make, "Workshop model")
                 val location = shop.createLocation("Shelf")
@@ -81,6 +85,21 @@ class CategoryMigrationTest {
                 assertEquals(12L, after.products.single().quantity)
                 assertEquals(80L, after.products.single().priceRupees)
                 assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
+                if (version >= 6) assertEquals("Original template", after.templates.single().catalog.description)
+            }
+            Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                val id = before.products.single().id
+                assertTrue(shop.correctionHistory(id).isEmpty())
+                shop.correctStock("migrated-count", id, CorrectionKind.PhysicalCount, "10", "Recount after upgrade")
+                assertEquals(10L, shop.snapshot().products.single().quantity)
+                assertEquals(before.revision + 1, shop.snapshot().revision)
+                assertEquals(-2L, shop.correctionHistory(id).single().movement)
+                assertEquals(12L, shop.openingHistory(id).single().quantity)
+            }
+            Shop.open(context, name).use { shop ->
+                assertEquals(10L, shop.snapshot().products.single().quantity)
+                assertEquals("Recount after upgrade", shop.correctionHistory(shop.snapshot().products.single().id).single().reason)
             }
             SQLiteDatabase.openDatabase(path.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
                 db.rawQuery("PRAGMA foreign_key_check", null).use { assertFalse(it.moveToFirst()) }
@@ -130,6 +149,20 @@ class CategoryMigrationTest {
                 assertEquals(9L, shop.snapshot().revision)
                 assertEquals(AttributeValue.Decimal("8.00"), shop.snapshot().products.single().attributes.values.single())
                 assertEquals(12L, shop.openingHistory("product-1").single().quantity)
+            }
+            Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                val id = before.products.single().id
+                assertTrue(shop.correctionHistory(id).isEmpty())
+                shop.correctStock("migrated-count", id, CorrectionKind.PhysicalCount, "10", "Recount after upgrade")
+                assertEquals(10L, shop.snapshot().products.single().quantity)
+                assertEquals(before.revision + 1, shop.snapshot().revision)
+                assertEquals(-2L, shop.correctionHistory(id).single().movement)
+                assertEquals(12L, shop.openingHistory(id).single().quantity)
+            }
+            Shop.open(context, name).use { shop ->
+                assertEquals(10L, shop.snapshot().products.single().quantity)
+                assertEquals("Recount after upgrade", shop.correctionHistory(shop.snapshot().products.single().id).single().reason)
             }
             SQLiteDatabase.openDatabase(path.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
                 db.rawQuery("PRAGMA foreign_key_check", null).use { assertFalse(it.moveToFirst()) }

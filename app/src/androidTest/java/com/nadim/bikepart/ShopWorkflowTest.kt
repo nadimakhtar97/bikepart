@@ -20,6 +20,85 @@ class ShopWorkflowTest {
     @Before fun launchApp() { scenario = ActivityScenario.launch(MainActivity::class.java) }
     @After fun closeApp() { scenario.close() }
 
+    @Test fun stockCorrectionsValidatePersistAndRemainUsableAcrossAppearances() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val originalScale = Settings.System.getFloat(context.contentResolver, Settings.System.FONT_SCALE, 1f)
+        var originalAppearance = com.nadim.bikepart.shop.Appearance.System
+        val title = "Stock correction workshop bolt with a long descriptive product title " + System.nanoTime()
+        var productId = ""
+        fun shell(command: String) { instrumentation.uiAutomation.executeShellCommand(command).use { android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() } }
+        fun await(text: String) {
+            try { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
+            catch (failure: AssertionError) { throw AssertionError("Waiting for $text\n" + compose.onRoot().printToString(), failure) }
+        }
+        fun click(text: String) {
+            val node = compose.onNodeWithText(text)
+            node.performScrollTo()
+            node.assertIsDisplayed().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+        }
+        fun capture(name: String) {
+            val file = java.io.File(context.getExternalFilesDir(null), "$name.png")
+            instrumentation.uiAutomation.takeScreenshot().let { bitmap -> file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle() }
+            shell("cp ${file.absolutePath} /data/local/tmp/$name.png")
+        }
+        kotlinx.coroutines.runBlocking { com.nadim.bikepart.shop.Shop.open(context).use {
+            originalAppearance = it.snapshot().appearance
+            productId = it.createProduct(title, it.snapshot().categories.first().id, "", "12", Long.MAX_VALUE.toString())
+        } }
+        try {
+            for (scale in listOf(1f, 2f)) for (mode in listOf(com.nadim.bikepart.shop.Appearance.Light, com.nadim.bikepart.shop.Appearance.Dark)) {
+                scenario.close()
+                shell("settings put system font_scale $scale")
+                kotlinx.coroutines.runBlocking { com.nadim.bikepart.shop.Shop.open(context).use { it.setAppearance(mode) } }
+                scenario = ActivityScenario.launch(MainActivity::class.java)
+                await("Stock")
+                compose.onNodeWithText("Stock").performClick()
+                await(title); click(title)
+                compose.onNodeWithText("Selling price: ₹92,23,37,20,36,85,47,75,807").performScrollTo().assertIsDisplayed()
+                click("Record physical count")
+                click("Save correction")
+                await("Correction quantity must be a nonnegative whole number")
+                compose.onNodeWithText("Counted pieces").performScrollTo().performTextInput("12")
+                click("Save correction")
+                await("Explain why this stock correction is needed")
+                compose.onNodeWithText("Reason").performScrollTo().performTextInput("All shelves counted and unchanged")
+                compose.onNodeWithText("Save correction").performScrollTo().assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+                capture("correction-keyboard-${mode.name.lowercase()}-$scale")
+                androidx.test.espresso.Espresso.closeSoftKeyboard()
+                scenario.recreate()
+                compose.onNodeWithText("Reason").performScrollTo().assertTextContains("All shelves counted and unchanged")
+                compose.onNodeWithText("Save correction").performScrollTo()
+                capture("correction-${mode.name.lowercase()}-$scale")
+                click("Save correction")
+                await("Stock correction history")
+                compose.onAllNodesWithText("No stock change · counted 12 pieces").onFirst().performScrollTo().assertIsDisplayed()
+                capture("correction-history-${mode.name.lowercase()}-$scale")
+            }
+            for (kind in listOf("damage", "loss")) {
+                click("Record $kind")
+                compose.onNodeWithText("Pieces to remove").performTextInput("0")
+                compose.onNodeWithText("Reason").performTextInput("Workshop $kind")
+                click("Save correction"); await("Enter a positive whole quantity to remove")
+                compose.onNodeWithText("Pieces to remove").performScrollTo().performTextReplacement("2")
+                click("Save correction"); await("Stock correction history")
+            }
+            compose.onNodeWithText("8 pieces").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("Opening stock: 12 pieces").performScrollTo().assertIsDisplayed()
+            scenario.close()
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+            await("Stock"); compose.onNodeWithText("Stock").performClick(); await(title); click(title)
+            compose.onNodeWithText("8 pieces").performScrollTo().assertIsDisplayed()
+            kotlinx.coroutines.runBlocking { com.nadim.bikepart.shop.Shop.open(context).use {
+                org.junit.Assert.assertEquals(6, it.correctionHistory(productId).size)
+                org.junit.Assert.assertEquals(8L, it.snapshot().products.single { product -> product.id == productId }.quantity)
+            } }
+        } finally {
+            shell("settings put system font_scale $originalScale")
+            kotlinx.coroutines.runBlocking { com.nadim.bikepart.shop.Shop.open(context).use { it.setAppearance(originalAppearance) } }
+        }
+    }
+
     @Test fun findingSelectorsValidateAndRemainReadableAcrossThemesAndFontScales() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext

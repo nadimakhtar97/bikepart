@@ -191,3 +191,32 @@ but leave active selection. Existing products and templates never hold mutable
 links to source-product custom definitions or to other template payloads. Photo
 bytes may be shared by immutable hash; retaining all published blobs keeps old
 template references available. Backup/restore has not landed yet.
+
+## Version 7 — reasoned stock corrections
+
+The additive 6 → 7 migration adds `stock_corrections` without changing existing
+catalog, opening stock, balances, settings or revisions. File-backed fixtures
+upgrade every historical schema (1–6), verify preserved state through `Shop`,
+record and reopen a correction, and check SQLite integrity and foreign keys.
+
+Each correction retains its operation identity, product, kind, entered whole
+quantity, explanatory reason, transaction-current before/after balances,
+timestamp and committed business revision. Its nullable signed movement is
+absent for an unchanged physical count. Audit order uses business revision,
+so equal timestamps or phone clock changes cannot reorder events. Positive
+opening stock plus correction movements reconciles to the cached balance.
+
+`Shop.correctStock` computes count differences within the Room transaction.
+Damage and loss remove positive quantities only; counts accept zero. Invalid
+input, insufficient stock, integer/revision overflow or interrupted writes leave
+no partial audit, balance or revision change. The audit row, optional movement,
+balance and business revision commit together. Retrying an operation identity
+with the same normalized inputs is a no-op, including after reopen; reusing it
+for different inputs is rejected. Compose retains the operation identity and
+draft through activity recreation and disables edits while saving.
+
+Product details expose separate count, damage and loss forms and readable audit
+history, while showing original opening stock independently of current stock.
+These forms reuse the adopted native theme, grouped surfaces and shared fields;
+they introduce no new theme tokens or inherited design changes. Backup/restore
+has not landed yet.

@@ -13,8 +13,8 @@ data class HistoricalAttribute(val id: String, val definitionId: String, val val
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
-data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList())
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo") }
+data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap())
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos) : AutoCloseable {
@@ -47,7 +47,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.makes().map { MotorcycleMake(it.id, it.name, it.retired) },
             dao.models().map { MotorcycleModel(it.id, it.makeId, it.name, it.retired) },
             dao.locations().map { StorageLocation(it.id, it.name, it.retired) },
-            dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) })
+            dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) }, dao.corrections().map { it.toCorrection() }, dao.allOpenings().associate { it.productId to OpeningStock(it.quantity, it.recordedAt) })
     }
 
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
@@ -405,6 +405,32 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         if (state.appearance != appearance.name) dao.putState(state.copy(appearance = appearance.name, revision = Math.addExact(state.revision, 1)))
     }
 
+    /** Retry with the same operation identity and inputs; reuse for a different command is rejected. */
+    suspend fun correctStock(operationId: String, productId: String, kind: CorrectionKind, quantity: String, reason: String) = database.withTransaction {
+        require(operationId.isNotBlank()) { "A correction operation identity is required" }
+        val amount = parseWhole(quantity, ProductField.CorrectionQuantity)
+        if (kind != CorrectionKind.PhysicalCount && amount == 0L) throw ShopValidation(ProductField.CorrectionQuantity, "Enter a positive whole quantity to remove")
+        val explanation = reason.trim()
+        if (explanation.isEmpty()) throw ShopValidation(ProductField.CorrectionReason, "Explain why this stock correction is needed")
+        val previous = dao.correction(operationId)
+        if (previous != null) {
+            require(previous.productId == productId && previous.kind == kind.name && previous.quantity == amount && previous.reason == explanation) { "This operation identity already belongs to a different correction" }
+            return@withTransaction
+        }
+        val balance = dao.balances().singleOrNull { it.productId == productId }
+            ?: throw IllegalArgumentException("Choose an existing stocked product")
+        val result = if (kind == CorrectionKind.PhysicalCount) amount else {
+            if (amount > balance.quantity) throw ShopValidation(ProductField.CorrectionQuantity, "Cannot remove more than the current stock")
+            Math.subtractExact(balance.quantity, amount)
+        }
+        val difference = Math.subtractExact(result, balance.quantity)
+        dao.insertCorrection(CorrectionRow(operationId, productId, kind.name, amount, explanation, balance.quantity, result, difference.takeIf { it != 0L }, System.currentTimeMillis(), Math.addExact(requireNotNull(dao.state()).revision, 1)))
+        dao.updateBalance(balance.copy(quantity = result))
+        advanceRevision()
+    }
+
+    suspend fun correctionHistory(productId: String): List<StockCorrection> = dao.corrections().filter { it.productId == productId }.map { it.toCorrection() }
+
     suspend fun openingHistory(id: String): List<OpeningStock> = dao.openings(id).map { OpeningStock(it.quantity, it.recordedAt) }
 
     private suspend fun validateProduct(title: String, categoryId: String) {
@@ -421,7 +447,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
             return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }

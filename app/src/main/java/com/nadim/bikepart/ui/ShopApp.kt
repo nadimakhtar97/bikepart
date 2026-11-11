@@ -38,6 +38,8 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     val busy by model.busy.collectAsStateWithLifecycle()
     var destination by rememberSaveable { mutableStateOf("Home") }
     var route by rememberSaveable { mutableStateOf("main") }
+    var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
+    var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
     var catalogPayload by rememberSaveable { mutableStateOf<String?>(null) }
     var templateId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -45,7 +47,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     val template = state?.templates?.find { it.id == templateId }
     fun beginCatalog(draft: CatalogDraft, target: String, id: String? = null) { model.error.value = null; catalogPayload = draft.encode(); templateId = id; route = target }
     val product = state?.products?.find { it.id == selectedId }
-    fun back() { route = when (route) { "edit", "fields" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }; model.error.value = null }
+    fun back() { route = when (route) { "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }; model.error.value = null }
     fun addProduct() { model.error.value = null; catalogPayload = null; route = "create" }
     BackHandler(route != "main") { if (!busy) back() }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
@@ -56,7 +58,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                 CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "templates" -> "Product templates"; "template-detail" -> "Template"; "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
@@ -130,7 +132,14 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             onEdit = { beginCatalog(template.catalog, "template-form", template.id) },
                             onUse = { beginCatalog(shop.prefillTemplate(template.id), "create") },
                             onRetire = { model.write({ retireTemplate(template.id) }) })
-                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") })
+                        "correction" -> if (product != null) key(correctionOperation) {
+                            StockCorrectionForm(product, CorrectionKind.valueOf(correctionKind), busy, error,
+                                onChange = { model.error.value = null },
+                                save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
+                        }
+                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
+                            model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
+                        })
                         "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
                             custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
                             promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
@@ -155,7 +164,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             }
                         }
                     }
-                    if (error != null && route != "create" && route != "edit" && route != "template-form" &&
+                    if (error != null && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
                         !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
                 }
             }
