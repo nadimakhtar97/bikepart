@@ -35,3 +35,19 @@ internal val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("CREATE INDEX index_attribute_values_definitionId ON attribute_values(definitionId)")
     }
 }
+
+/** Finding associations are additive; an empty fitment set retains unknown compatibility. */
+internal val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE motorcycle_makes (id TEXT NOT NULL, name TEXT NOT NULL, normalizedName TEXT NOT NULL, retired INTEGER NOT NULL, PRIMARY KEY(id))")
+        db.execSQL("CREATE UNIQUE INDEX index_motorcycle_makes_normalizedName ON motorcycle_makes(normalizedName)")
+        db.execSQL("CREATE TABLE motorcycle_models (id TEXT NOT NULL, makeId TEXT NOT NULL, name TEXT NOT NULL, normalizedName TEXT NOT NULL, retired INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(makeId) REFERENCES motorcycle_makes(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE UNIQUE INDEX index_motorcycle_models_makeId_normalizedName ON motorcycle_models(makeId, normalizedName)")
+        db.execSQL("CREATE TABLE storage_locations (id TEXT NOT NULL, name TEXT NOT NULL, normalizedName TEXT NOT NULL, retired INTEGER NOT NULL, PRIMARY KEY(id))")
+        db.execSQL("CREATE UNIQUE INDEX index_storage_locations_normalizedName ON storage_locations(normalizedName)")
+        db.execSQL("CREATE TABLE product_fitments (productId TEXT NOT NULL, modelId TEXT NOT NULL, PRIMARY KEY(productId, modelId), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT, FOREIGN KEY(modelId) REFERENCES motorcycle_models(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX index_product_fitments_modelId ON product_fitments(modelId)")
+        db.execSQL("CREATE TABLE product_locations (productId TEXT NOT NULL, locationId TEXT NOT NULL, PRIMARY KEY(productId, locationId), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT, FOREIGN KEY(locationId) REFERENCES storage_locations(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX index_product_locations_locationId ON product_locations(locationId)")
+    }
+}

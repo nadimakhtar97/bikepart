@@ -11,13 +11,17 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CategoryMigrationTest {
-    @Test fun versionTwoUpgradePreservesTypedValuesAndSupportsEvolutionAfterReopen() = runBlocking {
+    @Test fun versionTwoUpgradePreservesTypedValuesAndSupportsEvolutionAfterReopen() = runBlocking { verifyTypedUpgrade(2) }
+
+    @Test fun versionThreeUpgradePreservesTypedCatalogAndSupportsFindingDetails() = runBlocking { verifyTypedUpgrade(3) }
+
+    private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
         val path = context.getDatabasePath(name)
         path.parentFile!!.mkdirs()
         try {
-            val schema = InstrumentationRegistry.getInstrumentation().context.assets.open("com.nadim.bikepart.shop.ShopDatabase/2.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
+            val schema = InstrumentationRegistry.getInstrumentation().context.assets.open("com.nadim.bikepart.shop.ShopDatabase/$version.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
             SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->
                 val entities = schema.getJSONArray("entities")
                 for (index in 0 until entities.length()) {
@@ -34,12 +38,12 @@ class CategoryMigrationTest {
                 db.execSQL("INSERT INTO balances VALUES ('p', 12)")
                 db.execSQL("INSERT INTO opening_stock VALUES ('p', 12, 123456)")
                 db.execSQL("INSERT INTO shop_state VALUES (1, 'stable-dataset', 7, 'Dark', 1)")
-                db.execSQL("INSERT INTO category_attributes VALUES ('d', 'c', 'Diameter', 'diameter', 'Decimal', 0, 'mm')")
-                db.execSQL("INSERT INTO category_attributes VALUES ('f', 'c', 'Finish', 'finish', 'MultipleChoice', 0, '')")
-                db.execSQL("INSERT INTO attribute_options VALUES ('o', 'f', 'Zinc', 'zinc')")
-                db.execSQL("INSERT INTO attribute_values VALUES ('p', 'd', NULL, '008.00', NULL)")
-                db.execSQL("INSERT INTO attribute_values VALUES ('p', 'f', NULL, NULL, '[\"o\"]')")
-                db.version = 2
+                db.execSQL("INSERT INTO category_attributes (id, categoryId, name, normalizedName, type, required, unit${if (version == 3) ", ownerKey" else ""}) VALUES ('d', 'c', 'Diameter', 'diameter', 'Decimal', 0, 'mm'${if (version == 3) ", 'category:c'" else ""})")
+                db.execSQL("INSERT INTO category_attributes (id, categoryId, name, normalizedName, type, required, unit${if (version == 3) ", ownerKey" else ""}) VALUES ('f', 'c', 'Finish', 'finish', 'MultipleChoice', 0, ''${if (version == 3) ", 'category:c'" else ""})")
+                db.execSQL("INSERT INTO attribute_options (id, definitionId, name, normalizedName${if (version == 3) ", retired" else ""}) VALUES ('o', 'f', 'Zinc', 'zinc'${if (version == 3) ", 0" else ""})")
+                db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'd', NULL, '008.00', NULL)")
+                db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'f', NULL, NULL, '[\"o\"]')")
+                db.version = version
             }
             val values = mapOf("d" to AttributeValue.Decimal("008.00"), "f" to AttributeValue.Choices(setOf("o")))
             Shop.open(context, name).use { shop ->
@@ -49,6 +53,13 @@ class CategoryMigrationTest {
                 assertEquals(Appearance.Dark, before.appearance)
                 assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values), before.products.single())
                 assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
+                assertTrue(before.makes.isEmpty())
+                assertTrue(before.models.isEmpty())
+                assertTrue(before.locations.isEmpty())
+                val make = shop.createMake("Workshop make")
+                val model = shop.createModel(make, "Workshop model")
+                val location = shop.createLocation("Shelf")
+                shop.editProduct("p", "Bolt", "c", "Original", modelIds = setOf(model), locationIds = setOf(location))
                 shop.retireOption("o")
                 shop.replaceAttribute("d", "New diameter", AttributeType.Text)
                 val target = shop.createCategory("Other")
@@ -56,7 +67,9 @@ class CategoryMigrationTest {
             }
             Shop.open(context, name).use { shop ->
                 val after = shop.snapshot()
-                assertEquals(11L, after.revision)
+                assertEquals(15L, after.revision)
+                assertEquals(setOf(after.models.single().id), after.products.single().modelIds)
+                assertEquals(setOf(after.locations.single().id), after.products.single().locationIds)
                 assertEquals(values, after.products.single().historicalAttributes.associate { it.definitionId to it.value })
                 assertTrue(after.options.single().retired)
                 assertTrue(after.attributes.single { it.id == "d" }.retired)

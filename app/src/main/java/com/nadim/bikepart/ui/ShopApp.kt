@@ -49,7 +49,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                 CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
@@ -93,13 +93,18 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                     attribute = { input, done -> model.write({ createAttribute(categoryId = input.categoryId, name = input.name, type = input.type, required = input.required, unit = input.unit) }, done) },
                                     option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
                                 ),
+                                findingLookups = FindingLookups(
+                                    make = { name, selected -> model.write({ selected(createMake(name)) }) },
+                                    model = { make, name, selected -> model.write({ selected(createModel(make, name)) }) },
+                                    location = { name, selected -> model.write({ selected(createLocation(name)) }) },
+                                ),
                                 save = { input ->
                                     val editing = if (route == "edit") product else null
                                     model.write({
-                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes, input.categoryMappings)
+                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes, input.categoryMappings, input.modelIds, input.locationIds)
                                         else selectedId = createProduct(title = input.title, categoryId = input.categoryId,
                                             description = input.description, openingPieces = input.openingPieces,
-                                            priceRupees = input.priceRupees, allowSimilar = input.allowSimilar, attributes = input.attributes)
+                                            priceRupees = input.priceRupees, allowSimilar = input.allowSimilar, attributes = input.attributes, modelIds = input.modelIds, locationIds = input.locationIds)
                                     }, { route = "detail" })
                                 },
                             )
@@ -113,13 +118,17 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             required = { id, required -> model.write({ setAttributeRequired(id, required) }) },
                             replace = { id, input, done -> model.write({ replaceAttribute(id, input.name, input.type, input.required, input.unit) }, done) },
                         ))
+                        "finding-lookups" -> FindingLookupSettings(shop, busy,
+                            retireMake = { model.write({ retireMake(it) }) },
+                            retireModel = { model.write({ retireModel(it) }) },
+                            retireLocation = { model.write({ retireLocation(it) }) })
                         "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
                         else -> when (destination) {
                             "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = { destination = "Stock" })
                             "Stock" -> StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" })
                             "Carts" -> ShopEmptyState("No unfinished carts", "Your unfinished customer bills will appear here.", R.drawable.ic_carts)
                             "More" -> AppearanceSettings(shop.appearance, busy,
-                                onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" })
+                                onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" }, onFindingLookups = { route = "finding-lookups" })
                         }
                     }
                     if (error != null && route != "create" && route != "edit" &&

@@ -24,7 +24,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
     val title: String, val categoryId: String, val description: String,
-    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>, val categoryMappings: Map<String, String>,
+    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>, val categoryMappings: Map<String, String>, val modelIds: Set<String>, val locationIds: Set<String>,
 )
 
 @Composable
@@ -128,12 +128,13 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             Text(definition.name + ": " + attributeDisplay(shop, value) + " " + definition.unit, style = MaterialTheme.typography.bodyMedium)
         }
     }
+    FindingSummary(shop, product)
     ShopPrimaryButton("Edit details", onClick = onEdit)
     OutlinedButton(onClick = onManage, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fields") }
 }
 
 @Composable
-internal fun AppearanceSettings(appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit, onCategories: () -> Unit) {
+internal fun AppearanceSettings(appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit, onCategories: () -> Unit, onFindingLookups: () -> Unit) {
     ShopSection("Appearance") {
         Text("Now in Android · Default theme", style = MaterialTheme.typography.bodyMedium)
         Column(Modifier.selectableGroup()) {
@@ -149,6 +150,7 @@ internal fun AppearanceSettings(appearance: Appearance, busy: Boolean, onAppeara
         Text("System follows your phone’s light or dark appearance.", style = MaterialTheme.typography.bodyMedium)
     }
     ShopSection("Catalog setup") {
+        OutlinedButton(onClick = onFindingLookups, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fitment and locations") }
         OutlinedButton(onClick = onCategories, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Edit categories") }
     }
 }
@@ -169,7 +171,11 @@ internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (Stri
 }
 
 @Composable
-internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, save: (ProductFormInput) -> Unit) {
+internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, findingLookups: FindingLookups, save: (ProductFormInput) -> Unit) {
+    var models by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.modelIds ?: emptySet()) }
+    var locations by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.locationIds ?: emptySet()) }
+    var assigned by rememberSaveable { mutableStateOf(models.isNotEmpty()) }
+    var findingError by remember { mutableStateOf<ShopError?>(null) }
     var title by rememberSaveable { mutableStateOf(product?.title ?: "") }
     var category by rememberSaveable { mutableStateOf(product?.categoryId ?: "") }
     var description by rememberSaveable { mutableStateOf(product?.description ?: "") }
@@ -190,6 +196,9 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
     if (category.isNotEmpty()) CategoryFields(shop, category, values, busy, error, lookups, product?.id,
         onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
+    FindingFields(shop, product, models, locations, busy, findingError ?: error, findingLookups, assigned,
+        onAssigned = { assigned = it; findingError = null; onChange() },
+        onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() })
     if (product == null) ShopSection("Opening stock and price") {
         ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
             error?.takeIf { it.field == ProductField.OpeningStock }, number = true)
@@ -206,7 +215,11 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         Text("Save as a distinct product", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
     }
     ShopPrimaryButton(if (busy) "Saving…" else "Save product", enabled = !busy) {
-        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.appliesTo(category, product?.id) } }, mappings))
+        if (assigned && models.isEmpty()) {
+            findingError = ShopError("Choose at least one motorcycle model", ProductField.Fitment)
+            return@ShopPrimaryButton
+        }
+        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.appliesTo(category, product?.id) } }, mappings, models, locations))
     }
 }
 

@@ -20,6 +20,121 @@ class ShopWorkflowTest {
     @Before fun launchApp() { scenario = ActivityScenario.launch(MainActivity::class.java) }
     @After fun closeApp() { scenario.close() }
 
+    @Test fun findingSelectorsValidateAndRemainReadableAcrossThemesAndFontScales() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val original = Settings.System.getFloat(context.contentResolver, Settings.System.FONT_SCALE, 1f)
+        val suffix = System.nanoTime().toString()
+        val make = "Workshop motorcycle manufacturer with a long staff supplied name $suffix"
+        val model = "Replacement assembly model with extended description $suffix"
+        val location = "Upper storage shelf beside the workshop service counter $suffix"
+        fun shell(command: String) { instrumentation.uiAutomation.executeShellCommand(command).use { android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() } }
+        kotlinx.coroutines.runBlocking {
+            com.nadim.bikepart.shop.Shop.open(context).use {
+                val parent = it.createMake(make)
+                it.createModel(parent, model)
+                it.createLocation(location)
+            }
+        }
+        try {
+            for (scale in listOf(1f, 2f)) for (mode in listOf(com.nadim.bikepart.shop.Appearance.Light, com.nadim.bikepart.shop.Appearance.Dark)) {
+                scenario.close()
+                shell("settings put system font_scale $scale")
+                kotlinx.coroutines.runBlocking { com.nadim.bikepart.shop.Shop.open(context).use { it.setAppearance(mode) } }
+                scenario = ActivityScenario.launch(MainActivity::class.java)
+                compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
+                compose.onNodeWithText("Add product").performClick()
+                compose.onNodeWithText("Assigned fitment").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                compose.onNodeWithText("Save product").performScrollTo().performClick()
+                compose.waitUntil(10_000) { compose.onAllNodesWithText("Choose at least one motorcycle model").fetchSemanticsNodes().isNotEmpty() }
+                compose.onNodeWithText("Search or add make").performScrollTo().performTextInput(suffix)
+                compose.onNodeWithText(make).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                compose.onNodeWithText(model).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                scenario.recreate()
+                val fitmentName = "fitment-${mode.name.lowercase()}-$scale"
+                compose.onNodeWithText("Search or add make").performScrollTo()
+                java.io.File(context.getExternalFilesDir(null), "$fitmentName.png").let { file ->
+                    instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
+                        file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                        bitmap.recycle()
+                    }
+                    shell("cp ${file.absolutePath} /data/local/tmp/$fitmentName.png")
+                }
+                compose.onNodeWithText("Search or add location").performScrollTo().performTextInput(suffix)
+                compose.onNodeWithText(location).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                val name = "finding-${mode.name.lowercase()}-$scale"
+                val file = java.io.File(context.getExternalFilesDir(null), "$name.png")
+                instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
+                    file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                    bitmap.recycle()
+                }
+                shell("cp ${file.absolutePath} /data/local/tmp/$name.png")
+            }
+            compose.onNodeWithText("Back").performClick()
+            compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Manage fitment and locations").performScrollTo().performClick()
+            compose.onNodeWithText("Find make, model or location").performTextInput(suffix)
+            compose.onNodeWithText("Retire: $make").performScrollTo().performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("$make (retired)").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Retire: $location").performScrollTo().performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("$location (retired)").fetchSemanticsNodes().isNotEmpty() }
+        } finally { shell("settings put system font_scale $original") }
+    }
+
+    @Test fun fitmentAndLocationsSurviveDraftCancellationAndDurableReopen() {
+        val suffix = System.nanoTime().toString()
+        val make = "Workshop make $suffix"
+        val title = "Fitment product $suffix"
+        fun await(text: String) = compose.waitUntil(10_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+        fun click(text: String) {
+            val node = compose.onNodeWithText(text, useUnmergedTree = true)
+            if (text !in listOf("Back", "Stock")) node.performScrollTo()
+            node.performClick()
+        }
+        fun add(label: String, button: String, name: String) {
+            compose.onNodeWithText(label).performScrollTo().performTextInput(name)
+            click(button)
+            compose.waitUntil(10_000) { compose.onAllNodes(hasText(name) and isSelected()).fetchSemanticsNodes().isNotEmpty() }
+        }
+        await("Add product")
+        click("Add product")
+        click("Assigned fitment")
+        add("Search or add make", "Add make", make)
+        add("Search or add model", "Add model", "Model A $suffix")
+        add("Search or add model", "Add model", "Model B $suffix")
+        add("Search or add location", "Add location", "Shelf A $suffix")
+        add("Search or add location", "Add location", "Shelf B $suffix")
+        click("Back")
+        scenario.close()
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        await("Add product")
+        click("Add product")
+        compose.onNodeWithText("Title (required)").performTextInput(title)
+        click("Bolts")
+        click("Assigned fitment")
+        click(make)
+        for (name in listOf("Model A $suffix", "Model B $suffix", "Shelf A $suffix", "Shelf B $suffix")) click(name)
+        compose.onNodeWithText("Opening stock (pieces)").performScrollTo().performTextReplacement("12")
+        compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("80")
+        click("Save product")
+        await("12 pieces")
+        compose.onNodeWithText("$make · Model A $suffix").performScrollTo().assertExists()
+        click("Edit details")
+        click("Unknown fitment")
+        click("Shelf B $suffix")
+        click("Save product")
+        await("Fitment: Unknown")
+        scenario.close()
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        await("Stock")
+        click("Stock")
+        click(title)
+        compose.onNodeWithText("Fitment: Unknown").performScrollTo().assertExists()
+        compose.onNodeWithText("Location: Shelf A $suffix").performScrollTo().assertExists()
+        compose.onNodeWithText("Location: Shelf B $suffix").assertDoesNotExist()
+        compose.onNodeWithText("12 pieces").performScrollTo().assertExists()
+    }
+
     @Test fun evolutionScreensRemainReadableInBothThemesAtNormalAndDoubleFontScale() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext

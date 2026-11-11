@@ -8,13 +8,13 @@ import java.util.UUID
 import kotlinx.coroutines.flow.map
 
 data class Category(val id: String, val name: String)
-data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList())
+data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet())
 data class HistoricalAttribute(val id: String, val definitionId: String, val value: AttributeValue)
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
-data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "")
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type") }
+data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList())
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase) : AutoCloseable {
@@ -36,14 +36,19 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
         val state = requireNotNull(dao.state())
         val balances = dao.balances().associateBy { it.productId }
         val values = dao.values().groupBy { it.productId }
+        val fitments = dao.fitments().groupBy { it.productId }
+        val locations = dao.productLocations().groupBy { it.productId }
         ShopSnapshot(dao.categories().map { Category(it.id, it.name) }, dao.products().map {
-            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) })
+            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet())
         }, state.revision, Appearance.valueOf(state.appearance),
             dao.attributes().map { CategoryAttribute(it.id, it.categoryId, it.name, AttributeType.valueOf(it.type), it.required, it.unit, it.productId, it.retired) },
-            dao.options().map { AttributeOption(it.id, it.definitionId, it.name, it.retired) }, state.datasetId)
+            dao.options().map { AttributeOption(it.id, it.definitionId, it.name, it.retired) }, state.datasetId,
+            dao.makes().map { MotorcycleMake(it.id, it.name, it.retired) },
+            dao.models().map { MotorcycleModel(it.id, it.makeId, it.name, it.retired) },
+            dao.locations().map { StorageLocation(it.id, it.name, it.retired) })
     }
 
-    suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap()): String = database.withTransaction {
+    suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet()): String = database.withTransaction {
         validateProduct(title, categoryId)
         val values = validateAttributes(categoryId, attributes)
         val quantity = parseWhole(openingPieces, ProductField.OpeningStock)
@@ -52,13 +57,14 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
         val id = UUID.randomUUID().toString()
         dao.insertProduct(ProductRow(id, "BP-${id.uppercase(Locale.ROOT)}", title.trim(), categoryId, description.trim(), price))
         dao.insertValues(values.map { it.copy(productId = id) })
+        saveFindingDetails(id, modelIds, locationIds)
         dao.insertBalance(BalanceRow(id, quantity))
         if (quantity > 0) dao.insertOpening(OpeningRow(id, quantity, System.currentTimeMillis()))
         advanceRevision()
         id
     }
 
-    suspend fun editProduct(id: String, title: String, categoryId: String, description: String, attributes: Map<String, AttributeValue>? = null, categoryMappings: Map<String, String> = emptyMap()) = database.withTransaction {
+    suspend fun editProduct(id: String, title: String, categoryId: String, description: String, attributes: Map<String, AttributeValue>? = null, categoryMappings: Map<String, String> = emptyMap(), modelIds: Set<String>? = null, locationIds: Set<String>? = null) = database.withTransaction {
         validateProduct(title, categoryId)
         val product = dao.products().single { it.id == id }
         val previous = dao.values().filter { it.productId == id }
@@ -79,10 +85,70 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
             input[targetId] = mapped
         }
         val values = validateAttributes(categoryId, input, id, existing)
+        saveFindingDetails(id, modelIds ?: dao.fitments().filter { it.productId == id }.map { it.modelId }.toSet(), locationIds ?: dao.productLocations().filter { it.productId == id }.map { it.locationId }.toSet())
         dao.deleteValues(id)
         dao.insertValues(historical + values.map { it.copy(productId = id) })
         dao.updateProduct(product.copy(title = title.trim(), categoryId = categoryId, description = description.trim()))
         advanceRevision()
+    }
+
+    suspend fun createMake(name: String): String = database.withTransaction {
+        val display = lookupDisplay(name)
+        dao.makes().find { it.normalizedName == LookupNames.key(display) }?.also {
+            require(!it.retired) { "That make is retired; choose another name" }
+        }?.id ?: UUID.randomUUID().toString().also {
+            dao.insertMake(MakeRow(it, display, LookupNames.key(display))); advanceRevision()
+        }
+    }
+
+    suspend fun createModel(makeId: String, name: String): String = database.withTransaction {
+        require(dao.makes().any { it.id == makeId && !it.retired }) { "Choose an active make" }
+        val display = lookupDisplay(name)
+        dao.models().find { it.makeId == makeId && it.normalizedName == LookupNames.key(display) }?.also {
+            require(!it.retired) { "That model is retired; choose another name" }
+        }?.id ?: UUID.randomUUID().toString().also {
+            dao.insertModel(ModelRow(it, makeId, display, LookupNames.key(display))); advanceRevision()
+        }
+    }
+
+    suspend fun createLocation(name: String): String = database.withTransaction {
+        val display = lookupDisplay(name)
+        dao.locations().find { it.normalizedName == LookupNames.key(display) }?.also {
+            require(!it.retired) { "That location is retired; choose another name" }
+        }?.id ?: UUID.randomUUID().toString().also {
+            dao.insertLocation(LocationRow(it, display, LookupNames.key(display))); advanceRevision()
+        }
+    }
+
+    suspend fun retireMake(id: String) = database.withTransaction {
+        val row = dao.makes().single { it.id == id }
+        if (!row.retired) { dao.updateMake(row.copy(retired = true)); advanceRevision() }
+    }
+
+    suspend fun retireModel(id: String) = database.withTransaction {
+        val row = dao.models().single { it.id == id }
+        if (!row.retired) { dao.updateModel(row.copy(retired = true)); advanceRevision() }
+    }
+
+    suspend fun retireLocation(id: String) = database.withTransaction {
+        val row = dao.locations().single { it.id == id }
+        if (!row.retired) { dao.updateLocation(row.copy(retired = true)); advanceRevision() }
+    }
+
+    private suspend fun saveFindingDetails(id: String, modelIds: Set<String>, locationIds: Set<String>) {
+        val previousModels = dao.fitments().filter { it.productId == id }.map { it.modelId }.toSet()
+        val previousLocations = dao.productLocations().filter { it.productId == id }.map { it.locationId }.toSet()
+        val makes = dao.makes().associateBy { it.id }
+        val models = dao.models().associateBy { it.id }
+        val locations = dao.locations().associateBy { it.id }
+        if (modelIds.any { modelId -> models[modelId]?.let { (!it.retired && makes[it.makeId]?.retired == false) || modelId in previousModels } != true })
+            throw ShopValidation(ProductField.Fitment, "Choose active motorcycle models; retired fitment may only be retained")
+        if (locationIds.any { locationId -> locations[locationId]?.let { !it.retired || locationId in previousLocations } != true })
+            throw ShopValidation(ProductField.Location, "Choose active locations; retired locations may only be retained")
+        dao.deleteFitments(id)
+        dao.deleteLocations(id)
+        dao.insertFitments(modelIds.map { FitmentRow(id, it) })
+        dao.insertLocations(locationIds.map { ProductLocationRow(id, it) })
     }
 
     suspend fun renameCategory(id: String, name: String) = database.withTransaction {
@@ -261,7 +327,7 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
             return Shop(database).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }
     }

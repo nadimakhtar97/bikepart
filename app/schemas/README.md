@@ -106,3 +106,29 @@ lookups, repeating retirement and setting an unchanged required flag are no-ops.
 Revision-commit interruption tests verify rollback of creation, promotion,
 retirement, required changes, replacement and category moves through public
 snapshots and close/reopen checks. Backup/restore has not landed yet.
+
+## Version 4 — motorcycle fitment and finding locations
+
+The explicit 3 → 4 migration adds motorcycle makes, make-owned models, storage
+locations and two product association tables. It preserves every existing row,
+identity, stock balance, history, setting and revision. Existing products have
+unknown fitment and no finding locations. No motorcycle catalog is seeded.
+File-backed version-1, version-2 and version-3 fixtures upgrade to the current
+schema, verify durable outcomes through `Shop`, and check SQLite integrity and
+foreign keys.
+
+Fitment is represented by model identities: an empty set means unknown, while
+assigned fitment requires one or more models. Each model has a make foreign key.
+Locations are associations only; there are no location quantities. Product
+creation or editing commits all associations and one revision atomically without
+changing the combined balance, permanent SKU or opening history during edits.
+
+Makes and locations use shop-scoped normalizer-v1 keys; model keys are scoped
+to their make. Independently added lookups survive cancelling a product draft.
+Equivalent active names reuse identities without advancing the revision. Retired
+names remain reserved. Retiring a make also prevents new selection of its models.
+Existing associations may be retained or removed, but retired meanings cannot be
+newly selected or re-added after removal. Repeated retirement is a no-op.
+Revision-interruption coverage verifies rollback of lookup creation, retirement,
+product creation and association edits through snapshots and durable reopen.
+Backup/restore has not landed yet.
