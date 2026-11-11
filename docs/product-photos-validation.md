@@ -57,3 +57,25 @@ bytes before a product can commit their reference.
 
 Review totals: one optional Standards observation, no hard Standards violations,
 and zero Spec findings.
+
+## Final verification
+
+On 2026-11-11 the complete command passed on the API 37 emulator:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest :app:connectedDebugAndroidTest :app:lintDebug
+node tools/theme/validate.mjs
+```
+
+Results: 2 JVM tests, all 36 instrumentation tests, zero lint errors with the
+12 pre-existing warnings, and all 94 theme contrast checks. No UI inspection
+helper was active during instrumentation. Afterward, installed the final debug
+APK and used the actual Choose photo control to open the native system picker;
+cancelling returned to the unchanged optional-photo form.
+
+The first full run passed 35 of 36 instrumentation tests. An existing typed-field
+workflow timed out after its final Save tap with the keyboard active, then passed
+unchanged in isolation. The test now closes the keyboard and checks Save is
+enabled before the same touch click; its durable-result assertions are retained.
+The following complete run passed. Both reviewers checked this follow-up and the
+URI style cleanup and found no actionable Standards or Spec issues.
