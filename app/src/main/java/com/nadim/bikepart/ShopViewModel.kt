@@ -18,6 +18,10 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     val state = kotlinx.coroutines.flow.MutableStateFlow<ShopSnapshot?>(null)
     val error = kotlinx.coroutines.flow.MutableStateFlow<ShopError?>(null)
     val busy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val backupBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val localCapture = kotlinx.coroutines.flow.MutableStateFlow<LocalCapture?>(null)
+    val backupError = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val backupSaved = kotlinx.coroutines.flow.MutableStateFlow(false)
     val cartDraft = kotlinx.coroutines.flow.MutableStateFlow<CartDraft?>(null)
     private var cartAutosave: Job? = null
     private var afterCartSave: (() -> Unit)? = null
@@ -74,6 +78,10 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         try {
             val opened = Shop.open(application)
             shop = opened
+            viewModelScope.launch {
+                val latest = opened.latestLocalBackup()
+                if (localCapture.value == null) localCapture.value = latest
+            }
             opened.snapshots.collect { state.value = it }
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) { error.value = ShopError("Could not open shop. Reopen the app to retry.") }
@@ -94,5 +102,39 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         }
     }
     suspend fun readPhoto(reference: PhotoReference): ByteArray? = shop?.readPhoto(reference)
+
+    fun captureBackup() {
+        val opened = shop ?: return
+        if (backupBusy.value) return
+        backupBusy.value = true
+        backupError.value = null
+        backupSaved.value = false
+        viewModelScope.launch {
+            try { localCapture.value = opened.captureLocalBackup() }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { backupError.value = "Could not capture local backup. Check phone storage and product photos, then try again." }
+            finally { backupBusy.value = false }
+        }
+    }
+
+    fun saveBackupCopy(uri: android.net.Uri, capture: LocalCapture) {
+        if (backupBusy.value) return
+        backupBusy.value = true
+        backupError.value = null
+        backupSaved.value = false
+        viewModelScope.launch {
+            try {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    LocalBackup.inspect(capture.file)
+                    requireNotNull(getApplication<android.app.Application>().contentResolver.openOutputStream(uri, "wt")).use { output ->
+                        capture.file.inputStream().use { it.copyTo(output) }
+                    }
+                }
+                backupSaved.value = true
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { backupError.value = "Could not save the copy. The verified local capture is still on this phone. Try another destination." }
+            finally { backupBusy.value = false }
+        }
+    }
     override fun onCleared() { shop?.close() }
 }

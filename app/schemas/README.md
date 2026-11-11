@@ -1,5 +1,16 @@
 # Shop schema history
 
+## Local export format 1 — no Room migration
+
+Room remains at version 14. The independently versioned local backup codec now
+captures all 24 implemented business tables, including label preferences and
+the cart sequence, from one committed transaction. ZIP staging, photo pins and
+local completion metadata live outside the business database and do not advance
+its revision. See [local backup format and interruption contract](../../docs/local-backup.md).
+Real-persistence fixtures reconstruct the portable tables/blobs into a fresh
+database and reopen it through `Shop`, preserving the complete shop snapshot.
+Historical "backup has not landed" notes below describe their original releases.
+
 ## Version 14 — durable label preferences
 
 The additive 13 → 14 migration adds `shop_state.labelMedia` and `labelCopies`,
