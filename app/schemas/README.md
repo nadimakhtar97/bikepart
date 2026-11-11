@@ -1,5 +1,17 @@
 # Shop schema history
 
+## Version 11 — safe product archival
+
+The explicit 10 → 11 migration adds `products.archived`, defaulting to false for
+every existing product. Identity, catalog values, photos, balances, movements,
+unfinished carts, completed receipts, settings and revisions are preserved.
+`Shop.archiveProduct` checks zero balance and absence of unfinished-cart lines
+inside its write transaction, then advances the durable revision once. Retrying
+an archived identity changes nothing. Rejected guards, storage failures and
+revision overflow roll back the archive write. Stock, cart, description, price
+and threshold writes reject archived products even from stale screens. All ten
+historical schemas remain supported by the migration chain and fixtures.
+
 `com.nadim.bikepart.shop.ShopDatabase/1.json` is the first persistent shop schema.
 The starter application had no database, so there is no earlier shop schema to
 migrate. First use seeds four categories in the same initialization transaction

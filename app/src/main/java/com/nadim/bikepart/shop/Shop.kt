@@ -8,7 +8,7 @@ import java.util.UUID
 import kotlinx.coroutines.flow.map
 
 data class Category(val id: String, val name: String)
-data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet(), val photo: PhotoReference? = null, val lowStockThreshold: Long? = null)
+data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet(), val photo: PhotoReference? = null, val lowStockThreshold: Long? = null, val archived: Boolean = false)
 data class HistoricalAttribute(val id: String, val definitionId: String, val value: AttributeValue)
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
@@ -42,7 +42,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val cartLines = dao.cartLines().groupBy { it.cartId }
         val saleLines = dao.saleLines().groupBy { it.saleId }
         ShopSnapshot(dao.categories().map { Category(it.id, it.name) }, dao.products().map {
-            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet(), photoRows[it.id]?.let { row -> PhotoReference(row.sha256, row.sizeBytes) }, it.lowStockThreshold)
+            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet(), photoRows[it.id]?.let { row -> PhotoReference(row.sha256, row.sizeBytes) }, it.lowStockThreshold, it.archived)
         }, state.revision, Appearance.valueOf(state.appearance),
             dao.attributes().map { CategoryAttribute(it.id, it.categoryId, it.name, AttributeType.valueOf(it.type), it.required, it.unit, it.productId, it.retired) },
             dao.options().map { AttributeOption(it.id, it.definitionId, it.name, it.retired) }, state.datasetId,
@@ -78,7 +78,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
         database.withTransaction {
             validateProduct(title, categoryId)
-            val product = dao.products().single { it.id == id }
+            val product = requireActiveProduct(id)
             val previous = dao.values().filter { it.productId == id }
             val existing = previous.filter { it.historyId.isEmpty() }.associate { it.definitionId to decodeValue(it) }
             val definitions = dao.attributes()
@@ -111,9 +111,23 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
     suspend fun readPhoto(reference: PhotoReference): ByteArray? = photos.read(reference)
 
+    /** Recheck live stock and cart references in the same transaction as the archive write. */
+    suspend fun archiveProduct(id: String) = database.withTransaction {
+        val product = dao.products().single { it.id == id }
+        if (product.archived) return@withTransaction
+        require(dao.balances().single { it.productId == id }.quantity == 0L) {
+            "Cannot archive while stock remains. Stock must be zero."
+        }
+        require(dao.cartLines().none { it.productId == id }) {
+            "Cannot archive while an unfinished cart contains this product. Remove its line or discard the cart first."
+        }
+        dao.updateProduct(product.copy(archived = true))
+        advanceRevision()
+    }
+
     suspend fun setLowStockThreshold(id: String, pieces: String) = database.withTransaction {
         val threshold = pieces.takeIf { it.isNotBlank() }?.let { parseWhole(it, ProductField.LowStockThreshold) }
-        val product = dao.products().single { it.id == id }
+        val product = requireActiveProduct(id)
         if (product.lowStockThreshold != threshold) {
             dao.updateProduct(product.copy(lowStockThreshold = threshold))
             advanceRevision()
@@ -330,7 +344,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     suspend fun createCustomAttribute(productId: String, name: String, type: AttributeType, required: Boolean = false, unit: String = ""): String = database.withTransaction {
-        val product = dao.products().single { it.id == productId }
+        val product = requireActiveProduct(productId)
         createDefinition(product.categoryId, productId, name, type, required, unit)
     }
 
@@ -430,6 +444,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             require(previous.productId == productId && previous.kind == kind.name && previous.quantity == amount && previous.reason == explanation) { "This operation identity already belongs to a different correction" }
             return@withTransaction
         }
+        requireActiveProduct(productId)
         val balance = dao.balances().singleOrNull { it.productId == productId }
             ?: throw IllegalArgumentException("Choose an existing stocked product")
         val result = if (kind == CorrectionKind.PhysicalCount) amount else {
@@ -502,6 +517,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val products = dao.products().associateBy { it.id }
         val lines = quantities.map { (productId, input) ->
             val product = requireNotNull(products[productId]) { "Choose an existing stocked product" }
+            require(!product.archived) { "This product is archived. Choose an active product." }
             val quantity = parseCartQuantity(input, productId)
             CartLineRow(id, productId, quantity, old[productId]?.quotedPriceRupees ?: product.priceRupees)
         }
@@ -547,7 +563,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     suspend fun setSellingPrice(id: String, rupees: String) = database.withTransaction {
         val price = parseWhole(rupees, ProductField.SellingPrice)
-        val product = dao.products().single { it.id == id }
+        val product = requireActiveProduct(id)
         if (product.priceRupees != price) {
             dao.updateProduct(product.copy(priceRupees = price))
             advanceRevision()
@@ -557,6 +573,12 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     suspend fun correctionHistory(productId: String): List<StockCorrection> = dao.corrections().filter { it.productId == productId }.map { it.toCorrection() }
 
     suspend fun openingHistory(id: String): List<OpeningStock> = dao.openings(id).map { OpeningStock(it.quantity, it.recordedAt) }
+
+    private suspend fun requireActiveProduct(id: String): ProductRow {
+        val product = requireNotNull(dao.products().find { it.id == id }) { "Choose an existing stocked product" }
+        require(!product.archived) { "This product is archived. Choose an active product." }
+        return product
+    }
 
     private suspend fun validateProduct(title: String, categoryId: String) {
         if (title.isBlank()) throw ShopValidation(ProductField.Title, "Enter a product title")
@@ -572,7 +594,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
             return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }

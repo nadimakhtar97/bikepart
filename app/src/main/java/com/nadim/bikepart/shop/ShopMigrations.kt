@@ -3,6 +3,13 @@ package com.nadim.bikepart.shop
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+/** Archival preserves every existing product as active, with its ledger untouched. */
+internal val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE products ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 /** Additive migration: existing catalog identities, stock, history and revision are untouched. */
 internal val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {

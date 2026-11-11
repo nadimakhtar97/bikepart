@@ -59,6 +59,7 @@ class CatalogSearch(snapshot: ShopSnapshot) {
         val decimal = filter.decimal?.let { exactDecimal(it.exact) }
         return documents.filter { doc ->
             val product = doc.product
+            !product.archived &&
             (filter.categoryId == null || product.categoryId == filter.categoryId) &&
                 (filter.makeId == null || filter.makeId in doc.makes) &&
                 (filter.modelId == null || filter.modelId in product.modelIds) &&

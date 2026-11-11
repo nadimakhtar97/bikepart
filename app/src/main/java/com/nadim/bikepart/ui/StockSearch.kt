@@ -139,7 +139,7 @@ internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: Ph
                 Text(product.title, style = MaterialTheme.typography.titleMedium)
                 Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
                 Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
-                StockHealthIndicator(product)
+                if (product.archived) Text("Archived", style = MaterialTheme.typography.bodyMedium) else StockHealthIndicator(product)
                 if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete", style = MaterialTheme.typography.labelLarge)
                 Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

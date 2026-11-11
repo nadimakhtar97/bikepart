@@ -67,19 +67,23 @@ internal fun ShopEmptyState(title: String, description: String, icon: Int) {
 
 @Composable
 internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit, onNewSale: () -> Unit, onCarts: () -> Unit, busy: Boolean) {
+    val activeProducts = shop.products.filterNot { it.archived }
     ShopSection("Your parts counter") {
-        Text("${shop.products.size} stocked products", style = MaterialTheme.typography.headlineSmall)
+        Text("${activeProducts.size} stocked products", style = MaterialTheme.typography.headlineSmall)
         Text("Work offline. Your stock stays on this phone.", style = MaterialTheme.typography.bodyMedium)
         ShopPrimaryButton("New sale", enabled = !busy, onClick = onNewSale)
         OutlinedButton(onClick = onCarts, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Unfinished carts: ${shop.carts.size}") }
         ShopPrimaryButton("Add product", onClick = onAdd)
         OutlinedButton(onClick = { onStock(null) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("View stock") }
     }
-    if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
-        "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
-    if (shop.products.isNotEmpty()) ShopSection("Stock attention") {
+    if (activeProducts.isEmpty()) {
+        if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
+            "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
+        else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+    }
+    if (activeProducts.isNotEmpty()) ShopSection("Stock attention") {
         for (health in listOf(StockHealth.LowStock, StockHealth.OutOfStock)) {
-            val count = shop.products.count { it.stockHealth == health }
+            val count = activeProducts.count { it.stockHealth == health }
             OutlinedButton(onClick = { onStock(health) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
                 Icon(painterResource(R.drawable.ic_stock), contentDescription = null)
                 Spacer(Modifier.width(ShopSpacing.small))
@@ -92,20 +96,24 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
 @Composable
 internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null) {
     ShopPrimaryButton("Add product", onClick = onAdd)
-    if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
+    if (shop.products.none { !it.archived }) {
+        if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
+        else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+    }
     else StockSearch(shop, initialHealth, loadPhoto, onOpen)
 }
 @Composable
-internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit) {
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit, onArchive: () -> Unit, archiveError: String?) {
     Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
     Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
+    if (product.archived) Text("Archived product", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     ProductPhoto(product.photo, loadPhoto, Modifier.fillMaxWidth().height(160.dp))
     ShopSection("Stock and selling price") {
         Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
-        StockHealthIndicator(product)
+        if (!product.archived) StockHealthIndicator(product)
         Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
     }
-    ShopSection("Correct stock") {
+    if (!product.archived) ShopSection("Correct stock") {
         CorrectionKind.entries.forEach { kind ->
             OutlinedButton(onClick = { onCorrection(kind) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Record ${kind.label.lowercase()}") }
         }
@@ -129,10 +137,33 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     }
     CorrectionHistory(shop.corrections.filter { it.productId == product.id })
     FindingSummary(shop, product)
-    ShopPrimaryButton("Copy catalog details", enabled = !busy, onClick = onCopy)
-    OutlinedButton(onTemplate, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Create template from product") }
-    ShopPrimaryButton("Edit details", enabled = !busy, onClick = onEdit)
-    OutlinedButton(onClick = onManage, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fields") }
+    if (!product.archived) {
+        ShopPrimaryButton("Copy catalog details", enabled = !busy, onClick = onCopy)
+        OutlinedButton(onTemplate, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Create template from product") }
+        ShopPrimaryButton("Edit details", enabled = !busy, onClick = onEdit)
+        OutlinedButton(onClick = onManage, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fields") }
+        ShopSection("Archive unused product") {
+            Text("Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.", style = MaterialTheme.typography.bodyMedium)
+            if (archiveError != null) FormError(archiveError)
+            OutlinedButton(onClick = onArchive, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Archive product") }
+        }
+    }
+}
+
+@Composable
+internal fun ArchivedProducts(shop: ShopSnapshot, loadPhoto: PhotoLoader, onOpen: (String) -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var limit by rememberSaveable(query) { mutableIntStateOf(40) }
+    val archived = shop.products.filter { it.archived }
+    if (archived.isEmpty()) ShopEmptyState("No archived products", "Products archived at zero stock remain here with their details and history.", R.drawable.ic_stock)
+    else {
+        OutlinedTextField(query, { query = it }, label = { Text("Search archived products") }, modifier = Modifier.fillMaxWidth())
+        val found = archived.filter { LookupNames.key(it.title + " " + it.sku).contains(LookupNames.key(query)) }
+        Text("${found.size} archived products", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        if (found.isEmpty()) ShopEmptyState("No matching archived products", "Try a title or permanent SKU.", R.drawable.ic_stock)
+        found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
+        if (found.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Show more archived products") }
+    }
 }
 
 @Composable

@@ -63,7 +63,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     val product = state?.products?.find { it.id == selectedId }
     fun back() {
         if (route == "cart") { model.flushCart { route = "main"; destination = "Carts" }; return }
-        route = when (route) { "checkout", "cart-products" -> "cart"; "receipt" -> "sales"; "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }
+        route = when (route) { "checkout", "cart-products" -> "cart"; "receipt" -> "sales"; "detail" -> if (product?.archived == true) "archived-products" else "main"; "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }
         model.error.value = null
     }
     fun newCart() { model.write({ selectedId = createCart() }, { model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
@@ -84,7 +84,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                 CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "templates" -> "Product templates"; "template-detail" -> "Template"; "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"; "cart" -> "Unfinished bill"; "cart-products" -> "Add to cart"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"; "cart" -> "Unfinished bill"; "cart-products" -> "Add to cart"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
@@ -190,11 +190,12 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 onChange = { model.error.value = null },
                                 save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
                         }
+                        "archived-products" -> ArchivedProducts(shop, model::readPhoto) { selectedId = it; route = "detail" }
                         "detail" -> if (product != null) {
                             ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
                             model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
-                        })
-                            ThresholdForm(product, busy, error, onChange = { model.error.value = null },
+                        }, onArchive = { model.write({ archiveProduct(product.id) }) }, archiveError = error?.takeIf { it.field == null }?.message)
+                            if (!product.archived) ThresholdForm(product, busy, error, onChange = { model.error.value = null },
                                 save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
                             SaleStockHistory(shop, product.id)
                         }
@@ -218,6 +219,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             }
                             "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
                             "More" -> {
+                                OutlinedButton(onClick = { route = "archived-products" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Archived products") }
                                 OutlinedButton(onClick = { route = "sales" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Sales history") }
                                 OutlinedButton(onClick = { route = "templates" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Product templates") }
                                 AppearanceSettings(shop.appearance, busy,
@@ -225,7 +227,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             }
                         }
                     }
-                    if (error != null && route != "receipt" && route != "checkout" && route != "cart" && route != "cart-products" && !(route == "detail" && error?.field == ProductField.LowStockThreshold) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
+                    if (error != null && route != "receipt" && route != "checkout" && route != "cart" && route != "cart-products" && !(route == "detail" && (error?.field == ProductField.LowStockThreshold || error?.field == null)) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
                         !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
                 }
             }

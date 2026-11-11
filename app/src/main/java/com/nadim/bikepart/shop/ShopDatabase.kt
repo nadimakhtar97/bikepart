@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 internal data class CategoryRow(@PrimaryKey val id: String, val name: String, val normalizedName: String, val position: Int)
 
 @Entity(tableName = "products", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId"), Index(value = ["sku"], unique = true)])
-internal data class ProductRow(@PrimaryKey val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val lowStockThreshold: Long? = null)
+internal data class ProductRow(@PrimaryKey val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val lowStockThreshold: Long? = null, @ColumnInfo(defaultValue = "0") val archived: Boolean = false)
 
 @Entity(tableName = "balances", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)])
 internal data class BalanceRow(@PrimaryKey val productId: String, val quantity: Long)
@@ -141,5 +141,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class], version = 10, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class], version = 11, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }
