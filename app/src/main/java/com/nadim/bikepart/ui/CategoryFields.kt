@@ -61,7 +61,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
         shop.attributes.filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) && (LookupNames.key(it.name).contains(LookupNames.key(search)) || error?.definitionId == it.id) }.forEach { definition ->
             key(definition.id) {
                 val value = values[definition.id]
-                val label = definition.name + (if (definition.unit.isBlank()) "" else " (" + definition.unit + ")") + (if (definition.required) " (required)" else " (optional)") + if (definition.productId != null) " · product only" else ""
+                val label = definition.name + (if (definition.unit.isBlank()) "" else " (" + definition.unit + ")") + (if (definition.required) " (required)" else " (optional)") + if (definition.productId == "catalog-draft") " · copy only" else if (definition.productId != null) " · product only" else ""
                 val fieldError = error?.takeIf { it.definitionId == definition.id }
                 if (definition.retired) {
                     Text(definition.name + " (retired): " + attributeDisplay(shop, value), style = MaterialTheme.typography.bodyMedium)

@@ -13,7 +13,7 @@ data class HistoricalAttribute(val id: String, val definitionId: String, val val
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
-data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList())
+data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList())
 enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
@@ -46,7 +46,8 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.options().map { AttributeOption(it.id, it.definitionId, it.name, it.retired) }, state.datasetId,
             dao.makes().map { MotorcycleMake(it.id, it.name, it.retired) },
             dao.models().map { MotorcycleModel(it.id, it.makeId, it.name, it.retired) },
-            dao.locations().map { StorageLocation(it.id, it.name, it.retired) })
+            dao.locations().map { StorageLocation(it.id, it.name, it.retired) },
+            dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) })
     }
 
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
@@ -105,6 +106,85 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         }
     }
     suspend fun readPhoto(reference: PhotoReference): ByteArray? = photos.read(reference)
+
+    suspend fun saveTemplate(catalog: CatalogDraft, id: String? = null, photo: PhotoChange = PhotoChange.Keep): String {
+        val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
+        return database.withTransaction {
+            val previous = id?.let { key -> dao.templates().single { it.id == key }.also { require(!it.retired) { "That template is retired" } } }
+            val old = previous?.let { decodeCatalog(it.catalog) }
+            val definitions = dao.attributes()
+            val moved = if (old != null && old.categoryId != catalog.categoryId) old.attributes.filterKeys { key ->
+                definitions.any { it.id == key && it.productId == null && it.categoryId == old.categoryId }
+            }.map { (definition, value) -> HistoricalAttribute(UUID.randomUUID().toString(), definition, value) } else emptyList()
+            val draft = catalog.copy(title = catalog.title.trim(), description = catalog.description.trim(), historicalAttributes = old?.historicalAttributes.orEmpty() + moved, photo = when (photo) {
+                PhotoChange.Keep -> catalog.photo
+                PhotoChange.Remove -> null
+                is PhotoChange.Import -> imported
+            })
+            validateCatalog(draft, old, allowIncomplete = true)
+            val key = id ?: UUID.randomUUID().toString()
+            val row = TemplateRow(key, draft.categoryId, draft.encode())
+            if (previous == null) dao.insertTemplate(row) else dao.updateTemplate(row)
+            advanceRevision()
+            key
+        }
+    }
+
+    suspend fun retireTemplate(id: String) = database.withTransaction {
+        val row = dao.templates().single { it.id == id }
+        if (!row.retired) { dao.updateTemplate(row.copy(retired = true)); advanceRevision() }
+    }
+
+    suspend fun createFromCatalog(catalog: CatalogDraft, openingPieces: String, priceRupees: String,
+        allowSimilar: Boolean = false, locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
+        val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
+        return database.withTransaction {
+            val entered = catalog.copy(photo = when (photo) {
+                PhotoChange.Keep -> catalog.photo
+                PhotoChange.Remove -> null
+                is PhotoChange.Import -> imported
+            })
+            validateCatalog(entered)
+            val draft = entered.independent()
+            val customIds = draft.customFields.map { it.id }.toSet()
+            val id = createProduct(draft.title, draft.categoryId, draft.description, openingPieces, priceRupees,
+                allowSimilar, draft.attributes.filterKeys { it !in customIds }, draft.modelIds, locationIds)
+            for (field in draft.customFields) {
+                dao.insertAttribute(field.row(draft.categoryId, id))
+                field.options.forEach { dao.insertOption(OptionRow(it.id, field.id, it.name, LookupNames.key(it.name))) }
+            }
+            val values = validateAttributes(draft.categoryId, draft.attributes, id)
+            dao.deleteValues(id)
+            dao.insertValues(values.map { it.copy(productId = id) })
+            draft.photo?.let { dao.putPhoto(ProductPhotoRow(id, it.sha256, it.sizeBytes)) }
+            // createProduct advanced the revision inside this same enclosing transaction.
+            id
+        }
+    }
+
+    private suspend fun validateCatalog(draft: CatalogDraft, previous: CatalogDraft? = null, allowIncomplete: Boolean = false) {
+        validateProduct(draft.title, draft.categoryId)
+        require(draft.customFields.map { it.id }.distinct().size == draft.customFields.size) { "Duplicate custom field identity" }
+        val repeated = draft.customFields.groupBy { LookupNames.key(it.name) }.values.firstOrNull { it.size > 1 }?.last()
+        if (repeated != null) throw ShopValidation(ProductField.DefinitionName, "Custom field names must be distinct", repeated.id)
+        val definitions = draft.customFields.map { field ->
+            if (LookupNames.display(field.name).isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a custom field name", field.id)
+            require(field.options.all { it.definitionId == field.id && !it.retired && LookupNames.key(it.name).isNotEmpty() }) { "Choose valid custom options" }
+            require(field.options.map { LookupNames.key(it.name) }.distinct().size == field.options.size) { "Custom option names must be distinct" }
+            require(field.type.isChoice || field.options.isEmpty()) { "Only choice fields have options" }
+            field.row(draft.categoryId, "catalog-draft")
+        }
+        val options = draft.customFields.flatMap { it.options }.map { OptionRow(it.id, it.definitionId, it.name, LookupNames.key(it.name)) }
+        require((definitions.map { it.id } + options.map { it.id }).distinct().size == definitions.size + options.size) { "Custom identities must be distinct" }
+        require(dao.attributes().none { existing -> definitions.any { it.id == existing.id } }) { "Custom fields must be independently owned" }
+        validateAttributes(draft.categoryId, draft.attributes, "catalog-draft", previous?.attributes.orEmpty(), allowIncomplete, definitions, options)
+        val snapshot = snapshot()
+        if (draft.modelIds.any { id -> snapshot.models.none { it.id == id && ((!it.retired && snapshot.makes.any { make -> make.id == it.makeId && !make.retired }) || id in previous?.modelIds.orEmpty()) } })
+            throw ShopValidation(ProductField.Fitment, "Choose active motorcycle models")
+        draft.photo?.let { reference ->
+            require(reference == previous?.photo || dao.productPhotos().any { it.sha256 == reference.sha256 && it.sizeBytes == reference.sizeBytes } || dao.templates().any { decodeCatalog(it.catalog).photo == reference } || photos.read(reference) != null) { "Photo unavailable. Choose it again or remove it." }
+        }
+    }
 
     suspend fun createMake(name: String): String = database.withTransaction {
         val display = lookupDisplay(name)
@@ -290,15 +370,15 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         }
     }
 
-    private suspend fun validateAttributes(categoryId: String, values: Map<String, AttributeValue>, productId: String? = null, existing: Map<String, AttributeValue> = emptyMap()): List<AttributeValueRow> {
-        val definitions = dao.attributes().filter { it.productId != null && it.productId == productId || it.productId == null && it.categoryId == categoryId }
+    private suspend fun validateAttributes(categoryId: String, values: Map<String, AttributeValue>, productId: String? = null, existing: Map<String, AttributeValue> = emptyMap(), allowIncomplete: Boolean = false, customDefinitions: List<AttributeRow> = emptyList(), customOptions: List<OptionRow> = emptyList()): List<AttributeValueRow> {
+        val definitions = dao.attributes().filter { it.productId != null && it.productId == productId || it.productId == null && it.categoryId == categoryId } + customDefinitions
         require(values.keys.all { key -> definitions.any { it.id == key } }) { "Choose fields from the selected category" }
-        val options = dao.options()
+        val options = dao.options() + customOptions
         return definitions.mapNotNull { definition ->
             val value = values[definition.id]
             fun invalid(message: String): Nothing = throw ShopValidation(ProductField.Attribute, definition.name + ": " + message, definition.id)
             if (definition.retired && value != null && value != existing[definition.id]) invalid("Retired field cannot be newly selected or changed")
-            if (!definition.retired && definition.required && (value == null || value is AttributeValue.Text && value.text.isBlank() || value is AttributeValue.Choices && value.optionIds.isEmpty())) invalid("Required")
+            if (!allowIncomplete && !definition.retired && definition.required && (value == null || value is AttributeValue.Text && value.text.isBlank() || value is AttributeValue.Choices && value.optionIds.isEmpty())) invalid("Required")
             if (value == null) return@mapNotNull null
             when (value) {
                 is AttributeValue.Text -> {
@@ -341,7 +421,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
             return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }

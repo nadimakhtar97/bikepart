@@ -46,8 +46,14 @@ internal data class ProductLocationRow(val productId: String, val locationId: St
 @Entity(tableName = "product_photos", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)])
 internal data class ProductPhotoRow(@PrimaryKey val productId: String, val sha256: String, val sizeBytes: Long)
 
+@Entity(tableName = "product_templates", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId")])
+internal data class TemplateRow(@PrimaryKey val id: String, val categoryId: String, val catalog: String, val retired: Boolean = false)
+
 @Dao
 internal interface ShopDao {
+    @Query("SELECT * FROM product_templates ORDER BY id") suspend fun templates(): List<TemplateRow>
+    @Insert suspend fun insertTemplate(row: TemplateRow)
+    @Update suspend fun updateTemplate(row: TemplateRow)
     @Query("SELECT * FROM product_photos") suspend fun productPhotos(): List<ProductPhotoRow>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putPhoto(row: ProductPhotoRow)
     @Query("DELETE FROM product_photos WHERE productId = :id") suspend fun deletePhoto(id: String)
@@ -90,5 +96,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class], version = 5, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class], version = 6, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }

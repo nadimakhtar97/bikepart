@@ -17,6 +17,8 @@ class CategoryMigrationTest {
 
     @Test fun versionFourUpgradePreservesTypedCatalogAndSupportsPhotos() = runBlocking { verifyTypedUpgrade(4) }
 
+    @Test fun versionFiveUpgradePreservesTypedCatalogAndSupportsTemplates() = runBlocking { verifyTypedUpgrade(5) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -45,6 +47,7 @@ class CategoryMigrationTest {
                 db.execSQL("INSERT INTO attribute_options (id, definitionId, name, normalizedName${if (version >= 3) ", retired" else ""}) VALUES ('o', 'f', 'Zinc', 'zinc'${if (version >= 3) ", 0" else ""})")
                 db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'd', NULL, '008.00', NULL)")
                 db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'f', NULL, NULL, '[\"o\"]')")
+                if (version >= 5) db.execSQL("INSERT INTO product_photos VALUES ('p', '${"a".repeat(64)}', 3)")
                 db.version = version
             }
             val values = mapOf("d" to AttributeValue.Decimal("008.00"), "f" to AttributeValue.Choices(setOf("o")))
@@ -53,7 +56,7 @@ class CategoryMigrationTest {
                 assertEquals("stable-dataset", before.datasetId)
                 assertEquals(7L, before.revision)
                 assertEquals(Appearance.Dark, before.appearance)
-                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values), before.products.single())
+                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values, photo = if (version >= 5) PhotoReference("a".repeat(64), 3) else null), before.products.single())
                 assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
                 assertTrue(before.makes.isEmpty())
                 assertTrue(before.models.isEmpty())

@@ -23,8 +23,9 @@ import com.nadim.bikepart.shop.*
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
-    val title: String, val categoryId: String, val description: String,
-    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>, val categoryMappings: Map<String, String>, val modelIds: Set<String>, val locationIds: Set<String>, val photoUri: String?, val photoRemoved: Boolean,
+    val catalog: CatalogDraft, val openingPieces: String, val priceRupees: String,
+    val allowSimilar: Boolean, val categoryMappings: Map<String, String>, val locationIds: Set<String>,
+    val photoUri: String?, val photoRemoved: Boolean,
 )
 
 @Composable
@@ -44,9 +45,9 @@ internal fun ShopSection(title: String, content: @Composable ColumnScope.() -> U
 }
 
 @Composable
-internal fun ShopPrimaryButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun ShopPrimaryButton(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
     Button(onClick = onClick, enabled = enabled,
-        modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget),
+        modifier = modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.inverseSurface,
             contentColor = MaterialTheme.colorScheme.inverseOnSurface)) { Text(label) }
 }
@@ -105,7 +106,7 @@ internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String)
 }
 
 @Composable
-internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader) {
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit) {
     Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
     Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
     ProductPhoto(product.photo, loadPhoto, Modifier.fillMaxWidth().height(160.dp))
@@ -133,7 +134,9 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         }
     }
     FindingSummary(shop, product)
-    ShopPrimaryButton("Edit details", onClick = onEdit)
+    ShopPrimaryButton("Copy catalog details", enabled = !busy, onClick = onCopy)
+    OutlinedButton(onTemplate, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Create template from product") }
+    ShopPrimaryButton("Edit details", enabled = !busy, onClick = onEdit)
     OutlinedButton(onClick = onManage, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fields") }
 }
 
@@ -175,21 +178,36 @@ internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (Stri
 }
 
 @Composable
-internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, findingLookups: FindingLookups, loadPhoto: PhotoLoader, save: (ProductFormInput) -> Unit) {
+internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, findingLookups: FindingLookups, loadPhoto: PhotoLoader, initialCatalog: CatalogDraft? = null, templateMode: Boolean = false, save: (ProductFormInput) -> Unit) {
     var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var photoRemoved by rememberSaveable { mutableStateOf(false) }
-    var models by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.modelIds ?: emptySet()) }
+    var models by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.modelIds ?: initialCatalog?.modelIds ?: emptySet()) }
     var locations by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.locationIds ?: emptySet()) }
     var assigned by rememberSaveable { mutableStateOf(models.isNotEmpty()) }
     var findingError by remember { mutableStateOf<ShopError?>(null) }
-    var title by rememberSaveable { mutableStateOf(product?.title ?: "") }
-    var category by rememberSaveable { mutableStateOf(product?.categoryId ?: "") }
-    var description by rememberSaveable { mutableStateOf(product?.description ?: "") }
-    var quantity by rememberSaveable { mutableStateOf("0") }
+    var title by rememberSaveable { mutableStateOf(product?.title ?: initialCatalog?.title ?: "") }
+    var category by rememberSaveable { mutableStateOf(product?.categoryId ?: initialCatalog?.categoryId ?: "") }
+    var description by rememberSaveable { mutableStateOf(product?.description ?: initialCatalog?.description ?: "") }
+    var quantity by rememberSaveable { mutableStateOf(if (initialCatalog != null && !templateMode) "" else "0") }
     var price by rememberSaveable { mutableStateOf("") }
     var distinct by rememberSaveable { mutableStateOf(false) }
     var mappings by rememberSaveable(stateSaver = mappingDraftSaver) { mutableStateOf(emptyMap<String, String>()) }
-    var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: emptyMap()) }
+    var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: initialCatalog?.attributes ?: emptyMap()) }
+    var customPayload by rememberSaveable { mutableStateOf(CatalogDraft(customFields = initialCatalog?.customFields.orEmpty()).encode()) }
+    val customFields = decodeCatalog(customPayload).customFields
+    fun updateCustom(fields: List<DraftField>) { customPayload = CatalogDraft(customFields = fields).encode(); onChange() }
+    val formShop = shop.copy(attributes = shop.attributes + customFields.map { CategoryAttribute(it.id, category, it.name, it.type, it.required, it.unit, "catalog-draft") }, options = shop.options + customFields.flatMap { it.options })
+    val formLookups = ProductLookups(lookups.category, lookups.attribute) { definition, name, selected ->
+        val field = customFields.find { it.id == definition }
+        if (field == null) lookups.option(definition, name, selected)
+        else if (LookupNames.key(name).isNotEmpty()) {
+            val option = field.options.find { LookupNames.key(it.name) == LookupNames.key(name) }
+                ?: AttributeOption(java.util.UUID.randomUUID().toString(), definition, LookupNames.display(name))
+            updateCustom(customFields.map { if (it.id == definition) it.copy(options = (it.options + option).distinctBy { item -> item.id }) else it })
+            selected(option.id)
+        }
+    }
+    if (templateMode || initialCatalog != null) Text("Catalog details only. Enter stock, selling price and locations separately for each new product.", style = MaterialTheme.typography.bodyMedium)
     ShopSection("Basic details") {
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text("Category (required)", style = MaterialTheme.typography.labelLarge)
@@ -199,16 +217,18 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
-    PhotoField(product?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
+    PhotoField(product?.photo ?: initialCatalog?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
         select = { photoUri = it; photoRemoved = false; onChange() },
         remove = { photoUri = null; photoRemoved = true; onChange() })
+    if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text("Previous category values will be retained as historical attributes.", style = MaterialTheme.typography.bodyMedium)
     if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
-    if (category.isNotEmpty()) CategoryFields(shop, category, values, busy, error, lookups, product?.id,
+    if (category.isNotEmpty()) CategoryFields(formShop, category, values, busy, error, formLookups, if (product != null) product.id else "catalog-draft",
         onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
+    if (product == null) DraftCustomFields(customFields, category, busy, error, ::updateCustom)
     FindingFields(shop, product, models, locations, busy, findingError ?: error, findingLookups, assigned,
         onAssigned = { assigned = it; findingError = null; onChange() },
-        onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() })
-    if (product == null) ShopSection("Opening stock and price") {
+        onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
+    if (product == null && !templateMode) ShopSection("Opening stock and price") {
         ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
             error?.takeIf { it.field == ProductField.OpeningStock }, number = true)
         ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
@@ -216,6 +236,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         Text("Stock is counted in whole pieces. Prices use whole rupees.", style = MaterialTheme.typography.bodyMedium)
     }
     if (error != null && error.field == null) FormError(error.message)
+    if (error?.field == ProductField.DefinitionName && error.definitionId == null) FormError(error.message)
     if (error?.similar == true) Row(
         Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(distinct, enabled = !busy, role = Role.Checkbox, onValueChange = { distinct = it }),
         verticalAlignment = Alignment.CenterVertically,
@@ -223,12 +244,14 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         Checkbox(checked = distinct, onCheckedChange = null)
         Text("Save as a distinct product", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
     }
-    ShopPrimaryButton(if (busy) "Saving…" else "Save product", enabled = !busy) {
+    ShopPrimaryButton(if (busy) "Saving…" else if (templateMode) "Save template" else "Save product", enabled = !busy) {
         if (assigned && models.isEmpty()) {
             findingError = ShopError("Choose at least one motorcycle model", ProductField.Fitment)
             return@ShopPrimaryButton
         }
-        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.appliesTo(category, product?.id) } }, mappings, models, locations, photoUri, photoRemoved))
+        val applicable = values.filterKeys { id -> formShop.attributes.any { it.id == id && it.appliesTo(category, product?.id ?: "catalog-draft") } }
+        save(ProductFormInput(CatalogDraft(title, category, description, applicable, customFields, models, initialCatalog?.photo),
+            quantity, price, distinct, mappings, locations, photoUri, photoRemoved))
     }
 }
 

@@ -58,3 +58,11 @@ internal val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("CREATE TABLE product_photos (productId TEXT NOT NULL, sha256 TEXT NOT NULL, sizeBytes INTEGER NOT NULL, PRIMARY KEY(productId), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
     }
 }
+
+/** Templates never acquire stock, prices, SKUs or locations. Existing rows are untouched. */
+internal val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS product_templates (id TEXT NOT NULL, categoryId TEXT NOT NULL, catalog TEXT NOT NULL, retired INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(categoryId) REFERENCES categories(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_product_templates_categoryId ON product_templates(categoryId)")
+    }
+}

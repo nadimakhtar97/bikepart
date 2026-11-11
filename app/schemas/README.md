@@ -158,3 +158,36 @@ and retention can contribute their pins; future cleanup must use that full union
 Temporary imports are deleted on normal success/failure/cancellation. Process
 death can leave an unreferenced temporary file, never a committed partial photo.
 Backup/restore has not landed yet.
+
+## Version 6 — local templates and independent catalog copies
+
+The additive 5 → 6 migration adds `product_templates`, with a category foreign
+key, retirement state and a version-1 descriptive catalog payload. Templates
+have UUID identities but no product row, SKU, balance, price, opening history
+or location associations. Historical schemas 1–5 upgrade without changing
+existing identities, catalog values, photo references, stock, settings or revision.
+
+The versioned JSON payload retains template-owned custom definitions, complete
+active choice domains, exact values, shared category-definition references,
+staff-assigned model identities and an optional immutable photo reference.
+Payload relationships and types are validated through `Shop` before writes.
+This keeps draft/template-owned definitions outside the product-only ownership
+foreign key. Shared category fields keep their scope; copied custom fields and
+options receive new UUIDs on prefill and again when materialized as a product.
+Historical category values and retired meanings are not newly assigned by copies.
+Changing an existing template's category retains its previous category values
+with history identities in the payload. Later edits retain that history; prefill
+omits it. Retired templates display both current values and historical meanings.
+
+Template creation, editing and retirement each commit one revision atomically.
+Product materialization encloses product creation, custom definitions/options,
+values and photo references in the same transaction and advances exactly once.
+Rejected revisions roll back all rows. Opening a draft and cancelling it write
+nothing. Product creation still requires separately entered stock and price;
+locations are supplied separately. Repeated template retirement is a no-op.
+
+Retired templates remain readable in snapshots and the retired-template browser,
+but leave active selection. Existing products and templates never hold mutable
+links to source-product custom definitions or to other template payloads. Photo
+bytes may be shared by immutable hash; retaining all published blobs keeps old
+template references available. Backup/restore has not landed yet.

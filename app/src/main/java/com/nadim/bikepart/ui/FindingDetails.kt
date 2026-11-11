@@ -20,9 +20,9 @@ internal val idSetSaver = listSaver<Set<String>, String>(save = { it.toList() },
 
 @Composable
 internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<String>, locations: Set<String>, busy: Boolean,
-    error: ShopError?, lookups: FindingLookups, assigned: Boolean, onAssigned: (Boolean) -> Unit, onModels: (Set<String>) -> Unit, onLocations: (Set<String>) -> Unit) {
+    error: ShopError?, lookups: FindingLookups, assigned: Boolean, onAssigned: (Boolean) -> Unit, onModels: (Set<String>) -> Unit, onLocations: (Set<String>) -> Unit, showLocations: Boolean = true) {
     var make by rememberSaveable { mutableStateOf("") }
-    ShopSection("Fitment and locations") {
+    ShopSection(if (showLocations) "Fitment and locations" else "Fitment") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             FilterChip(selected = !assigned, enabled = !busy, onClick = { onAssigned(false); onModels(emptySet()) },
                 label = { Text("Unknown fitment") }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
@@ -46,11 +46,13 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
             if (error?.field == ProductField.Fitment) FormError(error.message)
             if (models.isEmpty()) Text("Choose a model before saving assigned fitment.", style = MaterialTheme.typography.bodyMedium)
         }
+        if (showLocations) {
         Text("Finding locations · one combined stock count", style = MaterialTheme.typography.bodyMedium)
         LookupSelector("Search or add location", "Add location", shop.locations.filter { !it.retired || it.id in locations && it.id in product?.locationIds.orEmpty() }.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, locations, busy,
             onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
             onCreate = { name -> lookups.location(name) { onLocations(locations + it) } })
         if (error?.field == ProductField.Location) FormError(error.message)
+        }
     }
 }
 
