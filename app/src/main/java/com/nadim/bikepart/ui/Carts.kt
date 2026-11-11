@@ -36,7 +36,7 @@ internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOp
 @Composable
 internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, error: ShopError?,
     edit: (String?, String?, String?) -> Unit, pause: () -> Unit, add: () -> Unit,
-    remove: (String) -> Unit, discard: () -> Unit, retry: () -> Unit, reload: () -> Unit) {
+    remove: (String) -> Unit, discard: () -> Unit, retry: () -> Unit, reload: () -> Unit, checkout: () -> Unit) {
     if (draft == null) { Text("This cart is no longer available. Return to the cart list."); return }
     val cart = shop.carts.find { it.id == draft.cart.id } ?: draft.cart
     var confirmDiscard by rememberSaveable(cart.id) { mutableStateOf(false) }
@@ -76,6 +76,7 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
     }
     Text("Saved cart total: ₹${indianNumber(cart.totalRupees)}", style = MaterialTheme.typography.headlineSmall)
     ShopPrimaryButton("Add products", enabled = !busy && !draft.dirty, onClick = add)
+    ShopPrimaryButton("Checkout", enabled = !busy && cart.lines.isNotEmpty(), onClick = checkout)
     OutlinedButton(onClick = pause, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Save and return to carts") }
     OutlinedButton(onClick = { confirmDiscard = true }, enabled = !busy && !draft.dirty, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Discard cart") }
     if (confirmDiscard) AlertDialog(onDismissRequest = { if (!busy) confirmDiscard = false },

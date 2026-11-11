@@ -25,6 +25,8 @@ class CategoryMigrationTest {
 
     @Test fun versionEightUpgradePreservesCatalogAndSupportsCarts() = runBlocking { verifyTypedUpgrade(8) }
 
+    @Test fun versionNineUpgradePreservesQuotedCartsAndSupportsCheckout() = runBlocking { verifyTypedUpgrade(9) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -57,6 +59,11 @@ class CategoryMigrationTest {
                 if (version >= 5) db.execSQL("INSERT INTO product_photos VALUES ('p', '${"a".repeat(64)}', 3)")
                 if (version >= 6) db.execSQL("INSERT INTO product_templates VALUES ('t', 'c', ?, 0)", arrayOf(CatalogDraft("Template bolt", "c", "Original template").encode()))
                 if (version >= 7) db.execSQL("INSERT INTO stock_corrections VALUES ('legacy-count', 'p', 'PhysicalCount', 12, 'Legacy recount', 12, 12, NULL, 123456, 7)")
+                if (version >= 9) {
+                    db.execSQL("INSERT INTO carts VALUES ('legacy-cart', 17, 'Legacy customer', 3)")
+                    db.execSQL("INSERT INTO cart_lines VALUES ('legacy-cart', 'p', 2, 70)")
+                    db.execSQL("INSERT INTO cart_sequence VALUES (1, 17)")
+                }
                 db.version = version
             }
             val values = mapOf("d" to AttributeValue.Decimal("008.00"), "f" to AttributeValue.Choices(setOf("o")))
@@ -64,6 +71,7 @@ class CategoryMigrationTest {
                 val before = shop.snapshot()
                 assertEquals("stable-dataset", before.datasetId)
                 assertEquals(7L, before.revision)
+                if (version >= 9) assertEquals(listOf(Cart("legacy-cart", 17, "Legacy customer", 3, listOf(CartLine("p", 2, 70)))), before.carts)
                 assertEquals(Appearance.Dark, before.appearance)
                 assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values, photo = if (version >= 5) PhotoReference("a".repeat(64), 3) else null, lowStockThreshold = if (version >= 8) 7 else null), before.products.single())
                 assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
@@ -117,15 +125,22 @@ class CategoryMigrationTest {
             }
             Shop.open(context, name).use { shop ->
                 val before = shop.snapshot()
-                assertTrue(before.carts.isEmpty())
+                if (version >= 9) {
+                    val legacy = before.carts.single()
+                    assertEquals(140L, legacy.totalRupees)
+                    val sale = shop.checkout(legacy.id, legacy.editVersion, "150")
+                    assertEquals(10L, sale.changeRupees)
+                    assertEquals(8L, shop.snapshot().products.single().quantity)
+                } else assertTrue(before.carts.isEmpty())
                 val cart = shop.createCart()
                 shop.saveCart(cart, 0, "Upgrade customer", mapOf("p" to "2"))
-                assertEquals(before.revision + 2, shop.snapshot().revision)
+                assertEquals(before.revision + if (version >= 9) 3 else 2, shop.snapshot().revision)
             }
             Shop.open(context, name).use { shop ->
                 assertEquals("Upgrade customer", shop.snapshot().carts.single().customer)
                 assertEquals(160L, shop.snapshot().carts.single().totalRupees)
-                assertEquals(10L, shop.snapshot().products.single().quantity)
+                assertEquals(if (version >= 9) 8L else 10L, shop.snapshot().products.single().quantity)
+                if (version >= 9) assertEquals(140L, shop.receipt("legacy-cart")!!.totalRupees)
             }
             SQLiteDatabase.openDatabase(path.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
                 db.rawQuery("PRAGMA foreign_key_check", null).use { assertFalse(it.moveToFirst()) }

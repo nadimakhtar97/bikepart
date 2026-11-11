@@ -92,3 +92,13 @@ internal val MIGRATION_8_9 = object : Migration(8, 9) {
         db.execSQL("CREATE TABLE cart_sequence (id INTEGER NOT NULL, lastNumber INTEGER NOT NULL, PRIMARY KEY(id))")
     }
 }
+
+/** Existing open carts and their quotes survive; completed carts are identified by sales.cartId. */
+internal val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE sales (id TEXT NOT NULL, cartId TEXT NOT NULL, cartNumber INTEGER NOT NULL, customer TEXT NOT NULL, recordedAt INTEGER NOT NULL, revision INTEGER NOT NULL, totalRupees INTEGER NOT NULL, cashRupees INTEGER NOT NULL, changeRupees INTEGER NOT NULL, PRIMARY KEY(id))")
+        db.execSQL("CREATE UNIQUE INDEX index_sales_cartId ON sales(cartId)")
+        db.execSQL("CREATE TABLE sale_lines (saleId TEXT NOT NULL, productId TEXT NOT NULL, sku TEXT NOT NULL, title TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, fitment TEXT NOT NULL, quantity INTEGER NOT NULL, quotedPriceRupees INTEGER NOT NULL, previousBalance INTEGER NOT NULL, resultingBalance INTEGER NOT NULL, movement INTEGER NOT NULL, PRIMARY KEY(saleId, productId), FOREIGN KEY(saleId) REFERENCES sales(id) ON UPDATE NO ACTION ON DELETE RESTRICT, FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX index_sale_lines_productId ON sale_lines(productId)")
+    }
+}

@@ -46,6 +46,12 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
     var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
+    var checkoutVersion by rememberSaveable { mutableLongStateOf(0L) }
+    // A persisted cart identity also recovers a committed receipt after a lost checkout response.
+    val selectedSale = state?.sales?.find { it.cartId == selectedId }
+    LaunchedEffect(state?.revision, route, selectedId) {
+        if (route in listOf("cart", "checkout") && selectedSale != null) { route = "receipt"; model.error.value = null }
+    }
     LaunchedEffect(state != null, route) {
         if (state != null && route in listOf("cart", "cart-products") && cartDraft == null) model.openCart(selectedId)
     }
@@ -57,7 +63,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     val product = state?.products?.find { it.id == selectedId }
     fun back() {
         if (route == "cart") { model.flushCart { route = "main"; destination = "Carts" }; return }
-        route = when (route) { "cart-products" -> "cart"; "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }
+        route = when (route) { "checkout", "cart-products" -> "cart"; "receipt" -> "sales"; "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }
         model.error.value = null
     }
     fun newCart() { model.write({ selectedId = createCart() }, { model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
@@ -78,7 +84,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                 CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "templates" -> "Product templates"; "template-detail" -> "Template"; "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "cart" -> "Unfinished bill"; "cart-products" -> "Add to cart"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"; "cart" -> "Unfinished bill"; "cart-products" -> "Add to cart"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
@@ -117,10 +123,24 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                         "cart" -> CartEditor(shop, cartDraft, busy, error,
                             edit = model::editCart, pause = ::back, add = { route = "cart-products" },
                             retry = { model.flushCart() }, reload = model::reloadCart,
+                            checkout = { model.flushCart { checkoutVersion = requireNotNull(model.cartDraft.value).cart.editVersion; model.error.value = null; route = "checkout" } },
                             remove = { productId -> cartDraft?.let { draft ->
                                 model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
                             } },
                             discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { route = "main"; destination = "Carts" }) } })
+                        "checkout" -> {
+                            val cart = shop.carts.find { it.id == selectedId }
+                            if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
+                            else if (cart != null) CashCheckout(shop, cart, busy, error,
+                                onChange = { model.error.value = null }, edit = { model.openCart(cart.id); route = "cart" },
+                                complete = { cash ->
+                                    model.write({ checkout(cart.id, checkoutVersion, cash) }, { route = "receipt" })
+                                })
+                            else Text("This cart is no longer available. Return to the cart list.")
+                        }
+                        "sales" -> SalesHistory(shop) { selectedId = it; model.error.value = null; route = "receipt" }
+                        "receipt" -> if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
+                            else Text("Receipt unavailable. Return to Sales history.")
                         "cart-products" -> cartDraft?.let { draft ->
                             CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
                                 onChange = { model.error.value = null }, add = { productId, pieces ->
@@ -176,6 +196,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                         })
                             ThresholdForm(product, busy, error, onChange = { model.error.value = null },
                                 save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
+                            SaleStockHistory(shop, product.id)
                         }
                         "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
                             custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
@@ -197,13 +218,14 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             }
                             "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
                             "More" -> {
+                                OutlinedButton(onClick = { route = "sales" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Sales history") }
                                 OutlinedButton(onClick = { route = "templates" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Product templates") }
                                 AppearanceSettings(shop.appearance, busy,
                                 onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" }, onFindingLookups = { route = "finding-lookups" })
                             }
                         }
                     }
-                    if (error != null && route != "cart" && route != "cart-products" && !(route == "detail" && error?.field == ProductField.LowStockThreshold) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
+                    if (error != null && route != "receipt" && route != "checkout" && route != "cart" && route != "cart-products" && !(route == "detail" && error?.field == ProductField.LowStockThreshold) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
                         !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
                 }
             }

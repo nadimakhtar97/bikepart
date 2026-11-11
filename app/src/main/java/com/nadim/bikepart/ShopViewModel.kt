@@ -37,7 +37,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         cartAutosave = viewModelScope.launch { delay(450); flushCart() }
     }
 
-    /** Navigation and future checkout use this same save barrier; failed drafts stay visible. */
+    /** Navigation and checkout use this same save barrier; failed drafts stay visible. */
     fun flushCart(done: (() -> Unit)? = null) {
         if (done != null) afterCartSave = done
         cartAutosave?.cancel()

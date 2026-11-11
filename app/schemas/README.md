@@ -272,3 +272,26 @@ stale draft remains visible for correction, retry or explicit reload. New lines,
 removal and discard appear as committed outcomes. Cash checkout remains ticket
 11; its entry must use the same pending-edit barrier. Backup/restore has not
 landed yet.
+
+## Version 10 — atomic cash sales
+
+The additive 9 → 10 migration creates `sales` and `sale_lines`, preserving open
+carts, quotes, numbering, catalog, balances, history, settings and revisions.
+All prior schemas remain supported by the explicit migration chain. The unique
+`sales.cartId` retains the identity of each completed cart after its open cart
+and draft lines are removed in the checkout transaction.
+
+`Shop.checkout` looks up that receipt before validating retry inputs. A new sale
+checks the cart edit version, nonempty lines, checked whole-rupee tender and all
+current balances. It inserts immutable receipt text (SKU, title, category,
+description and fitment), quantity/quote, cash/change, timestamp and revision.
+Each sale line also records its signed stock movement and before/after balance.
+These inserts, balance deductions, cart completion and revision advancement
+commit together. There are no sale update/delete operations and no network or
+printing work inside checkout. `Shop.receipt` and snapshot sales expose historical
+receipts without resolving their text from the live catalog.
+
+Fixtures cover upgrades from versions 1–9 and SQLite integrity/foreign-key checks.
+The version 9 fixture retains an existing customer cart, quote, edit version and
+sequence, then completes and reopens its receipt after migration. Backup/restore
+has not landed; there is no snapshot codec to extend yet.

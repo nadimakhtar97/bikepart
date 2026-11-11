@@ -63,8 +63,24 @@ internal data class CartLineRow(val cartId: String, val productId: String, val q
 @Entity(tableName = "cart_sequence")
 internal data class CartSequenceRow(@PrimaryKey val id: Int = 1, val lastNumber: Long)
 
+@Entity(tableName = "sales", indices = [Index(value = ["cartId"], unique = true)])
+internal data class SaleRow(@PrimaryKey val id: String, val cartId: String, val cartNumber: Long,
+    val customer: String, val recordedAt: Long, val revision: Long, val totalRupees: Long,
+    val cashRupees: Long, val changeRupees: Long)
+
+// Receipt snapshots and their stock movements have no update/delete API.
+@Entity(tableName = "sale_lines", primaryKeys = ["saleId", "productId"], foreignKeys = [ForeignKey(entity = SaleRow::class, parentColumns = ["id"], childColumns = ["saleId"], onDelete = ForeignKey.RESTRICT), ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
+internal data class SaleLineRow(val saleId: String, val productId: String, val sku: String, val title: String,
+    val category: String, val description: String, val fitment: String, val quantity: Long,
+    val quotedPriceRupees: Long, val previousBalance: Long, val resultingBalance: Long, val movement: Long)
+
 @Dao
 internal interface ShopDao {
+    @Query("SELECT * FROM sales ORDER BY revision DESC") suspend fun sales(): List<SaleRow>
+    @Query("SELECT * FROM sales WHERE cartId = :cartId") suspend fun saleForCart(cartId: String): SaleRow?
+    @Query("SELECT * FROM sale_lines ORDER BY saleId, productId") suspend fun saleLines(): List<SaleLineRow>
+    @Insert suspend fun insertSale(row: SaleRow)
+    @Insert suspend fun insertSaleLines(rows: List<SaleLineRow>)
     @Query("SELECT * FROM carts ORDER BY number DESC") suspend fun carts(): List<CartRow>
     @Query("SELECT * FROM carts WHERE id = :id") suspend fun cart(id: String): CartRow?
     @Query("SELECT * FROM cart_lines ORDER BY cartId, productId") suspend fun cartLines(): List<CartLineRow>
@@ -125,5 +141,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class], version = 9, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class], version = 10, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }
