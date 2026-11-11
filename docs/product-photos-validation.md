@@ -37,3 +37,23 @@ controls remain labelled, scrollable and at least 48dp. Existing theme validatio
 passes 94 contrast checks with minimum normal-text contrast 4.55:1.
 
 Manual TalkBack traversal and physical-device checks have not been performed.
+
+## Standards
+
+The independent code-review Standards review against starting commit `f559fcc`
+found no documented-rule violations. Its one optional judgment was that the
+selected URI and removal flag could become a sealed photo-draft type. Current
+selection/removal callbacks keep the pair mutually consistent, and activity
+recreation coverage verifies the saved draft. This is a future maintainability
+option, with no demonstrated behavior defect.
+
+## Spec
+
+The independent Spec review found no missing requirements, scope creep or
+incorrect implementation. Deterministic interruption coverage uses stream failure,
+cancellation and rejected database commits; it does not kill the process during
+filesystem publication. The reviewed write ordering publishes and syncs complete
+bytes before a product can commit their reference.
+
+Review totals: one optional Standards observation, no hard Standards violations,
+and zero Spec findings.

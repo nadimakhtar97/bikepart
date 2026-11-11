@@ -382,7 +382,8 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Treatments: Oil, Zinc").performScrollTo().assertExists()
         compose.onNodeWithText("Edit details").performScrollTo().performClick()
         compose.onNodeWithText("Size (optional)").performScrollTo().performTextReplacement("2.500")
-        compose.onNodeWithText("Save product").performScrollTo().performClick()
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Save product").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Size: 2.500").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Grade: SAE 10W-40").assertExists()
     }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nadim.bikepart.R
@@ -103,7 +104,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 save = { input ->
                                     val editing = if (route == "edit") product else null
                                     val photo = input.photoUri?.let { uri -> com.nadim.bikepart.shop.PhotoChange.Import {
-                                        resolver.openInputStream(android.net.Uri.parse(uri)) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
+                                        resolver.openInputStream(uri.toUri()) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
                                     } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
                                     model.write({
                                         if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes, input.categoryMappings, input.modelIds, input.locationIds, photo)

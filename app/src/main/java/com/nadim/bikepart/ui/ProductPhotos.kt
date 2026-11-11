@@ -1,7 +1,6 @@
 package com.nadim.bikepart.ui
 
 import android.graphics.ImageDecoder
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -17,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.nadim.bikepart.R
 import com.nadim.bikepart.shop.PhotoReference
 import com.nadim.bikepart.shop.MAX_PHOTO_BYTES
@@ -35,7 +35,7 @@ internal fun ProductPhoto(reference: PhotoReference?, load: PhotoLoader, modifie
         value = null
         try {
             value = withContext(Dispatchers.IO) {
-                val bytes = if (selectedUri != null) resolver.openInputStream(Uri.parse(selectedUri))?.use { input ->
+                val bytes = if (selectedUri != null) resolver.openInputStream(selectedUri.toUri())?.use { input ->
                     input.readNBytes(MAX_PHOTO_BYTES.toInt() + 1).takeIf { it.size <= MAX_PHOTO_BYTES }
                 } else reference?.let { load(it) }
                 bytes?.let {
