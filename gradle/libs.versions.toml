@@ -13,6 +13,7 @@ ksp = "2.3.10"
 icu4j = "76.1" # Normalizer v1 pins Unicode 16 data; upgrading requires a normalizer migration.
 
 [libraries]
+androidx-espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoCore" }
 icu4j = { group = "com.ibm.icu", name = "icu4j", version.ref = "icu4j" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }

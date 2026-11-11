@@ -43,8 +43,14 @@ internal data class FitmentRow(val productId: String, val modelId: String)
 @Entity(tableName = "product_locations", primaryKeys = ["productId", "locationId"], foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT), ForeignKey(entity = LocationRow::class, parentColumns = ["id"], childColumns = ["locationId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("locationId")])
 internal data class ProductLocationRow(val productId: String, val locationId: String)
 
+@Entity(tableName = "product_photos", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)])
+internal data class ProductPhotoRow(@PrimaryKey val productId: String, val sha256: String, val sizeBytes: Long)
+
 @Dao
 internal interface ShopDao {
+    @Query("SELECT * FROM product_photos") suspend fun productPhotos(): List<ProductPhotoRow>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putPhoto(row: ProductPhotoRow)
+    @Query("DELETE FROM product_photos WHERE productId = :id") suspend fun deletePhoto(id: String)
     @Query("SELECT * FROM motorcycle_makes ORDER BY name, id") suspend fun makes(): List<MakeRow>
     @Query("SELECT * FROM motorcycle_models ORDER BY name, id") suspend fun models(): List<ModelRow>
     @Query("SELECT * FROM storage_locations ORDER BY name, id") suspend fun locations(): List<LocationRow>
@@ -84,5 +90,5 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class], version = 4, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class], version = 5, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }

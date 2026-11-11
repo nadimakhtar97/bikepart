@@ -8,16 +8,16 @@ import java.util.UUID
 import kotlinx.coroutines.flow.map
 
 data class Category(val id: String, val name: String)
-data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet())
+data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet(), val photo: PhotoReference? = null)
 data class HistoricalAttribute(val id: String, val definitionId: String, val value: AttributeValue)
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
 data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList())
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location") }
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
-class Shop private constructor(private val database: ShopDatabase) : AutoCloseable {
+class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos) : AutoCloseable {
     private val dao = database.dao()
     val snapshots = dao.revisions().map { snapshot() }
 
@@ -34,12 +34,13 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
 
     suspend fun snapshot(): ShopSnapshot = database.withTransaction {
         val state = requireNotNull(dao.state())
+        val photoRows = dao.productPhotos().associateBy { it.productId }
         val balances = dao.balances().associateBy { it.productId }
         val values = dao.values().groupBy { it.productId }
         val fitments = dao.fitments().groupBy { it.productId }
         val locations = dao.productLocations().groupBy { it.productId }
         ShopSnapshot(dao.categories().map { Category(it.id, it.name) }, dao.products().map {
-            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet())
+            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet(), photoRows[it.id]?.let { row -> PhotoReference(row.sha256, row.sizeBytes) })
         }, state.revision, Appearance.valueOf(state.appearance),
             dao.attributes().map { CategoryAttribute(it.id, it.categoryId, it.name, AttributeType.valueOf(it.type), it.required, it.unit, it.productId, it.retired) },
             dao.options().map { AttributeOption(it.id, it.definitionId, it.name, it.retired) }, state.datasetId,
@@ -48,49 +49,62 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
             dao.locations().map { StorageLocation(it.id, it.name, it.retired) })
     }
 
-    suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet()): String = database.withTransaction {
-        validateProduct(title, categoryId)
-        val values = validateAttributes(categoryId, attributes)
-        val quantity = parseWhole(openingPieces, ProductField.OpeningStock)
-        val price = parseWhole(priceRupees, ProductField.SellingPrice)
-        if (!allowSimilar && dao.products().any { LookupNames.key(it.title) == LookupNames.key(title) && it.categoryId == categoryId }) throw SimilarProduct()
-        val id = UUID.randomUUID().toString()
-        dao.insertProduct(ProductRow(id, "BP-${id.uppercase(Locale.ROOT)}", title.trim(), categoryId, description.trim(), price))
-        dao.insertValues(values.map { it.copy(productId = id) })
-        saveFindingDetails(id, modelIds, locationIds)
-        dao.insertBalance(BalanceRow(id, quantity))
-        if (quantity > 0) dao.insertOpening(OpeningRow(id, quantity, System.currentTimeMillis()))
-        advanceRevision()
-        id
+    suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
+        val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
+        return database.withTransaction {
+            validateProduct(title, categoryId)
+            val values = validateAttributes(categoryId, attributes)
+            val quantity = parseWhole(openingPieces, ProductField.OpeningStock)
+            val price = parseWhole(priceRupees, ProductField.SellingPrice)
+            if (!allowSimilar && dao.products().any { LookupNames.key(it.title) == LookupNames.key(title) && it.categoryId == categoryId }) throw SimilarProduct()
+            val id = UUID.randomUUID().toString()
+            dao.insertProduct(ProductRow(id, "BP-${id.uppercase(Locale.ROOT)}", title.trim(), categoryId, description.trim(), price))
+            dao.insertValues(values.map { it.copy(productId = id) })
+            saveFindingDetails(id, modelIds, locationIds)
+            if (imported != null) dao.putPhoto(ProductPhotoRow(id, imported.sha256, imported.sizeBytes))
+            dao.insertBalance(BalanceRow(id, quantity))
+            if (quantity > 0) dao.insertOpening(OpeningRow(id, quantity, System.currentTimeMillis()))
+            advanceRevision()
+            id
+        }
     }
 
-    suspend fun editProduct(id: String, title: String, categoryId: String, description: String, attributes: Map<String, AttributeValue>? = null, categoryMappings: Map<String, String> = emptyMap(), modelIds: Set<String>? = null, locationIds: Set<String>? = null) = database.withTransaction {
-        validateProduct(title, categoryId)
-        val product = dao.products().single { it.id == id }
-        val previous = dao.values().filter { it.productId == id }
-        val existing = previous.filter { it.historyId.isEmpty() }.associate { it.definitionId to decodeValue(it) }
-        val definitions = dao.attributes()
-        val applicable = definitions.filter { it.productId == id || it.productId == null && it.categoryId == categoryId }.map { it.id }.toSet()
-        val historical = previous.filter { it.historyId.isNotEmpty() || it.definitionId !in applicable }.map { if (it.historyId.isNotEmpty()) it else it.copy(historyId = UUID.randomUUID().toString()) }
-        val input = (attributes ?: existing.filterKeys { it in applicable }).toMutableMap()
-        require(categoryMappings.isEmpty() || product.categoryId != categoryId) { "Mapping requires a category change" }
-        require(categoryMappings.values.toSet().size == categoryMappings.size) { "Map each target only once" }
-        for ((sourceId, targetId) in categoryMappings) {
-            val source = definitions.single { it.id == sourceId }
-            val target = definitions.single { it.id == targetId }
-            require(source.productId == null && source.categoryId == product.categoryId && sourceId in existing) { "Choose a previous category value" }
-            require(target.productId == null && target.categoryId == categoryId && !target.retired && source.type == target.type && source.unit == target.unit && !AttributeType.valueOf(source.type).isChoice) { "Map fields with the same text or decimal type and unit; choice fields must be selected explicitly" }
-            val mapped = existing.getValue(sourceId)
-            require(targetId !in input || input[targetId] == mapped) { "Mapping conflicts with the entered target value" }
-            input[targetId] = mapped
+    suspend fun editProduct(id: String, title: String, categoryId: String, description: String, attributes: Map<String, AttributeValue>? = null, categoryMappings: Map<String, String> = emptyMap(), modelIds: Set<String>? = null, locationIds: Set<String>? = null, photo: PhotoChange = PhotoChange.Keep) {
+        val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
+        database.withTransaction {
+            validateProduct(title, categoryId)
+            val product = dao.products().single { it.id == id }
+            val previous = dao.values().filter { it.productId == id }
+            val existing = previous.filter { it.historyId.isEmpty() }.associate { it.definitionId to decodeValue(it) }
+            val definitions = dao.attributes()
+            val applicable = definitions.filter { it.productId == id || it.productId == null && it.categoryId == categoryId }.map { it.id }.toSet()
+            val historical = previous.filter { it.historyId.isNotEmpty() || it.definitionId !in applicable }.map { if (it.historyId.isNotEmpty()) it else it.copy(historyId = UUID.randomUUID().toString()) }
+            val input = (attributes ?: existing.filterKeys { it in applicable }).toMutableMap()
+            require(categoryMappings.isEmpty() || product.categoryId != categoryId) { "Mapping requires a category change" }
+            require(categoryMappings.values.toSet().size == categoryMappings.size) { "Map each target only once" }
+            for ((sourceId, targetId) in categoryMappings) {
+                val source = definitions.single { it.id == sourceId }
+                val target = definitions.single { it.id == targetId }
+                require(source.productId == null && source.categoryId == product.categoryId && sourceId in existing) { "Choose a previous category value" }
+                require(target.productId == null && target.categoryId == categoryId && !target.retired && source.type == target.type && source.unit == target.unit && !AttributeType.valueOf(source.type).isChoice) { "Map fields with the same text or decimal type and unit; choice fields must be selected explicitly" }
+                val mapped = existing.getValue(sourceId)
+                require(targetId !in input || input[targetId] == mapped) { "Mapping conflicts with the entered target value" }
+                input[targetId] = mapped
+            }
+            val values = validateAttributes(categoryId, input, id, existing)
+            saveFindingDetails(id, modelIds ?: dao.fitments().filter { it.productId == id }.map { it.modelId }.toSet(), locationIds ?: dao.productLocations().filter { it.productId == id }.map { it.locationId }.toSet())
+            dao.deleteValues(id)
+            dao.insertValues(historical + values.map { it.copy(productId = id) })
+            when (photo) {
+                PhotoChange.Keep -> Unit
+                PhotoChange.Remove -> dao.deletePhoto(id)
+                is PhotoChange.Import -> dao.putPhoto(ProductPhotoRow(id, requireNotNull(imported).sha256, imported.sizeBytes))
+            }
+            dao.updateProduct(product.copy(title = title.trim(), categoryId = categoryId, description = description.trim()))
+            advanceRevision()
         }
-        val values = validateAttributes(categoryId, input, id, existing)
-        saveFindingDetails(id, modelIds ?: dao.fitments().filter { it.productId == id }.map { it.modelId }.toSet(), locationIds ?: dao.productLocations().filter { it.productId == id }.map { it.locationId }.toSet())
-        dao.deleteValues(id)
-        dao.insertValues(historical + values.map { it.copy(productId = id) })
-        dao.updateProduct(product.copy(title = title.trim(), categoryId = categoryId, description = description.trim()))
-        advanceRevision()
     }
+    suspend fun readPhoto(reference: PhotoReference): ByteArray? = photos.read(reference)
 
     suspend fun createMake(name: String): String = database.withTransaction {
         val display = lookupDisplay(name)
@@ -327,8 +341,9 @@ class Shop private constructor(private val database: ShopDatabase) : AutoCloseab
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
-            return Shop(database).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+            val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
+            return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }
     }
 }

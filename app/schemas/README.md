@@ -132,3 +132,29 @@ newly selected or re-added after removal. Repeated retirement is a no-op.
 Revision-interruption coverage verifies rollback of lookup creation, retirement,
 product creation and association edits through snapshots and durable reopen.
 Backup/restore has not landed yet.
+
+## Version 5 — immutable product photos
+
+The explicit 4 → 5 migration adds `product_photos`, associating a product with
+an immutable SHA-256 content identity and exact byte size. Existing products
+retain no photo. File-backed fixtures cover all historical versions 1–4 and
+verify identity, typed values, stock, history, settings, revision and integrity.
+
+`Shop` copies selected input into a private temporary file, bounds it to 20 MB,
+hashes and syncs it, then publishes it with an atomic rename under a publication
+lock. It syncs directory entries before committing the reference and business
+revision in one Room transaction. Failed/cancelled input never commits a product
+reference; rejected database commits preserve the previous reference. Replacement
+uses a new content identity; identical bytes reuse their existing immutable file.
+Reads verify size and hash. Image decoding is sampled off the UI thread; missing,
+corrupt or undecodable photos use the bundled neutral stock vector.
+
+Files live under `files/product-photos/<SHA-256 of database name>/<content hash>`.
+The picker URI is only a form draft: saved products use app-owned bytes. Preview
+and file reads do not advance the revision. Original files are never modified.
+Completed unreferenced blobs are deliberately retained, including after removal
+or a failed database write. No blob garbage collection runs until backup staging
+and retention can contribute their pins; future cleanup must use that full union.
+Temporary imports are deleted on normal success/failure/cancellation. Process
+death can leave an unreferenced temporary file, never a committed partial photo.
+Backup/restore has not landed yet.

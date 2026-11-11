@@ -34,5 +34,6 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             finally { busy.value = false }
         }
     }
+    suspend fun readPhoto(reference: PhotoReference): ByteArray? = shop?.readPhoto(reference)
     override fun onCleared() { shop?.close() }
 }

@@ -51,3 +51,10 @@ internal val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE INDEX index_product_locations_locationId ON product_locations(locationId)")
     }
 }
+
+/** Existing products retain their neutral fallback until staff attach a photo. */
+internal val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE product_photos (productId TEXT NOT NULL, sha256 TEXT NOT NULL, sizeBytes INTEGER NOT NULL, PRIMARY KEY(productId), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+    }
+}

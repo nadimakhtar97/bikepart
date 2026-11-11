@@ -24,7 +24,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
     val title: String, val categoryId: String, val description: String,
-    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>, val categoryMappings: Map<String, String>, val modelIds: Set<String>, val locationIds: Set<String>,
+    val openingPieces: String, val priceRupees: String, val allowSimilar: Boolean, val attributes: Map<String, AttributeValue>, val categoryMappings: Map<String, String>, val modelIds: Set<String>, val locationIds: Set<String>, val photoUri: String?, val photoRemoved: Boolean,
 )
 
 @Composable
@@ -81,20 +81,23 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: () -> Un
 }
 
 @Composable
-internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit) {
+internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader) {
     ShopPrimaryButton("Add product", onClick = onAdd)
     if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
     else Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         shop.products.forEach { product ->
             Surface(onClick = { onOpen(product.id) }, shape = MaterialTheme.shapes.small,
                 color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                    Text(product.title, style = MaterialTheme.typography.titleMedium)
-                    Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
-                    Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
-                    Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
-                    if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete", style = MaterialTheme.typography.labelLarge)
-                    Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+                    ProductPhoto(product.photo, loadPhoto, Modifier.size(64.dp), decodeSize = 256)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                        Text(product.title, style = MaterialTheme.typography.titleMedium)
+                        Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
+                        Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
+                        Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
+                        if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete", style = MaterialTheme.typography.labelLarge)
+                        Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }
@@ -102,9 +105,10 @@ internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String)
 }
 
 @Composable
-internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit) {
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader) {
     Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
     Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
+    ProductPhoto(product.photo, loadPhoto, Modifier.fillMaxWidth().height(160.dp))
     ShopSection("Stock and selling price") {
         Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
         Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
@@ -171,7 +175,9 @@ internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (Stri
 }
 
 @Composable
-internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, findingLookups: FindingLookups, save: (ProductFormInput) -> Unit) {
+internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, findingLookups: FindingLookups, loadPhoto: PhotoLoader, save: (ProductFormInput) -> Unit) {
+    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var photoRemoved by rememberSaveable { mutableStateOf(false) }
     var models by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.modelIds ?: emptySet()) }
     var locations by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.locationIds ?: emptySet()) }
     var assigned by rememberSaveable { mutableStateOf(models.isNotEmpty()) }
@@ -193,6 +199,9 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
+    PhotoField(product?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
+        select = { photoUri = it; photoRemoved = false; onChange() },
+        remove = { photoUri = null; photoRemoved = true; onChange() })
     if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
     if (category.isNotEmpty()) CategoryFields(shop, category, values, busy, error, lookups, product?.id,
         onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
@@ -219,7 +228,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
             findingError = ShopError("Choose at least one motorcycle model", ProductField.Fitment)
             return@ShopPrimaryButton
         }
-        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.appliesTo(category, product?.id) } }, mappings, models, locations))
+        save(ProductFormInput(title, category, description, quantity, price, distinct, values.filterKeys { id -> shop.attributes.any { it.id == id && it.appliesTo(category, product?.id) } }, mappings, models, locations, photoUri, photoRemoved))
     }
 }
 

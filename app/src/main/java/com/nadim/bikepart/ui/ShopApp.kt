@@ -31,6 +31,7 @@ private val destinations = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopApp(model: ShopViewModel = viewModel()) {
+    val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
     val state by model.state.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
@@ -98,18 +99,22 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                     model = { make, name, selected -> model.write({ selected(createModel(make, name)) }) },
                                     location = { name, selected -> model.write({ selected(createLocation(name)) }) },
                                 ),
+                                loadPhoto = model::readPhoto,
                                 save = { input ->
                                     val editing = if (route == "edit") product else null
+                                    val photo = input.photoUri?.let { uri -> com.nadim.bikepart.shop.PhotoChange.Import {
+                                        resolver.openInputStream(android.net.Uri.parse(uri)) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
+                                    } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
                                     model.write({
-                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes, input.categoryMappings, input.modelIds, input.locationIds)
+                                        if (editing != null) editProduct(editing.id, input.title, input.categoryId, input.description, input.attributes, input.categoryMappings, input.modelIds, input.locationIds, photo)
                                         else selectedId = createProduct(title = input.title, categoryId = input.categoryId,
                                             description = input.description, openingPieces = input.openingPieces,
-                                            priceRupees = input.priceRupees, allowSimilar = input.allowSimilar, attributes = input.attributes, modelIds = input.modelIds, locationIds = input.locationIds)
+                                            priceRupees = input.priceRupees, allowSimilar = input.allowSimilar, attributes = input.attributes, modelIds = input.modelIds, locationIds = input.locationIds, photo = photo)
                                     }, { route = "detail" })
                                 },
                             )
                         }
-                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" })
+                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto)
                         "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
                             custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
                             promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
@@ -125,7 +130,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                         "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
                         else -> when (destination) {
                             "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = { destination = "Stock" })
-                            "Stock" -> StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" })
+                            "Stock" -> StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto)
                             "Carts" -> ShopEmptyState("No unfinished carts", "Your unfinished customer bills will appear here.", R.drawable.ic_carts)
                             "More" -> AppearanceSettings(shop.appearance, busy,
                                 onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" }, onFindingLookups = { route = "finding-lookups" })
