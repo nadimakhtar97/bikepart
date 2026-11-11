@@ -220,3 +220,21 @@ history, while showing original opening stock independently of current stock.
 These forms reuse the adopted native theme, grouped surfaces and shared fields;
 they introduce no new theme tokens or inherited design changes. Backup/restore
 has not landed yet.
+
+## Version 8 — optional low-stock thresholds
+
+The additive 7 → 8 migration adds nullable `products.lowStockThreshold`. Existing
+products retain no threshold; identities, descriptive values, photos, templates,
+balances, correction/opening history, settings and revisions remain unchanged.
+File-backed fixtures cover schemas 1–7, including a version-7 correction audit,
+and exercise durable threshold settings after upgrade with SQLite integrity and
+foreign-key checks.
+
+`Shop.setLowStockThreshold` accepts a blank value to clear or an ASCII nonnegative
+64-bit whole-piece count. A changed setting and checked business revision commit
+together; an unchanged setting is a no-op. Revision-interruption coverage verifies
+rollback and reopen. A positive balance at or below the threshold is Low stock;
+zero is always Out of stock, including with no threshold. Status is derived from
+the current combined balance, never stored as a second mutable fact. Thresholds
+belong to stock management and are not copied into descriptive templates.
+Backup/restore has not landed yet.

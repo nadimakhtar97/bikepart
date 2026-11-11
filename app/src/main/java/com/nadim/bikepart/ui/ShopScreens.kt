@@ -66,45 +66,33 @@ internal fun ShopEmptyState(title: String, description: String, icon: Int) {
 }
 
 @Composable
-internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: () -> Unit) {
+internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit) {
     ShopSection("Your parts counter") {
         Text("${shop.products.size} stocked products", style = MaterialTheme.typography.headlineSmall)
         Text("Work offline. Your stock stays on this phone.", style = MaterialTheme.typography.bodyMedium)
         ShopPrimaryButton("Add product", onClick = onAdd)
-        OutlinedButton(onClick = onStock, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("View stock") }
+        OutlinedButton(onClick = { onStock(null) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("View stock") }
     }
     if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
         "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
-    val empty = shop.products.filter { it.quantity == 0L }
-    if (empty.isNotEmpty()) ShopSection("Stock attention") {
-        empty.forEach { Text("Out of stock: ${it.title}", style = MaterialTheme.typography.bodyMedium) }
-    }
-}
-
-@Composable
-internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader) {
-    ShopPrimaryButton("Add product", onClick = onAdd)
-    if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
-    else Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        shop.products.forEach { product ->
-            Surface(onClick = { onOpen(product.id) }, shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
-                    ProductPhoto(product.photo, loadPhoto, Modifier.size(64.dp), decodeSize = 256)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                        Text(product.title, style = MaterialTheme.typography.titleMedium)
-                        Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
-                        Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
-                        Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
-                        if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete", style = MaterialTheme.typography.labelLarge)
-                        Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
+    if (shop.products.isNotEmpty()) ShopSection("Stock attention") {
+        for (health in listOf(StockHealth.LowStock, StockHealth.OutOfStock)) {
+            val count = shop.products.count { it.stockHealth == health }
+            OutlinedButton(onClick = { onStock(health) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
+                Icon(painterResource(R.drawable.ic_stock), contentDescription = null)
+                Spacer(Modifier.width(ShopSpacing.small))
+                Text("${health.label}: $count products")
             }
         }
     }
 }
 
+@Composable
+internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null) {
+    ShopPrimaryButton("Add product", onClick = onAdd)
+    if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
+    else StockSearch(shop, initialHealth, loadPhoto, onOpen)
+}
 @Composable
 internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit) {
     Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
@@ -112,7 +100,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     ProductPhoto(product.photo, loadPhoto, Modifier.fillMaxWidth().height(160.dp))
     ShopSection("Stock and selling price") {
         Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
-        Text(if (product.quantity == 0L) "Out of stock" else "In stock", style = MaterialTheme.typography.bodyMedium)
+        StockHealthIndicator(product)
         Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
     }
     ShopSection("Correct stock") {

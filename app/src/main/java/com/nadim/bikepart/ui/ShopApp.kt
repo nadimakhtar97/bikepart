@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,10 +33,13 @@ private val destinations = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopApp(model: ShopViewModel = viewModel()) {
+    val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
     val state by model.state.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
+    var stockHealth by rememberSaveable { mutableStateOf<String?>(null) }
+    var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf("Home") }
     var route by rememberSaveable { mutableStateOf("main") }
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
@@ -49,6 +53,13 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
     val product = state?.products?.find { it.id == selectedId }
     fun back() { route = when (route) { "edit", "fields", "correction" -> "detail"; "template-detail", "template-form" -> "templates"; else -> "main" }; model.error.value = null }
     fun addProduct() { model.error.value = null; catalogPayload = null; route = "create" }
+    fun openStock(health: StockHealth?) {
+        stockState.removeState("stock:$stockSession")
+        stockSession++
+        stockHealth = health?.name
+        destination = "Stock"
+        model.error.value = null
+    }
     BackHandler(route != "main") { if (!busy) back() }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
         val colors = MaterialTheme.colorScheme
@@ -72,7 +83,7 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                         val selected = destination == item.label
                         NavigationBarItem(
                             selected = selected,
-                            onClick = { destination = item.label; model.error.value = null },
+                            onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
                             icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
                             label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
                             colors = NavigationBarItemDefaults.colors(
@@ -137,9 +148,13 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                                 onChange = { model.error.value = null },
                                 save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
                         }
-                        "detail" -> if (product != null) ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
+                        "detail" -> if (product != null) {
+                            ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
                             model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
                         })
+                            ThresholdForm(product, busy, error, onChange = { model.error.value = null },
+                                save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
+                        }
                         "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
                             custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
                             promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
@@ -154,8 +169,10 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             retireLocation = { model.write({ retireLocation(it) }) })
                         "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
                         else -> when (destination) {
-                            "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = { destination = "Stock" })
-                            "Stock" -> StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto)
+                            "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock)
+                            "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
+                                StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth)
+                            }
                             "Carts" -> ShopEmptyState("No unfinished carts", "Your unfinished customer bills will appear here.", R.drawable.ic_carts)
                             "More" -> {
                                 OutlinedButton(onClick = { route = "templates" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Product templates") }
@@ -164,11 +181,10 @@ fun ShopApp(model: ShopViewModel = viewModel()) {
                             }
                         }
                     }
-                    if (error != null && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
+                    if (error != null && !(route == "detail" && error?.field == ProductField.LowStockThreshold) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
                         !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
                 }
             }
         }
     }
 }
-
