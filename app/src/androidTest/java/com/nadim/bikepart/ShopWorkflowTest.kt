@@ -410,6 +410,7 @@ class ShopWorkflowTest {
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
                 compose.onNodeWithText(category, useUnmergedTree = true).performScrollTo().performClick()
                 compose.onNodeWithText("Bottle volume (ml) (required)").performScrollTo().performTextInput("0.123456789012")
+                androidx.test.espresso.Espresso.closeSoftKeyboard()
                 compose.onNodeWithText("Viscosity grade (optional)").performScrollTo().assertIsDisplayed()
                 val file = java.io.File(context.getExternalFilesDir(null), "typed-fields-" + mode.name.lowercase() + "-" + scale + ".png")
                 instrumentation.uiAutomation.takeScreenshot().let { bitmap -> file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle() }

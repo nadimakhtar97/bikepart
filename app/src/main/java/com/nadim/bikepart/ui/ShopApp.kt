@@ -132,7 +132,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             manual = { route = when (ScanPurpose.valueOf(scanPurpose)) { ScanPurpose.Sale -> "cart-products"; ScanPurpose.Receiving -> "receive-products"; ScanPurpose.Catalog -> "catalog-search" } },
                             onChange = { model.error.value = null },
                             add = { id, pieces -> cartDraft?.let { draft -> model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, id, pieces) }, { model.openCart(draft.cart.id); route = "cart" }) } },
-                            receive = ::receive, open = { selectedId = it; route = "detail" }, copy = { beginCatalog(it, "create") }, cart = cartDraft?.cart)
+                            receive = ::receive, open = { selectedId = it; route = "detail" }, copy = { beginCatalog(it, "create") }, cart = cartDraft?.cart,
+                            link = { code, target, revision, done -> model.write({ linkBarcode(code, target, expectedAssignmentRevision = revision) }, done) })
                         "receive-products", "catalog-search" -> {
                             val forCatalog = route == "catalog-search"
                             OutlinedButton(onClick = { scan(if (forCatalog) ScanPurpose.Catalog else ScanPurpose.Receiving, route) }, enabled = !busy) { Text(if (forCatalog) "Scan catalog details" else "Scan for receiving") }

@@ -3,6 +3,13 @@ package com.nadim.bikepart.shop
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+internal val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE barcode_aliases (namespace TEXT NOT NULL, code TEXT NOT NULL, kind TEXT NOT NULL, targetId TEXT NOT NULL, revision INTEGER NOT NULL, PRIMARY KEY(namespace, code))")
+        db.execSQL("CREATE TABLE barcode_assignments (revision INTEGER NOT NULL, namespace TEXT NOT NULL, code TEXT NOT NULL, previousKind TEXT, previousTargetId TEXT, kind TEXT NOT NULL, targetId TEXT NOT NULL, recordedAt INTEGER NOT NULL, PRIMARY KEY(revision))")
+    }
+}
+
 /** Additive arrival history; existing balances and business revisions are untouched. */
 internal val MIGRATION_11_12 = object : Migration(11, 12) {
     override fun migrate(db: SupportSQLiteDatabase) {

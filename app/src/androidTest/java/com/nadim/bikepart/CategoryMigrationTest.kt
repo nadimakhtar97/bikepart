@@ -31,6 +31,8 @@ class CategoryMigrationTest {
 
     @Test fun versionElevenUpgradePreservesShopAndSupportsArrivals() = runBlocking { verifyTypedUpgrade(11) }
 
+    @Test fun versionTwelveUpgradePreservesShopAndSupportsBarcodeAliases() = runBlocking { verifyTypedUpgrade(12) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -72,6 +74,7 @@ class CategoryMigrationTest {
                     db.execSQL("INSERT INTO sales VALUES ('legacy-sale', 'completed-cart', 16, 'Completed customer', 123455, 6, 70, 100, 30)")
                     db.execSQL("INSERT INTO sale_lines VALUES ('legacy-sale', 'p', 'BP-stable', 'Original bolt', 'Bolts', 'Receipt detail', 'Unknown fitment', 1, 70, 13, 12, -1)")
                 }
+                if (version >= 12) db.execSQL("INSERT INTO stock_arrivals VALUES ('legacy-arrival', 'p', 2, 25, 10, 12, 123456, 7)")
                 db.version = version
             }
             val values = mapOf("d" to AttributeValue.Decimal("008.00"), "f" to AttributeValue.Choices(setOf("o")))
@@ -79,6 +82,10 @@ class CategoryMigrationTest {
                 val before = shop.snapshot()
                 assertEquals("stable-dataset", before.datasetId)
                 assertEquals(7L, before.revision)
+                if (version >= 12) {
+                    assertEquals("legacy-arrival", before.arrivals.single().operationId)
+                    assertEquals(25L, before.arrivals.single().unitCostRupees)
+                }
                 assertFalse(before.products.single().archived)
                 if (version >= 10) {
                     val receipt = shop.receipt("completed-cart")!!
@@ -163,11 +170,25 @@ class CategoryMigrationTest {
                 val after = shop.snapshot()
                 assertEquals(before.revision + 1, after.revision)
                 assertEquals(before.products.single().quantity + 3, after.products.single().quantity)
-                assertEquals(before.products.single().id, after.arrivals.single().productId)
-                assertEquals(25L, after.arrivals.single().unitCostRupees)
+                assertEquals(before.arrivals, after.arrivals.filter { it.operationId != "arrival-after-upgrade" })
+                assertEquals(before.products.single().id, after.arrivals.single { it.operationId == "arrival-after-upgrade" }.productId)
+                assertEquals(25L, after.arrivals.single { it.operationId == "arrival-after-upgrade" }.unitCostRupees)
                 after
             }
             Shop.open(context, name).use { assertEquals(arrived, it.snapshot()) }
+            val aliased = Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                assertTrue(before.barcodeAliases.isEmpty())
+                assertTrue(before.barcodeHistory.isEmpty())
+                shop.linkBarcode("000123", BarcodeTarget(BarcodeTargetKind.Product, "p"))
+                val after = shop.snapshot()
+                assertEquals(before.revision + 1, after.revision)
+                assertEquals(before.products, after.products)
+                assertEquals(before.arrivals, after.arrivals)
+                assertEquals("p", (after.resolveScan("000123") as ScanTarget.StockedProduct).product.id)
+                after
+            }
+            Shop.open(context, name).use { assertEquals(aliased, it.snapshot()) }
             val archived = Shop.open(context, name).use { shop ->
                 val before = shop.snapshot()
                 before.carts.forEach { shop.discardCart(it.id, it.editVersion) }

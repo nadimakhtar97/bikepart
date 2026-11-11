@@ -43,7 +43,9 @@ class SearchWorkflowTest {
         fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
         fun click(text: String) { compose.onNodeWithText(text).performScrollTo().performClick() }
         fun choose(label: String, choice: String) {
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
             click("$label: Any")
+            await("Find $label")
             compose.onNodeWithText("Find $label").performTextInput(choice)
             compose.onNode(hasText(choice) and hasAnyAncestor(isDialog()) and hasClickAction() and !hasSetTextAction()).performClick()
         }

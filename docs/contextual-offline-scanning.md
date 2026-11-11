@@ -8,19 +8,20 @@ Shared product labels use exactly
 payload must match: no trimming, URL decoding, short UUIDs, extra segments,
 unknown kinds or versions, or case normalization. The dataset must match the
 open shop and the target must be a known active product. Resolution never
-looks up a guessed SKU, title, external code or product in another dataset.
+looks up a guessed SKU, title or product in another dataset. Explicit external
+aliases are described in [barcode aliases](barcode-aliases.md).
 
 Explicit local template identities use the separate
 `bikepart:1:<dataset-uuid>:template:<template-uuid>` kind. Only known nonretired
 templates resolve. They offer catalog prefill only, never sale or receiving.
-External barcode aliases and their assignment are a separate ticket; arbitrary
-codes are rejected here. The `bikepart:` namespace remains reserved.
+External barcode assignment is now implemented by ticket 14; unassigned codes
+retain manual fallback. The `bikepart:` namespace remains reserved.
 
 Staff enter scanning from Add to cart, Receive stock, or New product. The scan
 screen labels its purpose and explains the shared-label quantity requirement.
 Recognition starts explicitly, requests camera permission in context, and uses
 CameraX 1.5.3 with bundled ML Kit barcode-scanning 17.3.0. There is no model
-download dependency. Only QR recognition is enabled. Multiple visible QR values
+download dependency. Ticket 14 enables all bundled barcode formats. Multiple visible code values
 produce an error instead of selecting an arbitrary product.
 
 Every result or camera error pauses recognition. The first callback closes the

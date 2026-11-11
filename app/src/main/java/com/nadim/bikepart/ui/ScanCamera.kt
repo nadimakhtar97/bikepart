@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 typealias ScanCameraContent = @Composable (onPayload: (String) -> Unit, onFailure: (String) -> Unit) -> Unit
 
+internal fun shopBarcodeScanner() = BarcodeScanning.getClient(
+    BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS).build())
+
 /** Bundled model: no Play services model installation or first-use download. */
 @Composable
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
@@ -49,7 +52,7 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
     DisposableEffect(owner, previewView) {
         val disposed = AtomicBoolean(false)
         val processing = AtomicBoolean(false)
-        val scanner = BarcodeScanning.getClient(BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build())
+        val scanner = shopBarcodeScanner()
         val executor = ContextCompat.getMainExecutor(context)
         val future = ProcessCameraProvider.getInstance(context)
         val preview = Preview.Builder().build().apply { surfaceProvider = previewView.surfaceProvider }
@@ -69,7 +72,7 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
                     .addOnSuccessListener { codes ->
                         if (!disposed.get()) {
                             val values = codes.mapNotNull { it.rawValue }.distinct()
-                            if (values.size > 1) failure("More than one QR is visible. Show one label and resume, or use manual search.")
+                            if (values.size > 1) failure("More than one code is visible. Show one label and resume, or use manual search.")
                             else values.singleOrNull()?.let { payload(it) }
                         }
                     }

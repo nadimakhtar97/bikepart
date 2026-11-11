@@ -22,8 +22,12 @@ sealed interface ScanTarget {
 }
 
 /** Resolution is read-only and never falls back to titles, SKUs or another dataset. */
-fun ShopSnapshot.resolveScan(payload: String): ScanTarget {
-    val identity = ItemQr.parse(payload)
+fun ShopSnapshot.resolveScan(payload: String, namespace: String = "external"): ScanTarget {
+    val identity = if (payload.startsWith("bikepart:", ignoreCase = true)) ItemQr.parse(payload) else {
+        val alias = barcodeAliases.singleOrNull { it.namespace == namespace && it.code == payload }
+            ?: throw IllegalArgumentException("Unknown barcode. Use manual search or explicitly link it.")
+        ItemQr.Identity(datasetId, if (alias.target.kind == BarcodeTargetKind.Product) "product" else "template", alias.target.id)
+    }
     require(identity.datasetId == datasetId) { "This QR belongs to another shop dataset. Use manual search." }
     return when (identity.kind) {
         "product" -> ScanTarget.StockedProduct(products.singleOrNull { it.id == identity.id && !it.archived }

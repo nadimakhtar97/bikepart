@@ -37,7 +37,82 @@ class ScanWorkflowTest {
             Text("Substituted camera transport")
         }) } }
     }
+    private fun scanCode(id: String, template: Boolean, external: Boolean): String {
+        if (!external) return if (template) ItemQr.template(snapshot().datasetId, id) else ItemQr.product(snapshot().datasetId, id)
+        return "000$id".also { code -> runBlocking { Shop.open(context).use {
+            it.linkBarcode(code, BarcodeTarget(if (template) BarcodeTargetKind.Template else BarcodeTargetKind.Product, id))
+        } } }
+    }
     private fun emit(payload: String) { compose.runOnIdle { requireNotNull(frame)(payload) } }
+
+    @Test fun staffLinkExactExternalBarcodeThenCancelAndConfirmReassignment() {
+        val token = System.nanoTime()
+        val title = "Alias bolt $token"
+        val templateTitle = "Alias template $token"
+        val code = "000$token"
+        val id = runBlocking { Shop.open(context).use { shop ->
+            val category = shop.snapshot().categories.first().id
+            shop.saveTemplate(CatalogDraft(templateTitle, category))
+            shop.createProduct(title, category, "", "4", "80")
+        } }
+        launch().use {
+            await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+            await("Substituted camera transport"); emit(code)
+            val before = snapshot()
+            await("Unknown barcode. Use manual search or explicitly link it.")
+            click("Link barcode"); compose.onNodeWithText("Find barcode target").performTextInput(title)
+            click("Product: $title"); click("Save barcode link")
+            await("Scanned product")
+            val linked = snapshot()
+            assertEquals(before.revision + 1, linked.revision)
+            assertEquals(id, linked.barcodeAliases.single { it.code == code }.target.id)
+            click("Link barcode"); compose.onNodeWithText("Find barcode target").performTextReplacement(templateTitle)
+            click("Template: $templateTitle"); click("Cancel barcode link")
+            assertEquals(linked, snapshot())
+            click("Link barcode"); compose.onNodeWithText("Find barcode target").performTextReplacement(templateTitle)
+            click("Template: $templateTitle"); click("Confirm reassignment")
+            await("Use template details")
+            val reassigned = snapshot()
+            assertEquals(linked.revision + 1, reassigned.revision)
+            assertEquals(id, reassigned.barcodeHistory.last { it.code == code }.previousTarget!!.id)
+            click("Use template details")
+            compose.onNodeWithText("Title (required)").assertTextContains(templateTitle)
+            assertEquals(reassigned, snapshot())
+        }
+        val reopened = snapshot()
+        launch().use {
+            await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+            await("Substituted camera transport"); emit(code); await("Use template details")
+            compose.onAllNodesWithText("Barcode history · revision", substring = true).assertCountEquals(2)
+            assertEquals(reopened, snapshot())
+        }
+    }
+
+    @Test fun inactiveExternalAliasesKeepManualFallbackWithoutWrites() {
+        val token = System.nanoTime()
+        val codes = runBlocking { Shop.open(context).use { shop ->
+            val category = shop.snapshot().categories.first().id
+            val product = shop.createProduct("Archived alias $token", category, "", "0", "80")
+            val template = shop.saveTemplate(CatalogDraft("Retired alias $token", category))
+            val productCode = "000$product"
+            val templateCode = "000$template"
+            shop.linkBarcode(productCode, BarcodeTarget(BarcodeTargetKind.Product, product))
+            shop.linkBarcode(templateCode, BarcodeTarget(BarcodeTargetKind.Template, template))
+            shop.archiveProduct(product); shop.retireTemplate(template)
+            listOf(productCode, templateCode)
+        } }
+        val before = snapshot()
+        launch().use {
+            await("Receive stock"); click("Receive stock"); click("Scan for receiving"); click("Start camera")
+            await("Substituted camera transport"); emit(codes.first())
+            await("Product is unknown or archived. Use manual search.")
+            compose.onAllNodesWithText("Enter quantity and cost").assertCountEquals(0)
+            click("Resume scanning"); await("Substituted camera transport"); emit(codes.last())
+            await("Template is unknown or retired. Use manual search.")
+            click("Manual search"); await("Search products manually")
+            assertEquals(before, snapshot())
+        }
+    }
 
     @Test fun realCameraPermissionDenialKeepsManualSearchAvailable() {
         val automation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
@@ -81,12 +156,14 @@ class ScanWorkflowTest {
         }
     }
 
-    @Test fun saleRequiresQuantityAndIgnoresRepeatedAndStaleCameraFrames() {
+    @Test fun saleRequiresQuantityAndIgnoresRepeatedAndStaleCameraFrames() = saleScan(false)
+    @Test fun externalAliasesRequireSaleQuantityAndRestrictTemplates() = saleScan(true)
+    private fun saleScan(external: Boolean) {
         val token = System.nanoTime()
         val id = runBlocking { Shop.open(context).use { it.createProduct("Scan bolt $token", it.snapshot().categories.first().id, "", "4", "80") } }
-        val payload = ItemQr.product(snapshot().datasetId, id)
+        val payload = scanCode(id, false, external)
         val templateId = runBlocking { Shop.open(context).use { it.saveTemplate(CatalogDraft("Sale-restricted template $token", it.snapshot().categories.first().id)) } }
-        val templatePayload = ItemQr.template(snapshot().datasetId, templateId)
+        val templatePayload = scanCode(templateId, true, external)
         val priorCartIds = snapshot().carts.map { it.id }.toSet()
         var cartId: String? = null
         val scenario = launch()
@@ -129,11 +206,13 @@ class ScanWorkflowTest {
         }
     }
 
-    @Test fun receivingScanSelectsProductAndOnlySaveCommitsArrival() {
+    @Test fun receivingScanSelectsProductAndOnlySaveCommitsArrival() = receivingScan(false)
+    @Test fun externalAliasReceivingRequiresExplicitArrivalSave() = receivingScan(true)
+    private fun receivingScan(external: Boolean) {
         val token = System.nanoTime()
         val title = "Received washer $token"
         val id = runBlocking { Shop.open(context).use { it.createProduct(title, it.snapshot().categories.first().id, "", "2", "80") } }
-        val payload = ItemQr.product(snapshot().datasetId, id)
+        val payload = scanCode(id, false, external)
         val scenario = launch()
         try {
             await("Receive stock"); click("Receive stock"); click("Scan for receiving"); click("Start camera")
@@ -163,7 +242,9 @@ class ScanWorkflowTest {
         } finally { scenario.close() }
     }
 
-    @Test fun creationOffersExplicitExistingCopyAndTemplateChoicesWithManualFallbacks() {
+    @Test fun creationOffersExplicitExistingCopyAndTemplateChoicesWithManualFallbacks() = catalogScan(false)
+    @Test fun externalAliasesRouteCatalogCopiesAndRejectTemplateArrivals() = catalogScan(true)
+    private fun catalogScan(external: Boolean) {
         val token = System.nanoTime()
         val title = "Catalog nut $token"
         lateinit var id: String
@@ -173,9 +254,9 @@ class ScanWorkflowTest {
             id = shop.createProduct(title, category, "Shop description", "2", "80")
             templateId = shop.saveTemplate(CatalogDraft("Template nut $token", category, "Template description"))
         } }
+        val productQr = scanCode(id, false, external)
+        val templateQr = scanCode(templateId, true, external)
         val before = snapshot()
-        val productQr = ItemQr.product(before.datasetId, id)
-        val templateQr = ItemQr.template(before.datasetId, templateId)
         val scenario = launch()
         try {
             await("Add product"); click("Add product")
@@ -218,7 +299,9 @@ class ScanWorkflowTest {
         val originalAppearance = snapshot().appearance
         val token = System.nanoTime()
         val id = runBlocking { Shop.open(context).use { it.createProduct("Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token", it.snapshot().categories.first().id, "", "0", Long.MAX_VALUE.toString()) } }
-        val payload = ItemQr.product(snapshot().datasetId, id)
+        val payload = scanCode(id, false, true)
+        val templateTitle = "Long replacement template for stainless motorcycle flanged bolts $token"
+        runBlocking { Shop.open(context).use { it.saveTemplate(CatalogDraft(templateTitle, it.snapshot().categories.first().id)) } }
         fun shell(command: String) { instrumentation.uiAutomation.executeShellCommand(command).use { android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() } }
         fun capture(name: String) {
             compose.waitForIdle()
@@ -239,6 +322,27 @@ class ScanWorkflowTest {
                     compose.onNodeWithText("Open existing").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                     capture("scan-catalog-${appearance.name}-$scale")
                     compose.onNodeWithText("Copy catalog details").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+                    click("Link barcode")
+                    compose.onNodeWithText("Find barcode target").performScrollTo().performTextInput("No barcode target $token")
+                    compose.onNodeWithText("Find barcode target").performScrollTo().assertIsDisplayed()
+                    capture("barcode-keyboard-${appearance.name}-$scale")
+                    androidx.test.espresso.Espresso.closeSoftKeyboard()
+                    compose.onNodeWithText("No active targets found. Use manual search to create a product or template first.").performScrollTo().assertIsDisplayed()
+                    capture("barcode-empty-${appearance.name}-$scale")
+                    compose.onNodeWithText("Find barcode target").performScrollTo().performTextReplacement("Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token")
+                    androidx.test.espresso.Espresso.closeSoftKeyboard()
+                    compose.onNodeWithText("Product: Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token").performScrollTo().performClick()
+                    compose.onNodeWithText("Product: Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token").assertIsSelected()
+                    androidx.test.espresso.Espresso.closeSoftKeyboard()
+                    compose.onNodeWithText("Save barcode link").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+                    capture("barcode-link-${appearance.name}-$scale")
+                    compose.onNodeWithText("Find barcode target").performScrollTo().performTextReplacement(templateTitle)
+                    androidx.test.espresso.Espresso.closeSoftKeyboard()
+                    compose.onNodeWithText("Template: $templateTitle").performScrollTo().performClick()
+                    androidx.test.espresso.Espresso.closeSoftKeyboard()
+                    compose.onNodeWithText("Confirm reassignment").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+                    capture("barcode-conflict-${appearance.name}-$scale")
+                    click("Cancel barcode link")
                     click("Manual search"); await("Search products manually")
                     compose.onNodeWithText("Search products manually").performTextInput("No matching scan $token")
                     compose.onNodeWithText("No matching products").assertExists()

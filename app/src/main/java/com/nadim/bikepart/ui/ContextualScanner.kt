@@ -16,7 +16,8 @@ enum class ScanPurpose(val label: String) { Sale("Sale"), Receiving("Receive sto
 @Composable
 internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: Boolean, error: ShopError?,
     camera: ScanCameraContent, manual: () -> Unit, onChange: () -> Unit, add: (String, String) -> Unit,
-    receive: (String) -> Unit, open: (String) -> Unit, copy: (CatalogDraft) -> Unit, cart: Cart? = null) {
+    receive: (String) -> Unit, open: (String) -> Unit, copy: (CatalogDraft) -> Unit, cart: Cart? = null,
+    link: (String, BarcodeTarget, Long?, () -> Unit) -> Unit) {
     var raw by rememberSaveable { mutableStateOf<String?>(null) }
     var transportError by rememberSaveable { mutableStateOf<String?>(null) }
     // Recreation always requires explicit start/resume, never silently restarts recognition.
@@ -24,8 +25,14 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     var attempt by remember { mutableIntStateOf(0) }
     var started by rememberSaveable { mutableStateOf(false) }
     var quantity by rememberSaveable { mutableStateOf("") }
+    var linking by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { running = false; attempt++ } }
     val resolution = raw?.let { runCatching { shop.resolveScan(it) } }
+    if (linking && raw != null) {
+        BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
+            save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } })
+        return
+    }
     Text("Scan purpose: ${purpose.label}", style = MaterialTheme.typography.titleMedium)
     Text("Shared labels identify a product. Choose an action and enter pieces yourself. Scanning does not change stock.")
     OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; manual() }, enabled = !busy) { Text("Manual search") }
@@ -41,6 +48,13 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
         if (started) Text("Recognition paused", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         transportError?.let { FormError(it) }
         resolution?.exceptionOrNull()?.message?.let { FormError(it) }
+        raw?.takeIf { it.isNotEmpty() && !it.startsWith("bikepart:", ignoreCase = true) }?.let { code ->
+            OutlinedButton(onClick = { linking = true; onChange() }, enabled = !busy,
+                modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget)) { Text("Link barcode") }
+            for (assignment in shop.barcodeHistory.filter { it.namespace == "external" && it.code == code }) {
+                Text("Barcode history · revision ${assignment.revision}: ${assignment.previousTarget?.let { shop.barcodeTargetLabel(it) } ?: "Unassigned"} → ${shop.barcodeTargetLabel(assignment.target)}")
+            }
+        }
         when (val target = resolution?.getOrNull()) {
             is ScanTarget.StockedProduct -> ShopSection("Scanned product") {
                 Text(target.product.title, style = MaterialTheme.typography.titleMedium)

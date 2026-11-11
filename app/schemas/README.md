@@ -1,5 +1,28 @@
 # Shop schema history
 
+## Version 13 — exact external barcode aliases
+
+The additive 12 → 13 migration adds `barcode_aliases` and append-only
+`barcode_assignments`. Existing shop identities, catalog, stock, arrivals,
+carts, receipts, settings and revisions are preserved. All historical schemas
+remain supported; fixtures verify migration, alias linking, reopen, foreign keys
+and SQLite integrity. Backup/restore has not landed yet.
+
+An alias is unique by namespace and exact code using SQLite's binary text
+comparison. Codes never pass through lookup-name normalization, trimming or
+number parsing. The scanner uses the `external` namespace; app QR payloads and
+the `bikepart` namespace cannot be assigned as external aliases. Targets carry
+an explicit product/template kind and stable identity; `Shop` validates active
+ownership inside the write transaction. Historical targets are retained when
+products are archived or templates retired, but do not resolve for new work.
+
+Initial links and reassignment each record old/new target, timestamp and durable
+revision atomically with ownership. Repeating the current assignment is a no-op.
+Reassignment requires the exact assignment revision staff confirmed, preventing
+stale and A → B → A confirmations. Conflicts, cancellation, missing/inactive
+targets, write interruptions and revision overflow cannot partially mutate the
+alias, audit or revision. Stock, prices and cart lines never change on linking.
+
 ## Version 11 — safe product archival
 
 The explicit 10 → 11 migration adds `products.archived`, defaulting to false for

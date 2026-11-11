@@ -13,13 +13,32 @@ data class HistoricalAttribute(val id: String, val definitionId: String, val val
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
-data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap(), val carts: List<Cart> = emptyList(), val sales: List<Sale> = emptyList(), val arrivals: List<StockArrival> = emptyList())
+data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap(), val carts: List<Cart> = emptyList(), val sales: List<Sale> = emptyList(), val arrivals: List<StockArrival> = emptyList(), val barcodeAliases: List<BarcodeAlias> = emptyList(), val barcodeHistory: List<BarcodeAssignment> = emptyList())
 enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity"), CashReceived("Cash received"), ArrivalQuantity("Arrival quantity"), PurchaseCost("Purchase unit cost") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos) : AutoCloseable {
     private val dao = database.dao()
     val snapshots = dao.revisions().map { snapshot() }
+
+    /** Compare the confirmed assignment revision inside the same transaction as audit and ownership. */
+    suspend fun linkBarcode(code: String, target: BarcodeTarget, namespace: String = "external",
+        expectedAssignmentRevision: Long? = null) = database.withTransaction {
+        requireExternalBarcode(namespace, code)
+        when (target.kind) {
+            BarcodeTargetKind.Product -> requireActiveProduct(target.id)
+            BarcodeTargetKind.Template -> require(dao.templates().any { it.id == target.id && !it.retired }) { "Choose an active template." }
+        }
+        val previous = dao.barcodeAliases().find { it.namespace == namespace && it.code == code }
+        if (previous?.toAlias()?.target == target) return@withTransaction
+        if (previous != null && expectedAssignmentRevision != previous.revision) throw BarcodeConflict(previous.toAlias())
+        require(previous != null || expectedAssignmentRevision == null) { "Barcode ownership changed. Scan again." }
+        val revision = Math.addExact(requireNotNull(dao.state()).revision, 1)
+        dao.putBarcodeAlias(BarcodeAliasRow(namespace, code, target.kind.name, target.id, revision))
+        dao.insertBarcodeAssignment(BarcodeAssignmentRow(revision, namespace, code, previous?.kind, previous?.targetId,
+            target.kind.name, target.id, System.currentTimeMillis()))
+        advanceRevision()
+    }
 
     private suspend fun initialize() = database.withTransaction {
         require(dao.state()?.normalizerVersion?.let { it == LookupNames.VERSION } != false) { "Unsupported lookup normalizer version" }
@@ -51,7 +70,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.locations().map { StorageLocation(it.id, it.name, it.retired) },
             dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) }, dao.corrections().map { it.toCorrection() }, dao.allOpenings().associate { it.productId to OpeningStock(it.quantity, it.recordedAt) },
             dao.carts().map { cart -> Cart(cart.id, cart.number, cart.customer, cart.editVersion, cartLines[cart.id].orEmpty().map { CartLine(it.productId, it.quantity, it.quotedPriceRupees) }) },
-            dao.sales().map { it.toSale(saleLines[it.id].orEmpty()) }, dao.arrivals().map { it.toArrival() })
+            dao.sales().map { it.toSale(saleLines[it.id].orEmpty()) }, dao.arrivals().map { it.toArrival() }, dao.barcodeAliases().map { it.toAlias() }, dao.barcodeAssignments().map { it.toAssignment() })
     }
 
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
@@ -615,7 +634,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
             return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }

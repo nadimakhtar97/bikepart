@@ -128,6 +128,10 @@ internal interface ShopDao {
     @Insert suspend fun insertOption(row: OptionRow)
     @Insert suspend fun insertValues(rows: List<AttributeValueRow>)
     @Query("DELETE FROM attribute_values WHERE productId = :id") suspend fun deleteValues(id: String)
+    @Query("SELECT * FROM barcode_aliases ORDER BY namespace, code") suspend fun barcodeAliases(): List<BarcodeAliasRow>
+    @Query("SELECT * FROM barcode_assignments ORDER BY revision") suspend fun barcodeAssignments(): List<BarcodeAssignmentRow>
+    @Upsert suspend fun putBarcodeAlias(row: BarcodeAliasRow)
+    @Insert suspend fun insertBarcodeAssignment(row: BarcodeAssignmentRow)
     @Query("SELECT * FROM categories ORDER BY position, name") suspend fun categories(): List<CategoryRow>
     @Query("SELECT * FROM products ORDER BY title, id") suspend fun products(): List<ProductRow>
     @Query("SELECT * FROM balances") suspend fun balances(): List<BalanceRow>
@@ -144,8 +148,16 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class], version = 12, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class, BarcodeAliasRow::class, BarcodeAssignmentRow::class], version = 13, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }
+
+@Entity(tableName = "barcode_aliases", primaryKeys = ["namespace", "code"])
+internal data class BarcodeAliasRow(val namespace: String, val code: String, val kind: String, val targetId: String, val revision: Long)
+
+// Append-only assignment history, including the initial link. Targets retain stable identities.
+@Entity(tableName = "barcode_assignments")
+internal data class BarcodeAssignmentRow(@PrimaryKey val revision: Long, val namespace: String, val code: String,
+    val previousKind: String?, val previousTargetId: String?, val kind: String, val targetId: String, val recordedAt: Long)
 
 @Entity(tableName = "stock_arrivals", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
 internal data class ArrivalRow(@PrimaryKey val operationId: String, val productId: String, val quantity: Long,
