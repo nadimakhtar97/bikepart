@@ -73,7 +73,9 @@ internal fun renderProductLabel(product: Product, payload: String, media: LabelM
 
 @Composable
 internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, error: ShopError?,
-    onChange: () -> Unit, save: (LabelMedia, String) -> Unit) {
+    onChange: () -> Unit,
+    usbAccess: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess,
+    save: (LabelMedia, String) -> Unit) {
     var mediaName by rememberSaveable(product.id) { mutableStateOf(shop.labelPreferences.media.name) }
     var copies by rememberSaveable(product.id) { mutableStateOf(shop.labelPreferences.copies.toString()) }
     // Only primitives enter saved instance state.
@@ -114,7 +116,8 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
     previewMedia?.let { name ->
         val selected = LabelMedia.valueOf(name)
         val payload = ItemQr.product(shop.datasetId, product.id)
-        val artwork = remember(product.title, product.sku, payload, selected) { renderProductLabel(product, payload, selected).asImageBitmap() }
+        val bitmap = remember(product.title, product.sku, payload, selected) { renderProductLabel(product, payload, selected) }
+        val artwork = remember(bitmap) { bitmap.asImageBitmap() }
         ShopSection("Label preview") {
             Text("${selected.label} · $previewCopies copies")
             Image(artwork, contentDescription = "Product label QR: $payload", filterQuality = FilterQuality.None,
@@ -122,7 +125,9 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
             Text(product.title, style = MaterialTheme.typography.titleMedium)
             Text("SKU: ${product.sku}")
             Text("Artwork shows up to three title lines. Full product title is shown above. Price and stock are omitted.")
-            Text("Printing will be available after USB printer setup.")
+            key(selected, previewCopies, bitmap) {
+                LabelPrintControls(selected, previewCopies, product.sku, bitmap, usbAccess) { copies = ""; changed() }
+            }
         }
     }
 }

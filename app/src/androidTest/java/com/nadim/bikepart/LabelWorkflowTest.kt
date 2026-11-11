@@ -1,6 +1,9 @@
 package com.nadim.bikepart
 
 import android.content.Context
+import android.content.Intent
+import android.hardware.usb.UsbManager
+import androidx.activity.compose.setContent
 import android.provider.Settings
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -8,6 +11,8 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.printing.*
+import com.nadim.bikepart.ui.ShopApp
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
@@ -27,6 +32,95 @@ class LabelWorkflowTest {
         await("Stock"); click("Stock")
         compose.onNodeWithText("Search products").performTextReplacement(title)
         click(title); click("Preview product labels"); await("Label copies")
+    }
+
+    @Test fun permissionCallbacksNeverSendAndUiTransportFailureRequiresExplicitRemainingCopies() {
+        val journal = DevicePrintJournal(context)
+        journal.clear()
+        val title = "USB transport ${System.nanoTime()}"
+        runBlocking { Shop.open(context).use { shop -> shop.createProduct(title, shop.snapshot().categories.first().id, "", "12", "80") } }
+        val initial = snapshot()
+        val attempts = java.util.concurrent.atomic.AtomicInteger()
+        var permitted = false
+        var fail = true
+        val usb = object : LabelUsbAccess {
+            override val permissionAction = "${context.packageName}.TEST_USB_PERMISSION"
+            override fun connect(): LabelConnection? = if (!permitted) null else object : LabelConnection {
+                override fun send(bytes: ByteArray) {
+                    attempts.incrementAndGet()
+                    if (fail) throw java.io.IOException("Timed out after partial output")
+                }
+                override fun close() { }
+            }
+        }
+        fun confirm() { compose.onNode(isToggleable()).performScrollTo().performClick(); click("Print confirmed labels") }
+        try {
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                scenario.onActivity { activity -> activity.setContent { ShopApp(labelUsb = { _, _ -> usb }) } }
+                open(title)
+                compose.onNodeWithText("Label copies").performScrollTo().performTextReplacement("3")
+                click("Preview label"); confirm()
+                await("USB permission requested. Nothing has been sent. Confirm printing again after allowing access.")
+                context.sendBroadcast(Intent(usb.permissionAction).setPackage(context.packageName).putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false))
+                await("USB permission denied. No labels sent. Allow USB access to print.")
+                assertEquals(0, attempts.get())
+                permitted = true
+                context.sendBroadcast(Intent(usb.permissionAction).setPackage(context.packageName).putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, true))
+                await("USB access granted. Confirm media and copies, then tap Print confirmed labels.")
+                assertEquals(0, attempts.get())
+                compose.onNodeWithText("Print confirmed labels").performScrollTo().assertIsNotEnabled()
+                confirm()
+                await("USB transport failed after 0 copies sent. Output may be partial. Inspect labels and power-cycle the printer before selecting remaining copies.")
+                assertEquals(1, attempts.get())
+                compose.onNodeWithText("Print confirmed labels").performScrollTo().assertIsNotEnabled()
+                context.sendBroadcast(Intent(usb.permissionAction).setPackage(context.packageName).putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, true))
+                await("USB access granted. Confirm media and copies, then tap Print confirmed labels.")
+                assertEquals(1, attempts.get())
+                click("I inspected output and reset the printer")
+                compose.onNodeWithText("Label copies").performScrollTo().performTextReplacement("2")
+                click("Preview label")
+                fail = false
+                confirm()
+                await("2 copies sent over USB; physical output is unconfirmed. Inspect labels before printing again.")
+                assertEquals(3, attempts.get())
+                assertEquals(initial, snapshot())
+            }
+        } finally { journal.clear() }
+    }
+
+    @Test fun uncertainUsbOutputSurvivesRecreationAndRequiresNewRemainingCopiesWithoutStockWrites() {
+        val journal = DevicePrintJournal(context)
+        journal.clear()
+        val title = "USB label ${System.nanoTime()}"
+        runBlocking { Shop.open(context).use { shop -> shop.createProduct(title, shop.snapshot().categories.first().id, "", "12", "80") } }
+        val initial = snapshot()
+        try {
+            LabelPrinter(journal).send("Previous SKU · 3 copies", 3, byteArrayOf(1), CopyTransport { throw java.io.IOException("Disconnected") }) { false }
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                open(title); click("Preview label")
+                compose.onNodeWithText("Print confirmed labels").performScrollTo().assertIsNotEnabled()
+                scenario.recreate(); await("Label copies")
+                compose.onNodeWithText("Inspect previous output: Previous SKU · 3 copies").performScrollTo().assertIsDisplayed()
+                click("I inspected output and reset the printer")
+                compose.onNodeWithText("Label preview").assertDoesNotExist()
+                compose.onNodeWithText("Label copies").performScrollTo().assert(
+                    SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.EditableText,
+                        androidx.compose.ui.text.AnnotatedString("")))
+                click("Preview label")
+                compose.onNodeWithText("Label preview").assertDoesNotExist()
+                compose.onNodeWithText("Label copies").performScrollTo().performTextReplacement("2")
+                click("Preview label")
+                compose.onNodeWithText("Print confirmed labels").performScrollTo().assertIsNotEnabled()
+                compose.onNode(isToggleable()).performScrollTo().performClick()
+                click("Print confirmed labels")
+                compose.waitUntil(15_000) {
+                    compose.onAllNodes(hasText("Connect exactly one TE244", substring = true) or
+                        hasText("This phone does not support USB host/OTG.")).fetchSemanticsNodes().isNotEmpty()
+                }
+                assertNull(journal.pending()) // No USB device: nothing was submitted.
+                assertEquals(initial, snapshot())
+            }
+        } finally { journal.clear() }
     }
 
     @Test fun staffChooseProfilesValidateCopiesAndRepreviewStableIdentityAfterCatalogEdits() {
@@ -97,6 +191,10 @@ class LabelWorkflowTest {
                         val file = java.io.File(context.getExternalFilesDir(null), "$name.png")
                         instrumentation.uiAutomation.takeScreenshot().let { bitmap -> file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle() }
                         shell("cp ${file.absolutePath} /data/local/tmp/$name.png")
+                        compose.onNodeWithText("Print confirmed labels").performScrollTo().assertIsNotEnabled()
+                        val controls = java.io.File(context.getExternalFilesDir(null), "$name-usb.png")
+                        instrumentation.uiAutomation.takeScreenshot().let { bitmap -> controls.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle() }
+                        shell("cp ${controls.absolutePath} /data/local/tmp/$name-usb.png")
                         compose.onNodeWithText(title).performScrollTo().assertIsDisplayed()
                         compose.onNodeWithText("SKU: ${snapshot().products.single { it.id == id }.sku}").performScrollTo().assertIsDisplayed()
                     }

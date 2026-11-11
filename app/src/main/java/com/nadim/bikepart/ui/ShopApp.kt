@@ -32,7 +32,10 @@ private val destinations = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) }) {
+fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) },
+    labelUsb: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess = { context, cancelled ->
+        com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
+    }) {
     val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
     val state by model.state.collectAsStateWithLifecycle()
@@ -223,7 +226,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
                         }
                         "archived-products" -> ArchivedProducts(shop, model::readPhoto) { selectedId = it; route = "detail" }
-                        "labels" -> if (product != null) LabelPreview(shop, product, busy, error,
+                        "labels" -> if (product != null) LabelPreview(shop, product, busy, error, usbAccess = labelUsb,
                             onChange = { model.error.value = null }, save = { media, copies -> model.write({ setLabelPreferences(media, copies) }) })
                         "detail" -> if (product != null) {
                             if (!product.archived) OutlinedButton(onClick = { receive(product.id) }, enabled = !busy) { Text("Receive stock") }
