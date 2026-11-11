@@ -13,8 +13,8 @@ data class HistoricalAttribute(val id: String, val definitionId: String, val val
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
 enum class Appearance { System, Light, Dark }
-data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap(), val carts: List<Cart> = emptyList(), val sales: List<Sale> = emptyList())
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity"), CashReceived("Cash received") }
+data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap(), val carts: List<Cart> = emptyList(), val sales: List<Sale> = emptyList(), val arrivals: List<StockArrival> = emptyList())
+enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity"), CashReceived("Cash received"), ArrivalQuantity("Arrival quantity"), PurchaseCost("Purchase unit cost") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos) : AutoCloseable {
@@ -51,7 +51,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.locations().map { StorageLocation(it.id, it.name, it.retired) },
             dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) }, dao.corrections().map { it.toCorrection() }, dao.allOpenings().associate { it.productId to OpeningStock(it.quantity, it.recordedAt) },
             dao.carts().map { cart -> Cart(cart.id, cart.number, cart.customer, cart.editVersion, cartLines[cart.id].orEmpty().map { CartLine(it.productId, it.quantity, it.quotedPriceRupees) }) },
-            dao.sales().map { it.toSale(saleLines[it.id].orEmpty()) })
+            dao.sales().map { it.toSale(saleLines[it.id].orEmpty()) }, dao.arrivals().map { it.toArrival() })
     }
 
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
@@ -457,6 +457,27 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         advanceRevision()
     }
 
+    suspend fun receiveStock(operationId: String, productId: String, pieces: String, unitCostRupees: String) = database.withTransaction {
+        require(operationId.isNotBlank()) { "An arrival operation identity is required" }
+        val quantity = parseWhole(pieces, ProductField.ArrivalQuantity)
+        if (quantity == 0L) throw ShopValidation(ProductField.ArrivalQuantity, "Enter a positive whole-piece quantity")
+        val cost = parseWhole(unitCostRupees, ProductField.PurchaseCost)
+        val previous = dao.arrival(operationId)
+        if (previous != null) {
+            require(previous.productId == productId && previous.quantity == quantity && previous.unitCostRupees == cost) { "This operation identity already belongs to a different arrival" }
+            return@withTransaction
+        }
+        requireActiveProduct(productId)
+        val balance = dao.balances().single { it.productId == productId }
+        val result = try {
+            Math.multiplyExact(quantity, cost)
+            Math.addExact(balance.quantity, quantity)
+        } catch (_: ArithmeticException) { throw ShopValidation(ProductField.ArrivalQuantity, "Arrival exceeds the supported quantity or cost limit") }
+        dao.insertArrival(ArrivalRow(operationId, productId, quantity, cost, balance.quantity, result, System.currentTimeMillis(), Math.addExact(requireNotNull(dao.state()).revision, 1)))
+        dao.updateBalance(balance.copy(quantity = result))
+        advanceRevision()
+    }
+
     suspend fun receipt(cartId: String): Sale? = database.withTransaction {
         dao.saleForCart(cartId)?.let { sale -> sale.toSale(dao.saleLines().filter { it.saleId == sale.id }) }
     }
@@ -594,7 +615,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11).build()
+            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
             return Shop(database, ProductPhotos(photoDirectory)).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }

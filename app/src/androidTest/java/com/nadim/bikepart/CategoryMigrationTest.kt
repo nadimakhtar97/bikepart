@@ -29,6 +29,8 @@ class CategoryMigrationTest {
 
     @Test fun versionTenUpgradePreservesReceiptsAndSupportsArchival() = runBlocking { verifyTypedUpgrade(10) }
 
+    @Test fun versionElevenUpgradePreservesShopAndSupportsArrivals() = runBlocking { verifyTypedUpgrade(11) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -155,6 +157,17 @@ class CategoryMigrationTest {
                 assertEquals(if (version >= 9) 8L else 10L, shop.snapshot().products.single().quantity)
                 if (version >= 9) assertEquals(140L, shop.receipt("legacy-cart")!!.totalRupees)
             }
+            val arrived = Shop.open(context, name).use { shop ->
+                val before = shop.snapshot()
+                shop.receiveStock("arrival-after-upgrade", "p", "3", "25")
+                val after = shop.snapshot()
+                assertEquals(before.revision + 1, after.revision)
+                assertEquals(before.products.single().quantity + 3, after.products.single().quantity)
+                assertEquals(before.products.single().id, after.arrivals.single().productId)
+                assertEquals(25L, after.arrivals.single().unitCostRupees)
+                after
+            }
+            Shop.open(context, name).use { assertEquals(arrived, it.snapshot()) }
             val archived = Shop.open(context, name).use { shop ->
                 val before = shop.snapshot()
                 before.carts.forEach { shop.discardCart(it.id, it.editVersion) }

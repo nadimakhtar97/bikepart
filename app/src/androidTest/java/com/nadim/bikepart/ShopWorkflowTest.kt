@@ -407,6 +407,7 @@ class ShopWorkflowTest {
                 compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText("Add product").performClick()
                 compose.onNodeWithText("Search or add category").performTextInput(category.dropLast(1))
+                androidx.test.espresso.Espresso.closeSoftKeyboard()
                 compose.onNodeWithText(category, useUnmergedTree = true).performScrollTo().performClick()
                 compose.onNodeWithText("Bottle volume (ml) (required)").performScrollTo().performTextInput("0.123456789012")
                 compose.onNodeWithText("Viscosity grade (optional)").performScrollTo().assertIsDisplayed()

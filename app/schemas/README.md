@@ -307,3 +307,22 @@ Fixtures cover upgrades from versions 1–9 and SQLite integrity/foreign-key che
 The version 9 fixture retains an existing customer cart, quote, edit version and
 sequence, then completes and reopens its receipt after migration. Backup/restore
 has not landed; there is no snapshot codec to extend yet.
+
+## Version 12 — stock arrivals for contextual receiving
+
+The additive 11 → 12 migration creates `stock_arrivals` with a product foreign
+key and immutable operation identity, quantity, purchase-unit cost, before/after
+balance, timestamp and committed revision. Existing identities, archived flags,
+catalog, photos, cart quotes, receipts, balances and revisions are preserved.
+Historical schema fixtures now exercise receiving and reopen after migration.
+
+`Shop.receiveStock` commits history, combined balance and one business revision
+in the same transaction. Quantities must be positive whole pieces and costs
+nonnegative whole rupees; checked balance, total-cost and revision arithmetic
+reject overflow. Same-operation retries with identical normalized inputs do
+nothing, including after reopening. Conflicting reuse and archived targets are
+rejected. Interruption checks cover audit, balance and revision writes. Arrival
+history stays readable after archival. No backup/restore codec has landed yet.
+
+Scanning requires no stored scan session or identity migration. Product labels
+continue to use the existing dataset/product UUIDs; resolving a scan is read-only.

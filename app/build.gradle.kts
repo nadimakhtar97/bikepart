@@ -40,6 +40,11 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.barcode)
+    androidTestImplementation(libs.zxing.core)
     implementation(libs.icu4j)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

@@ -76,6 +76,9 @@ internal data class SaleLineRow(val saleId: String, val productId: String, val s
 
 @Dao
 internal interface ShopDao {
+    @Query("SELECT * FROM stock_arrivals ORDER BY revision") suspend fun arrivals(): List<ArrivalRow>
+    @Query("SELECT * FROM stock_arrivals WHERE operationId = :id") suspend fun arrival(id: String): ArrivalRow?
+    @Insert suspend fun insertArrival(row: ArrivalRow)
     @Query("SELECT * FROM sales ORDER BY revision DESC") suspend fun sales(): List<SaleRow>
     @Query("SELECT * FROM sales WHERE cartId = :cartId") suspend fun saleForCart(cartId: String): SaleRow?
     @Query("SELECT * FROM sale_lines ORDER BY saleId, productId") suspend fun saleLines(): List<SaleLineRow>
@@ -141,5 +144,10 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class], version = 11, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class], version = 12, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }
+
+@Entity(tableName = "stock_arrivals", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
+internal data class ArrivalRow(@PrimaryKey val operationId: String, val productId: String, val quantity: Long,
+    val unitCostRupees: Long, val previousBalance: Long, val resultingBalance: Long,
+    val recordedAt: Long, val revision: Long)

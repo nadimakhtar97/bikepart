@@ -3,6 +3,14 @@ package com.nadim.bikepart.shop
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+/** Additive arrival history; existing balances and business revisions are untouched. */
+internal val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE stock_arrivals (operationId TEXT NOT NULL, productId TEXT NOT NULL, quantity INTEGER NOT NULL, unitCostRupees INTEGER NOT NULL, previousBalance INTEGER NOT NULL, resultingBalance INTEGER NOT NULL, recordedAt INTEGER NOT NULL, revision INTEGER NOT NULL, PRIMARY KEY(operationId), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX index_stock_arrivals_productId ON stock_arrivals(productId)")
+    }
+}
+
 /** Archival preserves every existing product as active, with its ledger untouched. */
 internal val MIGRATION_10_11 = object : Migration(10, 11) {
     override fun migrate(db: SupportSQLiteDatabase) {
