@@ -14,7 +14,8 @@ import org.json.JSONObject
 data class DriveTarget(val account: String, val folderId: String, val folderName: String)
 data class DriveEntry(val id: String, val name: String)
 data class DrivePoint(val manifestId: String, val revision: Long, val capturedAt: Long)
-data class DriveBackupStatus(val target: DriveTarget?, val coveredRevision: Long?, val successAt: Long?, val pending: Boolean)
+data class DriveBackupStatus(val target: DriveTarget?, val coveredRevision: Long?, val successAt: Long?, val pending: Boolean,
+    val capturedAt: Long?, val pendingRevision: Long?, val pendingCapturedAt: Long?)
 
 /** Only external Google operations are substituted in interruption tests. Missing means HTTP 404 only. */
 interface DriveTransport {
@@ -49,7 +50,9 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         val state = read()
         DriveBackupStatus(state.optJSONObject("target")?.let { DriveTarget(it.getString("account"), it.getString("folderId"), it.getString("folderName")) },
             if (state.has("covered")) state.getLong("covered") else null,
-            if (state.has("successAt")) state.getLong("successAt") else null, state.has("job"))
+            if (state.has("successAt")) state.getLong("successAt") else null, state.has("job"),
+            if (state.has("capturedAt")) state.getLong("capturedAt") else null,
+            state.optJSONObject("job")?.getLong("revision"), state.optJSONObject("job")?.getLong("capturedAt"))
     } }
     suspend fun connect(target: DriveTarget) = withContext(Dispatchers.IO) { lock.withLock {
         require(target.account.isNotBlank() && target.folderId.isNotBlank() && target.folderName.isNotBlank())
@@ -58,14 +61,14 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         if (old?.optString("account") != target.account || old.optString("folderId") != target.folderId) {
             // Old jobs remain on disk in an archive, and can never acknowledge a new connection.
             if (state.has("job")) { val archive = AtomicFile(File(directory, "abandoned-${UUID.randomUUID()}.json")); val stream = archive.startWrite(); stream.write(state.toString().toByteArray()); archive.finishWrite(stream) }
-            state.remove("job"); state.remove("covered"); state.remove("successAt"); state.remove("marker"); state.remove("markerInitialized")
+            state.remove("job"); state.remove("covered"); state.remove("successAt"); state.remove("capturedAt"); state.remove("marker"); state.remove("markerInitialized")
             state.put("connection", UUID.randomUUID().toString())
         }
         state.put("target", JSONObject().put("account", target.account).put("folderId", target.folderId).put("folderName", target.folderName))
         write(state)
     } }
 
-    suspend fun publish(drive: DriveTransport): DrivePoint = withContext(Dispatchers.IO) { lock.withLock {
+    suspend fun publish(drive: DriveTransport, onCapture: (revision: Long, capturedAt: Long) -> Unit = { _, _ -> }): DrivePoint = withContext(Dispatchers.IO) { lock.withLock {
         val state = read()
         val target = requireNotNull(state.optJSONObject("target")) { "Connect a Google account and folder first." }
         val folder = target.getString("folderId")
@@ -99,7 +102,8 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         if (job == null) {
             val capture = shop.captureLocalBackup()
             val manifest = ZipFile(capture.file).use { zip -> JSONObject(zip.getInputStream(zip.getEntry("manifest.json")).bufferedReader().readText()) }
-            val files = manifest.getJSONArray("files")
+            // Session URLs are operational capabilities and must never reach the portable manifest.
+            val files = JSONArray(manifest.getJSONArray("files").toString())
             for (index in 0 until files.length()) files.getJSONObject(index).put("id", drive.newId())
             job = JSONObject().put("capture", capture.file.path).put("captureId", capture.id).put("revision", capture.revision).put("capturedAt", capture.capturedAt)
                 .put("connection", state.getString("connection")).put("datasetId", dataset).put("generation", generation)
@@ -109,6 +113,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         }
         val activeJob = job
         check(activeJob.getString("connection") == state.getString("connection") && activeJob.getString("datasetId") == dataset && activeJob.getString("generation") == generation && activeJob.getString("folderId") == folder && activeJob.getString("account") == target.getString("account")) { "Backup identity changed. Reconnect before retrying." }
+        onCapture(activeJob.getLong("revision"), activeJob.getLong("capturedAt"))
         val captureFile = File(activeJob.getString("capture"))
         LocalBackup.inspect(captureFile)
         val files = activeJob.getJSONArray("files")
@@ -141,7 +146,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         check(requireNotNull(drive.download(manifestId)).contentEquals(bytes)) { "Completion manifest content does not match." }
         checkPhone()
         val point = DrivePoint(manifestId, activeJob.getLong("revision"), activeJob.getLong("capturedAt"))
-        state.put("covered", maxOf(state.optLong("covered", -1), point.revision)).put("successAt", System.currentTimeMillis()).remove("job")
+        state.put("covered", maxOf(state.optLong("covered", -1), point.revision)).put("successAt", System.currentTimeMillis()).put("capturedAt", point.capturedAt).remove("job")
         write(state)
         point
     } }

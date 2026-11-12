@@ -28,7 +28,9 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         driveOperation {
             if (publish) {
                 require(shop!!.driveBackup.status().target?.account == account) { "Backup account changed. Reconnect the chosen account." }
-                shop!!.driveBackup.publish(transport)
+                shop!!.driveBackup.publish(transport) { revision, capturedAt ->
+                    driveStatus.value = driveStatus.value?.copy(pending = true, pendingRevision = revision, pendingCapturedAt = capturedAt)
+                }
             } else {
                 driveTransport = transport; driveAccount.value = account
                 driveFolders.value = transport.folders()
@@ -36,11 +38,13 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         }
     }
     fun selectDriveFolder(folder: DriveEntry) = driveOperation {
-        shop!!.driveBackup.connect(DriveTarget(requireNotNull(driveAccount.value), folder.id, folder.name))
-        driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
+        connectDriveFolder(folder)
     }
     fun createDriveFolder(name: String) = driveOperation {
         val folder = requireNotNull(driveTransport).createFolder(name)
+        connectDriveFolder(folder)
+    }
+    private suspend fun connectDriveFolder(folder: DriveEntry) {
         shop!!.driveBackup.connect(DriveTarget(requireNotNull(driveAccount.value), folder.id, folder.name))
         driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
     }

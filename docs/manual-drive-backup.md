@@ -115,3 +115,59 @@ Primary implementation references:
 [Android authorization](https://developer.android.com/identity/authorization),
 [Drive uploads](https://developers.google.com/workspace/drive/api/guides/manage-uploads),
 [pre-generated file IDs](https://developers.google.com/workspace/drive/api/guides/create-file).
+
+## Implementation review
+
+Compared against starting commit `808edf6` with independent standards/spec
+reviews, as required by the implement skill.
+
+### Standards
+
+No documented-standard violations were identified. Two nonblocking judgments:
+mutable JSON job records could become typed records, and folder selection and
+creation duplicated connection cleanup. The duplicate connection/reset operation
+was extracted. JSON persistence follows the existing portable-backup code style;
+a larger journal-model refactor is deferred.
+
+### Spec
+
+The initial review found that completed captures displayed upload completion
+time and that resumability/acknowledgement tests were incomplete. A follow-up
+also found that current capture metadata was not visible during the upload.
+These were addressed: completed/pending capture times are separate from success
+time; a capture callback updates the uploading UI after durable staging; tests
+resume a partially acknowledged job across reopen and change writer generation
+during the final manifest response. HTTP tests additionally exercise accepted
+chunk/lost response reconciliation and expired session restart with stable ID.
+Target changes are serialized with final acknowledgement and clear the old
+coverage after any in-flight operation finishes. Session URLs remain only in the
+operational job; immutable portable manifest metadata is copied separately.
+
+Final review accounting: Standards had 0 hard findings and 2 nonblocking smells
+(1 removed, 1 deferred); Spec had 2 initial findings plus 1 follow-up, all addressed.
+Real Google acceptance remains outstanding as listed above.
+
+## Execution results
+
+- Kotlin compilation and Android lint passed on the final source. Lint reported
+  0 errors and 17 warnings (dependency/version and existing project warnings).
+- Full unit suite: 7 passed. Full instrumentation suite: 117/119 passed, including
+  all 13 local-backup, Drive workflow and resumable-transport cases. The failures
+  were the existing search theme/large-text workflow (validation-message wait)
+  and stock-correction theme/large-text workflow (button visibility).
+- Stock-correction workflow passed its isolated rerun. The identical search
+  timeout/stack already appears in the pre-change USB validation report, whose
+  later isolated search rerun passed; it is a pre-existing intermittent UI test.
+- A resumed shared-emulator attempt also encountered another app's concurrent
+  instrumentation. A task-owned emulator was created for independent checks.
+  After disabling first-boot Play background work and reducing physical render
+  resolution while preserving the logical viewport, all 8 backup-specific tests
+  passed again. These deterministic checks do not exercise Google authorization.
+- Theme validation passed 94 checks. Light/dark screenshots at normal and 200%
+  system text were visually inspected after dismissing an unrelated launcher ANR.
+  Real Google, signing/reinstall, arbitrary-folder access and screen-reader
+  acceptance remain pending as described above.
+- Final dedicated-emulator run: **9/9 passed**, including all 8 backup-specific
+  tests and the search theme/large-text workflow. Together with the successful
+  stock-correction rerun, both original full-suite failures passed isolation.
+  The original full-suite result remains 117/119; it was not silently relabelled.

@@ -54,6 +54,7 @@ class DriveBackupTest {
                 try { shop.driveBackup.publish(drive); fail("Expected interruption") } catch (_: IOException) { }
                 assertNull(shop.driveBackup.status().coveredRevision)
                 assertTrue(shop.driveBackup.recoverable(drive).isEmpty())
+                assertEquals(0L, shop.driveBackup.status().pendingRevision)
             }
             Shop.open(context, name).use { shop ->
                 shop.setAppearance(Appearance.Dark)
@@ -64,11 +65,37 @@ class DriveBackupTest {
                 val point = shop.driveBackup.publish(drive)
                 assertEquals(0L, point.revision)
                 assertEquals(0L, shop.driveBackup.status().coveredRevision)
+                assertEquals(point.capturedAt, shop.driveBackup.status().capturedAt)
+                assertFalse(drive.files.getValue(point.manifestId).toString(Charsets.UTF_8).contains("\"session\""))
+                assertTrue(drive.resumed)
                 assertEquals(1L, shop.snapshot().revision)
                 assertEquals(1, shop.driveBackup.recoverable(drive).size)
                 val dependency = drive.files.keys.first { it != point.manifestId && !drive.names.getValue(it).contains("active-phone") }
                 drive.files[dependency] = "tampered".toByteArray()
                 assertTrue(shop.driveBackup.recoverable(drive).isEmpty())
+            }
+        } finally { context.deleteDatabase(name) }
+    }
+
+    @Test fun generationChangedDuringManifestResponseCannotAcknowledgeTheOldPhone() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "drive-ack-${UUID.randomUUID()}.db"
+        val drive = MemoryDrive()
+        try {
+            Shop.open(context, name).use { shop ->
+                shop.driveBackup.connect(DriveTarget("owner@example.com", "folder", "Shop"))
+                shop.driveBackup.publish(drive)
+                val preceding = shop.driveBackup.status()
+                shop.setAppearance(Appearance.Dark)
+                drive.afterManifest = {
+                    val id = drive.names.entries.single { it.value == "active-phone.json" }.key
+                    drive.files[id] = org.json.JSONObject(drive.files.getValue(id).toString(Charsets.UTF_8))
+                        .put("generation", "new-phone").toString().toByteArray()
+                }
+                try { shop.driveBackup.publish(drive); fail("A stale final response must not acknowledge") } catch (_: IllegalStateException) { }
+                assertEquals(preceding.coveredRevision, shop.driveBackup.status().coveredRevision)
+                assertEquals(preceding.successAt, shop.driveBackup.status().successAt)
+                assertTrue(shop.driveBackup.status().pending)
             }
         } finally { context.deleteDatabase(name) }
     }
@@ -81,13 +108,27 @@ private class MemoryDrive : DriveTransport {
     var corruptNext = false
     var interrupt = false
     var loseManifestResponse = false
+    var resumed = false
+    var afterManifest: (() -> Unit)? = null
+    private var partial: Pair<String, ByteArray>? = null
     override suspend fun newId() = UUID.randomUUID().toString()
     override suspend fun list(folder: String) = names.filterKeys { parents[it] == folder }.map { DriveEntry(it.key, it.value) }
     override suspend fun download(id: String): ByteArray? = files[id]
     override suspend fun upload(id: String, folder: String, name: String, bytes: ByteArray, session: String?, progress: suspend (String?, Long) -> Unit) {
-        if (interrupt && name != "active-phone.json") { interrupt = false; progress("session", 0); throw IOException("Interrupted") }
+        if (interrupt && name != "active-phone.json") {
+            interrupt = false
+            partial = id to bytes.copyOfRange(0, bytes.size / 2)
+            progress("session", (bytes.size / 2).toLong())
+            throw IOException("Interrupted after partial acknowledgement")
+        }
+        if (partial?.first == id) {
+            check(session == "session") { "Durable session was lost" }
+            check(partial!!.second.contentEquals(bytes.copyOfRange(0, bytes.size / 2)))
+            resumed = true; partial = null
+        }
         if (files.containsKey(id)) throw IOException("Conflict")
         files[id] = if (corruptNext && name != "active-phone.json") { corruptNext = false; "corrupt".toByteArray() } else bytes; names[id] = name; parents[id] = folder
+        if (name.startsWith("complete-")) afterManifest?.invoke()
         if (name.startsWith("complete-") && loseManifestResponse) { loseManifestResponse = false; throw IOException("Response lost") }
     }
 }

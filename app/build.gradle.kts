@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.gms:play-services-auth:21.4.0")
+    implementation(libs.google.play.services.auth)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)

@@ -58,11 +58,14 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
         Text(status?.target?.let { "Account: ${it.account}\nFolder: ${it.folderName}\nFolder ID: ${it.folderId}" } ?: "Choose the owner's Google account and a dedicated visible Drive folder.", style = MaterialTheme.typography.bodyMedium)
         Text(when {
             busy -> "Working with Google Drive…"
-            status?.coveredRevision != null -> "Verified backup · revision ${status!!.coveredRevision} · ${DateFormat.getDateTimeInstance().format(Date(status!!.successAt!!))}"
+            status?.coveredRevision != null -> "Verified backup · revision ${status!!.coveredRevision} · captured ${DateFormat.getDateTimeInstance().format(Date(status!!.capturedAt!!))}"
             else -> "No verified Drive backup for this connection."
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         if (status?.coveredRevision?.let { it < revision } != false) Text("Shop changes are waiting for backup. Changes held only on a lost phone cannot be recovered.", style = MaterialTheme.typography.bodyMedium)
-        if (status?.pending == true) Text("An interrupted backup is waiting. Back up now retries the captured revision first.", style = MaterialTheme.typography.bodyMedium)
+        if (status?.pending == true) {
+            Text("${if (busy) "Uploading capture" else "Pending backup"} · revision ${status!!.pendingRevision} · captured ${DateFormat.getDateTimeInstance().format(Date(status!!.pendingCapturedAt!!))}.", style = MaterialTheme.typography.bodyMedium)
+            if (revision > status!!.pendingRevision!!) Text("Newer shop changes are waiting for another backup.", style = MaterialTheme.typography.bodyMedium)
+        }
         error?.let { FormError(it) }
         OutlinedButton(enabled = !busy, onClick = {
             chooseAccount.launch(AccountManager.newChooseAccountIntent(null, null, arrayOf("com.google"), null, null, null, null))
@@ -74,6 +77,6 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             OutlinedButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text("Create and use folder") }
         }
         ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null, onClick = { authorize(status!!.target!!.account, true) })
-        Text("Manual Drive-file edits do not edit the shop. Keep the previous phone retired; this app checks the active-phone marker before publication.", style = MaterialTheme.typography.bodyMedium)
+        Text("Manual Drive-file edits do not edit the shop. Retire the previous phone before activating a replacement for shop work and backups.", style = MaterialTheme.typography.bodyMedium)
     }
 }

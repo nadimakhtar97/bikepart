@@ -9,12 +9,17 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /** Token stays in memory; session URLs stay in the non-exported operational journal. */
-class GoogleDriveTransport(private val token: String) : DriveTransport {
+internal data class DriveHttpResponse(val code: Int, val bytes: ByteArray, val location: String?, val range: String?)
+
+class GoogleDriveTransport internal constructor(private val token: String,
+    private val exchange: (suspend (String, String, ByteArray?, Map<String, String>) -> DriveHttpResponse)?
+) : DriveTransport {
+    constructor(token: String) : this(token, null)
     companion object { private const val API = "https://www.googleapis.com/drive/v3" }
-    private data class Response(val code: Int, val bytes: ByteArray, val location: String?, val range: String?)
-    private suspend fun request(url: String, method: String = "GET", bytes: ByteArray? = null, headers: Map<String, String> = emptyMap()): Response = withContext(Dispatchers.IO) {
+    private suspend fun request(url: String, method: String = "GET", bytes: ByteArray? = null, headers: Map<String, String> = emptyMap()): DriveHttpResponse = withContext(Dispatchers.IO) {
         val uri = java.net.URI(url)
         require(uri.scheme == "https" && uri.host == "www.googleapis.com") { "Invalid Drive upload session" }
+        exchange?.let { return@withContext it(url, method, bytes, headers) }
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method; connection.instanceFollowRedirects = false
@@ -24,10 +29,10 @@ class GoogleDriveTransport(private val token: String) : DriveTransport {
             if (bytes != null) { connection.doOutput = true; connection.setFixedLengthStreamingMode(bytes.size); connection.outputStream.use { it.write(bytes) } }
             val code = connection.responseCode
             val body = (if (code in 200..299) connection.inputStream else connection.errorStream)?.use { it.readBytes() } ?: byteArrayOf()
-            Response(code, body, connection.getHeaderField("Location"), connection.getHeaderField("Range"))
+            DriveHttpResponse(code, body, connection.getHeaderField("Location"), connection.getHeaderField("Range"))
         } finally { connection.disconnect() }
     }
-    private fun Response.checked(): Response {
+    private fun DriveHttpResponse.checked(): DriveHttpResponse {
         if (code !in 200..299) throw IOException(if (code == 401 || code == 403) "Drive access needs repair. Reconnect the selected account." else "Drive request failed ($code). Retry; the previous backup is preserved.")
         return this
     }

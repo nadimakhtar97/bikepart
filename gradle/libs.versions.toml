@@ -1,4 +1,5 @@
 [versions]
+googleAuth = "21.4.0"
 camerax = "1.5.3"
 mlkitBarcode = "17.3.0"
 zxing = "3.5.3"
@@ -16,6 +17,7 @@ ksp = "2.3.10"
 icu4j = "76.1" # Normalizer v1 pins Unicode 16 data; upgrading requires a normalizer migration.
 
 [libraries]
+google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googleAuth" }
 androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
