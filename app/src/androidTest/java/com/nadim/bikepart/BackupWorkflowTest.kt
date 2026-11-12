@@ -53,6 +53,8 @@ class BackupWorkflowTest {
                     compose.onNodeWithText("Capture local backup").performScrollTo().assertIsDisplayed().assertIsEnabled()
                     compose.onNodeWithText("Save a copy…").performScrollTo().assertIsDisplayed().assertIsEnabled()
                     compose.waitForIdle()
+                    compose.onNodeWithText("Connect or repair Drive").performScrollTo().assertIsDisplayed().assertIsEnabled()
+                    compose.onNodeWithText("Back up now").performScrollTo().assertIsDisplayed()
                     val name = "backup-${mode.name}-$scale.png"
                     val file = java.io.File(context.getExternalFilesDir(null), name)
                     instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
@@ -68,6 +70,20 @@ class BackupWorkflowTest {
         }
     }
 
+    @Test fun selectedDriveConnectionReopensWithPendingCoverageAndLabelledControls() {
+        val target = DriveTarget("owner-with-a-long-name@example.com", "owner-selected-folder", "Shop recovery copies with a long folder name")
+        runBlocking { Shop.open(context).use { it.driveBackup.connect(target) } }
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Connect or repair Drive").performScrollTo().assertIsEnabled()
+            compose.onNodeWithText("Back up now").performScrollTo().assertIsEnabled()
+            compose.onNodeWithText("No verified Drive backup for this connection.").performScrollTo().assertIsDisplayed()
+            scenario.recreate()
+            compose.waitUntil(30_000) { compose.onAllNodesWithText("Account: ${target.account}", substring = true).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Account: ${target.account}", substring = true).performScrollTo().assertIsDisplayed()
+        }
+    }
     @Test fun staffCaptureAndReopenLocalSuccessWithoutChangingBusinessRevision() {
         val before = runBlocking { Shop.open(context).use { it.snapshot() } }
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->

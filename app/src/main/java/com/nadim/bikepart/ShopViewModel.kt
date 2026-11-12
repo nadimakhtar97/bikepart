@@ -15,6 +15,44 @@ data class CartDraft(val cart: Cart, val customer: String = cart.customer,
 data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private var shop: Shop? = null
+    val driveStatus = kotlinx.coroutines.flow.MutableStateFlow<DriveBackupStatus?>(null)
+    val driveBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val driveError = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val driveFolders = kotlinx.coroutines.flow.MutableStateFlow<List<DriveEntry>>(emptyList())
+    val driveAccount = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    private var driveTransport: GoogleDriveTransport? = null
+    fun driveAuthorizing() { driveBusy.value = true; driveError.value = null }
+    fun driveFailure(message: String) { driveBusy.value = false; driveError.value = message }
+    fun authorizedDrive(account: String, token: String, publish: Boolean) {
+        val transport = GoogleDriveTransport(token)
+        driveOperation {
+            if (publish) {
+                require(shop!!.driveBackup.status().target?.account == account) { "Backup account changed. Reconnect the chosen account." }
+                shop!!.driveBackup.publish(transport)
+            } else {
+                driveTransport = transport; driveAccount.value = account
+                driveFolders.value = transport.folders()
+            }
+        }
+    }
+    fun selectDriveFolder(folder: DriveEntry) = driveOperation {
+        shop!!.driveBackup.connect(DriveTarget(requireNotNull(driveAccount.value), folder.id, folder.name))
+        driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
+    }
+    fun createDriveFolder(name: String) = driveOperation {
+        val folder = requireNotNull(driveTransport).createFolder(name)
+        shop!!.driveBackup.connect(DriveTarget(requireNotNull(driveAccount.value), folder.id, folder.name))
+        driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
+    }
+    private fun driveOperation(block: suspend () -> Unit) {
+        driveBusy.value = true; driveError.value = null
+        viewModelScope.launch {
+            try { block() }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { driveError.value = error.message ?: "Drive backup failed. Retry or repair the connection." }
+            finally { driveStatus.value = shop?.driveBackup?.status(); driveBusy.value = false }
+        }
+    }
     val state = kotlinx.coroutines.flow.MutableStateFlow<ShopSnapshot?>(null)
     val error = kotlinx.coroutines.flow.MutableStateFlow<ShopError?>(null)
     val busy = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -78,6 +116,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         try {
             val opened = Shop.open(application)
             shop = opened
+            driveStatus.value = opened.driveBackup.status()
             viewModelScope.launch {
                 val latest = opened.latestLocalBackup()
                 if (localCapture.value == null) localCapture.value = latest

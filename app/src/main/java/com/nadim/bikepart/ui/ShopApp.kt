@@ -267,6 +267,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 OutlinedButton(onClick = { route = "templates" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Product templates") }
                                 AppearanceSettings(shop.appearance, busy,
                                 onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" }, onFindingLookups = { route = "finding-lookups" })
+                                DriveBackupControls(model, shop.revision)
                                 LocalBackupControls(localCapture, shop.revision, backupBusy, backupError, backupSaved, model::captureBackup, model::saveBackupCopy)
                             }
                         }

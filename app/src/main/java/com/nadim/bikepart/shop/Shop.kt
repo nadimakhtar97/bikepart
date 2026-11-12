@@ -17,7 +17,8 @@ data class ShopSnapshot(val categories: List<Category>, val products: List<Produ
 enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity"), CashReceived("Cash received"), ArrivalQuantity("Arrival quantity"), PurchaseCost("Purchase unit cost"), LabelCopies("Label copies") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
-class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos, private val backupDirectory: java.io.File) : AutoCloseable {
+class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos, private val backupDirectory: java.io.File, driveDirectory: java.io.File) : AutoCloseable {
+    val driveBackup = DriveBackup(this, driveDirectory)
     private val dao = database.dao()
     val snapshots = dao.revisions().map { snapshot() }
 
@@ -655,7 +656,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
             val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14).build()
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
-            return Shop(database, ProductPhotos(photoDirectory), java.io.File(context.filesDir, "local-backups/${photoDirectory.name}")).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
+            return Shop(database, ProductPhotos(photoDirectory), java.io.File(context.filesDir, "local-backups/${photoDirectory.name}"), java.io.File(context.noBackupFilesDir, "drive/${photoDirectory.name}")).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }
     }
 }
