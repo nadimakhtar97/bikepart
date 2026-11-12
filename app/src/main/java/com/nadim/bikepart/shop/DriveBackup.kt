@@ -14,8 +14,10 @@ import org.json.JSONObject
 data class DriveTarget(val account: String, val folderId: String, val folderName: String)
 data class DriveEntry(val id: String, val name: String)
 data class DrivePoint(val manifestId: String, val revision: Long, val capturedAt: Long)
+
 data class DriveBackupStatus(val target: DriveTarget?, val coveredRevision: Long?, val successAt: Long?, val pending: Boolean,
-    val capturedAt: Long?, val pendingRevision: Long?, val pendingCapturedAt: Long?)
+    val capturedAt: Long?, val pendingRevision: Long?, val pendingCapturedAt: Long?,
+    val allowMobileData: Boolean = false, val failure: String? = null)
 
 /** Only external Google operations are substituted in interruption tests. Missing means HTTP 404 only. */
 interface DriveTransport {
@@ -27,10 +29,15 @@ interface DriveTransport {
 
 /** Operational journal is outside Room/business exports and Android automatic backup. */
 class DriveBackup internal constructor(private val shop: Shop, private val directory: File) {
-    companion object { private val lock = Mutex() }
+    companion object {
+        private val lock = Mutex()
+        private val journalLock = Any()
+    }
     private val stateFile get() = AtomicFile(File(directory, "state.json"))
-    private fun read(): JSONObject = if (stateFile.baseFile.exists()) stateFile.openRead().use { JSONObject(it.bufferedReader().readText()) } else JSONObject()
-    private fun write(value: JSONObject) {
+    private fun read(): JSONObject = synchronized(journalLock) {
+        if (stateFile.baseFile.exists()) stateFile.openRead().use { JSONObject(it.bufferedReader().readText()) } else JSONObject()
+    }
+    private fun write(value: JSONObject) = synchronized(journalLock) {
         check(directory.isDirectory || directory.mkdirs())
         val output = stateFile.startWrite()
         try { output.write(value.toString().toByteArray(Charsets.UTF_8)); stateFile.finishWrite(output); syncJournalDirectory() }
@@ -46,13 +53,20 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             }
         }
     }
-    suspend fun status(): DriveBackupStatus = withContext(Dispatchers.IO) { lock.withLock {
+    suspend fun status(): DriveBackupStatus = withContext(Dispatchers.IO) {
         val state = read()
         DriveBackupStatus(state.optJSONObject("target")?.let { DriveTarget(it.getString("account"), it.getString("folderId"), it.getString("folderName")) },
             if (state.has("covered")) state.getLong("covered") else null,
             if (state.has("successAt")) state.getLong("successAt") else null, state.has("job"),
             if (state.has("capturedAt")) state.getLong("capturedAt") else null,
-            state.optJSONObject("job")?.getLong("revision"), state.optJSONObject("job")?.getLong("capturedAt"))
+            state.optJSONObject("job")?.getLong("revision"), state.optJSONObject("job")?.getLong("capturedAt"),
+            state.optBoolean("allowMobileData"), state.optString("failure").ifEmpty { null })
+    }
+    suspend fun setAllowMobileData(allowed: Boolean) = withContext(Dispatchers.IO) { lock.withLock {
+        val state = read(); state.put("allowMobileData", allowed); write(state)
+    } }
+    suspend fun recordFailure(message: String) = withContext(Dispatchers.IO) { lock.withLock {
+        val state = read(); state.put("failure", message); write(state)
     } }
     suspend fun connect(target: DriveTarget) = withContext(Dispatchers.IO) { lock.withLock {
         require(target.account.isNotBlank() && target.folderId.isNotBlank() && target.folderName.isNotBlank())
@@ -62,15 +76,25 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             // Old jobs remain on disk in an archive, and can never acknowledge a new connection.
             if (state.has("job")) { val archive = AtomicFile(File(directory, "abandoned-${UUID.randomUUID()}.json")); val stream = archive.startWrite(); stream.write(state.toString().toByteArray()); archive.finishWrite(stream) }
             state.remove("job"); state.remove("covered"); state.remove("successAt"); state.remove("capturedAt"); state.remove("marker"); state.remove("markerInitialized")
+            state.remove("failure")
             state.put("connection", UUID.randomUUID().toString())
         }
         state.put("target", JSONObject().put("account", target.account).put("folderId", target.folderId).put("folderName", target.folderName))
         write(state)
     } }
 
-    suspend fun publish(drive: DriveTransport, onCapture: (revision: Long, capturedAt: Long) -> Unit = { _, _ -> }): DrivePoint = withContext(Dispatchers.IO) { lock.withLock {
+    suspend fun publish(drive: DriveTransport, expectedTarget: DriveTarget? = null, onCapture: (revision: Long, capturedAt: Long) -> Unit = { _, _ -> }): DrivePoint = try {
+        publishCapture(drive, expectedTarget, onCapture)
+    } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+    catch (error: Exception) {
+        recordFailure(error.message ?: "Backup failed. Check phone storage and Drive access, then retry.")
+        throw error
+    }
+
+    private suspend fun publishCapture(drive: DriveTransport, expectedTarget: DriveTarget?, onCapture: (Long, Long) -> Unit): DrivePoint = withContext(Dispatchers.IO) { lock.withLock {
         val state = read()
         val target = requireNotNull(state.optJSONObject("target")) { "Connect a Google account and folder first." }
+        check(expectedTarget == null || (expectedTarget.account == target.getString("account") && expectedTarget.folderId == target.getString("folderId"))) { "Backup account or folder changed. Retry with the chosen connection." }
         val folder = target.getString("folderId")
         val dataset = shop.snapshot().datasetId
         if (!state.has("generation")) { state.put("generation", UUID.randomUUID().toString()); write(state) }
@@ -146,6 +170,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         check(requireNotNull(drive.download(manifestId)).contentEquals(bytes)) { "Completion manifest content does not match." }
         checkPhone()
         val point = DrivePoint(manifestId, activeJob.getLong("revision"), activeJob.getLong("capturedAt"))
+        state.remove("failure")
         state.put("covered", maxOf(state.optLong("covered", -1), point.revision)).put("successAt", System.currentTimeMillis()).put("capturedAt", point.capturedAt).remove("job")
         write(state)
         point

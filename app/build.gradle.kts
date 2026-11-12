@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation(libs.google.play.services.auth)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)

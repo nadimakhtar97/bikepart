@@ -7,6 +7,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.nadim.bikepart.shop.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -14,6 +15,38 @@ import org.junit.Test
 class BackupWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
+
+    @Test fun priorCompletePointCurrentCaptureAndNewerEditsRemainVisibleDuringUpload() = runBlocking {
+        Shop.open(context).use { shop ->
+            val drive = MemoryDrive()
+            shop.driveBackup.connect(DriveTarget("coverage@example.com", "coverage-${java.util.UUID.randomUUID()}", "Coverage"))
+            shop.driveBackup.publish(drive)
+            val previous = shop.driveBackup.status().coveredRevision!!
+            val appearance = shop.snapshot().appearance
+            shop.setAppearance(if (appearance == Appearance.Dark) Appearance.Light else Appearance.Dark)
+            val current = shop.snapshot().revision
+            val paused = kotlinx.coroutines.CompletableDeferred<Unit>()
+            val release = kotlinx.coroutines.CompletableDeferred<Unit>()
+            drive.beforeContent = { paused.complete(Unit); release.await() }
+            val upload = async { shop.driveBackup.publish(drive) }
+            try {
+                kotlinx.coroutines.withTimeout(10_000) { paused.await() }
+                shop.setAppearance(appearance)
+                ActivityScenario.launch(MainActivity::class.java).use {
+                    compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+                    compose.onNodeWithText("More").performClick()
+                    compose.waitUntil(30_000) { compose.onAllNodesWithText("Verified backup · revision $previous", substring = true).fetchSemanticsNodes().isNotEmpty() }
+                    compose.onNodeWithText("Verified backup · revision $previous", substring = true).performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("revision $current · captured", substring = true).performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("Newer shop changes are waiting for another backup.").performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("Back up now").performScrollTo().assertIsEnabled()
+                }
+            } finally { release.complete(Unit) }
+            upload.await()
+            assertEquals(current, shop.driveBackup.status().coveredRevision)
+            assertTrue(shop.snapshot().revision > current)
+        }
+    }
 
     @Test fun captureFailureKeepsPriorSuccessAndControlsRemainUsableAcrossThemesAndLargeText() {
         val instrumentation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
@@ -55,6 +88,7 @@ class BackupWorkflowTest {
                     compose.waitForIdle()
                     compose.onNodeWithText("Connect or repair Drive").performScrollTo().assertIsDisplayed().assertIsEnabled()
                     compose.onNodeWithText("Back up now").performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("Allow mobile data for automatic backups").performScrollTo().assertIsDisplayed()
                     val name = "backup-${mode.name}-$scale.png"
                     val file = java.io.File(context.getExternalFilesDir(null), name)
                     instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
@@ -78,6 +112,9 @@ class BackupWorkflowTest {
             compose.onNodeWithText("More").performClick()
             compose.onNodeWithText("Connect or repair Drive").performScrollTo().assertIsEnabled()
             compose.onNodeWithText("Back up now").performScrollTo().assertIsEnabled()
+            compose.onNodeWithText("Allow mobile data for automatic backups").performScrollTo().performClick()
+            compose.waitUntil(30_000) { compose.onAllNodesWithText("Use Wi-Fi only").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Use Wi-Fi only").performScrollTo().performClick()
             compose.onNodeWithText("No verified Drive backup for this connection.").performScrollTo().assertIsDisplayed()
             scenario.recreate()
             compose.waitUntil(30_000) { compose.onAllNodesWithText("Account: ${target.account}", substring = true).fetchSemanticsNodes().isNotEmpty() }

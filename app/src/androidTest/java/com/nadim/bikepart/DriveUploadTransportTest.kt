@@ -8,6 +8,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DriveUploadTransportTest {
+    @Test fun automaticNetworkPolicyIsCheckedBeforeOpeningEveryDriveRequest() = runBlocking {
+        var checks = 0
+        val transport = GoogleDriveTransport("unused-token") {
+            checks++
+            throw IOException("Wi-Fi unavailable")
+        }
+        repeat(2) {
+            try { transport.newId(); fail("Policy must prevent network access") }
+            catch (error: IOException) { assertEquals("Wi-Fi unavailable", error.message) }
+        }
+        assertEquals(2, checks)
+    }
     @Test fun partialAcknowledgementResumesAtServerOffsetAfterLostChunkResponse() = runBlocking {
         val bytes = ByteArray(600_000) { (it % 251).toByte() }
         var savedSession: String? = null

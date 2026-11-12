@@ -4,12 +4,73 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nadim.bikepart.shop.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.IOException
 import java.util.UUID
 
 class DriveBackupTest {
+    @Test fun coverageRemainsReadableWhileUploadIsWaitingForNetwork() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "readable-${UUID.randomUUID()}.db"
+        val drive = MemoryDrive()
+        try {
+            Shop.open(context, name).use { shop ->
+                shop.driveBackup.connect(DriveTarget("owner@example.com", "folder", "Shop"))
+                shop.driveBackup.publish(drive)
+                val previous = shop.driveBackup.status()
+                shop.setAppearance(Appearance.Dark)
+                val paused = kotlinx.coroutines.CompletableDeferred<Unit>()
+                val release = kotlinx.coroutines.CompletableDeferred<Unit>()
+                drive.beforeContent = { paused.complete(Unit); release.await() }
+                val upload = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.currentCoroutineContext()).async {
+                    shop.driveBackup.publish(drive)
+                }
+                try {
+                    kotlinx.coroutines.withTimeout(10_000) { paused.await() }
+                    shop.setAppearance(Appearance.Light)
+                    val status = kotlinx.coroutines.withTimeout(2_000) { shop.driveBackup.status() }
+                    assertEquals(previous.capturedAt, status.capturedAt)
+                    assertEquals(1L, status.pendingRevision)
+                    assertEquals(2L, shop.snapshot().revision)
+                } finally { release.complete(Unit) }
+                upload.await()
+                assertEquals(1L, shop.driveBackup.status().coveredRevision)
+            }
+        } finally { context.deleteDatabase(name) }
+    }
+    @Test fun automaticPolicyAndFailuresSurviveRestartWithoutCoveringNewerEdits() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "automatic-${UUID.randomUUID()}.db"
+        val drive = MemoryDrive()
+        try {
+            Shop.open(context, name).use { shop ->
+                shop.driveBackup.connect(DriveTarget("owner@example.com", "folder", "Shop"))
+                assertFalse(shop.driveBackup.status().allowMobileData)
+                shop.driveBackup.setAllowMobileData(true)
+                shop.driveBackup.publish(drive)
+                val complete = shop.driveBackup.status()
+                shop.setAppearance(Appearance.Dark)
+                drive.interrupt = true
+                try { shop.driveBackup.publish(drive); fail("Expected network failure") } catch (_: IOException) { }
+                assertNotNull(shop.driveBackup.status().failure)
+                assertEquals(complete.capturedAt, shop.driveBackup.status().capturedAt)
+            }
+            Shop.open(context, name).use { shop ->
+                assertTrue(shop.driveBackup.status().allowMobileData)
+                assertNotNull(shop.driveBackup.status().failure)
+                shop.setAppearance(Appearance.Light)
+                shop.driveBackup.publish(drive)
+                assertEquals(1L, shop.driveBackup.status().coveredRevision)
+                assertEquals(2L, shop.snapshot().revision)
+                assertNull(shop.driveBackup.status().failure)
+                shop.driveBackup.publish(drive)
+                assertEquals(2L, shop.driveBackup.status().coveredRevision)
+                assertEquals(2L, shop.snapshot().revision)
+            }
+        } finally { context.deleteDatabase(name) }
+    }
     @Test fun stalePhoneAndConflictingContentPreservePriorSuccessAndSwitchingTargetsClearsCoverage() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "drive-guards-${UUID.randomUUID()}.db"
@@ -101,7 +162,8 @@ class DriveBackupTest {
     }
 }
 
-private class MemoryDrive : DriveTransport {
+internal class MemoryDrive : DriveTransport {
+    var beforeContent: (suspend () -> Unit)? = null
     val files = mutableMapOf<String, ByteArray>()
     val names = mutableMapOf<String, String>()
     val parents = mutableMapOf<String, String>()
@@ -115,6 +177,7 @@ private class MemoryDrive : DriveTransport {
     override suspend fun list(folder: String) = names.filterKeys { parents[it] == folder }.map { DriveEntry(it.key, it.value) }
     override suspend fun download(id: String): ByteArray? = files[id]
     override suspend fun upload(id: String, folder: String, name: String, bytes: ByteArray, session: String?, progress: suspend (String?, Long) -> Unit) {
+        if (name != "active-phone.json") beforeContent?.invoke()
         if (interrupt && name != "active-phone.json") {
             interrupt = false
             partial = id to bytes.copyOfRange(0, bytes.size / 2)

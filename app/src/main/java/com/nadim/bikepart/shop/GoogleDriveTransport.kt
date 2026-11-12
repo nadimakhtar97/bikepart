@@ -15,8 +15,13 @@ class GoogleDriveTransport internal constructor(private val token: String,
     private val exchange: (suspend (String, String, ByteArray?, Map<String, String>) -> DriveHttpResponse)?
 ) : DriveTransport {
     constructor(token: String) : this(token, null)
+    constructor(token: String, beforeRequest: suspend () -> Unit) : this(token, null) {
+        this.beforeRequest = beforeRequest
+    }
+    private var beforeRequest: suspend () -> Unit = {}
     companion object { private const val API = "https://www.googleapis.com/drive/v3" }
     private suspend fun request(url: String, method: String = "GET", bytes: ByteArray? = null, headers: Map<String, String> = emptyMap()): DriveHttpResponse = withContext(Dispatchers.IO) {
+        beforeRequest()
         val uri = java.net.URI(url)
         require(uri.scheme == "https" && uri.host == "www.googleapis.com") { "Invalid Drive upload session" }
         exchange?.let { return@withContext it(url, method, bytes, headers) }

@@ -25,6 +25,8 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     val context = LocalContext.current
     val status by model.driveStatus.collectAsState()
     val busy by model.driveBusy.collectAsState()
+    val uploading by model.driveUploading.collectAsState()
+    val capture by model.backgroundCapture.collectAsState()
     val error by model.driveError.collectAsState()
     val folders by model.driveFolders.collectAsState()
     val account by model.driveAccount.collectAsState()
@@ -57,16 +59,27 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     ShopSection("Google Drive backup") {
         Text(status?.target?.let { "Account: ${it.account}\nFolder: ${it.folderName}\nFolder ID: ${it.folderId}" } ?: "Choose the owner's Google account and a dedicated visible Drive folder.", style = MaterialTheme.typography.bodyMedium)
         Text(when {
-            busy -> "Working with Google Drive…"
             status?.coveredRevision != null -> "Verified backup · revision ${status!!.coveredRevision} · captured ${DateFormat.getDateTimeInstance().format(Date(status!!.capturedAt!!))}"
             else -> "No verified Drive backup for this connection."
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
+        Text(when {
+            uploading || busy -> "Uploading or preparing backup…"
+            status?.failure != null -> "Backup failed · action required or retry pending"
+            status?.coveredRevision == revision -> "Up to date"
+            else -> "Pending backup"
+        }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         if (status?.coveredRevision?.let { it < revision } != false) Text("Shop changes are waiting for backup. Changes held only on a lost phone cannot be recovered.", style = MaterialTheme.typography.bodyMedium)
-        if (status?.pending == true) {
-            Text("${if (busy) "Uploading capture" else "Pending backup"} · revision ${status!!.pendingRevision} · captured ${DateFormat.getDateTimeInstance().format(Date(status!!.pendingCapturedAt!!))}.", style = MaterialTheme.typography.bodyMedium)
-            if (revision > status!!.pendingRevision!!) Text("Newer shop changes are waiting for another backup.", style = MaterialTheme.typography.bodyMedium)
+        val currentCapture = capture ?: status?.pendingRevision?.let { it to requireNotNull(status?.pendingCapturedAt) }
+        if (currentCapture != null) {
+            val (capturedRevision, time) = currentCapture
+            Text("${if (busy || uploading) "Uploading capture" else "Pending backup"} · revision $capturedRevision · captured ${DateFormat.getDateTimeInstance().format(Date(time))}.", style = MaterialTheme.typography.bodyMedium)
+            if (revision > capturedRevision) Text("Newer shop changes are waiting for another backup.", style = MaterialTheme.typography.bodyMedium)
         }
-        error?.let { FormError(it) }
+        (error ?: status?.failure)?.let { FormError(it) }
+        Text("Automatic backups use Wi-Fi / unmetered networks by default. Android may delay work to save battery. Timing and recovery of changes still on this phone are not guaranteed.", style = MaterialTheme.typography.bodyMedium)
+        OutlinedButton(enabled = !busy && !uploading, onClick = { model.setBackupMobileData(status?.allowMobileData != true) }) {
+            Text(if (status?.allowMobileData == true) "Use Wi-Fi only" else "Allow mobile data for automatic backups")
+        }
         OutlinedButton(enabled = !busy, onClick = {
             chooseAccount.launch(AccountManager.newChooseAccountIntent(null, null, arrayOf("com.google"), null, null, null, null))
         }) { Text("Connect or repair Drive") }

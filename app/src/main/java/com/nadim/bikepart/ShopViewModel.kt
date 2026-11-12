@@ -17,6 +17,12 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     private var shop: Shop? = null
     val driveStatus = kotlinx.coroutines.flow.MutableStateFlow<DriveBackupStatus?>(null)
     val driveBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val driveUploading = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val backgroundCapture = kotlinx.coroutines.flow.MutableStateFlow<Pair<Long, Long>?>(null)
+    fun setBackupMobileData(allowed: Boolean) = driveOperation {
+        shop!!.driveBackup.setAllowMobileData(allowed)
+        AutomaticBackup.reconcile(getApplication(), shop!!, policyChanged = true)
+    }
     val driveError = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val driveFolders = kotlinx.coroutines.flow.MutableStateFlow<List<DriveEntry>>(emptyList())
     val driveAccount = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
@@ -46,6 +52,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     private suspend fun connectDriveFolder(folder: DriveEntry) {
         shop!!.driveBackup.connect(DriveTarget(requireNotNull(driveAccount.value), folder.id, folder.name))
+        AutomaticBackup.reconcile(getApplication(), shop!!)
         driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
     }
     private fun driveOperation(block: suspend () -> Unit) {
@@ -120,12 +127,35 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         try {
             val opened = Shop.open(application)
             shop = opened
-            driveStatus.value = opened.driveBackup.status()
+            viewModelScope.launch {
+                androidx.work.WorkManager.getInstance(application).getWorkInfosByTagFlow("com.nadim.bikepart.BackupWorker").collect { work ->
+                    val running = work.firstOrNull { it.state == androidx.work.WorkInfo.State.RUNNING }
+                    driveUploading.value = running != null
+                    backgroundCapture.value = running?.progress?.let { data ->
+                        if (data.keyValueMap.containsKey("revision")) data.getLong("revision", 0) to data.getLong("capturedAt", 0) else null
+                    }
+                }
+            }
+            viewModelScope.launch {
+                while (true) {
+                    try { driveStatus.value = opened.driveBackup.status() }
+                    catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { driveError.value = "Could not read backup status. Check phone storage and retry." }
+                    delay(2_000)
+                }
+            }
             viewModelScope.launch {
                 val latest = opened.latestLocalBackup()
                 if (localCapture.value == null) localCapture.value = latest
             }
-            opened.snapshots.collect { state.value = it }
+            opened.snapshots.collect {
+                state.value = it
+                viewModelScope.launch {
+                    try { AutomaticBackup.reconcile(application, opened) }
+                    catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { /* Startup and periodic work reconcile missed hints. */ }
+                }
+            }
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) { error.value = ShopError("Could not open shop. Reopen the app to retry.") }
     } }
