@@ -16,6 +16,11 @@ data class DraftField(val id: String, val name: String, val type: AttributeType,
     val unit: String, val options: List<AttributeOption> = emptyList())
 data class ProductTemplate(val id: String, val catalog: CatalogDraft, val retired: Boolean)
 
+internal fun CatalogDraft.requireDistinctCustomIdentities() {
+    val identities = customFields.flatMap { field -> listOf(field.id) + field.options.map { it.id } }
+    require(identities.distinct().size == identities.size) { "Custom identities must be distinct" }
+}
+
 internal fun DraftField.row(categoryId: String, productId: String) = AttributeRow(id, categoryId, name, LookupNames.key(name), type.name, required, unit, productId, "product:$productId")
 
 fun ShopSnapshot.copyCatalog(productId: String): CatalogDraft {

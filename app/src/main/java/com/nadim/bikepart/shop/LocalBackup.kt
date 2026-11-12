@@ -42,18 +42,24 @@ object LocalBackup {
 
     fun read(file: File): BackupContents = readContents(file, includeBlobs = true)
 
-    private fun readContents(file: File, includeBlobs: Boolean): BackupContents = ZipFile(file).use { zip ->
+    internal fun readForRestore(file: File): BackupContents = readContents(file, includeBlobs = true, historicalSchema = true)
+
+    private fun readContents(file: File, includeBlobs: Boolean, historicalSchema: Boolean = false): BackupContents = ZipFile(file).use { zip ->
         val names = zip.entries().asSequence().map { it.name }.toList()
         require(names.size == names.toSet().size) { "Duplicate backup file" }
-        val manifest = JSONObject(zip.getInputStream(requireNotNull(zip.getEntry("manifest.json"))).bufferedReader(Charsets.UTF_8).use { it.readText() })
-        require(manifest.getInt("exportVersion") == FORMAT_VERSION) { "Unsupported export version" }
-        require(manifest.getBoolean("complete"))
+        val manifest = JSONObject(utf8(zip.getInputStream(requireNotNull(zip.getEntry("manifest.json")) { "Missing backup manifest" }).use { it.readBytes() }))
+        require(manifest.get("exportVersion") == FORMAT_VERSION) { "Unsupported export version" }
+        require(manifest.get("complete") == true && manifest.getString("encoding") == "UTF-8") { "Incomplete backup or unsupported encoding" }
+        require(manifest.getString("revision").matches(Regex("0|[1-9][0-9]*")) && manifest.getString("revision").toLongOrNull() != null) { "Invalid capture revision" }
+        require(manifest.getString("capturedAt").toLongOrNull() != null) { "Invalid capture time" }
+        for (key in listOf("captureId", "datasetId")) require(runCatching { UUID.fromString(manifest.getString(key)).toString() == manifest.getString(key) }.getOrDefault(false)) { "Invalid $key" }
         val files = manifest.getJSONArray("files")
         val verified = mutableMapOf<String, ByteArray>()
         val sizes = mutableMapOf<String, Long>()
         for (i in 0 until files.length()) {
             val item = files.getJSONObject(i)
             val path = item.getString("path")
+            require(integer(item, "size") >= 0) { "Invalid file size: $path" }
             require(path.matches(Regex("(tables/[a-z_]+\\.csv|blobs/[0-9a-f]{64}|schema\\.json)")))
             require(path !in sizes)
             val digest = MessageDigest.getInstance("SHA-256")
@@ -76,8 +82,8 @@ object LocalBackup {
             verified[path] = bytes
         }
         require(names.toSet() == verified.keys + "manifest.json") { "Unexpected backup contents" }
-        val schema = JSONObject(requireNotNull(verified["schema.json"]).toString(Charsets.UTF_8))
-        require(schema.getInt("roomVersion") == manifest.getInt("roomVersion"))
+        val schema = JSONObject(utf8(requireNotNull(verified["schema.json"])))
+        require(schema.get("roomVersion") is Int && schema.get("roomVersion") == manifest.get("roomVersion")) { "Schema version mismatch" }
         val tableMetadata = schema.getJSONArray("tables")
         require(tableMetadata.toString() == manifest.getJSONArray("tables").toString())
         val tables = mutableMapOf<String, BackupTable>()
@@ -85,13 +91,15 @@ object LocalBackup {
             val metadata = tableMetadata.getJSONObject(i)
             val name = metadata.getString("name")
             require(name !in tables)
-            val rows = decodeCsv(requireNotNull(verified["tables/$name.csv"]).toString(Charsets.UTF_8))
+            val rows = decodeCsv(utf8(requireNotNull(verified["tables/$name.csv"])))
             val columns = rows.first().map { requireNotNull(it) }
+            require(columns.size == columns.toSet().size) { "Duplicate column in $name" }
             require(columns == metadata.getJSONArray("columns").let { array -> (0 until array.length()).map { array.getJSONObject(it).getString("name") } })
-            require(rows.size - 1 == metadata.getInt("rowCount"))
+            require((rows.size - 1).toLong() == integer(metadata, "rowCount")) { "Invalid row count: $name" }
             tables[name] = BackupTable(columns, rows.drop(1).map { row -> require(row.size == columns.size); columns.zip(row).toMap() })
         }
-        require(tables.keys == businessTables)
+        require(historicalSchema || tables.keys == businessTables)
+        require(verified.keys == tables.keys.map { "tables/$it.csv" }.toSet() + "schema.json" + verified.keys.filter { it.startsWith("blobs/") }) { "Unexpected files outside the declared schema" }
         val state = tables.getValue("shop_state").records.single()
         require(state["datasetId"] == manifest.getString("datasetId") && state["revision"] == manifest.getString("revision"))
         val dependencies = manifest.getJSONArray("dependencies")
@@ -100,18 +108,28 @@ object LocalBackup {
         for (i in 0 until dependencies.length()) {
             val dependency = dependencies.getJSONObject(i)
             val digest = dependency.getString("sha256")
-            require(sizes["blobs/$digest"] == dependency.getLong("size"))
-            expected += digest
+            require(sizes["blobs/$digest"] == integer(dependency, "size"))
+            require(expected.add(digest)) { "Duplicate blob dependency" }
         }
         require(blobs.keys == expected)
-        val references = tables.getValue("product_photos").records.map { PhotoReference(requireNotNull(it["sha256"]), requireNotNull(it["sizeBytes"]).toLong()) } +
-            tables.getValue("product_templates").records.mapNotNull { decodeCatalog(requireNotNull(it["catalog"])).photo }
+        val references = tables["product_photos"]?.records.orEmpty().map { PhotoReference(requireNotNull(it["sha256"]), requireNotNull(it["sizeBytes"]).toLong()) } +
+            tables["product_templates"]?.records.orEmpty().mapNotNull { decodeCatalog(requireNotNull(it["catalog"])).photo }
         require(references.map { it.sha256 }.toSet() == expected)
         references.forEach { require(sizes["blobs/${it.sha256}"] == it.sizeBytes) }
         BackupContents(manifest.getString("datasetId"), manifest.getString("revision").toLong(), tables, blobs)
     }
 
     internal fun hash(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+
+    internal fun utf8(bytes: ByteArray): String = Charsets.UTF_8.newDecoder()
+        .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT).onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+        .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+
+    internal fun integer(json: JSONObject, key: String): Long {
+        val value = json.get(key)
+        require(value is Int || value is Long) { "$key must be a whole number" }
+        return (value as Number).toLong()
+    }
 
     internal fun csv(rows: List<List<String?>>): ByteArray = rows.joinToString("") { row ->
         row.joinToString(",") { value -> value?.let { "\"${it.replace("\"", "\"\"")}\"" } ?: "\\N" } + "\r\n"

@@ -17,10 +17,13 @@ data class ShopSnapshot(val categories: List<Category>, val products: List<Produ
 enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity"), CashReceived("Cash received"), ArrivalQuantity("Arrival quantity"), PurchaseCost("Purchase unit cost"), LabelCopies("Label copies") }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
-class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos, private val backupDirectory: java.io.File, driveDirectory: java.io.File) : AutoCloseable {
+class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos, private val backupDirectory: java.io.File, private val driveDirectory: java.io.File, private val context: Context) : AutoCloseable {
     val driveBackup = DriveBackup(this, driveDirectory)
     private val dao = database.dao()
     val snapshots = dao.revisions().map { snapshot() }
+
+    suspend fun validateLocalRestore(file: java.io.File): ValidatedRestore =
+        RestoreValidation.prepare(context, file, java.io.File(driveDirectory, "restore"))
 
     /** The callback reports a pinned committed revision; ordinary writes may continue during staging. */
     suspend fun captureLocalBackup(directory: java.io.File = backupDirectory, onCaptured: suspend (Long) -> Unit = {}): LocalCapture =
@@ -222,7 +225,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     private suspend fun validateCatalog(draft: CatalogDraft, previous: CatalogDraft? = null, allowIncomplete: Boolean = false) {
         validateProduct(draft.title, draft.categoryId)
-        require(draft.customFields.map { it.id }.distinct().size == draft.customFields.size) { "Duplicate custom field identity" }
+        draft.requireDistinctCustomIdentities()
         val repeated = draft.customFields.groupBy { LookupNames.key(it.name) }.values.firstOrNull { it.size > 1 }?.last()
         if (repeated != null) throw ShopValidation(ProductField.DefinitionName, "Custom field names must be distinct", repeated.id)
         val definitions = draft.customFields.map { field ->
@@ -233,7 +236,6 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             field.row(draft.categoryId, "catalog-draft")
         }
         val options = draft.customFields.flatMap { it.options }.map { OptionRow(it.id, it.definitionId, it.name, LookupNames.key(it.name)) }
-        require((definitions.map { it.id } + options.map { it.id }).distinct().size == definitions.size + options.size) { "Custom identities must be distinct" }
         require(dao.attributes().none { existing -> definitions.any { it.id == existing.id } }) { "Custom fields must be independently owned" }
         validateAttributes(draft.categoryId, draft.attributes, "catalog-draft", previous?.attributes.orEmpty(), allowIncomplete, definitions, options)
         val snapshot = snapshot()
@@ -654,10 +656,16 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     companion object {
         suspend fun open(context: Context, name: String = "shop.db"): Shop {
-            val database = Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14).build()
+            val database = openDatabase(context, name)
             val photoDirectory = java.io.File(context.filesDir, "product-photos/" + java.security.MessageDigest.getInstance("SHA-256").digest(name.toByteArray()).joinToString("") { "%02x".format(it) })
-            return Shop(database, ProductPhotos(photoDirectory), java.io.File(context.filesDir, "local-backups/${photoDirectory.name}"), java.io.File(context.noBackupFilesDir, "drive/${photoDirectory.name}")).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
+            return Shop(database, ProductPhotos(photoDirectory), java.io.File(context.filesDir, "local-backups/${photoDirectory.name}"), java.io.File(context.noBackupFilesDir, "drive/${photoDirectory.name}"), context.applicationContext).also { try { it.initialize() } catch (error: Throwable) { database.close(); throw error } }
         }
+
+        internal fun openDatabase(context: Context, name: String): ShopDatabase =
+            Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14).build()
+
+        internal fun staged(context: Context, database: ShopDatabase, directory: java.io.File) =
+            Shop(database, ProductPhotos(java.io.File(directory, "blobs")), directory, directory, context)
     }
 }
 

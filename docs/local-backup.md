@@ -23,8 +23,9 @@ Every archive has a random capture UUID and contains:
 - `schema.json`: Room version and identity hash, SQLite table/index DDL for
   provenance, ordered columns, declared SQLite types, nullability, defaults,
   primary keys, foreign-key relationships and row counts. DDL is provenance;
-  an eventual restore implementation must validate it rather than execute
-  untrusted input. Restore/activation is separate work.
+  [staged restore validation](restore-preview.md) uses bundled trusted schema
+  definitions and checks the imported metadata rather than executing backup SQL.
+  Activation remains separate work.
 - `blobs/<sha256>`: immutable photo bytes, deduplicated across products and
   templates, including retired templates.
 - `manifest.json`: written last; export and Room versions, dataset/capture IDs,
@@ -44,7 +45,8 @@ Nested template/choice JSON remains quoted CSV text and retains its own identiti
 `LocalBackup.read` verifies required file sets, hashes/sizes, supported export
 version, table metadata/counts, captured dataset/revision and photo dependencies,
 then decodes CSV without losing null/empty values. It is a codec reader, not a
-restore operation or comprehensive business-state validator. `inspect` performs
+comprehensive business-state validator; `Shop.validateLocalRestore` prepares and
+validates an isolated copy separately. `inspect` performs
 the same verification while streaming blob checks to bound photo memory use.
 
 ## Consistency, interruption and pins

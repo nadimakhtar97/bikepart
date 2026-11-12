@@ -21,6 +21,7 @@ android {
     }
 
     sourceSets.getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    sourceSets.getByName("main").assets.directories.add("$projectDir/schemas")
 
     buildTypes {
         release {

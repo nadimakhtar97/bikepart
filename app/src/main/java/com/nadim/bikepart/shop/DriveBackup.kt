@@ -15,6 +15,9 @@ data class DriveTarget(val account: String, val folderId: String, val folderName
 data class DriveEntry(val id: String, val name: String)
 data class DrivePoint(val manifestId: String, val revision: Long, val capturedAt: Long)
 
+data class RestorePoint(val point: DrivePoint, val datasetId: String, val captureId: String,
+    val products: Int, val sales: Int, val carts: Int, val photos: Int,
+    internal val manifestHash: String, internal val target: DriveTarget)
 data class DriveBackupStatus(val target: DriveTarget?, val coveredRevision: Long?, val successAt: Long?, val pending: Boolean,
     val capturedAt: Long?, val pendingRevision: Long?, val pendingCapturedAt: Long?,
     val allowMobileData: Boolean = false, val failure: String? = null)
@@ -176,35 +179,74 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         point
     } }
 
-    /** Discovery is fail closed: owner edits never become shop edits or trusted restore points. */
-    suspend fun recoverable(drive: DriveTransport): List<DrivePoint> = withContext(Dispatchers.IO) { lock.withLock {
-        val state = read(); val target = state.optJSONObject("target") ?: return@withLock emptyList()
-        val dataset = shop.snapshot().datasetId
-        drive.list(target.getString("folderId")).filter { it.name.startsWith("complete-") }.mapNotNull { entry ->
+    /** Discovery checks completion and every required byte. Business validation follows selection. */
+    suspend fun restorePoints(drive: DriveTransport): List<RestorePoint> = withContext(Dispatchers.IO) { lock.withLock {
+        val target = statusTarget() ?: return@withLock emptyList()
+        check(directory.isDirectory || directory.mkdirs())
+        drive.list(target.folderId).filter { it.name.startsWith("complete-") }.mapNotNull { entry ->
             try {
-                val manifest = JSONObject(requireNotNull(drive.download(entry.id)).toString(Charsets.UTF_8))
-                require(manifest.getInt("driveFormat") == 1 && manifest.getString("datasetId") == dataset)
-                val local = manifest.getJSONObject("localManifest")
-                require(local.getString("datasetId") == dataset && local.getString("captureId") == manifest.getString("captureId"))
-                val files = manifest.getJSONArray("files")
-                require(files.length() == local.getJSONArray("files").length())
-                val temporary = File(directory, "verify-${UUID.randomUUID()}.zip")
-                try {
-                    java.util.zip.ZipOutputStream(temporary.outputStream()).use { zip ->
-                        for (index in 0 until files.length()) {
-                            val item = files.getJSONObject(index); val bytes = requireNotNull(drive.download(item.getString("id"))); verify(bytes, item)
-                            zip.putNextEntry(java.util.zip.ZipEntry(item.getString("path"))); zip.write(bytes); zip.closeEntry()
-                        }
-                        zip.putNextEntry(java.util.zip.ZipEntry("manifest.json")); zip.write(local.toString().toByteArray()); zip.closeEntry()
-                    }
-                    val capture = LocalBackup.inspect(temporary)
-                    require(capture.revision == manifest.getLong("revision") && capture.capturedAt == manifest.getLong("capturedAt"))
-                    DrivePoint(entry.id, capture.revision, capture.capturedAt)
-                } finally { temporary.delete() }
+                downloadPoint(drive, entry.id) { file, manifest, hash ->
+                    val local = manifest.getJSONObject("localManifest")
+                    require(entry.name == "complete-${manifest.getString("captureId")}.json") { "Completion file identity does not match." }
+                    val contents = LocalBackup.readForRestore(file)
+                    fun count(table: String) = contents.tables[table]?.records?.size ?: 0
+                    RestorePoint(DrivePoint(entry.id, manifest.getLong("revision"), manifest.getLong("capturedAt")),
+                        contents.datasetId, local.getString("captureId"), count("products"), count("sales"), count("carts"), contents.blobs.size, hash, target)
+                }
             } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
             catch (_: Exception) { null }
-        }.sortedByDescending { it.revision }
+        }.sortedByDescending { it.point.capturedAt }
     } }
+
+    suspend fun recoverable(drive: DriveTransport): List<DrivePoint> = restorePoints(drive).map { it.point }
+
+    /** Redownload and bind validation to the exact preview, even if Drive changed after discovery. */
+    suspend fun validateRestore(drive: DriveTransport, selected: RestorePoint): ValidatedRestore = withContext(Dispatchers.IO) { lock.withLock {
+        require(statusTarget() == selected.target) { "Drive connection changed. Refresh restore points." }
+        downloadPoint(drive, selected.point.manifestId, selected.manifestHash) { file, _, _ ->
+            shop.validateLocalRestore(file)
+        }
+    } }
+
+    private fun statusTarget(): DriveTarget? = read().optJSONObject("target")?.let { DriveTarget(it.getString("account"), it.getString("folderId"), it.getString("folderName")) }
+
+    private suspend fun <T> downloadPoint(drive: DriveTransport, id: String, expectedHash: String? = null,
+        use: suspend (File, JSONObject, String) -> T): T {
+        check(directory.isDirectory || directory.mkdirs())
+        val bytes = requireNotNull(drive.download(id)) { "Restore manifest is missing. Refresh restore points." }
+        require(expectedHash == null || LocalBackup.hash(bytes) == expectedHash) { "Restore point changed since preview. Refresh and select it again." }
+        val manifest = JSONObject(LocalBackup.utf8(bytes))
+        require(manifest.get("driveFormat") == 1) { "Unsupported Drive restore version. Update the app." }
+        val local = manifest.getJSONObject("localManifest")
+        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..14) { "Incomplete or unsupported restore point." }
+        for (key in listOf("datasetId", "captureId", "revision", "capturedAt")) require(manifest.getString(key) == local.getString(key)) { "Restore manifest identity mismatch: $key." }
+        require(manifest.getString("generation").isNotBlank()) { "Missing writer identity." }
+        val files = manifest.getJSONArray("files")
+        val declared = local.getJSONArray("files")
+        require(files.length() == declared.length()) { "Restore dependencies differ from the portable manifest." }
+        val expected = (0 until declared.length()).associate { declared.getJSONObject(it).let { item -> item.getString("path") to item } }
+        require(expected.size == declared.length()) { "Duplicate restore dependency." }
+        val ids = mutableSetOf(id)
+        val paths = mutableSetOf<String>()
+        val temporary = File(directory, "download-${UUID.randomUUID()}.zip")
+        try {
+            java.util.zip.ZipOutputStream(temporary.outputStream()).use { zip ->
+                for (index in 0 until files.length()) {
+                    val item = files.getJSONObject(index)
+                    val path = item.getString("path")
+                    val identity = item.getString("id")
+                    require(identity.isNotBlank() && ids.add(identity) && paths.add(path)) { "Duplicate restore file identity." }
+                    val original = requireNotNull(expected[path]) { "Unexpected restore dependency: $path." }
+                    require(LocalBackup.integer(item, "size") == LocalBackup.integer(original, "size") && item.getString("sha256") == original.getString("sha256")) { "Restore file metadata mismatch: $path." }
+                    val content = requireNotNull(drive.download(identity)) { "Required restore file is missing: $path." }
+                    verify(content, item)
+                    zip.putNextEntry(java.util.zip.ZipEntry(path)); zip.write(content); zip.closeEntry()
+                }
+                zip.putNextEntry(java.util.zip.ZipEntry("manifest.json")); zip.write(local.toString().toByteArray(Charsets.UTF_8)); zip.closeEntry()
+            }
+            return use(temporary, manifest, LocalBackup.hash(bytes))
+        } finally { temporary.delete() }
+    }
     private fun verify(bytes: ByteArray, item: JSONObject) {
         check(bytes.size.toLong() == item.getLong("size") && LocalBackup.hash(bytes) == item.getString("sha256")) { "Drive content failed verification. Repair the connection; the previous backup is preserved." }
     }

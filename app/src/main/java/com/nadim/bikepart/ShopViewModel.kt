@@ -13,6 +13,7 @@ data class CartDraft(val cart: Cart, val customer: String = cart.customer,
     val quantities: Map<String, String> = cart.lines.associate { it.productId to it.quantity.toString() }, val dirty: Boolean = false)
 
 data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
+enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore }
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private var shop: Shop? = null
     val driveStatus = kotlinx.coroutines.flow.MutableStateFlow<DriveBackupStatus?>(null)
@@ -26,22 +27,52 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     val driveError = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val driveFolders = kotlinx.coroutines.flow.MutableStateFlow<List<DriveEntry>>(emptyList())
     val driveAccount = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val restorePoints = kotlinx.coroutines.flow.MutableStateFlow<List<RestorePoint>?>(null)
+    val selectedRestore = kotlinx.coroutines.flow.MutableStateFlow<RestorePoint?>(null)
+    val restoreValidated = kotlinx.coroutines.flow.MutableStateFlow(false)
+    private var stagedRestore: ValidatedRestore? = null
     private var driveTransport: GoogleDriveTransport? = null
     fun driveAuthorizing() { driveBusy.value = true; driveError.value = null }
     fun driveFailure(message: String) { driveBusy.value = false; driveError.value = message }
-    fun authorizedDrive(account: String, token: String, publish: Boolean) {
+    fun authorizedDrive(account: String, token: String, action: DriveAction) {
         val transport = GoogleDriveTransport(token)
         driveOperation {
-            if (publish) {
+            if (action != DriveAction.Connect) {
                 require(shop!!.driveBackup.status().target?.account == account) { "Backup account changed. Reconnect the chosen account." }
-                shop!!.driveBackup.publish(transport) { revision, capturedAt ->
+            }
+            when (action) {
+                DriveAction.Publish -> shop!!.driveBackup.publish(transport) { revision, capturedAt ->
                     driveStatus.value = driveStatus.value?.copy(pending = true, pendingRevision = revision, pendingCapturedAt = capturedAt)
                 }
-            } else {
-                driveTransport = transport; driveAccount.value = account
-                driveFolders.value = transport.folders()
+                DriveAction.ListRestorePoints -> discoverRestorePoints(transport)
+                DriveAction.ValidateRestore -> prepareSelectedRestore(transport)
+                DriveAction.Connect -> {
+                    driveTransport = transport; driveAccount.value = account
+                    driveFolders.value = transport.folders()
+                }
             }
         }
+    }
+    fun selectRestorePoint(point: RestorePoint) {
+        if (driveBusy.value) return
+        clearStagedRestore()
+        selectedRestore.value = point
+        driveError.value = null
+    }
+    fun loadRestorePoints(transport: DriveTransport) = driveOperation { discoverRestorePoints(transport) }
+    fun validateSelectedRestore(transport: DriveTransport) = driveOperation { prepareSelectedRestore(transport) }
+    private suspend fun discoverRestorePoints(transport: DriveTransport) {
+        clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+        restorePoints.value = shop!!.driveBackup.restorePoints(transport)
+    }
+    private suspend fun prepareSelectedRestore(transport: DriveTransport) {
+        clearStagedRestore()
+        stagedRestore = shop!!.driveBackup.validateRestore(transport, requireNotNull(selectedRestore.value) { "Choose a restore point first." })
+        restoreValidated.value = true
+    }
+    private fun clearStagedRestore() {
+        restoreValidated.value = false
+        stagedRestore?.close(); stagedRestore = null
     }
     fun selectDriveFolder(folder: DriveEntry) = driveOperation {
         connectDriveFolder(folder)
@@ -54,6 +85,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         shop!!.driveBackup.connect(DriveTarget(requireNotNull(driveAccount.value), folder.id, folder.name))
         AutomaticBackup.reconcile(getApplication(), shop!!)
         driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
+        clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
     }
     private fun driveOperation(block: suspend () -> Unit) {
         driveBusy.value = true; driveError.value = null
@@ -209,5 +241,5 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             finally { backupBusy.value = false }
         }
     }
-    override fun onCleared() { shop?.close() }
+    override fun onCleared() { clearStagedRestore(); shop?.close() }
 }

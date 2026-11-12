@@ -49,12 +49,15 @@ Only then, after another phone-identity check, does the journal acknowledge the
 captured revision for the same account/folder/connection/dataset/generation.
 An interrupted or failed attempt keeps the preceding coverage and success time.
 
-`recoverable` enumerates completion manifests, downloads every dependency,
-reconstructs a temporary portable archive, and uses the existing verifier to
-check the complete set. Incomplete, damaged, inaccessible or unsupported points
-are omitted. Discovery never applies downloaded business data. Actual restore,
-preview/activation, retention, background scheduling and replacement-phone
-activation remain separate tickets. The current transport holds one remote file
+`restorePoints` enumerates completion manifests, downloads every dependency,
+reconstructs a temporary portable archive, and verifies the complete set before
+listing capture times and content counts. `recoverable` returns the same points'
+basic identities. Incomplete, damaged, inaccessible or unsupported points are
+omitted. Discovery never applies downloaded business data. Selected-point preview
+and isolated business validation are described in [restore-preview.md](restore-preview.md).
+Activation, retention and replacement-phone activation remain separate work;
+[automatic-backup.md](automatic-backup.md) describes background scheduling.
+The current transport holds one remote file
 in memory while uploading/downloading; large-photo streaming is future work.
 
 ## Active phone

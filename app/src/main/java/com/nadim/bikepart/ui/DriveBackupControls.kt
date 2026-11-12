@@ -13,10 +13,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
 import com.nadim.bikepart.ShopViewModel
+import com.nadim.bikepart.DriveAction
 import java.text.DateFormat
 import java.util.Date
 
@@ -31,20 +33,20 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     val folders by model.driveFolders.collectAsState()
     val account by model.driveAccount.collectAsState()
     var selectedAccount by rememberSaveable { mutableStateOf("") }
-    var publishing by rememberSaveable { mutableStateOf(false) }
+    var action by rememberSaveable { mutableStateOf(DriveAction.Connect) }
     var folderName by rememberSaveable { mutableStateOf("Bikepart shop backups") }
     val client = remember(context) { Identity.getAuthorizationClient(context) }
     fun accept(result: com.google.android.gms.auth.api.identity.AuthorizationResult) {
         val token = result.accessToken
         if (token == null) model.driveFailure("Google did not grant Drive access. Try connecting again.")
-        else model.authorizedDrive(selectedAccount, token, publishing)
+        else model.authorizedDrive(selectedAccount, token, action)
     }
     val resolution = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         try { accept(client.getAuthorizationResultFromIntent(result.data)) }
         catch (_: Exception) { model.driveFailure("Drive authorization was cancelled or failed. Reconnect to try again.") }
     }
-    fun authorize(email: String, publish: Boolean) {
-        selectedAccount = email; publishing = publish
+    fun authorize(email: String, requested: DriveAction) {
+        selectedAccount = email; action = requested
         model.driveAuthorizing()
         val request = AuthorizationRequest.builder().setAccount(Account(email, "com.google"))
             .setRequestedScopes(listOf(Scope("https://www.googleapis.com/auth/drive.file"))).build()
@@ -54,7 +56,7 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     }
     val chooseAccount = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
-        if (email != null) authorize(email, false) else model.driveFailure("No Google account selected.")
+        if (email != null) authorize(email, DriveAction.Connect) else model.driveFailure("No Google account selected.")
     }
     ShopSection("Google Drive backup") {
         Text(status?.target?.let { "Account: ${it.account}\nFolder: ${it.folderName}\nFolder ID: ${it.folderId}" } ?: "Choose the owner's Google account and a dedicated visible Drive folder.", style = MaterialTheme.typography.bodyMedium)
@@ -89,7 +91,39 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             OutlinedTextField(value = folderName, onValueChange = { folderName = it }, enabled = !busy, label = { Text("New dedicated folder name") })
             OutlinedButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text("Create and use folder") }
         }
-        ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null, onClick = { authorize(status!!.target!!.account, true) })
+        ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null, onClick = { authorize(status!!.target!!.account, DriveAction.Publish) })
         Text("Manual Drive-file edits do not edit the shop. Retire the previous phone before activating a replacement for shop work and backups.", style = MaterialTheme.typography.bodyMedium)
+    }
+    RestorePreviewControls(model,
+        onRefresh = { authorize(status!!.target!!.account, DriveAction.ListRestorePoints) },
+        onValidate = { authorize(status!!.target!!.account, DriveAction.ValidateRestore) })
+}
+
+@Composable
+private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, onValidate: () -> Unit) {
+    val status by model.driveStatus.collectAsState()
+    val busy by model.driveBusy.collectAsState()
+    val points by model.restorePoints.collectAsState()
+    val selected by model.selectedRestore.collectAsState()
+    val validated by model.restoreValidated.collectAsState()
+    val error by model.driveError.collectAsState()
+    ShopSection("Restore preview") {
+        Text("Inspect a complete Drive restore point before deciding to replace this phone's shop.", style = MaterialTheme.typography.bodyMedium)
+        OutlinedButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text("Find restore points") }
+        if (points?.isEmpty() == true) Text("No complete supported restore points found. Incomplete, damaged or inaccessible copies are excluded.", style = MaterialTheme.typography.bodyMedium)
+        points?.forEach { point ->
+            OutlinedButton(enabled = !busy, onClick = { model.selectRestorePoint(point) }, shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.semantics { this.selected = selected == point }) {
+                Text("${DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))} · revision ${point.point.revision}\n${point.products} products · ${point.sales} sales · ${point.carts} unfinished carts · ${point.photos} photos")
+            }
+        }
+        selected?.let { point ->
+            Text("Selected capture: ${DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))}", style = MaterialTheme.typography.bodyMedium)
+            Text("Local changes absent from this restore point will not be restored. The current shop remains unchanged during preview and validation.", style = MaterialTheme.typography.bodyMedium)
+            ShopPrimaryButton("Validate selected restore point", enabled = !busy, onClick = onValidate)
+            error?.let { FormError(it) }
+            if (validated) Text("Validation passed. This copy is complete and consistent. Preview only; your current shop is unchanged.",
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
