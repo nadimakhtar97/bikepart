@@ -92,8 +92,8 @@ the existing Drive and restore-activation focused checks.
   and preserved logical viewport. No Google account authorization was simulated
   as real-service evidence.
 
-Physical-device, real Google authorization/folder access, competing real-client
-handover and TalkBack checks remain pending. No backup history was deleted.
+Owner-assisted real Google/device results are recorded below. TalkBack and
+release-signing checks remain pending. No backup history was deleted.
 
 ## Implementation review
 
@@ -119,17 +119,95 @@ recorded below. No additional scope creep or implementation failure was found.
 The reviewer rechecked the fix and confirmed **1 addressed, 0 remaining
 implementation findings**, with **1 real-service acceptance gap pending**.
 
-Real Google authorization, signing/reinstall continuity, previously ungranted
-folder/descendant access, replacement restore, marker-update response loss and
-competing-client acceptance require the owner's configured OAuth project/account
-and intended devices. They remain pending; deterministic transport checks do not
-establish real-service acceptance. See the [Drive acceptance checklist](manual-drive-backup.md#real-google-acceptance--pending-not-claimed).
+The original real-service gap was subsequently exercised with the owner's
+configured OAuth project/account, physical S23 and replacement emulator, as
+recorded below. This does not establish release-signing continuity or access to
+arbitrary previously ungranted folders. See the broader
+[Drive acceptance checklist](manual-drive-backup.md#real-google-acceptance--pending-not-claimed).
 
 The marker's content update uses the documented
 [Drive files.update media endpoint](https://developers.google.com/workspace/drive/api/reference/rest/v3/files/update).
 No credentials or service secrets are stored in portable backups.
 
-### Pending real Drive acceptance
+### Owner-assisted real Drive acceptance — 2026-11-14
+
+The owner configured the Android OAuth client and personally completed Google
+sign-in and Drive consent on both devices. Acceptance used the debug APK built
+from committed ticket 22 source `d679db2` (SHA-256
+`A42222CB2F58F2EDAFD39007D55718F38C3E647E494154DB5D1A9851B8682556`),
+a physical Samsung S23 and an API 37 replacement emulator. Original app data and
+APKs were saved before updating. Concurrent instrumentation was stopped by
+owner-authorized coordination; both installations were verified against the
+pinned APK. Later ticket 23 changes were not part of this real-service run.
+
+The test used one owner-selected account and a dedicated folder created by the
+app, `Bike part acceptance 2026-11-14 a42222`. Actual remote descendant bytes
+were downloaded and verified; folder visibility alone was not used as proof.
+
+- The S23 published revision 51 with 3 products, 3 sales, 1 unfinished cart and
+  1 photo. The only business changes were creation of a labelled acceptance
+  cart and one quoted line; no checkout or stock movement occurred.
+- The emulator discovered complete points through real Drive, validated the
+  selected revision 51 point, and restored it after the owner clicked the actual
+  replacement confirmation. The app first saved its previous revision 49 as a
+  before-restore recovery copy. Restored provenance retained the exact dataset,
+  capture, source writer and remote manifest identities.
+- Independent verification of the source portable capture and restored local
+  capture found all 24 business CSV tables and the photo byte-identical. The
+  actual cart UI also retained its label, SKU, quantity 1, quoted price ₹111 and
+  stock of 16. Dataset/product/SKU identities were preserved; a physical printed
+  QR scan was not performed.
+- The owner authorized temporary emulator activation and return of the S23 to
+  active afterward. During a real S23 upload, the emulator journaled a fresh
+  writer and issued the marker update. Bikepart alone was force-stopped before
+  local confirmation, then reopened. Its durable state remained Unknown with
+  takeover pending, no coverage, no job and no success timestamp. Deletion
+  eligibility therefore remained paused.
+- The S23 observed the real changed marker and stopped its old-generation job
+  after 6 of 26 files. Its previous covered revision, capture timestamp and
+  success timestamp stayed unchanged; the interrupted job did not establish a
+  completion acknowledgement. No history was deleted.
+- **Check active phone** reconciled the emulator's pending takeover through the
+  real marker without repeating activation. It became Active with a distinct
+  writer while coverage remained empty. Its first fresh-generation backup then
+  completed and was verified at revision 51, capture
+  `d3e67960-1e59-4b81-91cb-4c9a1741d677`. Independent verification of that portable
+  capture again matched all 24 business tables and the photo.
+- After the handover, the S23 rediscovered the earlier complete points and
+  revalidated the original selected capture through real Drive. The app reported
+  complete, consistent validation with the current shop unchanged. This was a
+  read-only validation; no second shop restore was performed.
+- The emulator was retired through its actual confirmation dialog. Retirement
+  waited for an already-running redundant automatic upload to complete, then
+  persisted Retired with no pending job or takeover. The S23 was explicitly
+  reactivated with another fresh writer,
+  `48414532-9839-48aa-b272-52beaea70704`, and its previous writer's partial job
+  and acknowledgement could not establish coverage for that generation.
+- The test-created unfinished cart was discarded through the normal app dialog
+  without a checkout or stock movement. The S23 advanced to revision 52, and its
+  automatic fresh-generation backup completed with Active identity, covered
+  revision 52, no pending job/takeover and no failure. The app displayed **Up to
+  date**. Final capture `82323335-74a3-4b9a-9a23-9b13d91c8c2a` was independently
+  verified: the other 21 business tables and photo were byte-identical; only
+  the test-cart rows, shop revision and corresponding export metadata changed.
+- Retirement survived an emulator app restart. The original device keep-awake
+  settings and S23 screen timeout were restored, and the shared emulator was
+  released to the other chat. The S23 remains the owner's active shop phone.
+
+Private captures, original device snapshots and sanitized operational evidence
+remain under `.scratch/drive-acceptance/`; they are not committed with the app.
+
+### Additional acceptance not exercised in this run
+
+Release-signing/reinstall continuity, a second real account, arbitrary
+previously ungranted folder access, permission revocation/repair, missing or
+duplicate real markers, two simultaneous real takeover requests, a physical QR
+scan and TalkBack remain unverified. Deterministic persistence/transport tests
+cover the relevant fault cases, but are not represented as real-service results.
+The interrupted real handover above exercised a server-accepted update with
+lost local confirmation and an overlapping old-client upload.
+
+The broader manual procedure remains useful when testing these conditions:
 
 1. Configure the owner-authorized Android OAuth client for the intended signing
    identity. On the old phone publish a complete point with photos, a receipt

@@ -135,5 +135,12 @@ Review accounting: Standards 2 addressed, 0 remaining; Spec 1 addressed, 0 remai
   work. Final recovery captions distinguish the before-replacement artifact from
   captures of the restored shop, with export feedback routed to its own section.
 - Physical-device power-loss, real Google authorization/folder access and
-  TalkBack checks remain unperformed. Deterministic transport/interruption tests
-  do not establish those acceptance results.
+  TalkBack checks were unperformed in that implementation run. Deterministic
+  transport/interruption tests do not establish those acceptance results.
+
+The subsequent owner-assisted [ticket 22 real Drive run](active-phone-replacement.md#owner-assisted-real-drive-acceptance--2026-11-14)
+completed actual Google consent, folder/descendant access and confirmed
+replacement restore onto the emulator, including the app's before-restore
+recovery copy. All 24 exported business tables and the photo matched the S23
+source byte for byte. This adds real-service restore evidence; physical power
+loss and TalkBack remain untested.

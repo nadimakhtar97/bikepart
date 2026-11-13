@@ -95,8 +95,12 @@ backup operations with only the external Drive transport substituted.
 
 ### Real Google acceptance — pending, not claimed
 
-No real owner account or configured Google Cloud OAuth client is supplied by this
-checkout. These checks require the owner's configured project and device:
+The original implementation run had no real owner account or configured Google
+Cloud OAuth client. A subsequent owner-assisted ticket 22 run exercised real
+Google consent, a dedicated app-created folder, descendant-byte validation,
+replacement restore, fresh-writer backup and interrupted handover on a physical
+S23 and an emulator; see [the recorded results](active-phone-replacement.md#owner-assisted-real-drive-acceptance--2026-11-14).
+The broader checks below still require additional account/signing conditions:
 
 1. Enable Drive API; configure Android OAuth clients for
    `com.nadim.bikepart` and each installed debug/release signing certificate.
@@ -117,9 +121,11 @@ checkout. These checks require the owner's configured project and device:
    not returned and publication stops on an identity mismatch. Confirm the
    preceding complete point remains intact after network/permission failures.
 
-Physical-device Google authorization, signing/reinstall continuity, folder
-rediscovery/descendant access, real account switching and screen-reader checks
-remain unverified. Deterministic transport tests do not establish those results.
+Release-signing/reinstall continuity, arbitrary previously ungranted folder
+access, real account switching and screen-reader checks remain unverified.
+The ticket 22 results establish access to the specific app-created test folder
+and its required descendants only. Deterministic transport tests do not
+establish the remaining real-service results.
 
 Primary implementation references:
 [Android authorization](https://developer.android.com/identity/authorization),
