@@ -67,8 +67,32 @@ Theme validation passed all 94 checks with minimum normal-text contrast 4.55:1.
 TDD regression runs established and then fixed two concrete failures: reconnecting
 could revive a retired installation, and a changed review could leave automatic
 deletion eligibility enabled. All six replacement persistence cases pass, as do
-the existing Drive and restore-activation focused checks. The full-suite result
-and independent review accounting will be appended after final verification.
+the existing Drive and restore-activation focused checks.
+
+## Execution results
+
+- Final Kotlin compilation, app/test APK builds and all **7 unit tests** passed.
+  Android lint completed with **0 errors and 18 warnings** in existing manifest,
+  resource and dependency/configuration code.
+- The full isolated API 37 instrumentation run completed **143/147**. The four
+  failures were checkout cash-entry navigation, scanning template pagination,
+  search threshold validation in the appearance/text matrix and template
+  retirement navigation. These cases are outside the implementation diff.
+- All four failed cases passed a subsequent **4/4** focused follow-up, without
+  source changes. The original full-suite result remains 143/147; those broad-run
+  UI failures are recorded rather than relabelled as a clean full run.
+- All replacement, Drive, restore-activation and restore-validation cases passed
+  in the full run. Earlier focused runs also passed all six replacement
+  persistence cases and the replacement app workflow across both appearances
+  and both text scales. Eight screenshots were inspected and all 94 generated
+  theme checks passed.
+- Initial shared-emulator attempts were interrupted by other instrumentation.
+  Final runs used a task-owned emulator, with reduced physical rendering size
+  and preserved logical viewport. No Google account authorization was simulated
+  as real-service evidence.
+
+Physical-device, real Google authorization/folder access, competing real-client
+handover and TalkBack checks remain pending. No backup history was deleted.
 
 ## Implementation review
 
@@ -83,12 +107,16 @@ eligibility enabled. Activation now persists unknown identity before remote
 revalidation. A real-persistence regression failed before the fix and passed
 after it for changed, inaccessible, missing and malformed markers. No substantive
 baseline code-smell finding was reported.
+The reviewer rechecked commit `569de64` and confirmed **1 addressed, 0 remaining
+actionable Standards findings**.
 
 ### Spec
 
 The same uncertainty finding was identified and fixed. The separate real Drive
 acceptance requirement remains pending for owner account/device access, as
 recorded below. No additional scope creep or implementation failure was found.
+The reviewer rechecked the fix and confirmed **1 addressed, 0 remaining
+implementation findings**, with **1 real-service acceptance gap pending**.
 
 Real Google authorization, signing/reinstall continuity, previously ungranted
 folder/descendant access, replacement restore, marker-update response loss and
@@ -99,3 +127,24 @@ establish real-service acceptance. See the [Drive acceptance checklist](manual-d
 The marker's content update uses the documented
 [Drive files.update media endpoint](https://developers.google.com/workspace/drive/api/reference/rest/v3/files/update).
 No credentials or service secrets are stored in portable backups.
+
+### Pending real Drive acceptance
+
+1. Configure the owner-authorized Android OAuth client for the intended signing
+   identity. On the old phone publish a complete point with photos, a receipt
+   and an unfinished cart; record its capture time and remote manifest identity.
+2. On the replacement, grant the selected account/folder, preview and restore
+   that point. Check saved quantities, receipts, cart quotes, photos and an
+   existing QR label. Review the displayed dataset, source and current target.
+3. Retire the old installation with the owner. Confirm replacement activation,
+   publish a new point and verify a distinct writer and fresh coverage. Attempt
+   an old-client upload before uninstalling/clearing it; it must stop on the
+   observed mismatch while its local edits remain possible offline.
+4. Interrupt the marker-update response and reopen. Until **Check active phone**
+   confirms the intended writer, require paused deletion eligibility and no
+   publication acknowledgement. Check that preceding complete points still
+   restore. Repeat with revoked permission, a missing/duplicate marker and a
+   competing takeover; do not infer safety from an incomplete listing.
+5. Record actual device/build/account-grant conditions and outcomes. A race
+   after a cooperative check is not remotely fenced. Keep recovery history on
+   uncertain outcomes and resolve which installation the owner will use.
