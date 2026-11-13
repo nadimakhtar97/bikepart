@@ -23,6 +23,13 @@ Operational progress, failure records and network policy do not advance business
 revisions or enter portable shop exports. Room stays at version 14; the existing
 JSON journal accepts additive optional fields with Wi-Fi-only/no-error defaults.
 
+[Phone replacement](active-phone-replacement.md) adds explicit writer activation
+and retirement. Automatic work waits for owner action on a known phone mismatch,
+retired installation or unresolved takeover, before requesting Google access.
+Confirmed activation clears prior-generation jobs and coverage; startup and
+periodic reconciliation schedule a fresh backup. Coverage labels do not claim
+that a retired or mismatching phone is up to date.
+
 The More screen distinguishes the last verified capture, an uploading capture,
 newer pending edits, failures and up-to-date coverage. Network and storage failures
 retry with backoff; account/permission consent requires foreground repair. Sales

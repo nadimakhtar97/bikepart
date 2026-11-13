@@ -47,6 +47,10 @@ class GoogleDriveTransport internal constructor(private val token: String,
         val response = request("$API/files/${encode(id)}?alt=media")
         return if (response.code == 404) null else response.checked().bytes
     }
+    override suspend fun replace(id: String, bytes: ByteArray) {
+        request("https://www.googleapis.com/upload/drive/v3/files/${encode(id)}?uploadType=media", "PATCH", bytes,
+            mapOf("Content-Type" to "application/json; charset=UTF-8")).checked()
+    }
     override suspend fun list(folder: String): List<DriveEntry> = listQuery("'${folder.replace("'", "\\'")}' in parents and trashed = false")
     suspend fun folders(): List<DriveEntry> = listQuery("mimeType = 'application/vnd.google-apps.folder' and trashed = false")
     private suspend fun listQuery(query: String): List<DriveEntry> {

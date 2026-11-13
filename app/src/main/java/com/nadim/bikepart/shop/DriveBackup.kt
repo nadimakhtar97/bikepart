@@ -14,13 +14,23 @@ import org.json.JSONObject
 data class DriveTarget(val account: String, val folderId: String, val folderName: String)
 data class DriveEntry(val id: String, val name: String)
 data class DrivePoint(val manifestId: String, val revision: Long, val capturedAt: Long)
+enum class ActivePhoneState { Unknown, Active, Mismatch, Retired }
+data class RestoreOrigin(val datasetId: String, val captureId: String, val revision: Long, val capturedAt: Long,
+    val manifestId: String?, val account: String?, val folderId: String?, val writer: String?)
+data class PhoneReplacement internal constructor(val target: DriveTarget, val datasetId: String,
+    val previousWriter: String, val origin: RestoreOrigin?, internal val markerId: String,
+    internal val markerHash: String, internal val connection: String, internal val localWriter: String)
 
 data class RestorePoint(val point: DrivePoint, val datasetId: String, val captureId: String,
     val products: Int, val sales: Int, val carts: Int, val photos: Int,
     internal val manifestHash: String, internal val target: DriveTarget)
 data class DriveBackupStatus(val target: DriveTarget?, val coveredRevision: Long?, val successAt: Long?, val pending: Boolean,
     val capturedAt: Long?, val pendingRevision: Long?, val pendingCapturedAt: Long?,
-    val allowMobileData: Boolean = false, val failure: String? = null)
+    val allowMobileData: Boolean = false, val failure: String? = null,
+    val phoneState: ActivePhoneState = ActivePhoneState.Unknown, val takeoverPending: Boolean = false,
+    val writer: String? = null, val origin: RestoreOrigin? = null) {
+    val automaticDeletionPaused: Boolean get() = phoneState != ActivePhoneState.Active || takeoverPending
+}
 
 /** Only external Google operations are substituted in interruption tests. Missing means HTTP 404 only. */
 interface DriveTransport {
@@ -28,6 +38,8 @@ interface DriveTransport {
     suspend fun list(folder: String): List<DriveEntry>
     suspend fun download(id: String): ByteArray?
     suspend fun upload(id: String, folder: String, name: String, bytes: ByteArray, session: String?, progress: suspend (String?, Long) -> Unit)
+    /** Update only the cooperative marker. This is not a per-installation exclusion fence. */
+    suspend fun replace(id: String, bytes: ByteArray) { error("This Drive transport cannot activate a replacement phone.") }
 }
 
 /** Operational journal is outside Room/business exports and Android automatic backup. */
@@ -64,7 +76,9 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             if (state.has("successAt")) state.getLong("successAt") else null, state.has("job"),
             if (state.has("capturedAt")) state.getLong("capturedAt") else null,
             state.optJSONObject("job")?.getLong("revision"), state.optJSONObject("job")?.getLong("capturedAt"),
-            state.optBoolean("allowMobileData"), state.optString("failure").ifEmpty { null })
+            state.optBoolean("allowMobileData"), state.optString("failure").ifEmpty { null },
+            if (state.optBoolean("retired")) ActivePhoneState.Retired else ActivePhoneState.valueOf(state.optString("phoneState", ActivePhoneState.Unknown.name)), state.has("takeover"),
+            state.optString("generation").ifEmpty { null }, shop.restoreOrigin())
     }
     suspend fun setAllowMobileData(allowed: Boolean) = withContext(Dispatchers.IO) { lock.withLock {
         val state = read(); state.put("allowMobileData", allowed); write(state)
@@ -81,11 +95,108 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             if (state.has("job")) { val archive = AtomicFile(File(directory, "abandoned-${UUID.randomUUID()}.json")); val stream = archive.startWrite(); stream.write(state.toString().toByteArray()); archive.finishWrite(stream) }
             state.remove("job"); state.remove("covered"); state.remove("successAt"); state.remove("capturedAt"); state.remove("marker"); state.remove("markerInitialized")
             state.remove("failure")
+            state.remove("takeover"); state.remove("phoneState")
             state.put("connection", UUID.randomUUID().toString())
         }
         state.put("target", JSONObject().put("account", target.account).put("folderId", target.folderId).put("folderName", target.folderName))
         write(state)
     } }
+
+    /** A preview binds owner confirmation to this dataset, connection and exact observed marker. */
+    suspend fun previewReplacement(drive: DriveTransport): PhoneReplacement = withContext(Dispatchers.IO) { lock.withLock {
+        shop.checkActive()
+        val state = read()
+        val target = requireNotNull(statusTarget()) { "Connect the owner's account and backup folder first." }
+        val dataset = shop.snapshot().datasetId
+        if (!state.has("generation")) { state.put("generation", UUID.randomUUID().toString()); write(state) }
+        state.put("phoneState", ActivePhoneState.Unknown.name); write(state)
+        val marker = marker(drive, target.folderId)
+        require(marker.third.getString("datasetId") == dataset) { "This folder belongs to another shop. Restore the intended shop before activating this phone." }
+        PhoneReplacement(target, dataset, marker.third.getString("generation"), shop.restoreOrigin(), marker.first,
+            LocalBackup.hash(marker.second), state.getString("connection"), state.getString("generation"))
+    } }
+
+    suspend fun activateReplacement(drive: DriveTransport, preview: PhoneReplacement, oldInstallationRetired: Boolean) = withContext(Dispatchers.IO) { lock.withLock {
+        require(oldInstallationRetired) { "Retire the old installation before activating this phone. An offline old phone can still edit locally." }
+        shop.checkActive()
+        val state = read()
+        require(statusTarget() == preview.target && shop.snapshot().datasetId == preview.datasetId &&
+            state.getString("connection") == preview.connection && state.getString("generation") == preview.localWriter) { "Shop or connection changed. Review replacement again." }
+        val observed = marker(drive, preview.target.folderId)
+        require(observed.first == preview.markerId && LocalBackup.hash(observed.second) == preview.markerHash) { "Active phone changed since review. Review replacement again; recovery history is preserved." }
+        // Journal the new writer before the request. A lost response never permits an old job to acknowledge it.
+        archiveJob(state)
+        for (key in listOf("job", "covered", "successAt", "capturedAt")) state.remove(key)
+        val generation = UUID.randomUUID().toString()
+        state.remove("retired")
+        state.put("generation", generation).put("marker", preview.markerId).put("markerInitialized", true)
+            .put("phoneState", ActivePhoneState.Unknown.name)
+            .put("takeover", JSONObject().put("previousWriter", preview.previousWriter).put("markerHash", preview.markerHash))
+            .put("failure", "Phone activation is uncertain. Use Check active phone before backing up. Recovery history is preserved.")
+        write(state)
+        drive.replace(preview.markerId, phoneBytes(preview.datasetId, generation))
+        verifyPhone(drive, state, reconcileTakeover = true)
+    } }
+
+    /** Reconciles a lost activation response without repeating a remote takeover. Call before cleanup too. */
+    suspend fun requireActivePhone(drive: DriveTransport) = withContext(Dispatchers.IO) { lock.withLock {
+        verifyPhone(drive, read(), reconcileTakeover = true)
+    } }
+
+    /** Local owner action only; uninstall/clear the old installation to retire its offline editing data. */
+    suspend fun retireInstallation(confirmed: Boolean) = withContext(Dispatchers.IO) { lock.withLock {
+        require(confirmed) { "Confirm retirement of this installation." }
+        shop.checkActive()
+        val state = read(); state.put("retired", true).put("phoneState", ActivePhoneState.Retired.name)
+            .put("failure", "This installation is retired. Stop using it for shop work; uninstall it or clear its app data after checking the replacement.")
+        write(state)
+    } }
+
+    private fun archiveJob(state: JSONObject) {
+        if (!state.has("job")) return
+        val archive = AtomicFile(File(directory, "abandoned-${UUID.randomUUID()}.json"))
+        val output = archive.startWrite()
+        try { output.write(state.toString().toByteArray(Charsets.UTF_8)); archive.finishWrite(output) }
+        catch (error: Throwable) { archive.failWrite(output); throw error }
+    }
+
+    private fun phoneBytes(dataset: String, generation: String) = JSONObject().put("datasetId", dataset).put("generation", generation).toString().toByteArray(Charsets.UTF_8)
+
+    private suspend fun marker(drive: DriveTransport, folder: String): Triple<String, ByteArray, JSONObject> {
+        val entries = drive.list(folder).filter { it.name == "active-phone.json" }
+        check(entries.size == 1) { "Active-phone marker is missing or duplicated. Repair the folder; recovery history is preserved." }
+        val id = entries.single().id
+        val bytes = requireNotNull(drive.download(id)) { "Active-phone marker is missing. Repair the folder." }
+        val content = JSONObject(LocalBackup.utf8(bytes))
+        require(content.getString("datasetId").isNotBlank() && content.getString("generation").isNotBlank()) { "Invalid active-phone marker. Repair the folder." }
+        return Triple(id, bytes, content)
+    }
+
+    private suspend fun verifyPhone(drive: DriveTransport, state: JSONObject, initialize: Boolean = false, reconcileTakeover: Boolean = false) {
+        shop.checkActive()
+        check(!state.optBoolean("retired") && state.optString("phoneState") != ActivePhoneState.Retired.name) { "This installation is retired. Use the replacement phone for backups." }
+        state.put("phoneState", ActivePhoneState.Unknown.name); write(state)
+        check(!state.has("takeover") || reconcileTakeover) { "Phone activation is uncertain. Use Check active phone; recovery history is preserved." }
+        val folder = requireNotNull(state.optJSONObject("target")) { "Connect a Google account and folder first." }.getString("folderId")
+        val dataset = shop.snapshot().datasetId
+        val generation = state.getString("generation")
+        val candidates = drive.list(folder).filter { it.name == "active-phone.json" }
+        if (initialize && candidates.isEmpty() && !state.optBoolean("markerInitialized")) {
+            check(drive.list(folder).none { it.name.startsWith("complete-") }) { "Existing shop backups require replacement activation." }
+            val id = state.optString("marker").ifEmpty { drive.newId().also { state.put("marker", it); write(state) } }
+            val bytes = drive.download(id)
+            if (bytes == null) drive.upload(id, folder, "active-phone.json", phoneBytes(dataset, generation), null) { _, _ -> }
+        }
+        val remote = marker(drive, folder)
+        if ((state.has("marker") && remote.first != state.getString("marker")) ||
+            remote.third.getString("datasetId") != dataset || remote.third.getString("generation") != generation) {
+            state.put("phoneState", ActivePhoneState.Mismatch.name); write(state)
+            error("This is not the active shop phone. Stop backups on this installation. Use the replacement phone, or review Activate replacement phone after retiring the old installation.")
+        }
+        check(drive.list(folder).filter { it.name == "active-phone.json" }.singleOrNull()?.id == remote.first) { "Active-phone identity is uncertain. Repair the folder before backup or cleanup." }
+        state.put("marker", remote.first).put("markerInitialized", true).put("phoneState", ActivePhoneState.Active.name)
+        state.remove("takeover"); state.remove("failure"); write(state)
+    }
 
     suspend fun publish(drive: DriveTransport, expectedTarget: DriveTarget? = null, onCapture: (revision: Long, capturedAt: Long) -> Unit = { _, _ -> }): DrivePoint = try {
         publishCapture(drive, expectedTarget, onCapture)
@@ -104,28 +215,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         val dataset = shop.snapshot().datasetId
         if (!state.has("generation")) { state.put("generation", UUID.randomUUID().toString()); write(state) }
         val generation = state.getString("generation")
-        suspend fun checkPhone() {
-            val candidates = drive.list(folder).filter { it.name == "active-phone.json" }
-            check(candidates.size <= 1) { "Multiple active-phone markers. Repair the Drive folder before backing up." }
-            var id = state.optString("marker")
-            if (id.isEmpty()) {
-                id = candidates.singleOrNull()?.id ?: drive.newId()
-                state.put("marker", id); write(state)
-            }
-            check(candidates.all { it.id == id }) { "Active-phone identity changed. Stop and repair this connection." }
-            val expected = JSONObject().put("datasetId", dataset).put("generation", generation).toString().toByteArray()
-            var bytes = drive.download(id)
-            if (bytes == null) {
-                check(candidates.isEmpty() && !state.optBoolean("markerInitialized")) { "Active-phone marker is missing. Repair required." }
-                check(drive.list(folder).none { it.name.startsWith("complete-") }) { "Existing shop backups require replacement activation." }
-                drive.upload(id, folder, "active-phone.json", expected, null) { _, _ -> }
-                bytes = drive.download(id)
-            }
-            val marker = JSONObject(requireNotNull(bytes).toString(Charsets.UTF_8))
-            check(marker.getString("datasetId") == dataset && marker.getString("generation") == generation) { "This is not the active shop phone. Replacement activation is required." }
-            check(drive.list(folder).filter { it.name == "active-phone.json" }.single().id == id)
-            state.put("markerInitialized", true); write(state)
-        }
+        suspend fun checkPhone() = verifyPhone(drive, state, initialize = true)
         checkPhone()
         var job = state.optJSONObject("job")
         if (job == null) {

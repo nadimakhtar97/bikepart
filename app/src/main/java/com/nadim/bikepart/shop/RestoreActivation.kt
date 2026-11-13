@@ -30,6 +30,12 @@ internal class ShopStorage(private val context: Context, val name: String) {
     private val gate = gates.getOrPut(base.absolutePath) { Gate() }
     val changes get() = gate.changes
     val active: String? get() = if (journal.baseFile.exists()) journal.openRead().use { JSONObject(it.bufferedReader().readText()).getString("generation") } else null
+    fun origin(): RestoreOrigin? = if (journal.baseFile.isFile) journal.openRead().use { input ->
+        val value = JSONObject(input.bufferedReader().readText())
+        RestoreOrigin(value.getString("sourceDataset"), value.getString("sourceCapture"), value.getLong("sourceRevision"), value.getLong("sourceCapturedAt"),
+            value.optString("sourceManifest").ifEmpty { null }, value.optString("sourceAccount").ifEmpty { null },
+            value.optString("sourceFolder").ifEmpty { null }, value.optString("sourceWriter").ifEmpty { null })
+    } else null
     fun database(generation: String?) = generation?.let { File(base, "$it/shop.db").absolutePath } ?: name
     fun photos(generation: String?) = generation?.let { File(base, "$it/blobs") } ?: File(context.filesDir, "product-photos/$key")
     fun backups(generation: String?) = File(context.filesDir, "local-backups/$key" + (generation?.let { "/$it" } ?: ""))

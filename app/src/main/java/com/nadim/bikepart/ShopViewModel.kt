@@ -14,13 +14,39 @@ data class CartDraft(val cart: Cart, val customer: String = cart.customer,
     val quantities: Map<String, String> = cart.lines.associate { it.productId to it.quantity.toString() }, val dirty: Boolean = false)
 
 data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
-enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore }
+enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore, ReviewPhone, ActivatePhone, CheckPhone }
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private var shop: Shop? = null
     private val readyShop = kotlinx.coroutines.flow.MutableStateFlow<Shop?>(null)
     private var openFailure: Throwable? = null
     val driveStatus = kotlinx.coroutines.flow.MutableStateFlow<DriveBackupStatus?>(null)
     val driveBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val phoneReplacement = kotlinx.coroutines.flow.MutableStateFlow<PhoneReplacement?>(null)
+    fun cancelPhoneReplacement() { if (!driveBusy.value) phoneReplacement.value = null }
+    fun retirePhone() = driveOperation {
+        shop!!.driveBackup.retireInstallation(confirmed = true)
+        phoneReplacement.value = null
+    }
+    fun phoneDriveAction(transport: DriveTransport, action: DriveAction) = driveOperation { performPhoneAction(transport, action) }
+    private suspend fun performPhoneAction(transport: DriveTransport, action: DriveAction) {
+        when (action) {
+            DriveAction.ReviewPhone -> {
+                phoneReplacement.value = null
+                phoneReplacement.value = shop!!.driveBackup.previewReplacement(transport)
+            }
+            DriveAction.ActivatePhone -> {
+                shop!!.driveBackup.activateReplacement(transport, requireNotNull(phoneReplacement.value) { "Review replacement first." }, oldInstallationRetired = true)
+                phoneReplacement.value = null
+                AutomaticBackup.reconcile(getApplication(), shop!!, policyChanged = true)
+            }
+            DriveAction.CheckPhone -> {
+                shop!!.driveBackup.requireActivePhone(transport)
+                phoneReplacement.value = null
+                AutomaticBackup.reconcile(getApplication(), shop!!)
+            }
+            else -> error("Choose a phone action.")
+        }
+    }
     val driveUploading = kotlinx.coroutines.flow.MutableStateFlow(false)
     val backgroundCapture = kotlinx.coroutines.flow.MutableStateFlow<Pair<Long, Long>?>(null)
     fun setBackupMobileData(allowed: Boolean) = driveOperation {
@@ -51,6 +77,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 }
                 DriveAction.ListRestorePoints -> discoverRestorePoints(transport)
                 DriveAction.ValidateRestore -> prepareSelectedRestore(transport)
+                DriveAction.ReviewPhone, DriveAction.ActivatePhone, DriveAction.CheckPhone -> performPhoneAction(transport, action)
                 DriveAction.Connect -> {
                     driveTransport = transport; driveAccount.value = account
                     driveFolders.value = transport.folders()
@@ -76,6 +103,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 recoveryCapture.value = previous.activateRestore(requireNotNull(stagedRestore) { "Validate a restore point first." }, confirmed = true)
                 localCapture.value = null
                 clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+                phoneReplacement.value = null
                 driveAccount.value = null; driveTransport = null; driveFolders.value = emptyList()
                 cartAutosave?.cancel(); cartDraft.value = null
                 // The observer reopens on the root change; don't report completion until it has done so.
@@ -91,6 +119,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     private suspend fun discoverRestorePoints(transport: DriveTransport) {
         clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+        phoneReplacement.value = null
         restorePoints.value = shop!!.driveBackup.restorePoints(transport)
     }
     private suspend fun prepareSelectedRestore(transport: DriveTransport) {

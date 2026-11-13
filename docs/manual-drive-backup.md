@@ -55,7 +55,9 @@ listing capture times and content counts. `recoverable` returns the same points'
 basic identities. Incomplete, damaged, inaccessible or unsupported points are
 omitted. Discovery never applies downloaded business data. Selected-point preview
 and isolated business validation are described in [restore-preview.md](restore-preview.md).
-Activation, retention and replacement-phone activation remain separate work;
+Safe activation and replacement-phone activation are described in
+[safe-restore.md](safe-restore.md) and [active-phone-replacement.md](active-phone-replacement.md).
+Retention remains separate work;
 [automatic-backup.md](automatic-backup.md) describes background scheduling.
 The current transport holds one remote file
 in memory while uploading/downloading; large-photo streaming is future work.
@@ -67,7 +69,9 @@ writer generation. Its ID is journalled before creation. Existing markers must
 match; duplicate or missing known markers, existing backups without a marker,
 and another dataset/generation stop publication. The marker is checked before
 each upload, immediately before the final manifest and before acknowledgement.
-A replacement activation flow is deliberately not supplied here. This is a
+A separate [replacement activation flow](active-phone-replacement.md) requires
+owner retirement acknowledgement and journals a fresh writer before updating
+the existing marker. This is a
 cooperative check, not a Drive-enforced exclusion fence: retire the old phone
 manually. Reinstall removes the no-backup installation journal, so an existing
 folder with another generation requires the replacement activation workflow.

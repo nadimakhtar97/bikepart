@@ -19,6 +19,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.DriveAction
+import com.nadim.bikepart.shop.ActivePhoneState
 import java.text.DateFormat
 import java.util.Date
 
@@ -65,6 +66,8 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             else -> "No verified Drive backup for this connection."
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         Text(when {
+            status?.phoneState == ActivePhoneState.Retired -> "Installation retired · use the replacement phone"
+            status?.phoneState == ActivePhoneState.Mismatch || status?.takeoverPending == true -> "Phone identity needs owner action"
             uploading || busy -> "Uploading or preparing backup…"
             status?.failure != null -> "Backup failed · action required or retry pending"
             status?.coveredRevision == revision -> "Up to date"
@@ -91,9 +94,13 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             OutlinedTextField(value = folderName, onValueChange = { folderName = it }, enabled = !busy, label = { Text("New dedicated folder name") })
             OutlinedButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text("Create and use folder") }
         }
-        ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null, onClick = { authorize(status!!.target!!.account, DriveAction.Publish) })
+        ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired && status?.phoneState != ActivePhoneState.Mismatch && status?.takeoverPending != true,
+            onClick = { authorize(status!!.target!!.account, DriveAction.Publish) })
         Text("Manual Drive-file edits do not edit the shop. Retire the previous phone before activating a replacement for shop work and backups.", style = MaterialTheme.typography.bodyMedium)
     }
+    PhoneReplacementControls(model, onReview = { authorize(status!!.target!!.account, DriveAction.ReviewPhone) },
+        onActivate = { authorize(status!!.target!!.account, DriveAction.ActivatePhone) },
+        onCheck = { authorize(status!!.target!!.account, DriveAction.CheckPhone) })
     RestorePreviewControls(model,
         onRefresh = { authorize(status!!.target!!.account, DriveAction.ListRestorePoints) },
         onValidate = { authorize(status!!.target!!.account, DriveAction.ValidateRestore) })

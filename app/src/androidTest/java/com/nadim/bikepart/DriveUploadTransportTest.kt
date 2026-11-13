@@ -8,6 +8,25 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DriveUploadTransportTest {
+    @Test fun markerReplacementUpdatesOnlyTheSelectedRemoteFileAndRejectsPermissionFailure() = runBlocking {
+        val bytes = "{\"datasetId\":\"shop\",\"generation\":\"new-writer\"}".toByteArray()
+        var forbidden = false
+        val transport = GoogleDriveTransport("memory-token") { url, method, body, headers ->
+            assertEquals("https://www.googleapis.com/upload/drive/v3/files/marker-id?uploadType=media", url)
+            assertEquals("PATCH", method)
+            assertEquals("application/json; charset=UTF-8", headers["Content-Type"])
+            assertArrayEquals(bytes, body)
+            DriveHttpResponse(if (forbidden) 403 else 200, byteArrayOf(), null, null)
+        }
+        transport.replace("marker-id", bytes)
+        forbidden = true
+        try { transport.replace("marker-id", bytes); fail("Permission failure accepted") }
+        catch (error: IOException) { assertTrue(error.message!!.contains("repair")) }
+        // Verify Android's actual connection implementation accepts the method without making a request.
+        val connection = java.net.URL("https://www.googleapis.com").openConnection() as java.net.HttpURLConnection
+        try { connection.requestMethod = "PATCH"; assertEquals("PATCH", connection.requestMethod) }
+        finally { connection.disconnect() }
+    }
     @Test fun automaticNetworkPolicyIsCheckedBeforeOpeningEveryDriveRequest() = runBlocking {
         var checks = 0
         val transport = GoogleDriveTransport("unused-token") {

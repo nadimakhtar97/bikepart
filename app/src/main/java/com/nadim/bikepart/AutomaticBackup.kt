@@ -29,6 +29,7 @@ object AutomaticBackup {
     suspend fun reconcile(context: Context, shop: Shop, policyChanged: Boolean = false) {
         val status = shop.driveBackup.status()
         if (status.target == null) return
+        if (status.phoneState == ActivePhoneState.Retired || status.phoneState == ActivePhoneState.Mismatch || status.takeoverPending) return
         val manager = WorkManager.getInstance(context)
         // Periodic reconciliation closes the commit/enqueue and worker-completion races.
         manager.enqueueUniquePeriodicWork("$WORK-reconcile", ExistingPeriodicWorkPolicy.UPDATE,
@@ -70,6 +71,7 @@ class BackupWorker(context: Context, parameters: WorkerParameters) : CoroutineWo
             Shop.open(applicationContext).use { shop ->
                 val status = shop.driveBackup.status()
                 val target = status.target ?: return@withContext Result.success()
+                if (status.phoneState == ActivePhoneState.Retired || status.phoneState == ActivePhoneState.Mismatch || status.takeoverPending) return@withContext Result.success()
                 if (!status.pending && status.coveredRevision == shop.snapshot().revision) return@withContext Result.success()
                 // Recheck saved policy even when an older request was eligible on mobile data.
                 val network = applicationContext.getSystemService(android.net.ConnectivityManager::class.java)

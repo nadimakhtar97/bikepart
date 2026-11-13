@@ -1,5 +1,15 @@
 # Shop schema history
 
+## Active-phone replacement — operational journal only
+
+Room and the portable export remain at versions 14 and 1. Optional active-phone,
+retirement and pending-takeover metadata lives in the existing non-exported Drive
+journal; absent fields mean unknown identity and paused deletion eligibility.
+Replacement archives pending jobs and clears coverage before assigning a fresh
+writer. No business records, revisions or label identities are changed. Source
+provenance remains in the recoverable restore-activation journal. See
+[active-phone replacement](../../docs/active-phone-replacement.md).
+
 ## Safe activation — no Room migration
 
 Room remains at version 14 and portable export at format 1. Restore reconstructs

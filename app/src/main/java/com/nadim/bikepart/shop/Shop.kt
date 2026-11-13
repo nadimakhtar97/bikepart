@@ -24,6 +24,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         storage?.changes?.map { Unit } ?: kotlinx.coroutines.flow.emptyFlow()).map { snapshot() }
 
     internal fun checkActive() { storage?.checkActive(generation) }
+    internal fun restoreOrigin(): RestoreOrigin? = storage?.origin()
     private suspend fun <T> activeTransaction(block: suspend () -> T): T {
         suspend fun run(): T { checkActive(); return database.withTransaction { block() } }
         return storage?.exclusive { run() } ?: run()
