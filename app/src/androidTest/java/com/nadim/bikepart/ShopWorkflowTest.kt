@@ -359,7 +359,7 @@ class ShopWorkflowTest {
             compose.waitUntil(15_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             for (mode in listOf("Light", "Dark")) {
                 compose.onNodeWithText("More").performClick()
-                compose.onNodeWithText(mode).performClick()
+                compose.onNodeWithText(mode).performScrollTo().assertIsDisplayed().performClick()
                 compose.waitUntil(10_000) { compose.onAllNodes(hasText(mode) and isSelected()).fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText(mode).assertIsSelected()
                 screenshot("more-${mode.lowercase()}-200")
@@ -379,7 +379,7 @@ class ShopWorkflowTest {
                 compose.onNodeWithText("No unfinished carts").assertExists()
             }
             compose.onNodeWithText("More").performClick()
-            compose.onNodeWithText("System").performClick()
+            compose.onNodeWithText("System").performScrollTo().performClick()
         } finally { shell("settings put system font_scale $original") }
     }
 

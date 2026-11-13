@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
+import kotlinx.coroutines.flow.first
 
 data class CartDraft(val cart: Cart, val customer: String = cart.customer,
     val quantities: Map<String, String> = cart.lines.associate { it.productId to it.quantity.toString() }, val dirty: Boolean = false)
@@ -16,6 +17,8 @@ data class ShopError(val message: String, val field: ProductField? = null, val s
 enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore }
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private var shop: Shop? = null
+    private val readyShop = kotlinx.coroutines.flow.MutableStateFlow<Shop?>(null)
+    private var openFailure: Throwable? = null
     val driveStatus = kotlinx.coroutines.flow.MutableStateFlow<DriveBackupStatus?>(null)
     val driveBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
     val driveUploading = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -30,6 +33,8 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     val restorePoints = kotlinx.coroutines.flow.MutableStateFlow<List<RestorePoint>?>(null)
     val selectedRestore = kotlinx.coroutines.flow.MutableStateFlow<RestorePoint?>(null)
     val restoreValidated = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val restoreComplete = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val recoveryCapture = kotlinx.coroutines.flow.MutableStateFlow<LocalCapture?>(null)
     private var stagedRestore: ValidatedRestore? = null
     private var driveTransport: GoogleDriveTransport? = null
     fun driveAuthorizing() { driveBusy.value = true; driveError.value = null }
@@ -61,6 +66,29 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     fun loadRestorePoints(transport: DriveTransport) = driveOperation { discoverRestorePoints(transport) }
     fun validateSelectedRestore(transport: DriveTransport) = driveOperation { prepareSelectedRestore(transport) }
+    fun activateSelectedRestore() {
+        if (driveBusy.value || busy.value || backupBusy.value || shop == null) return
+        busy.value = true
+        driveOperation {
+            try {
+                require(cartDraft.value?.dirty != true) { "Save or reload the unfinished cart before replacing the shop." }
+                val previous = requireNotNull(shop)
+                recoveryCapture.value = previous.activateRestore(requireNotNull(stagedRestore) { "Validate a restore point first." }, confirmed = true)
+                localCapture.value = null
+                clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+                driveAccount.value = null; driveTransport = null; driveFolders.value = emptyList()
+                cartAutosave?.cancel(); cartDraft.value = null
+                // The observer reopens on the root change; don't report completion until it has done so.
+                val reopened = requireNotNull(readyShop.first { it !== previous }) {
+                    "Could not reopen the restored shop. Reopen the app to retry: ${openFailure?.message.orEmpty()}"
+                }
+                try { AutomaticBackup.reconcile(getApplication(), reopened, policyChanged = true) }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { /* Startup reconciliation retries the durable uncovered generation. */ }
+                restoreComplete.value = true
+            } finally { busy.value = false }
+        }
+    }
     private suspend fun discoverRestorePoints(transport: DriveTransport) {
         clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
         restorePoints.value = shop!!.driveBackup.restorePoints(transport)
@@ -72,6 +100,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     private fun clearStagedRestore() {
         restoreValidated.value = false
+        restoreComplete.value = false
         stagedRestore?.close(); stagedRestore = null
     }
     fun selectDriveFolder(folder: DriveEntry) = driveOperation {
@@ -103,6 +132,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     val localCapture = kotlinx.coroutines.flow.MutableStateFlow<LocalCapture?>(null)
     val backupError = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val backupSaved = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val exportedCaptureId = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val cartDraft = kotlinx.coroutines.flow.MutableStateFlow<CartDraft?>(null)
     private var cartAutosave: Job? = null
     private var afterCartSave: (() -> Unit)? = null
@@ -170,7 +200,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             }
             viewModelScope.launch {
                 while (true) {
-                    try { driveStatus.value = opened.driveBackup.status() }
+                    try { driveStatus.value = shop?.driveBackup?.status() }
                     catch (cancelled: CancellationException) { throw cancelled }
                     catch (_: Exception) { driveError.value = "Could not read backup status. Check phone storage and retry." }
                     delay(2_000)
@@ -179,17 +209,33 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             viewModelScope.launch {
                 val latest = opened.latestLocalBackup()
                 if (localCapture.value == null) localCapture.value = latest
+                recoveryCapture.value = opened.restoreRecoveryCopy()
             }
-            opened.snapshots.collect {
-                state.value = it
-                viewModelScope.launch {
-                    try { AutomaticBackup.reconcile(application, opened) }
-                    catch (cancelled: CancellationException) { throw cancelled }
-                    catch (_: Exception) { /* Startup and periodic work reconcile missed hints. */ }
+            var current = opened
+            while (true) {
+                try {
+                    current.snapshots.collect {
+                        state.value = it
+                        readyShop.value = current
+                        viewModelScope.launch {
+                            try { AutomaticBackup.reconcile(application, current) }
+                            catch (cancelled: CancellationException) { throw cancelled }
+                            catch (_: Exception) { /* Startup and periodic work reconcile missed hints. */ }
+                        }
+                    }
+                } catch (_: ShopReplaced) {
+                    current.close()
+                    current = Shop.open(application)
+                    shop = current
+                    driveStatus.value = current.driveBackup.status()
+                    recoveryCapture.value = current.restoreRecoveryCopy()
                 }
             }
         } catch (e: CancellationException) { throw e }
-        catch (e: Exception) { error.value = ShopError("Could not open shop. Reopen the app to retry.") }
+        catch (e: Exception) {
+            openFailure = e; readyShop.value = null
+            error.value = ShopError("Could not open shop. Reopen the app to retry.")
+        }
     } }
     fun write(action: suspend Shop.() -> Unit, done: () -> Unit = {}, failed: () -> Unit = {}) {
         if (busy.value || shop == null) return
@@ -212,6 +258,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         val opened = shop ?: return
         if (backupBusy.value) return
         backupBusy.value = true
+        exportedCaptureId.value = null
         backupError.value = null
         backupSaved.value = false
         viewModelScope.launch {
@@ -225,6 +272,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     fun saveBackupCopy(uri: android.net.Uri, capture: LocalCapture) {
         if (backupBusy.value) return
         backupBusy.value = true
+        exportedCaptureId.value = capture.id
         backupError.value = null
         backupSaved.value = false
         viewModelScope.launch {

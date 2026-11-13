@@ -32,6 +32,7 @@ interface DriveTransport {
 
 /** Operational journal is outside Room/business exports and Android automatic backup. */
 class DriveBackup internal constructor(private val shop: Shop, private val directory: File) {
+    internal suspend fun <T> exclusiveActivation(block: suspend () -> T): T = withContext(Dispatchers.IO) { lock.withLock { block() } }
     companion object {
         private val lock = Mutex()
         private val journalLock = Any()
@@ -95,6 +96,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
     }
 
     private suspend fun publishCapture(drive: DriveTransport, expectedTarget: DriveTarget?, onCapture: (Long, Long) -> Unit): DrivePoint = withContext(Dispatchers.IO) { lock.withLock {
+        shop.checkActive()
         val state = read()
         val target = requireNotNull(state.optJSONObject("target")) { "Connect a Google account and folder first." }
         check(expectedTarget == null || (expectedTarget.account == target.getString("account") && expectedTarget.folderId == target.getString("folderId"))) { "Backup account or folder changed. Retry with the chosen connection." }
@@ -203,8 +205,12 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
     /** Redownload and bind validation to the exact preview, even if Drive changed after discovery. */
     suspend fun validateRestore(drive: DriveTransport, selected: RestorePoint): ValidatedRestore = withContext(Dispatchers.IO) { lock.withLock {
         require(statusTarget() == selected.target) { "Drive connection changed. Refresh restore points." }
-        downloadPoint(drive, selected.point.manifestId, selected.manifestHash) { file, _, _ ->
-            shop.validateLocalRestore(file)
+        downloadPoint(drive, selected.point.manifestId, selected.manifestHash) { file, manifest, _ ->
+            shop.validateLocalRestore(file).also {
+                it.provenance.put("sourceWriter", manifest.getString("generation"))
+                    .put("sourceManifest", selected.point.manifestId).put("sourceManifestHash", selected.manifestHash)
+                    .put("sourceAccount", selected.target.account).put("sourceFolder", selected.target.folderId)
+            }
         }
     } }
 

@@ -56,7 +56,8 @@ class ShopApplication : Application() {
                             catch (_: Exception) { /* Startup/periodic reconciliation retries. */ }
                         }
                     }
-                } catch (cancelled: CancellationException) { throw cancelled }
+                } catch (_: ShopReplaced) { /* Reopen the newly activated root immediately. */ }
+                catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) { delay(30_000) }
             }
         }

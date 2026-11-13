@@ -61,8 +61,8 @@ class BackupWorkflowTest {
             shop.captureLocalBackup()
             shop.snapshot().products.single { it.id == id }
         } }
-        val dbHash = java.security.MessageDigest.getInstance("SHA-256").digest("shop.db".toByteArray()).joinToString("") { "%02x".format(it) }
-        val photo = java.io.File(context.filesDir, "product-photos/$dbHash/${product.photo!!.sha256}")
+        val storage = ShopStorage(context, "shop.db")
+        val photo = java.io.File(storage.photos(storage.active), product.photo!!.sha256)
         try {
             photo.delete()
             ActivityScenario.launch(MainActivity::class.java).use {

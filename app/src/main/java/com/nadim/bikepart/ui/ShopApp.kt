@@ -43,9 +43,12 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val busy by model.busy.collectAsStateWithLifecycle()
     val cartDraft by model.cartDraft.collectAsStateWithLifecycle()
     val localCapture by model.localCapture.collectAsStateWithLifecycle()
+    val recoveryCapture by model.recoveryCapture.collectAsStateWithLifecycle()
     val backupBusy by model.backupBusy.collectAsStateWithLifecycle()
     val backupError by model.backupError.collectAsStateWithLifecycle()
     val backupSaved by model.backupSaved.collectAsStateWithLifecycle()
+    val exportedCaptureId by model.exportedCaptureId.collectAsStateWithLifecycle()
+    val recoveryExport = exportedCaptureId != null && exportedCaptureId == recoveryCapture?.id
     var stockHealth by rememberSaveable { mutableStateOf<String?>(null) }
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf("Home") }
@@ -112,6 +115,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     destinations.forEach { item ->
                         val selected = destination == item.label
                         NavigationBarItem(
+                            enabled = !busy,
                             selected = selected,
                             onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
                             icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
@@ -268,7 +272,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 AppearanceSettings(shop.appearance, busy,
                                 onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" }, onFindingLookups = { route = "finding-lookups" })
                                 DriveBackupControls(model, shop.revision)
-                                LocalBackupControls(localCapture, shop.revision, backupBusy, backupError, backupSaved, model::captureBackup, model::saveBackupCopy)
+                                LocalBackupControls(localCapture, shop.revision, backupBusy, backupError.takeUnless { recoveryExport }, backupSaved && !recoveryExport, model::captureBackup, model::saveBackupCopy)
+                                if (recoveryCapture != null) LocalBackupControls(recoveryCapture, shop.revision, backupBusy, backupError.takeIf { recoveryExport }, backupSaved && recoveryExport,
+                                    model::captureBackup, model::saveBackupCopy, recovery = true)
                             }
                         }
                     }

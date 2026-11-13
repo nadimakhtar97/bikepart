@@ -88,7 +88,8 @@ class CartWorkflowTest {
             click("Open ${second.name}"); await("Saved cart total: ₹80")
             assertEquals(1L, snapshot().products.single { it.id == product }.quantity)
             // Hold the real writer lock so typing during a commit is deterministic.
-            android.database.sqlite.SQLiteDatabase.openDatabase(context.getDatabasePath("shop.db").path, null, 0).use { writer ->
+            val storage = ShopStorage(context, "shop.db")
+            android.database.sqlite.SQLiteDatabase.openDatabase(context.getDatabasePath(storage.database(storage.active)).path, null, 0).use { writer ->
                 writer.beginTransactionNonExclusive()
                 try {
                     compose.onNodeWithText("Customer label (optional)").performScrollTo().performClick().performTextReplacement("$secondCustomer paused")

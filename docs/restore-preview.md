@@ -52,8 +52,9 @@ their historical text and quotes; checked arithmetic verifies quantities, line
 totals, sale totals, cash and change without deducting stock again.
 
 Successful validation reports a prepared copy and explicitly says the current
-shop is unchanged. Activation, safety copies and an activation journal belong to
-the next ticket; no replacement control is supplied here.
+shop is unchanged. The owner can then use the separately confirmed
+[safe activation workflow](safe-restore.md), including a verified recovery copy
+and recoverable journal.
 
 ## Verification
 

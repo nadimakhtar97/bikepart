@@ -25,7 +25,7 @@ Every archive has a random capture UUID and contains:
   primary keys, foreign-key relationships and row counts. DDL is provenance;
   [staged restore validation](restore-preview.md) uses bundled trusted schema
   definitions and checks the imported metadata rather than executing backup SQL.
-  Activation remains separate work.
+  [Safe activation](safe-restore.md) preserves a verified before-replacement copy.
 - `blobs/<sha256>`: immutable photo bytes, deduplicated across products and
   templates, including retired templates.
 - `manifest.json`: written last; export and Room versions, dataset/capture IDs,

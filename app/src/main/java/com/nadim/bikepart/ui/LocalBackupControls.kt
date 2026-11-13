@@ -16,7 +16,7 @@ import java.util.Date
 
 @Composable
 internal fun LocalBackupControls(capture: LocalCapture?, currentRevision: Long, busy: Boolean, error: String?, saved: Boolean,
-    onCapture: () -> Unit, onSave: (android.net.Uri, LocalCapture) -> Unit) {
+    onCapture: () -> Unit, onSave: (android.net.Uri, LocalCapture) -> Unit, recovery: Boolean = false) {
     // Preserve the selected capture across activity recreation while the document picker is open.
     var selectedPath by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedId by rememberSaveable { mutableStateOf("") }
@@ -27,19 +27,19 @@ internal fun LocalBackupControls(capture: LocalCapture?, currentRevision: Long, 
         if (uri != null && path != null) onSave(uri, LocalCapture(File(path), selectedId, selectedRevision, selectedTime))
         selectedPath = null
     }
-    ShopSection("Local backup") {
-        Text("Saved on this phone. This does not confirm a Drive backup.", style = MaterialTheme.typography.bodyMedium)
-        Text(if (busy) "Preparing local backup…" else capture?.let {
-            "Local capture complete · revision ${it.revision} · ${DateFormat.getDateTimeInstance().format(Date(it.capturedAt))}"
+    ShopSection(if (recovery) "Before-restore recovery copy" else "Local backup") {
+        Text(if (recovery) "The shop saved before replacement. Save this copy to keep it elsewhere." else "Saved on this phone. This does not confirm a Drive backup.", style = MaterialTheme.typography.bodyMedium)
+        Text(if (busy && !recovery) "Preparing local backup…" else capture?.let {
+            "${if (recovery) "Recovery capture" else "Local capture complete"} · revision ${it.revision} · ${DateFormat.getDateTimeInstance().format(Date(it.capturedAt))}"
         } ?: "No complete local capture yet.", style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        if (capture != null && currentRevision > capture.revision) Text("Newer shop changes are waiting for a local capture.", style = MaterialTheme.typography.bodyMedium)
+        if (!recovery && capture != null && currentRevision > capture.revision) Text("Newer shop changes are waiting for a local capture.", style = MaterialTheme.typography.bodyMedium)
         if (error != null) FormError(error)
-        if (saved) Text("Backup copy saved.", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        ShopPrimaryButton("Capture local backup", enabled = !busy, onClick = onCapture)
+        if (saved) Text(if (recovery) "Recovery copy saved." else "Backup copy saved.", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        if (!recovery) ShopPrimaryButton("Capture local backup", enabled = !busy, onClick = onCapture)
         if (capture != null) OutlinedButton(enabled = !busy && selectedPath == null, onClick = {
             selectedPath = capture.file.path; selectedId = capture.id; selectedRevision = capture.revision; selectedTime = capture.capturedAt
             save.launch("shop-backup-${capture.id}.zip")
-        }) { Text("Save a copy…") }
+        }) { Text(if (recovery) "Save recovery copy…" else "Save a copy…") }
     }
 }

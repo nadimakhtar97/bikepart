@@ -106,8 +106,14 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
     val points by model.restorePoints.collectAsState()
     val selected by model.selectedRestore.collectAsState()
     val validated by model.restoreValidated.collectAsState()
+    val complete by model.restoreComplete.collectAsState()
+    val shopBusy by model.busy.collectAsState()
+    val backupBusy by model.backupBusy.collectAsState()
+    var confirm by rememberSaveable { mutableStateOf(false) }
     val error by model.driveError.collectAsState()
     ShopSection("Restore preview") {
+        if (complete) Text("Shop restored. A local recovery copy is saved. A new backup is pending; replacement-phone activation may be required before publication.",
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         Text("Inspect a complete Drive restore point before deciding to replace this phone's shop.", style = MaterialTheme.typography.bodyMedium)
         OutlinedButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text("Find restore points") }
         if (points?.isEmpty() == true) Text("No complete supported restore points found. Incomplete, damaged or inaccessible copies are excluded.", style = MaterialTheme.typography.bodyMedium)
@@ -124,6 +130,15 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
             error?.let { FormError(it) }
             if (validated) Text("Validation passed. This copy is complete and consistent. Preview only; your current shop is unchanged.",
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
+            if (validated) ShopPrimaryButton("Replace shop with validated restore", enabled = !busy && !shopBusy && !backupBusy,
+                onClick = { confirm = true })
         }
     }
+    if (confirm && validated) AlertDialog(
+        onDismissRequest = { confirm = false },
+        title = { Text("Replace this phone's shop?") },
+        text = { Text("Local changes absent from this restore point will be replaced. A verified local recovery copy must be saved before replacement. Existing QR labels will keep working. Retire the previous shop phone before activating this phone for backups.") },
+        confirmButton = { TextButton(enabled = !busy && !shopBusy && !backupBusy, onClick = { confirm = false; model.activateSelectedRestore() }) { Text("Replace shop now") } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } },
+    )
 }

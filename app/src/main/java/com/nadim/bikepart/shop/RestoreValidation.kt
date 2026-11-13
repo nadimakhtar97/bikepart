@@ -13,13 +13,19 @@ import org.json.JSONObject
 
 /** A disposable, migrated copy. No operation here can switch the active database or photo root. */
 class ValidatedRestore internal constructor(internal val directory: File, val snapshot: ShopSnapshot) : AutoCloseable {
+    internal var provenance: JSONObject = ZipFile(File(directory, "capture.zip")).use { zip ->
+        JSONObject(zip.getInputStream(zip.getEntry("manifest.json")).bufferedReader().readText()).let {
+            JSONObject().put("sourceDataset", it.getString("datasetId")).put("sourceCapture", it.getString("captureId"))
+                .put("sourceRevision", it.getString("revision")).put("sourceCapturedAt", it.getString("capturedAt"))
+        }
+    }
     fun readPhoto(reference: PhotoReference): ByteArray? = File(directory, "blobs/${reference.sha256}")
         .takeIf { it.isFile }?.readBytes()?.takeIf { it.size.toLong() == reference.sizeBytes && LocalBackup.hash(it) == reference.sha256 }
     override fun close() { directory.deleteRecursively() }
 }
 
 internal object RestoreValidation {
-    suspend fun prepare(context: Context, archive: File, parent: File): ValidatedRestore = withContext(Dispatchers.IO) {
+    suspend fun prepare(context: Context, archive: File, parent: File, beforeMigration: suspend () -> Unit = {}): ValidatedRestore = withContext(Dispatchers.IO) {
         val directory = File(parent, UUID.randomUUID().toString())
         check(directory.mkdirs()) { "Could not create isolated restore staging. Free space and retry." }
         try {
@@ -94,6 +100,7 @@ internal object RestoreValidation {
             val blobs = File(directory, "blobs").apply { mkdirs() }
             contents.blobs.forEach { (hash, bytes) -> File(blobs, hash).writeBytes(bytes) }
             // Only trusted application migrations run, and only against the isolated copy.
+            beforeMigration()
             val database = Shop.openDatabase(context, path.absolutePath)
             try {
                 database.openHelper.writableDatabase.query("PRAGMA integrity_check").use { require(it.moveToFirst() && it.getString(0) == "ok") { "Staged database integrity check failed." } }
@@ -101,7 +108,13 @@ internal object RestoreValidation {
                 val snapshot = Shop.staged(context, database, directory).snapshot()
                 require(snapshot.datasetId == contents.datasetId && snapshot.revision == contents.revision) { "Staged migration changed the capture identity." }
                 ValidatedRestore(directory, snapshot)
-            } finally { database.close() }
+            } finally {
+                try {
+                    if (database.isOpen) database.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(TRUNCATE)").use {
+                        check(it.moveToFirst() && it.getInt(0) == 0) { "Could not finish the staged database." }
+                    }
+                } finally { database.close() }
+            }
         } catch (cancelled: CancellationException) { directory.deleteRecursively(); throw cancelled }
         catch (error: Exception) {
             directory.deleteRecursively()

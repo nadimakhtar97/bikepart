@@ -1,5 +1,16 @@
 # Shop schema history
 
+## Safe activation — no Room migration
+
+Room remains at version 14 and portable export at format 1. Restore reconstructs
+and migrates only isolated staging, then atomically selects a complete database,
+blob root and fresh operational writer generation through a durable journal.
+The existing legacy paths remain the initial root. Saved balances, stock history,
+sales/snapshots, carts and dataset/product/SKU identities are imported as records;
+activation does not run checkout or advance business revisions. Before-replacement
+recovery ZIPs remain accessible after reopening. Operational jobs, coverage and
+credentials are excluded. See [safe restore activation](../../docs/safe-restore.md).
+
 ## Local export format 1 — no Room migration
 
 Room remains at version 14. The independently versioned local backup codec now
