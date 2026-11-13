@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,22 +28,6 @@ internal data class ProductFormInput(
     val allowSimilar: Boolean, val categoryMappings: Map<String, String>, val locationIds: Set<String>,
     val photoUri: String?, val photoRemoved: Boolean,
 )
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-}
-
-@Composable
-internal fun ShopSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Surface(shape = MaterialTheme.shapes.medium, color = colors.primary.copy(alpha = .08f).compositeOver(colors.surface)) {
-        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
-            SectionTitle(title)
-            content()
-        }
-    }
-}
 
 @Composable
 internal fun ShopPrimaryButton(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
@@ -66,59 +51,120 @@ internal fun ShopEmptyState(title: String, description: String, icon: Int) {
 }
 
 @Composable
-internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit, onNewSale: () -> Unit, onCarts: () -> Unit, busy: Boolean) {
+internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit, onNewSale: () -> Unit,
+    onCarts: () -> Unit, onReceive: () -> Unit, onSales: () -> Unit, onSale: (String) -> Unit, busy: Boolean) {
     val activeProducts = shop.products.filterNot { it.archived }
-    ShopSection("Your parts counter") {
-        Text("${activeProducts.size} stocked products", style = MaterialTheme.typography.headlineSmall)
-        Text("Work offline. Your stock stays on this phone.", style = MaterialTheme.typography.bodyMedium)
-        ShopPrimaryButton("New sale", enabled = !busy, onClick = onNewSale)
-        OutlinedButton(onClick = onCarts, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Unfinished carts: ${shop.carts.size}") }
-        ShopPrimaryButton("Add product", onClick = onAdd)
-        OutlinedButton(onClick = { onStock(null) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("View stock") }
+    val lowStock = activeProducts.count { it.stockHealth == StockHealth.LowStock }
+    val outOfStock = activeProducts.count { it.stockHealth == StockHealth.OutOfStock }
+    val recentSales = shop.sales.sortedByDescending { it.recordedAt }.take(3)
+    ShopPageHeader("Your parts counter", "Work offline. Your stock stays on this phone.")
+    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+        ShopStatCard("Unfinished carts", shop.carts.size.toString(), R.drawable.ic_pending,
+            modifier = Modifier.weight(1f), enabled = !busy, onClick = onCarts)
+        ShopStatCard("Active products", activeProducts.size.toString(), R.drawable.ic_inventory,
+            modifier = Modifier.weight(1f), enabled = !busy, onClick = { onStock(null) })
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+        ShopStatCard("Low stock", lowStock.toString(), R.drawable.ic_warning,
+            modifier = Modifier.weight(1f), enabled = !busy, onClick = { onStock(StockHealth.LowStock) })
+        ShopStatCard("Out of stock", outOfStock.toString(), R.drawable.ic_no_stock,
+            modifier = Modifier.weight(1f), enabled = !busy, onClick = { onStock(StockHealth.OutOfStock) })
+    }
+    ShopSectionHeader("Quick actions")
+    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+        ShopActionTile("New sale", R.drawable.ic_cart, Modifier.weight(1f), enabled = !busy, primary = true, onClick = onNewSale)
+        ShopActionTile("Add product", R.drawable.ic_add, Modifier.weight(1f), onClick = onAdd)
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+        ShopActionTile("Receive stock", R.drawable.ic_inventory, Modifier.weight(1f), enabled = !busy, onClick = onReceive)
+        ShopActionTile("Sales history", R.drawable.ic_receipt, Modifier.weight(1f), onClick = onSales)
     }
     if (activeProducts.isEmpty()) {
         if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
             "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
         else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
     }
-    if (activeProducts.isNotEmpty()) ShopSection("Stock attention") {
-        for (health in listOf(StockHealth.LowStock, StockHealth.OutOfStock)) {
-            val count = activeProducts.count { it.stockHealth == health }
-            OutlinedButton(onClick = { onStock(health) }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
-                Icon(painterResource(R.drawable.ic_stock), contentDescription = null)
-                Spacer(Modifier.width(ShopSpacing.small))
-                Text("${health.label}: $count products")
-            }
+    if (activeProducts.isNotEmpty()) {
+        ShopSectionHeader("Stock attention",
+            supporting = if (lowStock + outOfStock == 0) "Nothing needs attention today" else "Counts at or below your thresholds")
+        ShopGroup(spacing = ShopSpacing.small) {
+            ShopListRow("Low stock: $lowStock ${if (lowStock == 1) "product" else "products"}",
+                supporting = "Positive stock at or below the set threshold",
+                icon = R.drawable.ic_warning, meta = lowStock.toString(), onClick = { onStock(StockHealth.LowStock) })
+            ShopListRow("Out of stock: $outOfStock ${if (outOfStock == 1) "product" else "products"}",
+                supporting = "No pieces currently on hand",
+                icon = R.drawable.ic_no_stock, meta = outOfStock.toString(), onClick = { onStock(StockHealth.OutOfStock) })
+        }
+    }
+    ShopSectionHeader("Recent orders", actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
+    if (recentSales.isEmpty()) Text("Completed cash sales will appear here.", style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant)
+    else ShopGroup(spacing = ShopSpacing.small) {
+        recentSales.forEach { sale ->
+            ShopListRow("Cart ${sale.cartNumber}",
+                supporting = listOfNotNull(sale.customer.ifBlank { null }, "${sale.lines.size} lines").joinToString(" · "),
+                meta = "₹${indianNumber(sale.totalRupees)}", status = { ShopStatusChip("Paid", ShopStatusTone.Success) },
+                actionLabel = "Open receipt · Cart ${sale.cartNumber}", onClick = { onSale(sale.cartId) })
         }
     }
 }
 
 @Composable
 internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null) {
-    ShopPrimaryButton("Add product", onClick = onAdd)
     if (shop.products.none { !it.archived }) {
+        ShopPrimaryButton("Add product", onClick = onAdd)
         if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
         else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+    } else {
+        ShopSectionHeader("Find a product", actionLabel = "Add product", onAction = onAdd)
+        StockSearch(shop, initialHealth, loadPhoto, onOpen)
     }
-    else StockSearch(shop, initialHealth, loadPhoto, onOpen)
 }
 @Composable
-internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader, busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit, onArchive: () -> Unit, archiveError: String?) {
-    Text(product.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-    Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
-    if (product.archived) Text("Archived product", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-    ProductPhoto(product.photo, loadPhoto, Modifier.fillMaxWidth().height(160.dp))
-    ShopSection("Stock and selling price") {
+internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader,
+    busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit, onArchive: () -> Unit,
+    archiveError: String?, onReceive: () -> Unit, onLabels: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    // At large system text the photo would squeeze the title into a narrow column.
+    val stackHeader = LocalDensity.current.fontScale >= 1.5f
+    val summary: @Composable ColumnScope.() -> Unit = {
+        Text(product.title, style = MaterialTheme.typography.titleLarge)
+        Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant)
+        Spacer(Modifier.height(4.dp))
         Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
-        if (!product.archived) StockHealthIndicator(product)
         Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(2.dp))
+        if (product.archived) Text("Archived product", style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        else StockHealthIndicator(product)
     }
-    if (!product.archived) ShopSection("Correct stock") {
-        CorrectionKind.entries.forEach { kind ->
-            OutlinedButton(onClick = { onCorrection(kind) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Record ${kind.label.lowercase()}") }
+    Surface(shape = MaterialTheme.shapes.medium, color = colors.primary.copy(alpha = .08f).compositeOver(colors.surface)) {
+        if (stackHeader) Column(Modifier.fillMaxWidth().padding(ShopSpacing.content),
+            verticalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+            ProductPhoto(product.photo, loadPhoto, Modifier.size(96.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp), content = summary)
+        } else Row(Modifier.fillMaxWidth().padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+            ProductPhoto(product.photo, loadPhoto, Modifier.size(104.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp), content = summary)
         }
     }
+    if (!product.archived) ShopPrimaryButton("Edit details", enabled = !busy, onClick = onEdit)
     if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete · complete required fields when editing. Stock and selling price remain available.", style = MaterialTheme.typography.bodyMedium)
+    if (!product.archived) {
+        ShopSectionHeader("Correct stock")
+        ShopGroup(spacing = ShopSpacing.small) {
+            CorrectionKind.entries.forEach { kind ->
+                ShopListRow("Record ${kind.label.lowercase()}",
+                    supporting = when (kind) {
+                        CorrectionKind.PhysicalCount -> "Enter the total pieces counted"
+                        CorrectionKind.Damage -> "Remove damaged pieces from stock"
+                        CorrectionKind.Loss -> "Remove lost pieces from stock"
+                    },
+                    icon = R.drawable.ic_inventory, enabled = !busy, onClick = { onCorrection(kind) })
+            }
+        }
+    }
     ShopSection("Product details") {
         Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
         shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && (!it.retired || it.id in product.attributes) }.forEach { definition ->
@@ -126,6 +172,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             val display = if (value == null && definition.required && !definition.retired) "Required · missing" else attributeDisplay(shop, value)
             Text(definition.name + (if (definition.retired) " (retired)" else "") + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
         }
+        HorizontalDivider(color = colors.outlineVariant)
         Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodyMedium)
         Text("Opening stock: ${indianNumber(shop.openings[product.id]?.quantity ?: 0L)} pieces", style = MaterialTheme.typography.bodyMedium)
     }
@@ -137,11 +184,22 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     }
     CorrectionHistory(shop.corrections.filter { it.productId == product.id })
     FindingSummary(shop, product)
+    if (product.archived) ShopListRow("Preview product labels", supporting = "Package or shared-bin label",
+        icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
     if (!product.archived) {
-        ShopPrimaryButton("Copy catalog details", enabled = !busy, onClick = onCopy)
-        OutlinedButton(onTemplate, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Create template from product") }
-        ShopPrimaryButton("Edit details", enabled = !busy, onClick = onEdit)
-        OutlinedButton(onClick = onManage, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fields") }
+        ShopSectionHeader("Product actions")
+        ShopGroup(spacing = ShopSpacing.small) {
+            ShopListRow("Receive stock", supporting = "Add received pieces and purchase cost",
+                icon = R.drawable.ic_inventory, enabled = !busy, onClick = onReceive)
+            ShopListRow("Preview product labels", supporting = "Package or shared-bin label",
+                icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
+            ShopListRow("Copy catalog details", supporting = "Start a new product with these details",
+                icon = R.drawable.ic_add, enabled = !busy, onClick = onCopy)
+            ShopListRow("Create template from product", supporting = "Reuse these details later",
+                icon = R.drawable.ic_template, enabled = !busy, onClick = onTemplate)
+            ShopListRow("Manage fields", supporting = "Custom and category fields",
+                icon = R.drawable.ic_settings, enabled = !busy, onClick = onManage)
+        }
         ShopSection("Archive unused product") {
             Text("Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.", style = MaterialTheme.typography.bodyMedium)
             if (archiveError != null) FormError(archiveError)
@@ -157,19 +215,24 @@ internal fun ArchivedProducts(shop: ShopSnapshot, loadPhoto: PhotoLoader, onOpen
     val archived = shop.products.filter { it.archived }
     if (archived.isEmpty()) ShopEmptyState("No archived products", "Products archived at zero stock remain here with their details and history.", R.drawable.ic_stock)
     else {
-        OutlinedTextField(query, { query = it }, label = { Text("Search archived products") }, modifier = Modifier.fillMaxWidth())
+        ShopSearchField(query, { query = it }, "Search archived products")
         val found = archived.filter { LookupNames.key(it.title + " " + it.sku).contains(LookupNames.key(query)) }
-        Text("${found.size} archived products", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        ShopSectionHeader("${found.size} archived products", supporting = "Title or permanent SKU")
         if (found.isEmpty()) ShopEmptyState("No matching archived products", "Try a title or permanent SKU.", R.drawable.ic_stock)
-        found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
-        if (found.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Show more archived products") }
+        else ShopGroup(spacing = ShopSpacing.small) {
+            found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
+        }
+        if (found.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more archived products") }
     }
 }
 
 @Composable
-internal fun AppearanceSettings(appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit, onCategories: () -> Unit, onFindingLookups: () -> Unit) {
-    ShopSection("Appearance") {
-        Text("Now in Android · Default theme", style = MaterialTheme.typography.bodyMedium)
+internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
+    onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit) {
+    ShopSectionHeader("Appearance")
+    ShopGroup(spacing = ShopSpacing.small) {
+        Text("Now in Android · Default theme", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
         Column(Modifier.selectableGroup()) {
             Appearance.entries.forEach { mode ->
                 Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
@@ -180,24 +243,54 @@ internal fun AppearanceSettings(appearance: Appearance, busy: Boolean, onAppeara
                 }
             }
         }
-        Text("System follows your phone’s light or dark appearance.", style = MaterialTheme.typography.bodyMedium)
+        Text("System follows your phone's light or dark appearance.", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    ShopSection("Catalog setup") {
-        OutlinedButton(onClick = onFindingLookups, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Manage fitment and locations") }
-        OutlinedButton(onClick = onCategories, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Edit categories") }
+    ShopSectionHeader("Shop")
+    ShopGroup(spacing = ShopSpacing.small) {
+        ShopListRow("Sales history", supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,
+            enabled = !busy, onClick = onSales)
+        ShopListRow("Product templates", supporting = "Reusable catalog details", icon = R.drawable.ic_template,
+            enabled = !busy, onClick = onTemplates)
+        ShopListRow("Archived products", supporting = "Retained details and history", icon = R.drawable.ic_archive,
+            enabled = !busy, onClick = onArchived)
+    }
+    ShopSectionHeader("Catalog")
+    ShopGroup(spacing = ShopSpacing.small) {
+        ShopListRow("Edit categories", supporting = "${shop.categories.size} categories", icon = R.drawable.ic_category,
+            enabled = !busy, onClick = onCategories)
+        ShopListRow("Manage fitment and locations", supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
+            icon = R.drawable.ic_two_wheeler, enabled = !busy, onClick = onFindingLookups)
     }
 }
 
 @Composable
 internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (String, String) -> Unit) {
     Text("Rename your starter categories to suit the shop.", style = MaterialTheme.typography.bodyMedium)
-    shop.categories.forEach { category ->
-        key(category.id) {
-            var name by rememberSaveable(category.name) { mutableStateOf(category.name) }
-            ShopSection(category.name) {
-                OutlinedTextField(name, { name = it }, enabled = !busy, label = { Text("Category name") }, modifier = Modifier.fillMaxWidth())
-                OutlinedButton(enabled = !busy && name != category.name, onClick = { onRename(category.id, name) },
-                    modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Save ${category.name}") }
+    ShopGroup(spacing = ShopSpacing.small) {
+        shop.categories.forEach { category ->
+            key(category.id) {
+                var editing by rememberSaveable(category.id) { mutableStateOf(false) }
+                var name by rememberSaveable(category.name) { mutableStateOf(category.name) }
+                val productCount = shop.products.count { it.categoryId == category.id && !it.archived }
+                ShopListRow(category.name, supporting = "$productCount active products", icon = R.drawable.ic_category,
+                    trailing = { Icon(painterResource(R.drawable.ic_edit), contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) },
+                    showChevron = false, enabled = !busy, actionLabel = "Rename ${category.name}",
+                    onClick = { editing = true })
+                if (editing) AlertDialog(
+                    onDismissRequest = { if (!busy) editing = false },
+                    title = { Text("Rename ${category.name}") },
+                    text = { OutlinedTextField(name, { name = it }, enabled = !busy,
+                        label = { Text("Category name") }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
+                    confirmButton = {
+                        TextButton(enabled = !busy && name != category.name, onClick = {
+                            editing = false
+                            onRename(category.id, name)
+                        }) { Text("Save ${category.name}") }
+                    },
+                    dismissButton = { TextButton(onClick = { editing = false }) { Text("Cancel") } },
+                )
             }
         }
     }
@@ -234,6 +327,9 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         }
     }
     if (templateMode || initialCatalog != null) Text("Catalog details only. Enter stock, selling price and locations separately for each new product.", style = MaterialTheme.typography.bodyMedium)
+    PhotoField(product?.photo ?: initialCatalog?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
+        select = { photoUri = it; photoRemoved = false; onChange() },
+        remove = { photoUri = null; photoRemoved = true; onChange() })
     ShopSection("Basic details") {
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text("Category (required)", style = MaterialTheme.typography.labelLarge)
@@ -243,9 +339,6 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
-    PhotoField(product?.photo ?: initialCatalog?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
-        select = { photoUri = it; photoRemoved = false; onChange() },
-        remove = { photoUri = null; photoRemoved = true; onChange() })
     if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text("Previous category values will be retained as historical attributes.", style = MaterialTheme.typography.bodyMedium)
     if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
     if (category.isNotEmpty()) CategoryFields(formShop, category, values, busy, error, formLookups, if (product != null) product.id else "catalog-draft",
@@ -255,10 +348,25 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
     if (product == null && !templateMode) ShopSection("Opening stock and price") {
-        ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
-            error?.takeIf { it.field == ProductField.OpeningStock }, number = true)
-        ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
-            error?.takeIf { it.field == ProductField.SellingPrice }, number = true)
+        val stockField: @Composable (Modifier) -> Unit = { fieldModifier ->
+            ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
+                error?.takeIf { it.field == ProductField.OpeningStock }, number = true, modifier = fieldModifier)
+        }
+        val priceField: @Composable (Modifier) -> Unit = { fieldModifier ->
+            ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
+                error?.takeIf { it.field == ProductField.SellingPrice }, number = true, modifier = fieldModifier)
+        }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // Roomier screens keep the two short numeric fields on one line; phones stay stacked
+            // so 200% font scale never clips their labels.
+            if (maxWidth >= 480.dp) Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+                Box(Modifier.weight(1f)) { stockField(Modifier.fillMaxWidth()) }
+                Box(Modifier.weight(1f)) { priceField(Modifier.fillMaxWidth()) }
+            } else Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                stockField(Modifier.fillMaxWidth())
+                priceField(Modifier.fillMaxWidth())
+            }
+        }
         Text("Stock is counted in whole pieces. Prices use whole rupees.", style = MaterialTheme.typography.bodyMedium)
     }
     if (error != null && error.field == null) FormError(error.message)
@@ -282,11 +390,11 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
 }
 
 @Composable
-private fun ProductTextField(value: String, onChange: (String) -> Unit, label: String, enabled: Boolean, error: ShopError? = null, number: Boolean = false) {
+private fun ProductTextField(value: String, onChange: (String) -> Unit, label: String, enabled: Boolean, error: ShopError? = null, number: Boolean = false, modifier: Modifier = Modifier.fillMaxWidth()) {
     OutlinedTextField(value, onChange, enabled = enabled, label = { Text(label) }, isError = error != null,
         supportingText = if (error == null) null else ({ FormError(error.message) }),
         keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Number else KeyboardType.Text),
-        modifier = Modifier.fillMaxWidth())
+        modifier = modifier)
 }
 
 @Composable

@@ -10,9 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
@@ -97,15 +100,25 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         val current = search
         if (current != null) value = withContext(Dispatchers.Default) { CatalogResult(shop, filter, if (decimalError) emptyList() else current.find(filter)) }
     }
-    OutlinedTextField(query, { query = it }, label = { Text("Search products") },
-        supportingText = { Text("Title, SKU, description, fields, fitment or location") }, modifier = Modifier.fillMaxWidth())
+    ShopSearchField(query, { query = it }, "Search products",
+        supporting = "Title, SKU, description, fields, fitment or location")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        FilterChip(selected = health == null, onClick = { health = null }, label = { Text("All stock") }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+        FilterChip(selected = health == null, onClick = { health = null }, label = { Text("All stock") },
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
         StockHealth.entries.forEach { state ->
-            FilterChip(selected = health == state, onClick = { health = if (health == state) null else state }, label = { Text(state.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+            FilterChip(selected = health == state, onClick = { health = if (health == state) null else state },
+                label = { Text(state.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
         }
     }
-    OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (expanded) "Hide filters" else "More filters") }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+        OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) {
+            Icon(painterResource(R.drawable.ic_filter), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(ShopSpacing.small))
+            Text(if (expanded) "Hide filters" else "More filters")
+        }
+        TextButton(onClick = { query = ""; category = null; make = null; model = null; location = null; health = null; definition = null; decimal = "" },
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Clear search and filters") }
+    }
     if (expanded) ShopSection("Catalog filters") {
         SearchFilter("Category", shop.categories.map { it.id to it.name }, category) { category = it; definition = null; decimal = "" }
         SearchFilter("Make", listOf("unknown" to "Unknown fitment") + shop.makes.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, make) { make = it; model = null }
@@ -118,30 +131,60 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
             if (decimalError) FormError("Enter a plain exact decimal, without grouping or exponent")
         }
     }
-    OutlinedButton(onClick = { query = ""; category = null; make = null; model = null; location = null; health = null; definition = null; decimal = "" }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Clear search and filters") }
     val found = results?.takeIf { it.snapshot === shop && it.filter == filter }?.products
     if (found == null) Text("Searching products…", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     else {
         Text("${found.size} matching products", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (found.isEmpty()) ShopEmptyState("No matching products", "Try another description or clear the filters to browse all stock.", R.drawable.ic_stock)
-        found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
-        if (found.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Show more products") }
+        else ShopGroup(spacing = ShopSpacing.small) {
+            found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
+        }
+        if (found.size > limit) OutlinedButton(onClick = { limit += 40 },
+            modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more products") }
     }
 }
 
 @Composable
 internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: PhotoLoader, enabled: Boolean = true, onOpen: () -> Unit) {
     Surface(onClick = onOpen, enabled = enabled, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
-        Row(Modifier.padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
-            ProductPhoto(product.photo, loadPhoto, Modifier.size(ShopSpacing.touchTarget))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                Text(product.title, style = MaterialTheme.typography.titleMedium)
-                Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
-                Text("${indianNumber(product.quantity)} pieces · ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
-                if (product.archived) Text("Archived", style = MaterialTheme.typography.bodyMedium) else StockHealthIndicator(product)
-                if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete", style = MaterialTheme.typography.labelLarge)
-                Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp)) {
+        val density = LocalDensity.current
+        val priceStyle = MaterialTheme.typography.titleMedium
+        val measurer = rememberTextMeasurer()
+        val price = "₹${indianNumber(product.priceRupees)}"
+        BoxWithConstraints {
+            val priceMax = maxWidth * 0.45f
+            // A price that cannot fit its share of the row moves under the title so
+            // a grouped amount never breaks across lines.
+            val stackPrice = density.fontScale >= 1.5f ||
+                measurer.measure(price, priceStyle, maxLines = 1, softWrap = false).size.width > with(density) { priceMax.toPx() }
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                ProductPhoto(product.photo, loadPhoto, Modifier.size(52.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(product.title, style = MaterialTheme.typography.titleMedium, maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    Text(shop.categories.single { it.id == product.categoryId }.name + " · " + indianNumber(product.quantity) + " pieces",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (product.archived) ShopStatusChip("Archived")
+                        else if (product.stockHealth != StockHealth.InStock) {
+                            ShopStatusChip(product.stockHealth.label, when (product.stockHealth) {
+                                StockHealth.LowStock -> ShopStatusTone.Warning
+                                StockHealth.OutOfStock -> ShopStatusTone.Danger
+                                StockHealth.InStock -> ShopStatusTone.Neutral
+                            })
+                        }
+                        if (shop.missingRequired(product.id).isNotEmpty()) ShopStatusChip("Catalog incomplete", ShopStatusTone.Accent)
+                    }
+                    Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    if (stackPrice) Text(price, style = priceStyle)
+                }
+                if (!stackPrice) Text(price, style = priceStyle, maxLines = 2,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = priceMax))
             }
         }
     }

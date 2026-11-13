@@ -61,6 +61,8 @@ class ArchivalWorkflowTest {
                 compose.onNodeWithText("Retained archived description").performScrollTo().assertIsDisplayed()
                 compose.onNodeWithText("SKU:", substring = true).performScrollTo().assertIsDisplayed()
                 compose.onNodeWithText("Edit details").assertDoesNotExist()
+                click("Preview product labels"); await("Label copies")
+                click("Back"); await("Archived product")
             }
         } finally {
             scenario?.close(); shell("settings put system font_scale $originalScale")

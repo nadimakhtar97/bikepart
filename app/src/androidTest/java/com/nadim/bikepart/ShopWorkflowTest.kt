@@ -511,7 +511,7 @@ class ShopWorkflowTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
         compose.onNodeWithText("Title (required)").performTextInput(title)
-        compose.onNodeWithText("Bolts", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText("Opening stock (pieces)").performScrollTo().performTextReplacement("12")
         compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("9223372036854775807")
         compose.onNodeWithText("Save product").performScrollTo().performClick()
