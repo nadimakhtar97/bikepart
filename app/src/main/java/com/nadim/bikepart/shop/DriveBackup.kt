@@ -122,6 +122,8 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         val state = read()
         require(statusTarget() == preview.target && shop.snapshot().datasetId == preview.datasetId &&
             state.getString("connection") == preview.connection && state.getString("generation") == preview.localWriter) { "Shop or connection changed. Review replacement again." }
+        // Publication may have reconfirmed this writer since preview. Invalidate that observation before network I/O.
+        state.put("phoneState", ActivePhoneState.Unknown.name); write(state)
         val observed = marker(drive, preview.target.folderId)
         require(observed.first == preview.markerId && LocalBackup.hash(observed.second) == preview.markerHash) { "Active phone changed since review. Review replacement again; recovery history is preserved." }
         // Journal the new writer before the request. A lost response never permits an old job to acknowledge it.

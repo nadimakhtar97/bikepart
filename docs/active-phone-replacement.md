@@ -70,6 +70,26 @@ deletion eligibility enabled. All six replacement persistence cases pass, as do
 the existing Drive and restore-activation focused checks. The full-suite result
 and independent review accounting will be appended after final verification.
 
+## Implementation review
+
+Independent Standards and Spec reviews compared the implementation against
+ticket 21's completed commit `815e3bf`.
+
+### Standards
+
+One actionable finding: a publication between preview and activation could
+reconfirm this writer, after which failed replacement revalidation left deletion
+eligibility enabled. Activation now persists unknown identity before remote
+revalidation. A real-persistence regression failed before the fix and passed
+after it for changed, inaccessible, missing and malformed markers. No substantive
+baseline code-smell finding was reported.
+
+### Spec
+
+The same uncertainty finding was identified and fixed. The separate real Drive
+acceptance requirement remains pending for owner account/device access, as
+recorded below. No additional scope creep or implementation failure was found.
+
 Real Google authorization, signing/reinstall continuity, previously ungranted
 folder/descendant access, replacement restore, marker-update response loss and
 competing-client acceptance require the owner's configured OAuth project/account

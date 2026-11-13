@@ -97,19 +97,31 @@ class PhoneReplacementTest {
 
     @Test fun aChangedReviewCannotLeaveAutomaticDeletionEnabled() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val name = "phone-review-${UUID.randomUUID()}.db"
-        val drive = ReplacementDrive()
-        Shop.open(context, name).use { shop ->
-            shop.driveBackup.connect(DriveTarget("owner@example.com", "review", "Reviewed folder"))
-            shop.driveBackup.publish(drive)
-            val preview = shop.driveBackup.previewReplacement(drive)
-            drive.changeWriter("competing-phone")
-            val before = drive.snapshot()
-            try { shop.driveBackup.activateReplacement(drive, preview, true); fail("Stale review accepted") }
-            catch (_: IllegalArgumentException) { }
-            assertTrue("Changed review must pause deletion", shop.driveBackup.status().automaticDeletionPaused)
-            assertEquals(before, drive.snapshot())
-            assertEquals(1, shop.driveBackup.recoverable(drive).size)
+        for (fault in listOf("changed", "unavailable", "missing", "malformed")) {
+            val name = "phone-review-${UUID.randomUUID()}.db"
+            val drive = ReplacementDrive()
+            Shop.open(context, name).use { shop ->
+                shop.driveBackup.connect(DriveTarget("owner@example.com", "review", "Reviewed folder"))
+                shop.driveBackup.publish(drive)
+                val preview = shop.driveBackup.previewReplacement(drive)
+                // A foreground or background publication can reconfirm authority while review remains open.
+                shop.driveBackup.publish(drive)
+                assertFalse(shop.driveBackup.status().automaticDeletionPaused)
+                val markerId = drive.names.entries.single { it.value == "active-phone.json" }.key
+                when (fault) {
+                    "changed" -> drive.changeWriter("competing-phone")
+                    "unavailable" -> drive.unavailable = true
+                    "missing" -> drive.files.remove(markerId)
+                    "malformed" -> drive.files[markerId] = "invalid-marker".toByteArray()
+                }
+                val before = drive.snapshot()
+                try { shop.driveBackup.activateReplacement(drive, preview, true); fail("Stale review accepted") }
+                catch (_: Exception) { }
+                assertTrue("$fault review must pause deletion", shop.driveBackup.status().automaticDeletionPaused)
+                assertEquals(before, drive.snapshot())
+                drive.unavailable = false
+                assertEquals(2, shop.driveBackup.recoverable(drive).size)
+            }
         }
     }
 
