@@ -14,13 +14,34 @@ data class CartDraft(val cart: Cart, val customer: String = cart.customer,
     val quantities: Map<String, String> = cart.lines.associate { it.productId to it.quantity.toString() }, val dirty: Boolean = false)
 
 data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
-enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore, ReviewPhone, ActivatePhone, CheckPhone }
+enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore, ReviewPhone, ActivatePhone, CheckPhone, InspectStorage, CleanupStorage }
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private var shop: Shop? = null
     private val readyShop = kotlinx.coroutines.flow.MutableStateFlow<Shop?>(null)
     private var openFailure: Throwable? = null
     val driveStatus = kotlinx.coroutines.flow.MutableStateFlow<DriveBackupStatus?>(null)
     val driveBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val backupStorage = kotlinx.coroutines.flow.MutableStateFlow<BackupStorage?>(null)
+    val cleanupComplete = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val storageProgress = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    fun storageDriveAction(transport: DriveTransport, action: DriveAction) = driveOperation { performStorageAction(transport, action) }
+    private suspend fun performStorageAction(transport: DriveTransport, action: DriveAction) {
+        val reviewed = backupStorage.value
+        backupStorage.value = null; cleanupComplete.value = false
+        storageProgress.value = "Verifying backup storage and protected recovery history…"
+        try {
+            when (action) {
+                DriveAction.InspectStorage -> backupStorage.value = shop!!.driveBackup.inspectStorage(transport)
+                DriveAction.CleanupStorage -> {
+                    storageProgress.value = "Cleaning reviewed history. Interrupted work can be inspected and continued safely."
+                    backupStorage.value = shop!!.driveBackup.cleanupStorage(transport, requireNotNull(reviewed) { "Inspect backup storage first." })
+                    clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+                    cleanupComplete.value = true
+                }
+                else -> error("Choose a backup storage action.")
+            }
+        } finally { storageProgress.value = null }
+    }
     val phoneReplacement = kotlinx.coroutines.flow.MutableStateFlow<PhoneReplacement?>(null)
     fun cancelPhoneReplacement() { if (!driveBusy.value) phoneReplacement.value = null }
     fun retirePhone() = driveOperation {
@@ -29,6 +50,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     fun phoneDriveAction(transport: DriveTransport, action: DriveAction) = driveOperation { performPhoneAction(transport, action) }
     private suspend fun performPhoneAction(transport: DriveTransport, action: DriveAction) {
+        backupStorage.value = null; cleanupComplete.value = false
         when (action) {
             DriveAction.ReviewPhone -> {
                 phoneReplacement.value = null
@@ -65,8 +87,8 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     private var driveTransport: GoogleDriveTransport? = null
     fun driveAuthorizing() { driveBusy.value = true; driveError.value = null }
     fun driveFailure(message: String) { driveBusy.value = false; driveError.value = message }
-    fun authorizedDrive(account: String, token: String, action: DriveAction) {
-        val transport = GoogleDriveTransport(token)
+    fun authorizedDrive(account: String, token: String, action: DriveAction, fullMetadataAccess: Boolean = false) {
+        val transport = GoogleDriveTransport(token, fullMetadataAccess)
         driveOperation {
             if (action != DriveAction.Connect) {
                 require(shop!!.driveBackup.status().target?.account == account) { "Backup account changed. Reconnect the chosen account." }
@@ -77,6 +99,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 }
                 DriveAction.ListRestorePoints -> discoverRestorePoints(transport)
                 DriveAction.ValidateRestore -> prepareSelectedRestore(transport)
+                DriveAction.InspectStorage, DriveAction.CleanupStorage -> performStorageAction(transport, action)
                 DriveAction.ReviewPhone, DriveAction.ActivatePhone, DriveAction.CheckPhone -> performPhoneAction(transport, action)
                 DriveAction.Connect -> {
                     driveTransport = transport; driveAccount.value = account
@@ -104,6 +127,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 localCapture.value = null
                 clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
                 phoneReplacement.value = null
+                backupStorage.value = null; cleanupComplete.value = false
                 driveAccount.value = null; driveTransport = null; driveFolders.value = emptyList()
                 cartAutosave?.cancel(); cartDraft.value = null
                 // The observer reopens on the root change; don't report completion until it has done so.
@@ -119,6 +143,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     private suspend fun discoverRestorePoints(transport: DriveTransport) {
         clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+        backupStorage.value = null; cleanupComplete.value = false
         phoneReplacement.value = null
         restorePoints.value = shop!!.driveBackup.restorePoints(transport)
     }
@@ -144,6 +169,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         AutomaticBackup.reconcile(getApplication(), shop!!)
         driveAccount.value = null; driveFolders.value = emptyList(); driveTransport = null
         clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
+        backupStorage.value = null; cleanupComplete.value = false
     }
     private fun driveOperation(block: suspend () -> Unit) {
         driveBusy.value = true; driveError.value = null

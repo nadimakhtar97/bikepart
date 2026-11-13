@@ -57,7 +57,10 @@ omitted. Discovery never applies downloaded business data. Selected-point previe
 and isolated business validation are described in [restore-preview.md](restore-preview.md).
 Safe activation and replacement-phone activation are described in
 [safe-restore.md](safe-restore.md) and [active-phone-replacement.md](active-phone-replacement.md).
-Retention remains separate work;
+[Storage inspection and reviewed cleanup](backup-retention.md) add the retained
+India-day history window and dependency-safe deletion. Ordinary publication
+continues using `drive.file`; storage inspection requests an additional metadata
+grant to avoid treating ungranted files as absent.
 [automatic-backup.md](automatic-backup.md) describes background scheduling.
 The current transport holds one remote file
 in memory while uploading/downloading; large-photo streaming is future work.

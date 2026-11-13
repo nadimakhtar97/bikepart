@@ -12,10 +12,12 @@ import org.json.JSONObject
 internal data class DriveHttpResponse(val code: Int, val bytes: ByteArray, val location: String?, val range: String?)
 
 class GoogleDriveTransport internal constructor(private val token: String,
+    private val fullMetadataAccess: Boolean = false,
     private val exchange: (suspend (String, String, ByteArray?, Map<String, String>) -> DriveHttpResponse)?
 ) : DriveTransport {
-    constructor(token: String) : this(token, null)
-    constructor(token: String, beforeRequest: suspend () -> Unit) : this(token, null) {
+    constructor(token: String) : this(token, false, null)
+    constructor(token: String, fullMetadataAccess: Boolean) : this(token, fullMetadataAccess, null)
+    constructor(token: String, beforeRequest: suspend () -> Unit) : this(token, false, null) {
         this.beforeRequest = beforeRequest
     }
     private var beforeRequest: suspend () -> Unit = {}
@@ -52,16 +54,37 @@ class GoogleDriveTransport internal constructor(private val token: String,
             mapOf("Content-Type" to "application/json; charset=UTF-8")).checked()
     }
     override suspend fun list(folder: String): List<DriveEntry> = listQuery("'${folder.replace("'", "\\'")}' in parents and trashed = false")
+    override suspend fun inventory(folder: String): DriveInventory {
+        check(fullMetadataAccess) { "Complete Drive metadata access is required to inspect storage safely. Grant it when Google asks, or leave cleanup paused." }
+        val metadata = JSONObject(request("$API/files/${encode(folder)}?fields=id,mimeType,trashed,ownedByMe,capabilities(canListChildren)").checked().bytes.toString(Charsets.UTF_8))
+        val owner = metadata.getString("id") == folder && metadata.getString("mimeType") == "application/vnd.google-apps.folder" &&
+            !metadata.optBoolean("trashed") && metadata.optBoolean("ownedByMe") && metadata.optJSONObject("capabilities")?.optBoolean("canListChildren") == true
+        check(owner) { "Folder ownership or listing permissions are uncertain. Cleanup is paused." }
+        val entries = queryFiles("'${folder.replace("'", "\\'")}' in parents and trashed = false", "id,name,size,version,capabilities(canDelete)").map { file ->
+            DriveStoredFile(file.getString("id"), file.getString("name"), if (file.has("size")) file.getString("size").toLongOrNull() else null,
+                file.optJSONObject("capabilities")?.optBoolean("canDelete") == true, file.optString("version").ifBlank { null })
+        }
+        return DriveInventory(entries, owner)
+    }
+    override suspend fun delete(id: String) {
+        request("$API/files/${encode(id)}", "DELETE").checked()
+    }
     suspend fun folders(): List<DriveEntry> = listQuery("mimeType = 'application/vnd.google-apps.folder' and trashed = false")
     private suspend fun listQuery(query: String): List<DriveEntry> {
-        val result = mutableListOf<DriveEntry>(); var page = ""
+        return queryFiles(query, "id,name").map { DriveEntry(it.getString("id"), it.getString("name")) }
+    }
+    private suspend fun queryFiles(query: String, fields: String): List<JSONObject> {
+        val result = mutableListOf<JSONObject>(); var page = ""
+        val pages = mutableSetOf<String>()
         do {
-            val json = JSONObject(request("$API/files?q=${encode(query)}&fields=nextPageToken,incompleteSearch,files(id,name)&pageSize=1000&pageToken=${encode(page)}").checked().bytes.toString(Charsets.UTF_8))
+            check(pages.add(page)) { "Drive pagination repeated. Listing is uncertain; retry later." }
+            val json = JSONObject(request("$API/files?q=${encode(query)}&fields=nextPageToken,incompleteSearch,files($fields)&pageSize=1000&pageToken=${encode(page)}").checked().bytes.toString(Charsets.UTF_8))
             check(!json.optBoolean("incompleteSearch")) { "Drive listing was incomplete. Retry later." }
             val files = json.getJSONArray("files")
-            for (index in 0 until files.length()) { val file = files.getJSONObject(index); result += DriveEntry(file.getString("id"), file.getString("name")) }
+            for (index in 0 until files.length()) result += files.getJSONObject(index)
             page = json.optString("nextPageToken")
         } while (page.isNotEmpty())
+        check(result.map { it.getString("id") }.toSet().size == result.size) { "Drive listing duplicated a file. Retry later." }
         return result
     }
     suspend fun createFolder(name: String): DriveEntry {

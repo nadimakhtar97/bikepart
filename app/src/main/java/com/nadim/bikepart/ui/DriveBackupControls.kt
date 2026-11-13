@@ -30,6 +30,7 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     val busy by model.driveBusy.collectAsState()
     val uploading by model.driveUploading.collectAsState()
     val capture by model.backgroundCapture.collectAsState()
+    val storageProgress by model.storageProgress.collectAsState()
     val error by model.driveError.collectAsState()
     val folders by model.driveFolders.collectAsState()
     val account by model.driveAccount.collectAsState()
@@ -40,7 +41,8 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     fun accept(result: com.google.android.gms.auth.api.identity.AuthorizationResult) {
         val token = result.accessToken
         if (token == null) model.driveFailure("Google did not grant Drive access. Try connecting again.")
-        else model.authorizedDrive(selectedAccount, token, action)
+        else model.authorizedDrive(selectedAccount, token, action,
+            fullMetadataAccess = result.grantedScopes.contains("https://www.googleapis.com/auth/drive.metadata.readonly"))
     }
     val resolution = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         try { accept(client.getAuthorizationResultFromIntent(result.data)) }
@@ -49,8 +51,11 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     fun authorize(email: String, requested: DriveAction) {
         selectedAccount = email; action = requested
         model.driveAuthorizing()
+        val scopes = mutableListOf(Scope("https://www.googleapis.com/auth/drive.file"))
+        if (requested == DriveAction.InspectStorage || requested == DriveAction.CleanupStorage)
+            scopes += Scope("https://www.googleapis.com/auth/drive.metadata.readonly")
         val request = AuthorizationRequest.builder().setAccount(Account(email, "com.google"))
-            .setRequestedScopes(listOf(Scope("https://www.googleapis.com/auth/drive.file"))).build()
+            .setRequestedScopes(scopes).build()
         client.authorize(request).addOnSuccessListener { result ->
             if (result.hasResolution()) resolution.launch(IntentSenderRequest.Builder(requireNotNull(result.pendingIntent)).build()) else accept(result)
         }.addOnFailureListener { model.driveFailure("Google authorization failed. Check Google Play services and reconnect.") }
@@ -68,6 +73,7 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
         Text(when {
             status?.phoneState == ActivePhoneState.Retired -> "Installation retired · use the replacement phone"
             status?.phoneState == ActivePhoneState.Mismatch || status?.takeoverPending == true -> "Phone identity needs owner action"
+            storageProgress != null -> "Checking backup storage or cleaning reviewed history…"
             uploading || busy -> "Uploading or preparing backup…"
             status?.failure != null -> "Backup failed · action required or retry pending"
             status?.coveredRevision == revision -> "Up to date"
@@ -101,6 +107,8 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     PhoneReplacementControls(model, onReview = { authorize(status!!.target!!.account, DriveAction.ReviewPhone) },
         onActivate = { authorize(status!!.target!!.account, DriveAction.ActivatePhone) },
         onCheck = { authorize(status!!.target!!.account, DriveAction.CheckPhone) })
+    BackupStorageControls(model, onInspect = { authorize(status!!.target!!.account, DriveAction.InspectStorage) },
+        onCleanup = { authorize(status!!.target!!.account, DriveAction.CleanupStorage) })
     RestorePreviewControls(model,
         onRefresh = { authorize(status!!.target!!.account, DriveAction.ListRestorePoints) },
         onValidate = { authorize(status!!.target!!.account, DriveAction.ValidateRestore) })

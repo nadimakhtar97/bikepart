@@ -1,5 +1,13 @@
 # Shop schema history
 
+## Backup retention — operational journal only
+
+Room remains at version 14 and portable exports at format 1. Optional last
+acknowledged manifest and reviewed-cleanup fields extend the existing synced
+Drive journal. Absent cleanup fields mean no deletion plan. Storage inspection,
+permissions, progress and deletion do not advance business revisions or enter
+portable backups. See [backup retention](../../docs/backup-retention.md).
+
 ## Active-phone replacement — operational journal only
 
 Room and the portable export remain at versions 14 and 1. Optional active-phone,

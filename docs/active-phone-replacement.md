@@ -35,8 +35,9 @@ Automatic deletion eligibility starts paused, stays paused during uncertain or
 pending takeover and resumes only after a confirmed active state. The status is
 the last observed state, not a lease. Cleanup must call `requireActivePhone` again
 immediately before each destructive request; it must never use a cached status as
-authorization. Actual retention/deletion remains ticket 23's responsibility; no
-backup history is deleted by this ticket.
+authorization. [Ticket 23's storage workflow](backup-retention.md) applies that
+check to every manifest/dependency deletion. Phone replacement itself does not
+delete backup history.
 
 The cooperative check cannot make a read followed by a Drive write atomic. A
 competing takeover can win after a check or after an update. Final readback detects

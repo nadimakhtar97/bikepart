@@ -8,6 +8,40 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DriveUploadTransportTest {
+    @Test fun storageRequiresTheMetadataGrantAndEveryListingPageAndNeverTreats404AsDeleted() = runBlocking {
+        val withoutGrant = GoogleDriveTransport("token") { _, _, _, _ -> error("A limited token must not start an inventory") }
+        try { withoutGrant.inventory("folder"); fail("Limited file access cannot prove a full inventory") }
+        catch (error: IllegalStateException) { assertTrue(error.message!!.contains("metadata access")) }
+        var incomplete = true
+        var repeatToken = false
+        var deletedStatus = 204
+        val transport = GoogleDriveTransport("token", true) { url, method, _, _ ->
+            val body = when {
+                method == "DELETE" -> return@GoogleDriveTransport DriveHttpResponse(deletedStatus, byteArrayOf(), null, null)
+                url.contains("/files/folder?") -> """{"id":"folder","mimeType":"application/vnd.google-apps.folder","ownedByMe":true,"capabilities":{"canListChildren":true}}"""
+                url.endsWith("pageToken=next") -> """{"incompleteSearch":$incomplete,${if (repeatToken) "\"nextPageToken\":\"next\"," else ""}"files":[{"id":"two","name":"photo","size":"5","version":"8","capabilities":{"canDelete":true}}]}"""
+                else -> """{"nextPageToken":"next","files":[{"id":"one","name":"table","size":"3","version":"7","capabilities":{"canDelete":true}}]}"""
+            }
+            DriveHttpResponse(200, body.toByteArray(), null, null)
+        }
+        try { transport.inventory("folder"); fail("Incomplete second page was accepted") }
+        catch (error: IllegalStateException) { assertTrue(error.message!!.contains("incomplete")) }
+        incomplete = false
+        val inventory = transport.inventory("folder")
+        assertTrue(inventory.ownerCanListAll)
+        assertEquals(listOf("one", "two"), inventory.entries.map { it.id })
+        assertEquals(listOf("7", "8"), inventory.entries.map { it.version })
+        assertEquals(8L, inventory.entries.sumOf { it.size!! })
+        repeatToken = true
+        try { transport.inventory("folder"); fail("Repeated page token was accepted") }
+        catch (error: IllegalStateException) { assertTrue(error.message!!.contains("pagination")) }
+        transport.delete("old-file")
+        for (status in listOf(403, 404)) {
+            deletedStatus = status
+            try { transport.delete("old-file"); fail("Uncertain delete response was accepted") } catch (_: IOException) { }
+        }
+    }
+
     @Test fun markerReplacementUpdatesOnlyTheSelectedRemoteFileAndRejectsPermissionFailure() = runBlocking {
         val bytes = "{\"datasetId\":\"shop\",\"generation\":\"new-writer\"}".toByteArray()
         var forbidden = false
