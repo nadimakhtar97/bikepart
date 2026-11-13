@@ -57,17 +57,22 @@ grouping and whole rupees.
 - Use centered 22/28 bold app titles. Preserve labelled Home, Stock, Carts and
   More navigation with 24dp icons, filled/outlined selection variants, a tonal
   selected indicator and 12/16 bold labels. Navigation uses the surface role.
-- Phone content uses 16dp margins, 8–16dp internal spacing and 24dp between
-  sections. Forms constrain width on larger windows. Content scrolls safely
-  above the keyboard and system bars.
+- Phone content uses 16dp margins, 8–16dp internal spacing and 16dp between
+  grouped sections. Forms constrain width on larger windows. Content scrolls
+  safely above the keyboard and system bars.
 - Use 16dp rounded grouped surfaces and 8dp compact stock rows. Settings/form
   groups use the reference's primary-at-8%-over-surface treatment. Group titles
   use title-medium, supporting text uses body-medium, and important stock/price
   values use title or headline roles.
 - Use the reference's neutral inverse-surface filled button for the main action;
   outlined buttons are secondary. Buttons grow for wrapped text and have at
-  least 48dp targets. Reuse `ShopPrimaryButton`, `ShopSection` and shared field
-  patterns in `ui/ShopScreens.kt`.
+  least 48dp targets. Reuse `ShopPrimaryButton` in `ui/ShopScreens.kt` and the
+  shared page, group, row and field primitives in `ui/ShopLayout.kt`.
+- Sub-screens show their contextual title in the centred app bar with a 48dp
+  arrow back button. Generic page headers do not repeat the app bar label; a
+  detail screen may repeat the item name it was opened for, because the app bar
+  truncates long names. Stat and action tiles reserve two label lines so
+  neighbours keep equal heights.
 - Category chips wrap and retain the required single-category selection. Use
   labelled fields, useful keyboards, typed errors, announced feedback and
   automatic scrolling to validation errors. Disable edits during a pending save.
@@ -77,6 +82,10 @@ grouping and whole rupees.
 - Product rows show title, category, combined quantity/price, stock status and
   permanent SKU. Detail screens distinguish current stock/price from descriptive
   information. Empty states use truthful shop copy and bundled shop icons.
+  Trailing totals keep at most 45% of a row so long titles stay readable; a
+  total that cannot fit that share, or any total at 150%+ system font scale,
+  moves under the title instead, and detail headers stack the photo above the
+  summary.
 
 The shop keeps its domain-specific destinations, inventory controls and bundled
 Material Symbols. Reference news illustrations, avatars, account data, content

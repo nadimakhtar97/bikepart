@@ -90,19 +90,24 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         model.error.value = null
     }
     BackHandler(route != "main") { if (!busy) back() }
+    val selectedCart = state?.carts?.find { it.id == selectedId }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
         val colors = MaterialTheme.colorScheme
         Scaffold(
             containerColor = colors.surface,
             topBar = {
-                CenterAlignedTopAppBar(
+                if (route != "main") CenterAlignedTopAppBar(
                     title = { Text(when (route) {
                         "labels" -> "Product labels"; "scan" -> "Scan shared label"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
-                        "templates" -> "Product templates"; "template-detail" -> "Template"; "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"; "detail" -> "Product"; "edit" -> "Edit details"
-                        "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"; "cart" -> "Unfinished bill"; "cart-products" -> "Add to cart"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
+                        "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
+                        "detail" -> "Product details"; "edit" -> "Edit details"
+                        "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"
+                        "cart" -> selectedCart?.name ?: "Unfinished bill"; "cart-products" -> "Add to cart"
+                        "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
                     }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
-                        if (route != "main") TextButton(enabled = !busy, onClick = { back() }) { Text("Back") }
+                        ShopBackButton(onClick = { back() }, enabled = !busy)
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface),
                 )
@@ -130,7 +135,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
             Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), contentAlignment = Alignment.TopCenter) {
                 Column(
                     Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content),
-                    verticalArrangement = Arrangement.spacedBy(ShopSpacing.section),
+                    verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
                 ) {
                     val shop = state
                     if (shop == null) { Text(error?.message ?: "Opening your shop…"); return@Column }
@@ -229,11 +234,10 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         "labels" -> if (product != null) LabelPreview(shop, product, busy, error, usbAccess = labelUsb,
                             onChange = { model.error.value = null }, save = { media, copies -> model.write({ setLabelPreferences(media, copies) }) })
                         "detail" -> if (product != null) {
-                            if (!product.archived) OutlinedButton(onClick = { receive(product.id) }, enabled = !busy) { Text("Receive stock") }
-                            OutlinedButton(onClick = { model.error.value = null; route = "labels" }, enabled = !busy) { Text("Preview product labels") }
                             ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
                             model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
-                        }, onArchive = { model.write({ archiveProduct(product.id) }) }, archiveError = error?.takeIf { it.field == null }?.message)
+                        }, onArchive = { model.write({ archiveProduct(product.id) }) }, archiveError = error?.takeIf { it.field == null }?.message,
+                            onReceive = { receive(product.id) }, onLabels = { model.error.value = null; route = "labels" })
                             if (!product.archived) ThresholdForm(product, busy, error, onChange = { model.error.value = null },
                                 save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
                             SaleStockHistory(shop, product.id)
@@ -253,20 +257,22 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             retireLocation = { model.write({ retireLocation(it) }) })
                         "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
                         else -> when (destination) {
-                            "Home" -> {
-                                HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock, onNewSale = ::newCart, onCarts = { destination = "Carts" }, busy = busy)
-                                OutlinedButton(onClick = { route = "receive-products" }, enabled = !busy) { Text("Receive stock") }
-                            }
+                            "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock, onNewSale = ::newCart,
+                                onCarts = { destination = "Carts" }, onReceive = { route = "receive-products" },
+                                onSales = { route = "sales" }, onSale = { selectedId = it; model.error.value = null; route = "receipt" },
+                                busy = busy)
                             "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
                                 StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth)
                             }
                             "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
                             "More" -> {
-                                OutlinedButton(onClick = { route = "archived-products" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Archived products") }
-                                OutlinedButton(onClick = { route = "sales" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Sales history") }
-                                OutlinedButton(onClick = { route = "templates" }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Product templates") }
-                                AppearanceSettings(shop.appearance, busy,
-                                onAppearance = { model.write({ setAppearance(it) }) }, onCategories = { route = "categories" }, onFindingLookups = { route = "finding-lookups" })
+                                MoreScreen(shop, shop.appearance, busy,
+                                    onAppearance = { model.write({ setAppearance(it) }) },
+                                    onCategories = { route = "categories" },
+                                    onFindingLookups = { route = "finding-lookups" },
+                                    onArchived = { route = "archived-products" },
+                                    onSales = { route = "sales" },
+                                    onTemplates = { route = "templates" })
                                 DriveBackupControls(model, shop.revision)
                                 LocalBackupControls(localCapture, shop.revision, backupBusy, backupError, backupSaved, model::captureBackup, model::saveBackupCopy)
                             }

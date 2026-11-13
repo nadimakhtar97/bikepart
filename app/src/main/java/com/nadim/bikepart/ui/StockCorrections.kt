@@ -16,7 +16,8 @@ import java.util.Date
 internal fun StockCorrectionForm(product: Product, kind: CorrectionKind, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String, String) -> Unit) {
     var quantity by rememberSaveable { mutableStateOf("") }
     var reason by rememberSaveable { mutableStateOf("") }
-    ShopSection(kind.label) {
+    // The app bar already names the correction, so the group starts with the product.
+    ShopGroup {
         Text(product.title, style = MaterialTheme.typography.titleMedium)
         Text("Current stock: ${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.bodyMedium)
         Text(if (kind == CorrectionKind.PhysicalCount) "Enter the total pieces counted. The difference is calculated against stock when saved." else "Enter the pieces to remove for ${kind.label.lowercase()}.", style = MaterialTheme.typography.bodyMedium)
