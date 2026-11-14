@@ -65,13 +65,20 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
     val picker = rememberLauncherForActivityResult(PickVisualMedia()) { selected -> selected?.let { select(it.toString()) } }
     ShopSection("Product photo (optional)") {
         val hasPhoto = uri != null || (!removed && reference != null)
-        ProductPhoto(if (removed) null else reference, load, Modifier.fillMaxWidth().height(160.dp), uri)
-        Text("Choose a photo from your phone. Saved photos stay with the product. Maximum 20 MB.", style = MaterialTheme.typography.bodyMedium)
-        OutlinedButton(enabled = !busy, onClick = { picker.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
+        val description = "Choose a photo from your phone. Saved photos stay with the product. Maximum 20 MB."
+        if (hasPhoto) {
+            ProductPhoto(if (removed) null else reference, load, Modifier.fillMaxWidth().height(160.dp), uri)
+            Text(description, style = MaterialTheme.typography.bodyMedium)
+        } else Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium), verticalAlignment = Alignment.CenterVertically) {
+            ProductPhoto(null, load, Modifier.size(48.dp))
+            Text(description, style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        }
+        ShopSecondaryButton(enabled = !busy, onClick = { picker.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
             modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
             Text(if (hasPhoto) "Replace photo" else "Choose photo")
         }
-        if (hasPhoto) OutlinedButton(enabled = !busy, onClick = remove,
+        if (hasPhoto) ShopSecondaryButton(enabled = !busy, onClick = remove,
             modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Remove photo") }
         if (error != null) FormError(error)
     }

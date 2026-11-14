@@ -88,17 +88,17 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
         }
         (error ?: status?.failure)?.let { FormError(it) }
         Text("Automatic backups use Wi-Fi / unmetered networks by default. Android may delay work to save battery. Timing and recovery of changes still on this phone are not guaranteed.", style = MaterialTheme.typography.bodyMedium)
-        OutlinedButton(enabled = !busy && !uploading, onClick = { model.setBackupMobileData(status?.allowMobileData != true) }) {
+        ShopSecondaryButton(enabled = !busy && !uploading, onClick = { model.setBackupMobileData(status?.allowMobileData != true) }) {
             Text(if (status?.allowMobileData == true) "Use Wi-Fi only" else "Allow mobile data for automatic backups")
         }
-        OutlinedButton(enabled = !busy, onClick = {
+        ShopSecondaryButton(enabled = !busy, onClick = {
             chooseAccount.launch(AccountManager.newChooseAccountIntent(null, null, arrayOf("com.google"), null, null, null, null))
         }) { Text("Connect or repair Drive") }
         if (account != null) {
             Text("Choose a folder for $account. Only folders granted to this app are listed.", style = MaterialTheme.typography.bodyMedium)
-            folders.forEach { folder -> OutlinedButton(enabled = !busy, onClick = { model.selectDriveFolder(folder) }) { Text("${folder.name} · ${folder.id}") } }
+            folders.forEach { folder -> ShopSecondaryButton(enabled = !busy, onClick = { model.selectDriveFolder(folder) }) { Text("${folder.name} · ${folder.id}") } }
             OutlinedTextField(value = folderName, onValueChange = { folderName = it }, enabled = !busy, label = { Text("New dedicated folder name") })
-            OutlinedButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text("Create and use folder") }
+            ShopSecondaryButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text("Create and use folder") }
         }
         ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired && status?.phoneState != ActivePhoneState.Mismatch && status?.takeoverPending != true,
             onClick = { authorize(status!!.target!!.account, DriveAction.Publish) })
@@ -130,10 +130,10 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
         if (complete) Text("Shop restored. A local recovery copy is saved. A new backup is pending; replacement-phone activation may be required before publication.",
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         Text("Inspect a complete Drive restore point before deciding to replace this phone's shop.", style = MaterialTheme.typography.bodyMedium)
-        OutlinedButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text("Find restore points") }
+        ShopSecondaryButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text("Find restore points") }
         if (points?.isEmpty() == true) Text("No complete supported restore points found. Incomplete, damaged or inaccessible copies are excluded.", style = MaterialTheme.typography.bodyMedium)
         points?.forEach { point ->
-            OutlinedButton(enabled = !busy, onClick = { model.selectRestorePoint(point) }, shape = MaterialTheme.shapes.medium,
+            ShopSecondaryButton(enabled = !busy, onClick = { model.selectRestorePoint(point) }, shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.semantics { this.selected = selected == point }) {
                 Text("${DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))} · revision ${point.point.revision}\n${point.products} products · ${point.sales} sales · ${point.carts} unfinished carts · ${point.photos} photos")
             }

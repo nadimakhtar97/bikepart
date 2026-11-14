@@ -57,7 +57,7 @@ private fun SearchFilter(label: String, choices: List<Pair<String, String>>, sel
     var open by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     val selectedLabel = choices.find { it.first == selected }?.second ?: "Any"
-    OutlinedButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
+    ShopSecondaryButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
         Text("$label: $selectedLabel")
     }
     if (open) AlertDialog(onDismissRequest = { open = false }, title = { Text(label) }, text = {
@@ -111,7 +111,7 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         }
     }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        OutlinedButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) {
+        ShopSecondaryButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) {
             Icon(painterResource(R.drawable.ic_filter), contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(ShopSpacing.small))
             Text(if (expanded) "Hide filters" else "More filters")
@@ -136,10 +136,10 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
     else {
         Text("${found.size} matching products", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (found.isEmpty()) ShopEmptyState("No matching products", "Try another description or clear the filters to browse all stock.", R.drawable.ic_stock)
-        else ShopGroup(spacing = ShopSpacing.small) {
+        else ShopListGroup {
             found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
         }
-        if (found.size > limit) OutlinedButton(onClick = { limit += 40 },
+        if (found.size > limit) ShopSecondaryButton(onClick = { limit += 40 },
             modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more products") }
     }
 }
@@ -153,7 +153,7 @@ internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: Ph
         val measurer = rememberTextMeasurer()
         val price = "₹${indianNumber(product.priceRupees)}"
         BoxWithConstraints {
-            val priceMax = maxWidth * 0.45f
+            val priceMax = (maxWidth - 24.dp) * 0.45f
             // A price that cannot fit its share of the row moves under the title so
             // a grouped amount never breaks across lines.
             val stackPrice = density.fontScale >= 1.5f ||
@@ -166,7 +166,7 @@ internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: Ph
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     Text(shop.categories.single { it.id == product.categoryId }.name + " · " + indianNumber(product.quantity) + " pieces",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         if (product.archived) ShopStatusChip("Archived")
                         else if (product.stockHealth != StockHealth.InStock) {
                             ShopStatusChip(product.stockHealth.label, when (product.stockHealth) {

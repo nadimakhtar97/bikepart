@@ -17,7 +17,10 @@ import org.junit.Test
 class CheckoutWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
-    private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
+    private fun await(text: String) {
+        try { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
+        catch (failure: Throwable) { throw AssertionError("Waiting for $text\n" + compose.onRoot().printToString(), failure) }
+    }
     private fun click(text: String) {
         val node = compose.onNode(hasText(text) and hasClickAction())
         if (text in listOf("Carts", "More", "Back")) node.performClick() else node.performScrollTo().performClick()

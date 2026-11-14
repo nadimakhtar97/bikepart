@@ -96,196 +96,216 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val selectedCart = state?.carts?.find { it.id == selectedId }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
         val colors = MaterialTheme.colorScheme
-        Scaffold(
-            containerColor = colors.surface,
-            topBar = {
-                if (route != "main") CenterAlignedTopAppBar(
-                    title = { Text(when (route) {
-                        "labels" -> "Product labels"; "scan" -> "Scan shared label"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
-                        "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
-                        "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
-                        "detail" -> "Product details"; "edit" -> "Edit details"
-                        "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"
-                        "cart" -> selectedCart?.name ?: "Unfinished bill"; "cart-products" -> "Add to cart"
-                        "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
-                    }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    navigationIcon = {
-                        ShopBackButton(onClick = { back() }, enabled = !busy)
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface),
-                )
-            },
-            bottomBar = {
-                if (route == "main") NavigationBar(containerColor = colors.surface, tonalElevation = 0.dp) {
-                    destinations.forEach { item ->
-                        val selected = destination == item.label
-                        NavigationBarItem(
-                            enabled = !busy,
-                            selected = selected,
-                            onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
-                            icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
-                            label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = colors.primaryContainer, selectedIconColor = colors.onPrimaryContainer,
-                                selectedTextColor = colors.primary, unselectedIconColor = colors.onSurface,
-                                unselectedTextColor = colors.onSurface,
-                            ),
-                        )
-                    }
-                }
-            },
-        ) { padding ->
-            val scrollState = key(route, destination, selectedId) { rememberScrollState() }
-            Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), contentAlignment = Alignment.TopCenter) {
-                Column(
-                    Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content),
-                    verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
-                ) {
-                    val shop = state
-                    if (shop == null) { Text(error?.message ?: "Opening your shop…"); return@Column }
-                    when (route) {
-                        "scan" -> ContextualScanner(shop, ScanPurpose.valueOf(scanPurpose), busy, error, camera,
-                            manual = { route = when (ScanPurpose.valueOf(scanPurpose)) { ScanPurpose.Sale -> "cart-products"; ScanPurpose.Receiving -> "receive-products"; ScanPurpose.Catalog -> "catalog-search" } },
-                            onChange = { model.error.value = null },
-                            add = { id, pieces -> cartDraft?.let { draft -> model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, id, pieces) }, { model.openCart(draft.cart.id); route = "cart" }) } },
-                            receive = ::receive, open = { selectedId = it; route = "detail" }, copy = { beginCatalog(it, "create") }, cart = cartDraft?.cart,
-                            link = { code, target, revision, done -> model.write({ linkBarcode(code, target, expectedAssignmentRevision = revision) }, done) })
-                        "receive-products", "catalog-search" -> {
-                            val forCatalog = route == "catalog-search"
-                            OutlinedButton(onClick = { scan(if (forCatalog) ScanPurpose.Catalog else ScanPurpose.Receiving, route) }, enabled = !busy) { Text(if (forCatalog) "Scan catalog details" else "Scan for receiving") }
-                            ScanManualPicker(shop, forCatalog, busy, model::readPhoto,
-                                select = { if (forCatalog) { selectedId = it; route = "detail" } else receive(it) },
-                                template = { beginCatalog(shop.prefillTemplate(it), "create") }, create = { route = "create" })
-                        }
-                        "arrival" -> if (product != null && !product.archived) key(arrivalOperation) {
-                            StockArrivalForm(product, busy, error, onChange = { model.error.value = null },
-                                save = { pieces, cost -> model.write({ receiveStock(arrivalOperation, product.id, pieces, cost) }, { route = "detail" }) })
-                        }
-                        "cart" -> CartEditor(shop, cartDraft, busy, error,
-                            edit = model::editCart, pause = ::back, add = { route = "cart-products" },
-                            retry = { model.flushCart() }, reload = model::reloadCart,
-                            checkout = { model.flushCart { checkoutVersion = requireNotNull(model.cartDraft.value).cart.editVersion; model.error.value = null; route = "checkout" } },
-                            remove = { productId -> cartDraft?.let { draft ->
-                                model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
-                            } },
-                            discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { route = "main"; destination = "Carts" }) } })
-                        "checkout" -> {
-                            val cart = shop.carts.find { it.id == selectedId }
-                            if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
-                            else if (cart != null) CashCheckout(shop, cart, busy, error,
-                                onChange = { model.error.value = null }, edit = { model.openCart(cart.id); route = "cart" },
-                                complete = { cash ->
-                                    model.write({ checkout(cart.id, checkoutVersion, cash) }, { route = "receipt" })
-                                })
-                            else Text("This cart is no longer available. Return to the cart list.")
-                        }
-                        "sales" -> SalesHistory(shop) { selectedId = it; model.error.value = null; route = "receipt" }
-                        "receipt" -> if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
-                            else Text("Receipt unavailable. Return to Sales history.")
-                        "cart-products" -> cartDraft?.let { draft ->
-                            OutlinedButton(onClick = { scan(ScanPurpose.Sale, "cart-products") }, enabled = !busy) { Text("Scan for sale") }
-                            CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
-                                onChange = { model.error.value = null }, add = { productId, pieces ->
-                                    model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, productId, pieces) }, { model.openCart(draft.cart.id); route = "cart" })
-                                })
-                        }
-                        "create", "edit", "template-form" -> stockState.SaveableStateProvider("form:$formSession:$route:$selectedId:$catalogPayload") { key(route, selectedId, catalogPayload) {
-                            if (route == "create") OutlinedButton(onClick = { scan(ScanPurpose.Catalog, "create") }, enabled = !busy) { Text("Scan catalog details") }
-                            if (route == "create" && catalog == null) OutlinedButton(onClick = { route = "templates" }, enabled = !busy) { Text("Choose template") }
-                            ProductForm(shop, if (route == "edit") product else null, busy, error,
-                                onChange = { model.error.value = null },
-                                lookups = ProductLookups(
-                                    category = { name, selected -> model.write({ val id = createCategory(name); selected(id) }) },
-                                    attribute = { input, done -> model.write({ createAttribute(categoryId = input.categoryId, name = input.name, type = input.type, required = input.required, unit = input.unit) }, done) },
-                                    option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val useRail = maxWidth >= 600.dp && route == "main"
+            Scaffold(
+                containerColor = colors.surface,
+                topBar = {
+                    if (route != "main") CenterAlignedTopAppBar(
+                        title = { Text(when (route) {
+                            "labels" -> "Product labels"; "scan" -> "Scan shared label"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
+                            "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
+                            "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
+                            "detail" -> "Product details"; "edit" -> "Edit details"
+                            "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"
+                            "cart" -> selectedCart?.name ?: "Unfinished bill"; "cart-products" -> "Add to cart"
+                            "backups" -> "Shop backups"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
+                        }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        navigationIcon = {
+                            ShopBackButton(onClick = { back() }, enabled = !busy)
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface),
+                    )
+                },
+                bottomBar = {
+                    if (route == "main" && !useRail) NavigationBar(containerColor = colors.surface, tonalElevation = 0.dp) {
+                        destinations.forEach { item ->
+                            val selected = destination == item.label
+                            NavigationBarItem(
+                                enabled = !busy,
+                                selected = selected,
+                                onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
+                                icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
+                                label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    indicatorColor = colors.primaryContainer, selectedIconColor = colors.onPrimaryContainer,
+                                    selectedTextColor = colors.primary, unselectedIconColor = colors.onSurface,
+                                    unselectedTextColor = colors.onSurface,
                                 ),
-                                findingLookups = FindingLookups(
-                                    make = { name, selected -> model.write({ selected(createMake(name)) }) },
-                                    model = { make, name, selected -> model.write({ selected(createModel(make, name)) }) },
-                                    location = { name, selected -> model.write({ selected(createLocation(name)) }) },
-                                ),
-                                loadPhoto = model::readPhoto,
-                                initialCatalog = if (route == "edit") null else catalog,
-                                templateMode = route == "template-form",
-                                save = { input ->
-                                    val editing = if (route == "edit") product else null
-                                    val photo = input.photoUri?.let { uri -> com.nadim.bikepart.shop.PhotoChange.Import {
-                                        resolver.openInputStream(uri.toUri()) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
-                                    } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
-                                    model.write({
-                                        if (route == "template-form") templateId = saveTemplate(input.catalog, templateId, photo)
-                                        else if (editing != null) editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
-                                        else selectedId = createFromCatalog(input.catalog, input.openingPieces, input.priceRupees, input.allowSimilar, input.locationIds, photo)
-                                    }, { route = if (route == "template-form") "template-detail" else "detail" })
-                                },
                             )
                         }
-                        }
-                        "templates" -> TemplateList(shop, busy,
-                            onCreate = { beginCatalog(CatalogDraft(), "template-form") },
-                            onOpen = { templateId = it; route = "template-detail" },
-                            onUse = { beginCatalog(shop.prefillTemplate(it), "create") })
-                        "template-detail" -> if (template != null) TemplateDetails(shop, template, busy, model::readPhoto,
-                            onEdit = { beginCatalog(template.catalog, "template-form", template.id) },
-                            onUse = { beginCatalog(shop.prefillTemplate(template.id), "create") },
-                            onRetire = { model.write({ retireTemplate(template.id) }) })
-                        "correction" -> if (product != null) key(correctionOperation) {
-                            StockCorrectionForm(product, CorrectionKind.valueOf(correctionKind), busy, error,
-                                onChange = { model.error.value = null },
-                                save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
-                        }
-                        "archived-products" -> ArchivedProducts(shop, model::readPhoto) { selectedId = it; route = "detail" }
-                        "labels" -> if (product != null) LabelPreview(shop, product, busy, error, usbAccess = labelUsb,
-                            onChange = { model.error.value = null }, save = { media, copies -> model.write({ setLabelPreferences(media, copies) }) })
-                        "detail" -> if (product != null) {
-                            ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
-                            model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
-                        }, onArchive = { model.write({ archiveProduct(product.id) }) }, archiveError = error?.takeIf { it.field == null }?.message,
-                            onReceive = { receive(product.id) }, onLabels = { model.error.value = null; route = "labels" })
-                            if (!product.archived) ThresholdForm(product, busy, error, onChange = { model.error.value = null },
-                                save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
-                            SaleStockHistory(shop, product.id)
-                            ArrivalHistory(shop.arrivals.filter { it.productId == product.id })
-                        }
-                        "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
-                            custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
-                            promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
-                            retire = { id -> model.write({ retireAttribute(id) }) },
-                            retireOption = { id -> model.write({ retireOption(id) }) },
-                            required = { id, required -> model.write({ setAttributeRequired(id, required) }) },
-                            replace = { id, input, done -> model.write({ replaceAttribute(id, input.name, input.type, input.required, input.unit) }, done) },
-                        ))
-                        "finding-lookups" -> FindingLookupSettings(shop, busy,
-                            retireMake = { model.write({ retireMake(it) }) },
-                            retireModel = { model.write({ retireModel(it) }) },
-                            retireLocation = { model.write({ retireLocation(it) }) })
-                        "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
-                        else -> when (destination) {
-                            "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock, onNewSale = ::newCart,
-                                onCarts = { destination = "Carts" }, onReceive = { route = "receive-products" },
-                                onSales = { route = "sales" }, onSale = { selectedId = it; model.error.value = null; route = "receipt" },
-                                busy = busy)
-                            "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
-                                StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth)
-                            }
-                            "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
-                            "More" -> {
-                                MoreScreen(shop, shop.appearance, busy,
-                                    onAppearance = { model.write({ setAppearance(it) }) },
-                                    onCategories = { route = "categories" },
-                                    onFindingLookups = { route = "finding-lookups" },
-                                    onArchived = { route = "archived-products" },
-                                    onSales = { route = "sales" },
-                                    onTemplates = { route = "templates" })
-                                DriveBackupControls(model, shop.revision)
-                                LocalBackupControls(localCapture, shop.revision, backupBusy, backupError.takeUnless { recoveryExport }, backupSaved && !recoveryExport, model::captureBackup, model::saveBackupCopy)
-                                if (recoveryCapture != null) LocalBackupControls(recoveryCapture, shop.revision, backupBusy, backupError.takeIf { recoveryExport }, backupSaved && recoveryExport,
-                                    model::captureBackup, model::saveBackupCopy, recovery = true)
-                            }
+                    }
+                },
+            ) { padding ->
+                val scrollState = key(route, destination, selectedId) { rememberScrollState() }
+                Row(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+                    if (useRail) NavigationRail(containerColor = colors.surface) {
+                        Spacer(Modifier.height(ShopSpacing.section))
+                        destinations.forEach { item ->
+                            val selected = destination == item.label
+                            NavigationRailItem(selected = selected, enabled = !busy,
+                                onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
+                                icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
+                                label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
+                                colors = NavigationRailItemDefaults.colors(indicatorColor = colors.primaryContainer,
+                                    selectedIconColor = colors.onPrimaryContainer, selectedTextColor = colors.primary,
+                                    unselectedIconColor = colors.onSurface, unselectedTextColor = colors.onSurface))
                         }
                     }
-                    if (error != null && route != "scan" && route != "arrival" && route != "receipt" && route != "checkout" && route != "cart" && route != "cart-products" && !(route == "detail" && (error?.field == ProductField.LowStockThreshold || error?.field == null)) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
-                        !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
+                    Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.TopCenter) {
+                        Column(
+                            Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content),
+                            verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
+                        ) {
+                            val shop = state
+                            if (shop == null) { Text(error?.message ?: "Opening your shop…"); return@Column }
+                            when (route) {
+                                "backups" -> {
+                                    DriveBackupControls(model, shop.revision)
+                                    LocalBackupControls(localCapture, shop.revision, backupBusy, backupError.takeUnless { recoveryExport }, backupSaved && !recoveryExport, model::captureBackup, model::saveBackupCopy)
+                                    if (recoveryCapture != null) LocalBackupControls(recoveryCapture, shop.revision, backupBusy, backupError.takeIf { recoveryExport }, backupSaved && recoveryExport,
+                                        model::captureBackup, model::saveBackupCopy, recovery = true)
+                                }
+                                "scan" -> ContextualScanner(shop, ScanPurpose.valueOf(scanPurpose), busy, error, camera,
+                                    manual = { route = when (ScanPurpose.valueOf(scanPurpose)) { ScanPurpose.Sale -> "cart-products"; ScanPurpose.Receiving -> "receive-products"; ScanPurpose.Catalog -> "catalog-search" } },
+                                    onChange = { model.error.value = null },
+                                    add = { id, pieces -> cartDraft?.let { draft -> model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, id, pieces) }, { model.openCart(draft.cart.id); route = "cart" }) } },
+                                    receive = ::receive, open = { selectedId = it; route = "detail" }, copy = { beginCatalog(it, "create") }, cart = cartDraft?.cart,
+                                    link = { code, target, revision, done -> model.write({ linkBarcode(code, target, expectedAssignmentRevision = revision) }, done) })
+                                "receive-products", "catalog-search" -> {
+                                    val forCatalog = route == "catalog-search"
+                                    ShopSecondaryButton(onClick = { scan(if (forCatalog) ScanPurpose.Catalog else ScanPurpose.Receiving, route) }, enabled = !busy) { Text(if (forCatalog) "Scan catalog details" else "Scan for receiving") }
+                                    ScanManualPicker(shop, forCatalog, busy, model::readPhoto,
+                                        select = { if (forCatalog) { selectedId = it; route = "detail" } else receive(it) },
+                                        template = { beginCatalog(shop.prefillTemplate(it), "create") }, create = { route = "create" })
+                                }
+                                "arrival" -> if (product != null && !product.archived) key(arrivalOperation) {
+                                    StockArrivalForm(product, busy, error, onChange = { model.error.value = null },
+                                        save = { pieces, cost -> model.write({ receiveStock(arrivalOperation, product.id, pieces, cost) }, { route = "detail" }) })
+                                }
+                                "cart" -> CartEditor(shop, cartDraft, busy, error,
+                                    edit = model::editCart, pause = ::back, add = { route = "cart-products" },
+                                    retry = { model.flushCart() }, reload = model::reloadCart,
+                                    checkout = { model.flushCart { checkoutVersion = requireNotNull(model.cartDraft.value).cart.editVersion; model.error.value = null; route = "checkout" } },
+                                    remove = { productId -> cartDraft?.let { draft ->
+                                        model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
+                                    } },
+                                    discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { route = "main"; destination = "Carts" }) } })
+                                "checkout" -> {
+                                    val cart = shop.carts.find { it.id == selectedId }
+                                    if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
+                                    else if (cart != null) CashCheckout(shop, cart, busy, error,
+                                        onChange = { model.error.value = null }, edit = { model.openCart(cart.id); route = "cart" },
+                                        complete = { cash ->
+                                            model.write({ checkout(cart.id, checkoutVersion, cash) }, { route = "receipt" })
+                                        })
+                                    else Text("This cart is no longer available. Return to the cart list.")
+                                }
+                                "sales" -> SalesHistory(shop) { selectedId = it; model.error.value = null; route = "receipt" }
+                                "receipt" -> if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
+                                    else Text("Receipt unavailable. Return to Sales history.")
+                                "cart-products" -> cartDraft?.let { draft ->
+                                    ShopSecondaryButton(onClick = { scan(ScanPurpose.Sale, "cart-products") }, enabled = !busy) { Text("Scan for sale") }
+                                    CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
+                                        onChange = { model.error.value = null }, add = { productId, pieces ->
+                                            model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, productId, pieces) }, { model.openCart(draft.cart.id); route = "cart" })
+                                        })
+                                }
+                                "create", "edit", "template-form" -> stockState.SaveableStateProvider("form:$formSession:$route:$selectedId:$catalogPayload") { key(route, selectedId, catalogPayload) {
+                                    if (route == "create") ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, "create") }, enabled = !busy) { Text("Scan catalog details") }
+                                    if (route == "create" && catalog == null) ShopSecondaryButton(onClick = { route = "templates" }, enabled = !busy) { Text("Choose template") }
+                                    ProductForm(shop, if (route == "edit") product else null, busy, error,
+                                        onChange = { model.error.value = null },
+                                        lookups = ProductLookups(
+                                            category = { name, selected -> model.write({ val id = createCategory(name); selected(id) }) },
+                                            attribute = { input, done -> model.write({ createAttribute(categoryId = input.categoryId, name = input.name, type = input.type, required = input.required, unit = input.unit) }, done) },
+                                            option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
+                                        ),
+                                        findingLookups = FindingLookups(
+                                            make = { name, selected -> model.write({ selected(createMake(name)) }) },
+                                            model = { make, name, selected -> model.write({ selected(createModel(make, name)) }) },
+                                            location = { name, selected -> model.write({ selected(createLocation(name)) }) },
+                                        ),
+                                        loadPhoto = model::readPhoto,
+                                        initialCatalog = if (route == "edit") null else catalog,
+                                        templateMode = route == "template-form",
+                                        save = { input ->
+                                            val editing = if (route == "edit") product else null
+                                            val photo = input.photoUri?.let { uri -> com.nadim.bikepart.shop.PhotoChange.Import {
+                                                resolver.openInputStream(uri.toUri()) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
+                                            } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
+                                            model.write({
+                                                if (route == "template-form") templateId = saveTemplate(input.catalog, templateId, photo)
+                                                else if (editing != null) editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
+                                                else selectedId = createFromCatalog(input.catalog, input.openingPieces, input.priceRupees, input.allowSimilar, input.locationIds, photo)
+                                            }, { route = if (route == "template-form") "template-detail" else "detail" })
+                                        },
+                                    )
+                                }
+                                }
+                                "templates" -> TemplateList(shop, busy,
+                                    onCreate = { beginCatalog(CatalogDraft(), "template-form") },
+                                    onOpen = { templateId = it; route = "template-detail" },
+                                    onUse = { beginCatalog(shop.prefillTemplate(it), "create") })
+                                "template-detail" -> if (template != null) TemplateDetails(shop, template, busy, model::readPhoto,
+                                    onEdit = { beginCatalog(template.catalog, "template-form", template.id) },
+                                    onUse = { beginCatalog(shop.prefillTemplate(template.id), "create") },
+                                    onRetire = { model.write({ retireTemplate(template.id) }) })
+                                "correction" -> if (product != null) key(correctionOperation) {
+                                    StockCorrectionForm(product, CorrectionKind.valueOf(correctionKind), busy, error,
+                                        onChange = { model.error.value = null },
+                                        save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
+                                }
+                                "archived-products" -> ArchivedProducts(shop, model::readPhoto) { selectedId = it; route = "detail" }
+                                "labels" -> if (product != null) LabelPreview(shop, product, busy, error, usbAccess = labelUsb,
+                                    onChange = { model.error.value = null }, save = { media, copies -> model.write({ setLabelPreferences(media, copies) }) })
+                                "detail" -> if (product != null) {
+                                    ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
+                                    model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
+                                }, onArchive = { model.write({ archiveProduct(product.id) }) }, archiveError = error?.takeIf { it.field == null }?.message,
+                                    onReceive = { receive(product.id) }, onLabels = { model.error.value = null; route = "labels" })
+                                    if (!product.archived) ThresholdForm(product, busy, error, onChange = { model.error.value = null },
+                                        save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
+                                    SaleStockHistory(shop, product.id)
+                                    ArrivalHistory(shop.arrivals.filter { it.productId == product.id })
+                                }
+                                "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
+                                    custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
+                                    promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
+                                    retire = { id -> model.write({ retireAttribute(id) }) },
+                                    retireOption = { id -> model.write({ retireOption(id) }) },
+                                    required = { id, required -> model.write({ setAttributeRequired(id, required) }) },
+                                    replace = { id, input, done -> model.write({ replaceAttribute(id, input.name, input.type, input.required, input.unit) }, done) },
+                                ))
+                                "finding-lookups" -> FindingLookupSettings(shop, busy,
+                                    retireMake = { model.write({ retireMake(it) }) },
+                                    retireModel = { model.write({ retireModel(it) }) },
+                                    retireLocation = { model.write({ retireLocation(it) }) })
+                                "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
+                                else -> when (destination) {
+                                    "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock, onNewSale = ::newCart,
+                                        onCarts = { destination = "Carts" }, onReceive = { route = "receive-products" },
+                                        onSales = { route = "sales" }, onSale = { selectedId = it; model.error.value = null; route = "receipt" },
+                                        busy = busy)
+                                    "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
+                                        StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth)
+                                    }
+                                    "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
+                                    "More" -> {
+                                        MoreScreen(shop, shop.appearance, busy,
+                                            onAppearance = { model.write({ setAppearance(it) }) },
+                                            onCategories = { route = "categories" },
+                                            onFindingLookups = { route = "finding-lookups" },
+                                            onArchived = { route = "archived-products" },
+                                            onSales = { route = "sales" },
+                                            onTemplates = { route = "templates" }, onBackups = { route = "backups" })
+                                    }
+                                }
+                            }
+                            if (error != null && route != "scan" && route != "arrival" && route != "receipt" && route != "checkout" && route != "cart" && route != "cart-products" && !(route == "detail" && (error?.field == ProductField.LowStockThreshold || error?.field == null)) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
+                                !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
+                        }
+                    }
                 }
             }
         }

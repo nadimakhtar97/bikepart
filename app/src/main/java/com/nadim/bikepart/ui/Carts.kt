@@ -29,7 +29,7 @@ internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOp
         return
     }
     ShopSectionHeader("${shop.carts.size} unfinished ${if (shop.carts.size == 1) "cart" else "carts"}")
-    ShopGroup(spacing = ShopSpacing.small) {
+    ShopListGroup {
         shop.carts.forEach { cart ->
             ShopListRow(cart.name,
                 supporting = listOfNotNull(cart.customer.ifBlank { null }, "${cart.lines.size} ${if (cart.lines.size == 1) "line" else "lines"}").joinToString(" · "),
@@ -64,7 +64,7 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
     if (error != null) ShopGroup {
         Column(Modifier.bringIntoViewRequester(errorView)) {
             FormError(error.message)
-            Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                 TextButton(onClick = retry, enabled = !busy) { Text("Retry saving cart") }
                 TextButton(onClick = reload, enabled = !busy) { Text("Reload saved cart") }
             }
@@ -114,7 +114,7 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
         Text("Saved cart total: ₹${indianNumber(cart.totalRupees)}", style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite })
     }
-    ShopGroup(spacing = ShopSpacing.small) {
+    ShopListGroup {
         ShopListRow("Add products", supporting = "Search or scan another product", icon = R.drawable.ic_add,
             enabled = !busy && !draft.dirty, onClick = add)
     }
@@ -165,11 +165,11 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
     if (results.isEmpty()) Text("No matching products", style = MaterialTheme.typography.bodyMedium)
     else {
         ShopSectionHeader("Products", supporting = "${results.size} matching")
-        ShopGroup(spacing = ShopSpacing.small) {
+        ShopListGroup {
             results.take(limit).forEach { item ->
                 StockProductRow(shop, item, loadPhoto, enabled = !busy) { selected = item.id; quantity = "1"; onChange() }
             }
         }
     }
-    if (results.size > limit) OutlinedButton(onClick = { limit += 30 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more products") }
+    if (results.size > limit) ShopSecondaryButton(onClick = { limit += 30 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more products") }
 }

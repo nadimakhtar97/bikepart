@@ -40,8 +40,8 @@ internal fun PhoneReplacementControls(model: ShopViewModel, onReview: () -> Unit
             Text("Restored capture: ${DateFormat.getDateTimeInstance().format(Date(origin.capturedAt))} · revision ${origin.revision}\nDataset: ${origin.datasetId}\nCapture: ${origin.captureId}", style = MaterialTheme.typography.bodyMedium)
             origin.account?.let { Text("Restore source: $it · folder ${origin.folderId}\nManifest: ${origin.manifestId}", style = MaterialTheme.typography.bodyMedium) }
         }
-        OutlinedButton(onClick = onCheck, enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired) { Text("Check active phone") }
-        OutlinedButton(onClick = onReview, enabled = !busy && status?.target != null) { Text("Review replacement phone") }
+        ShopSecondaryButton(onClick = onCheck, enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired) { Text("Check active phone") }
+        ShopSecondaryButton(onClick = onReview, enabled = !busy && status?.target != null) { Text("Review replacement phone") }
         preview?.let { selected ->
             Text("Activate for account: ${selected.target.account}\nFolder: ${selected.target.folderName}\nFolder ID: ${selected.target.folderId}\nDataset: ${selected.datasetId}\nPrevious writer: ${selected.previousWriter}", style = MaterialTheme.typography.bodyMedium)
             if (selected.origin == null) Text("No restore provenance is recorded for this local shop. Confirm that this is the intended dataset before replacing its backup writer.", style = MaterialTheme.typography.bodyMedium)
@@ -53,9 +53,9 @@ internal fun PhoneReplacementControls(model: ShopViewModel, onReview: () -> Unit
                 Text("I have retired the old installation", style = MaterialTheme.typography.bodyMedium)
             }
             ShopPrimaryButton("Activate replacement phone", enabled = !busy && retired, onClick = onActivate)
-            OutlinedButton(enabled = !busy, onClick = { model.cancelPhoneReplacement() }) { Text("Cancel replacement review") }
+            ShopSecondaryButton(enabled = !busy, onClick = { model.cancelPhoneReplacement() }) { Text("Cancel replacement review") }
         }
-        OutlinedButton(enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired, onClick = { retireThis = true }) { Text("Retire this installation") }
+        ShopSecondaryButton(enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired, onClick = { retireThis = true }) { Text("Retire this installation") }
     }
     if (retireThis) AlertDialog(onDismissRequest = { retireThis = false }, title = { Text("Retire this installation?") },
         text = { Text("Backups from this installation will stop. Verify the replacement and recovery copies, stop using this phone for shop work, then uninstall the app or clear its data. Offline local edits cannot be remotely prevented.") },

@@ -47,7 +47,7 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
                 label = { Text(name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
         }
     }
-    if (query.isNotBlank()) OutlinedButton(onClick = { onCreate(query); query = "" }, enabled = !busy,
+    if (query.isNotBlank()) ShopSecondaryButton(onClick = { onCreate(query); query = "" }, enabled = !busy,
         modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(addLabel) }
 }
 
@@ -57,7 +57,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
     ShopSection("Category fields") {
         var search by rememberSaveable(categoryId) { mutableStateOf("") }
         var creating by rememberSaveable(categoryId) { mutableStateOf(false) }
-        OutlinedTextField(search, { search = it }, enabled = !busy, label = { Text("Search fields") }, modifier = Modifier.fillMaxWidth())
+        ShopSearchField(search, { search = it }, "Search fields", enabled = !busy)
         shop.attributes.filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) && (LookupNames.key(it.name).contains(LookupNames.key(search)) || error?.definitionId == it.id) }.forEach { definition ->
             key(definition.id) {
                 val value = values[definition.id]
@@ -91,7 +91,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                 if (fieldError != null) FormError(fieldError.message)
             }
         }
-        OutlinedButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add category field") }
+        ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add category field") }
         if (creating) FieldCreator(categoryId, busy, error) { setup ->
             lookups.attribute(setup) { creating = false; search = "" }
         }

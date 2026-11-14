@@ -41,7 +41,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
             shop.models.filter { it.id in models }.forEach { model ->
                 val parent = shop.makes.single { it.id == model.makeId }
                 Text(parent.name + " · " + model.name + if (parent.retired || model.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
-                OutlinedButton(enabled = !busy, onClick = { onModels(models - model.id) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Remove " + model.name) }
+                ShopSecondaryButton(enabled = !busy, onClick = { onModels(models - model.id) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Remove " + model.name) }
             }
             if (error?.field == ProductField.Fitment) FormError(error.message)
             if (models.isEmpty()) Text("Choose a model before saving assigned fitment.", style = MaterialTheme.typography.bodyMedium)
@@ -76,7 +76,7 @@ internal fun FindingLookupSettings(shop: ShopSnapshot, busy: Boolean, retireMake
     retireModel: (String) -> Unit, retireLocation: (String) -> Unit) {
     var search by rememberSaveable { mutableStateOf("") }
     Text("Retired names stay readable on existing products and cannot be newly selected.", style = MaterialTheme.typography.bodyMedium)
-    OutlinedTextField(search, { search = it }, enabled = !busy, label = { Text("Find make, model or location") }, modifier = Modifier.fillMaxWidth())
+    ShopSearchField(search, { search = it }, "Find make, model or location", enabled = !busy)
     fun matches(name: String) = LookupNames.key(name).contains(LookupNames.key(search))
     ShopSection("Motorcycle makes") {
         shop.makes.filter { matches(it.name) }.forEach {
@@ -102,5 +102,5 @@ internal fun FindingLookupSettings(shop: ShopSnapshot, busy: Boolean, retireMake
 @Composable
 private fun LookupRetirement(name: String, retired: Boolean, busy: Boolean, retire: () -> Unit) {
     if (retired) Text(name + " (retired)", style = MaterialTheme.typography.bodyMedium)
-    else OutlinedButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire: " + name) }
+    else ShopSecondaryButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire: " + name) }
 }

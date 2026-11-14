@@ -48,7 +48,7 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
             label = { Text("Cash received (₹)") }, singleLine = true,
             isError = error?.field == ProductField.CashReceived, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth())
-        OutlinedButton(onClick = { cash = cart.totalRupees.toString(); onChange() }, enabled = !busy,
+        ShopSecondaryButton(onClick = { cash = cart.totalRupees.toString(); onChange() }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Exact amount") }
         val tender = cash.trim().takeIf { it.matches(Regex("[0-9]+")) }?.toLongOrNull()
         Text(if (tender != null && tender >= cart.totalRupees) "Change: ₹${indianNumber(Math.subtractExact(tender, cart.totalRupees))}" else "Enter enough cash to calculate change.",
@@ -70,7 +70,7 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
         return
     }
     ShopSectionHeader("Receipts")
-    ShopGroup(spacing = ShopSpacing.small) {
+    ShopListGroup {
         shop.sales.forEach { sale ->
             ShopListRow("Cart ${sale.cartNumber}",
                 supporting = listOfNotNull(sale.customer.ifBlank { null }, saleDate(sale.recordedAt)).joinToString(" · "),

@@ -61,7 +61,7 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
         pending?.let { description ->
             Text("Inspect previous output: $description", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             Text("Check the physical labels. After interrupted output, power-cycle the TE244 to discard partial commands. Then enter only the remaining copies (or finish without reprinting).")
-            OutlinedButton(enabled = !sending, onClick = {
+            ShopSecondaryButton(enabled = !sending, onClick = {
                 try { printer.inspected(); pending = null; confirmed = false; inspected() }
                 catch (_: Exception) { feedback = "Could not save inspection. Printing remains blocked." }
             }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("I inspected output and reset the printer") }
@@ -91,7 +91,7 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
                 } finally { pending = printer.pending(); sending = false }
             }
         }
-        if (sending) OutlinedButton(onClick = { cancelled.set(true); feedback = "Cancelling unsent copies. Output already sent cannot be retracted." },
+        if (sending) ShopSecondaryButton(onClick = { cancelled.set(true); feedback = "Cancelling unsent copies. Output already sent cannot be retracted." },
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Cancel unsent copies") }
         feedback?.let { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
     }

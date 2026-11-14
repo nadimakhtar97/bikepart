@@ -35,7 +35,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     }
     Text("Scan purpose: ${purpose.label}", style = MaterialTheme.typography.titleMedium)
     Text("Shared labels identify a product. Choose an action and enter pieces yourself. Scanning does not change stock.")
-    OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; manual() }, enabled = !busy) { Text("Manual search") }
+    ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; manual() }, enabled = !busy) { Text("Manual search") }
     if (running) key(attempt) {
         val currentAttempt = attempt
         camera({ value ->
@@ -43,13 +43,13 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
         }, { message ->
             if (running && attempt == currentAttempt) { running = false; transportError = message; raw = null }
         })
-        OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; transportError = "Camera cancelled. Use manual search or resume." }) { Text("Cancel camera") }
+        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; transportError = "Camera cancelled. Use manual search or resume." }) { Text("Cancel camera") }
     } else {
         if (started) Text("Recognition paused", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         transportError?.let { FormError(it) }
         resolution?.exceptionOrNull()?.message?.let { FormError(it) }
         raw?.takeIf { it.isNotEmpty() && !it.startsWith("bikepart:", ignoreCase = true) }?.let { code ->
-            OutlinedButton(onClick = { linking = true; onChange() }, enabled = !busy,
+            ShopSecondaryButton(onClick = { linking = true; onChange() }, enabled = !busy,
                 modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget)) { Text("Link barcode") }
             for (assignment in shop.barcodeHistory.filter { it.namespace == "external" && it.code == code }) {
                 Text("Barcode history · revision ${assignment.revision}: ${assignment.previousTarget?.let { shop.barcodeTargetLabel(it) } ?: "Unassigned"} → ${shop.barcodeTargetLabel(assignment.target)}")
@@ -73,7 +73,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                     ScanPurpose.Receiving -> ShopPrimaryButton("Enter quantity and cost", enabled = !busy) { attempt++; receive(target.product.id) }
                     ScanPurpose.Catalog -> {
                         ShopPrimaryButton("Open existing", enabled = !busy) { attempt++; open(target.product.id) }
-                        OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; copy(shop.copyCatalog(target.product.id)) }, enabled = !busy) { Text("Copy catalog details") }
+                        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; copy(shop.copyCatalog(target.product.id)) }, enabled = !busy) { Text("Copy catalog details") }
                     }
                 }
             }
@@ -83,7 +83,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
             } else FormError("Template codes only prefill new products. They cannot be sold or received.")
             null -> Unit
         }
-        OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {
+        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {
             Text(if (started) "Resume scanning" else "Start camera")
         }
     }

@@ -35,6 +35,7 @@ class BackupWorkflowTest {
                 ActivityScenario.launch(MainActivity::class.java).use {
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
                     compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("Verified backup · revision $previous", substring = true).fetchSemanticsNodes().isNotEmpty() }
                     compose.onNodeWithText("Verified backup · revision $previous", substring = true).performScrollTo().assertIsDisplayed()
                     compose.onNodeWithText("revision $current · captured", substring = true).performScrollTo().assertIsDisplayed()
@@ -68,6 +69,7 @@ class BackupWorkflowTest {
             ActivityScenario.launch(MainActivity::class.java).use {
                 compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText("More").performClick()
+                compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                 compose.waitUntil(30_000) { compose.onAllNodesWithText("Local capture complete", substring = true).fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText("Capture local backup").performScrollTo().performClick()
                 compose.waitUntil(30_000) { compose.onAllNodesWithText("Could not capture local backup.", substring = true).fetchSemanticsNodes().isNotEmpty() }
@@ -81,6 +83,7 @@ class BackupWorkflowTest {
                 ActivityScenario.launch(MainActivity::class.java).use {
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
                     compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                     compose.onNodeWithText("Capture local backup").performScrollTo().performClick()
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("Local capture complete", substring = true).fetchSemanticsNodes().isNotEmpty() }
                     compose.onNodeWithText("Capture local backup").performScrollTo().assertIsDisplayed().assertIsEnabled()
@@ -110,6 +113,7 @@ class BackupWorkflowTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Shop backups").performScrollTo().performClick()
             compose.onNodeWithText("Connect or repair Drive").performScrollTo().assertIsEnabled()
             compose.onNodeWithText("Back up now").performScrollTo().assertIsEnabled()
             compose.onNodeWithText("Allow mobile data for automatic backups").performScrollTo().performClick()
@@ -126,6 +130,7 @@ class BackupWorkflowTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             compose.waitUntil(15_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Shop backups").performScrollTo().performClick()
             compose.onNodeWithText("Capture local backup").performScrollTo().performClick()
             compose.waitUntil(30_000) { compose.onAllNodesWithText("Local capture complete", substring = true).fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Save a copy…").performScrollTo().assertIsEnabled()

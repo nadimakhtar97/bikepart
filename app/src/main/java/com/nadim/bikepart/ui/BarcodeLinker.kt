@@ -33,7 +33,7 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
         val targets = products.map { BarcodeTarget(BarcodeTargetKind.Product, it.id) to "Product: ${it.title}" } +
             templates.map { BarcodeTarget(BarcodeTargetKind.Template, it.id) to "Template: ${it.catalog.title}" }
         for ((target, label) in targets.take(limit)) {
-            OutlinedButton(onClick = { selectedId = target.id; selectedKind = target.kind.name; confirmedRevision = owner?.revision; onChange() },
+            ShopSecondaryButton(onClick = { selectedId = target.id; selectedKind = target.kind.name; confirmedRevision = owner?.revision; onChange() },
                 enabled = !busy, shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = if (target == selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
@@ -54,7 +54,7 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
                 }
             }
         }
-        if (targets.size > limit) OutlinedButton(onClick = { limit += 30 }, enabled = !busy) { Text("Show more barcode targets") }
+        if (targets.size > limit) ShopSecondaryButton(onClick = { limit += 30 }, enabled = !busy) { Text("Show more barcode targets") }
         if (targets.isEmpty()) Text("No active targets found. Use manual search to create a product or template first.")
         selected?.let { target ->
             Text("Selected target: ${shop.barcodeTargetLabel(target)}")
@@ -64,6 +64,6 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
                 save(target, confirmedRevision)
             }
         }
-        OutlinedButton(onClick = cancel, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Cancel barcode link") }
+        ShopSecondaryButton(onClick = cancel, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Cancel barcode link") }
     }
 }

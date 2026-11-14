@@ -40,6 +40,7 @@ class BackupStorageWorkflowTest {
                     scenario.onActivity { model = ViewModelProvider(it)[ShopViewModel::class.java] }
                     compose.waitUntil(30_000) { model.state.value != null && model.driveStatus.value != null }
                     compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                     compose.onNodeWithText("Inspect backup storage").performScrollTo().assertIsDisplayed().assertIsEnabled()
                     // Substitute Google authorization/transport at the established external boundary.
                     scenario.onActivity { model.storageDriveAction(drive, DriveAction.InspectStorage) }

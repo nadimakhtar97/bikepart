@@ -108,7 +108,7 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
             try { previewCopies = parseLabelCopies(copies); previewMedia = media.name }
             catch (e: ShopValidation) { validation = e.message }
         }
-        OutlinedButton(onClick = { save(media, copies) }, enabled = !busy,
+        ShopSecondaryButton(onClick = { save(media, copies) }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Save label preferences") }
         Text("Saved default: ${shop.labelPreferences.media.label} · ${shop.labelPreferences.copies} copies",
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })

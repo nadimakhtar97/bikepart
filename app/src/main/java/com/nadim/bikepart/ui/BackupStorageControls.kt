@@ -32,7 +32,7 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
     ShopSection("Backup storage") {
         Text("Keep the latest seven complete captures, plus the latest capture on each India calendar day in the current day and previous 29 days. Days without a backup add no recovery point.", style = MaterialTheme.typography.bodyMedium)
         Text("Google will ask for read-only Drive file metadata access to check the complete folder history. If access is declined or uncertain, cleanup stays paused.", style = MaterialTheme.typography.bodyMedium)
-        OutlinedButton(onClick = onInspect, enabled = canInspect) { Text("Inspect backup storage") }
+        ShopSecondaryButton(onClick = onInspect, enabled = canInspect) { Text("Inspect backup storage") }
         progress?.let { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium) }
         if (complete) Text("Reviewed cleanup finished. Protected recovery history is preserved.",
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
@@ -44,7 +44,7 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
                 Text("Eligible: ${DateFormat.getDateTimeInstance().format(Date(point.capturedAt))} · revision ${point.revision}", style = MaterialTheme.typography.bodyMedium)
             }
             if (reviewed.cleanupPending) Text("A reviewed cleanup was interrupted. Continue to recheck the remaining files and finish safely.", style = MaterialTheme.typography.bodyMedium)
-            if (reviewed.eligible.isNotEmpty() || reviewed.cleanupPending) OutlinedButton(enabled = canInspect, onClick = { confirm = true }) {
+            if (reviewed.eligible.isNotEmpty() || reviewed.cleanupPending) ShopSecondaryButton(enabled = canInspect, onClick = { confirm = true }) {
                 Text(if (reviewed.cleanupPending) "Continue reviewed cleanup" else "Remove eligible older backups")
             } else Text("No older backup history is eligible for removal.", style = MaterialTheme.typography.bodyMedium)
         }

@@ -45,8 +45,11 @@ internal fun ShopEmptyState(title: String, description: String, icon: Int) {
             Icon(painterResource(icon), contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(ShopSpacing.content).size(24.dp))
         }
-        Text(title, style = MaterialTheme.typography.titleLarge)
-        Text(description, style = MaterialTheme.typography.bodyMedium)
+        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.semantics { heading() })
+        Text(description, style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.widthIn(max = 360.dp))
     }
 }
 
@@ -58,26 +61,19 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
     val outOfStock = activeProducts.count { it.stockHealth == StockHealth.OutOfStock }
     val recentSales = shop.sales.sortedByDescending { it.recordedAt }.take(3)
     ShopPageHeader("Your parts counter", "Work offline. Your stock stays on this phone.")
-    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
-        ShopStatCard("Unfinished carts", shop.carts.size.toString(), R.drawable.ic_pending,
-            modifier = Modifier.weight(1f), enabled = !busy, onClick = onCarts)
-        ShopStatCard("Active products", activeProducts.size.toString(), R.drawable.ic_inventory,
-            modifier = Modifier.weight(1f), enabled = !busy, onClick = { onStock(null) })
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
-        ShopStatCard("Low stock", lowStock.toString(), R.drawable.ic_warning,
-            modifier = Modifier.weight(1f), enabled = !busy, onClick = { onStock(StockHealth.LowStock) })
-        ShopStatCard("Out of stock", outOfStock.toString(), R.drawable.ic_no_stock,
-            modifier = Modifier.weight(1f), enabled = !busy, onClick = { onStock(StockHealth.OutOfStock) })
-    }
     ShopSectionHeader("Quick actions")
-    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
-        ShopActionTile("New sale", R.drawable.ic_cart, Modifier.weight(1f), enabled = !busy, primary = true, onClick = onNewSale)
-        ShopActionTile("Add product", R.drawable.ic_add, Modifier.weight(1f), onClick = onAdd)
+    ShopTileGrid { tile ->
+        ShopActionTile("New sale", R.drawable.ic_cart, tile, enabled = !busy, primary = true, onClick = onNewSale)
+        ShopActionTile("Add product", R.drawable.ic_add, tile, enabled = !busy, onClick = onAdd)
+        ShopActionTile("Receive stock", R.drawable.ic_inventory, tile, enabled = !busy, onClick = onReceive)
+        ShopActionTile("Sales history", R.drawable.ic_receipt, tile, enabled = !busy, onClick = onSales)
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
-        ShopActionTile("Receive stock", R.drawable.ic_inventory, Modifier.weight(1f), enabled = !busy, onClick = onReceive)
-        ShopActionTile("Sales history", R.drawable.ic_receipt, Modifier.weight(1f), onClick = onSales)
+    ShopSectionHeader("Shop overview")
+    ShopTileGrid { tile ->
+        ShopStatCard("Unfinished carts", shop.carts.size.toString(), R.drawable.ic_pending,
+            modifier = tile, enabled = !busy, onClick = onCarts)
+        ShopStatCard("Active products", activeProducts.size.toString(), R.drawable.ic_inventory,
+            modifier = tile, enabled = !busy, onClick = { onStock(null) })
     }
     if (activeProducts.isEmpty()) {
         if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
@@ -87,19 +83,19 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
     if (activeProducts.isNotEmpty()) {
         ShopSectionHeader("Stock attention",
             supporting = if (lowStock + outOfStock == 0) "Nothing needs attention today" else "Counts at or below your thresholds")
-        ShopGroup(spacing = ShopSpacing.small) {
+        ShopListGroup {
             ShopListRow("Low stock: $lowStock ${if (lowStock == 1) "product" else "products"}",
                 supporting = "Positive stock at or below the set threshold",
-                icon = R.drawable.ic_warning, meta = lowStock.toString(), onClick = { onStock(StockHealth.LowStock) })
+                icon = R.drawable.ic_warning, onClick = { onStock(StockHealth.LowStock) })
             ShopListRow("Out of stock: $outOfStock ${if (outOfStock == 1) "product" else "products"}",
                 supporting = "No pieces currently on hand",
-                icon = R.drawable.ic_no_stock, meta = outOfStock.toString(), onClick = { onStock(StockHealth.OutOfStock) })
+                icon = R.drawable.ic_no_stock, onClick = { onStock(StockHealth.OutOfStock) })
         }
     }
     ShopSectionHeader("Recent orders", actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
     if (recentSales.isEmpty()) Text("Completed cash sales will appear here.", style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
-    else ShopGroup(spacing = ShopSpacing.small) {
+    else ShopListGroup {
         recentSales.forEach { sale ->
             ShopListRow("Cart ${sale.cartNumber}",
                 supporting = listOfNotNull(sale.customer.ifBlank { null }, "${sale.lines.size} lines").joinToString(" · "),
@@ -153,7 +149,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete · complete required fields when editing. Stock and selling price remain available.", style = MaterialTheme.typography.bodyMedium)
     if (!product.archived) {
         ShopSectionHeader("Correct stock")
-        ShopGroup(spacing = ShopSpacing.small) {
+        ShopListGroup {
             CorrectionKind.entries.forEach { kind ->
                 ShopListRow("Record ${kind.label.lowercase()}",
                     supporting = when (kind) {
@@ -188,7 +184,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
     if (!product.archived) {
         ShopSectionHeader("Product actions")
-        ShopGroup(spacing = ShopSpacing.small) {
+        ShopListGroup {
             ShopListRow("Receive stock", supporting = "Add received pieces and purchase cost",
                 icon = R.drawable.ic_inventory, enabled = !busy, onClick = onReceive)
             ShopListRow("Preview product labels", supporting = "Package or shared-bin label",
@@ -203,7 +199,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         ShopSection("Archive unused product") {
             Text("Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.", style = MaterialTheme.typography.bodyMedium)
             if (archiveError != null) FormError(archiveError)
-            OutlinedButton(onClick = onArchive, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Archive product") }
+            ShopSecondaryButton(onClick = onArchive, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Archive product") }
         }
     }
 }
@@ -219,20 +215,19 @@ internal fun ArchivedProducts(shop: ShopSnapshot, loadPhoto: PhotoLoader, onOpen
         val found = archived.filter { LookupNames.key(it.title + " " + it.sku).contains(LookupNames.key(query)) }
         ShopSectionHeader("${found.size} archived products", supporting = "Title or permanent SKU")
         if (found.isEmpty()) ShopEmptyState("No matching archived products", "Try a title or permanent SKU.", R.drawable.ic_stock)
-        else ShopGroup(spacing = ShopSpacing.small) {
+        else ShopListGroup {
             found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
         }
-        if (found.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more archived products") }
+        if (found.size > limit) ShopSecondaryButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more archived products") }
     }
 }
 
 @Composable
 internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
-    onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit) {
+    onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit) {
+    ShopPageHeader("Your shop", "Catalog, appearance and recovery.")
     ShopSectionHeader("Appearance")
     ShopGroup(spacing = ShopSpacing.small) {
-        Text("Now in Android · Default theme", style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
         Column(Modifier.selectableGroup()) {
             Appearance.entries.forEach { mode ->
                 Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
@@ -247,7 +242,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     ShopSectionHeader("Shop")
-    ShopGroup(spacing = ShopSpacing.small) {
+    ShopListGroup {
         ShopListRow("Sales history", supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,
             enabled = !busy, onClick = onSales)
         ShopListRow("Product templates", supporting = "Reusable catalog details", icon = R.drawable.ic_template,
@@ -255,8 +250,13 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
         ShopListRow("Archived products", supporting = "Retained details and history", icon = R.drawable.ic_archive,
             enabled = !busy, onClick = onArchived)
     }
+    ShopSectionHeader("Backup and recovery")
+    ShopListGroup {
+        ShopListRow("Shop backups", supporting = "Drive, local copies and phone recovery", icon = R.drawable.ic_cloud,
+            enabled = !busy, onClick = onBackups)
+    }
     ShopSectionHeader("Catalog")
-    ShopGroup(spacing = ShopSpacing.small) {
+    ShopListGroup {
         ShopListRow("Edit categories", supporting = "${shop.categories.size} categories", icon = R.drawable.ic_category,
             enabled = !busy, onClick = onCategories)
         ShopListRow("Manage fitment and locations", supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
@@ -267,7 +267,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
 @Composable
 internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (String, String) -> Unit) {
     Text("Rename your starter categories to suit the shop.", style = MaterialTheme.typography.bodyMedium)
-    ShopGroup(spacing = ShopSpacing.small) {
+    ShopListGroup {
         shop.categories.forEach { category ->
             key(category.id) {
                 var editing by rememberSaveable(category.id) { mutableStateOf(false) }
@@ -359,7 +359,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             // Roomier screens keep the two short numeric fields on one line; phones stay stacked
             // so 200% font scale never clips their labels.
-            if (maxWidth >= 480.dp) Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+            if (maxWidth >= 480.dp && LocalDensity.current.fontScale < 1.5f) Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
                 Box(Modifier.weight(1f)) { stockField(Modifier.fillMaxWidth()) }
                 Box(Modifier.weight(1f)) { priceField(Modifier.fillMaxWidth()) }
             } else Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {

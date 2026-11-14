@@ -37,7 +37,7 @@ internal fun LocalBackupControls(capture: LocalCapture?, currentRevision: Long, 
         if (error != null) FormError(error)
         if (saved) Text(if (recovery) "Recovery copy saved." else "Backup copy saved.", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (!recovery) ShopPrimaryButton("Capture local backup", enabled = !busy, onClick = onCapture)
-        if (capture != null) OutlinedButton(enabled = !busy && selectedPath == null, onClick = {
+        if (capture != null) ShopSecondaryButton(enabled = !busy && selectedPath == null, onClick = {
             selectedPath = capture.file.path; selectedId = capture.id; selectedRevision = capture.revision; selectedTime = capture.capturedAt
             save.launch("shop-backup-${capture.id}.zip")
         }) { Text(if (recovery) "Save recovery copy…" else "Save a copy…") }

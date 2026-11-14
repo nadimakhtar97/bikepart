@@ -23,12 +23,12 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
     ShopSection("Product custom fields") {
         Text("Custom fields belong only to ${product.title}. Promote a field explicitly to share it with this category.", style = MaterialTheme.typography.bodyMedium)
         var creating by rememberSaveable { mutableStateOf(false) }
-        OutlinedButton(onClick = { creating = !creating }, enabled = !busy,
+        ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add product custom field") }
         if (creating) FieldCreator(product.categoryId, busy, error?.takeIf { it.definitionId == null }, onChange) { setup -> actions.custom(setup) { creating = false } }
     }
     var search by rememberSaveable { mutableStateOf("") }
-    OutlinedTextField(search, { search = it }, enabled = !busy, label = { Text("Find definition") }, modifier = Modifier.fillMaxWidth())
+    ShopSearchField(search, { search = it }, "Find definition", enabled = !busy)
     shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && LookupNames.key(it.name).contains(LookupNames.key(search)) }.forEach { field ->
         key(field.id) {
             ShopSection(field.name) {
@@ -36,12 +36,12 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                 if (!field.retired) {
                     var expanded by rememberSaveable { mutableStateOf(false) }
                     var replacing by rememberSaveable { mutableStateOf(false) }
-                    OutlinedButton(onClick = { expanded = !expanded; onChange() }, enabled = !busy,
+                    ShopSecondaryButton(onClick = { expanded = !expanded; onChange() }, enabled = !busy,
                         modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.productId == null) "Manage ${field.name}" else "Manage custom ${field.name}") }
                     if (expanded) {
-                        OutlinedButton(onClick = { actions.required(field.id, !field.required) }, enabled = !busy,
+                        ShopSecondaryButton(onClick = { actions.required(field.id, !field.required) }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.required) "Make optional" else "Make required") }
-                        OutlinedButton(onClick = { actions.retire(field.id) }, enabled = !busy,
+                        ShopSecondaryButton(onClick = { actions.retire(field.id) }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire field") }
                         if (field.productId != null && !replacing) {
                             var name by rememberSaveable { mutableStateOf(field.name) }
@@ -53,10 +53,10 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                         }
                         shop.options.filter { it.definitionId == field.id }.forEach { option ->
                             if (option.retired) Text(option.name + " (retired)", style = MaterialTheme.typography.bodyMedium)
-                            else OutlinedButton(onClick = { actions.retireOption(option.id) }, enabled = !busy,
+                            else ShopSecondaryButton(onClick = { actions.retireOption(option.id) }, enabled = !busy,
                                 modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire option: ${option.name}") }
                         }
-                        OutlinedButton(onClick = { replacing = !replacing; onChange() }, enabled = !busy,
+                        ShopSecondaryButton(onClick = { replacing = !replacing; onChange() }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Replace field type") }
                         if (replacing) {
                             Text("Use a distinct name and a new type. The original field is retired and its values remain unchanged.", style = MaterialTheme.typography.bodyMedium)

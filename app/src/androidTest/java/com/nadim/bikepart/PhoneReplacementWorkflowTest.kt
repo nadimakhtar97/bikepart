@@ -48,6 +48,7 @@ class PhoneReplacementWorkflowTest {
                     scenario.onActivity { model = ViewModelProvider(it)[ShopViewModel::class.java] }
                     compose.waitUntil(30_000) { model.state.value != null && model.driveStatus.value != null }
                     compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                     compose.onNodeWithText("Review replacement phone").performScrollTo().assertIsDisplayed().assertIsEnabled()
                     // Substitute only the external Google authorization/transport boundary.
                     scenario.onActivity { model.phoneDriveAction(drive, DriveAction.ReviewPhone) }

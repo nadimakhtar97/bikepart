@@ -70,6 +70,7 @@ class RestoreWorkflowTest {
                     lateinit var model: ShopViewModel
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
                     compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                     scenario.onActivity { model = ViewModelProvider(it)[ShopViewModel::class.java]; model.loadRestorePoints(drive) }
                     compose.waitUntil(30_000) { model.restorePoints.value != null && !model.driveBusy.value }
                     val point = model.restorePoints.value!!.single()
@@ -94,7 +95,7 @@ class RestoreWorkflowTest {
                     val recovery = requireNotNull(model.recoveryCapture.value)
                     runBlocking { Shop.open(context).use { shop -> shop.validateLocalRestore(recovery.file).use { assertEquals(expected.products.size + 1, it.snapshot.products.size) } } }
                     scenario.recreate()
-                    compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+                    compose.waitUntil(30_000) { compose.onAllNodesWithText("Shop backups").fetchSemanticsNodes().isNotEmpty() }
                     lateinit var reopened: ShopViewModel
                     scenario.onActivity { reopened = ViewModelProvider(it)[ShopViewModel::class.java] }
                     compose.waitUntil(30_000) { reopened.state.value != null && reopened.recoveryCapture.value != null }
@@ -144,6 +145,7 @@ class RestoreWorkflowTest {
                 ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
                     compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Shop backups").performScrollTo().performClick()
                     compose.onNodeWithText("Find restore points").performScrollTo().assertIsDisplayed().assertIsEnabled()
                     // Substitute the Google transport after authorization, retaining the actual app/model/Room workflow.
                     lateinit var model: ShopViewModel

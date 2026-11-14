@@ -18,21 +18,23 @@ internal fun ScanManualPicker(shop: ShopSnapshot, catalog: Boolean, busy: Boolea
     val search = remember(shop) { CatalogSearch(shop) }
     val results = remember(search, query) { search.find(ProductFilter(query = query)) }
     val templates = if (catalog) shop.templates.filter { !it.retired && it.catalog.title.contains(query, ignoreCase = true) } else emptyList()
-    OutlinedTextField(query, { query = it }, label = { Text("Search products manually") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
-    if (catalog) OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = create, enabled = !busy) { Text("Continue new product") }
-    if (results.isEmpty()) Text("No matching products")
-    results.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto, enabled = !busy) { select(product.id) } }
-    templates.take(limit).forEach {
-        OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { template(it.id) }, enabled = !busy) { Text("Use template: ${it.catalog.title}") }
+    ShopSearchField(query, { query = it }, "Search products manually", enabled = !busy)
+    if (catalog) ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = create, enabled = !busy) { Text("Continue new product") }
+    if (results.isEmpty()) ShopEmptyState("No matching products", "Try a title, SKU, fitment or location.", com.nadim.bikepart.R.drawable.ic_stock)
+    else ShopListGroup {
+        results.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto, enabled = !busy) { select(product.id) } }
     }
-    if (results.size > limit || templates.size > limit) OutlinedButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { limit += 30 }) { Text("Show more results") }
+    templates.take(limit).forEach {
+        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { template(it.id) }, enabled = !busy) { Text("Use template: ${it.catalog.title}") }
+    }
+    if (results.size > limit || templates.size > limit) ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { limit += 30 }) { Text("Show more results") }
 }
 
 @Composable
 internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String, String) -> Unit) {
     var pieces by rememberSaveable { mutableStateOf("") }
     var cost by rememberSaveable { mutableStateOf("") }
-    ShopSection("Receive stock") {
+    ShopSection("Arrival details") {
         Text(product.title, style = MaterialTheme.typography.titleMedium)
         Text(product.sku)
         Text("Current stock: ${indianNumber(product.quantity)} pieces")

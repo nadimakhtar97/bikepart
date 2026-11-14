@@ -4,9 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -29,7 +32,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun ShopPageHeader(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(modifier.fillMaxWidth().padding(vertical = ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
         if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -39,14 +42,54 @@ internal fun ShopPageHeader(title: String, subtitle: String? = null, modifier: M
 @Composable
 internal fun ShopSectionHeader(title: String, supporting: String? = null, modifier: Modifier = Modifier,
     actionLabel: String? = null, onAction: (() -> Unit)? = null, actionEnabled: Boolean = true) {
-    Row(modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    FlowRow(modifier.fillMaxWidth().padding(top = ShopSpacing.small),
+        horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small),
+        verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.weight(1f).widthIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             if (supporting != null) Text(supporting, style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (actionLabel != null && onAction != null) TextButton(onClick = onAction, enabled = actionEnabled,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(actionLabel) }
+    }
+}
+
+private val LocalShopListGroup = staticCompositionLocalOf { false }
+
+/** Secondary actions share the same touch target and wrapping behavior as the primary action. */
+@Composable
+internal fun ShopSecondaryButton(onClick: () -> Unit, modifier: Modifier = Modifier,
+    enabled: Boolean = true, shape: Shape = ButtonDefaults.outlinedShape,
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(), content: @Composable RowScope.() -> Unit) {
+    OutlinedButton(onClick = onClick, modifier = modifier.heightIn(min = ShopSpacing.touchTarget),
+        enabled = enabled, shape = shape, colors = colors, content = content)
+}
+
+/** A single quiet surface for a collection, without a card around every row. */
+@Composable
+internal fun ShopListGroup(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        CompositionLocalProvider(LocalShopListGroup provides true) {
+            Column(Modifier.fillMaxWidth().padding(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp), content = content)
+        }
+    }
+}
+
+/** Equal columns at ordinary text sizes; full-width tiles when labels need room. */
+@Composable
+internal fun ShopTileGrid(content: @Composable (Modifier) -> Unit) {
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = if (maxWidth >= 320.dp && fontScale < 1.5f) 2 else 1
+        val tileWidth = (maxWidth - ShopSpacing.medium * (columns - 1)) / columns
+        FlowRow(Modifier.fillMaxWidth(), maxItemsInEachRow = columns,
+            horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium),
+            verticalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+            content(Modifier.width(tileWidth))
+        }
     }
 }
 
@@ -94,7 +137,7 @@ internal fun ShopStatusChip(label: String, tone: ShopStatusTone = ShopStatusTone
     }
     Surface(modifier.heightIn(min = 24.dp), shape = RoundedCornerShape(8.dp), color = container, contentColor = content) {
         Box(Modifier.padding(horizontal = 8.dp, vertical = 2.dp), contentAlignment = Alignment.Center) {
-            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -111,7 +154,7 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
     meta: String? = null, icon: Int? = null, leading: (@Composable () -> Unit)? = null,
     status: (@Composable () -> Unit)? = null, trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null, enabled: Boolean = true, actionLabel: String? = null,
-    showChevron: Boolean = onClick != null, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    showChevron: Boolean = false, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow) {
     val metaStyle = MaterialTheme.typography.titleMedium
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
@@ -125,7 +168,8 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
             Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (supporting != null) Text(supporting, style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (status != null) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { status() }
+            if (status != null) FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)) { status() }
             if (stackedMeta) Text(meta.orEmpty(), style = metaStyle)
         }
         if (meta != null && !stackedMeta) Text(meta, style = metaStyle, maxLines = 2,
@@ -136,12 +180,13 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
             contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
     }
     val shape = MaterialTheme.shapes.small
+    val rowColor = if (LocalShopListGroup.current) Color.Transparent else containerColor
     val contentModifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)
     if (onClick != null) {
-        Surface(onClick = onClick, enabled = enabled, shape = shape, color = containerColor,
+        Surface(onClick = onClick, enabled = enabled, shape = shape, color = rowColor,
             modifier = modifier.then(contentModifier).semantics { if (actionLabel != null) text = AnnotatedString(actionLabel) }) {
             BoxWithConstraints {
-                val metaMax = maxWidth * 0.45f
+                val metaMax = (maxWidth - 24.dp) * 0.45f
                 val stacked = meta != null && (density.fontScale >= 1.5f || measurer.measure(meta, metaStyle,
                     maxLines = 1, softWrap = false).size.width > with(density) { metaMax.toPx() })
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically,
@@ -149,9 +194,9 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
             }
         }
     } else {
-        Surface(shape = shape, color = containerColor, modifier = modifier.then(contentModifier)) {
+        Surface(shape = shape, color = rowColor, modifier = modifier.then(contentModifier)) {
             BoxWithConstraints {
-                val metaMax = maxWidth * 0.45f
+                val metaMax = (maxWidth - 24.dp) * 0.45f
                 val stacked = meta != null && (density.fontScale >= 1.5f || measurer.measure(meta, metaStyle,
                     maxLines = 1, softWrap = false).size.width > with(density) { metaMax.toPx() })
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically,
@@ -165,33 +210,33 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
 internal fun ShopStatCard(label: String, value: String, icon: Int, modifier: Modifier = Modifier,
     enabled: Boolean = true, onClick: (() -> Unit)? = null) {
     val content: @Composable ColumnScope.() -> Unit = {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp))
+                modifier = Modifier.size(20.dp))
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Text(value, style = MaterialTheme.typography.headlineSmall, maxLines = 1)
+        Text(value, style = MaterialTheme.typography.headlineSmall)
     }
     if (onClick != null) Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier.heightIn(min = 88.dp)) {
-        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween, content = content)
+        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
     } else Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier.heightIn(min = 88.dp)) {
-        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween, content = content)
+        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
     }
 }
 
 @Composable
 internal fun ShopActionTile(label: String, icon: Int, modifier: Modifier = Modifier, enabled: Boolean = true,
     primary: Boolean = false, onClick: () -> Unit) {
-    val container = if (primary) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
-    val content = if (primary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+    val container = if (primary) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.surfaceContainerLow
+    val content = if (primary) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface
     Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.medium, color = container,
         contentColor = content,
         modifier = modifier.heightIn(min = 88.dp)) {
-        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
             Text(label, style = MaterialTheme.typography.titleSmall, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
