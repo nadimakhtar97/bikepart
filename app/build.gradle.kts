@@ -23,8 +23,23 @@ android {
     sourceSets.getByName("androidTest").assets.directories.add("$projectDir/schemas")
     sourceSets.getByName("main").assets.directories.add("$projectDir/schemas")
 
+    val releaseStoreFile = providers.environmentVariable("ANDROID_KEYSTORE_PATH").orNull
+    if (releaseStoreFile != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD").get()
+                keyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS").get()
+                keyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseStoreFile != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
