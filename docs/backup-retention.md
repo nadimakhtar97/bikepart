@@ -120,9 +120,57 @@ full-suite attempt must not be reported as passing.
 Before the hold, the focused Drive/replacement/activation regressions passed
 17/17; earlier retention/transport checks passed 9/9; and both final dependency
 mutation regressions passed 2/2. The newest transport-version parsing assertion
-compiled but was not reached in the final full run. After the owner releases the
-devices, complete the full suite and isolate the archival timeout. No additional
-installation, data reset or device inspection is authorized during that hold.
+compiled but was not reached in that interrupted run.
+
+### Validation after device release
+
+The owner subsequently released the hold. A fresh disposable API 37 profile,
+`emulator-5570`, kept the signed-in acceptance emulator and physical S23 intact.
+The archival navigation case passed in isolation without source changes.
+
+The complete 156-case run then finished **141 passed / 15 failed**. All seven
+retention persistence cases, the storage UI matrix and the Drive transport
+checks, including version parsing, passed. During the UI failures, window
+diagnostics identified an Android **System UI not responding** dialog holding
+focus; a native screenshot confirmed it. Thirteen failures reported missing
+window focus, one camera-permission flow timed out and one activity was destroyed.
+The dialog was dismissed and the 15 affected cases were rerun using the same
+installed APKs. Both cart cases, checkout's appearance matrix and the external
+alias scanning workflow passed: **4 follow-ups passed** without source changes.
+The next scanning case was interrupted when another operation set the debug app
+and updated both APK packages on emulator-5570. ActivityManager recorded the
+instrumentation process being killed for `set debug app`, followed by
+`killDueToPackageUpdate`; this is not an established spontaneous app crash.
+
+At the end of that attempt, **11 follow-ups were incomplete** and required an exclusive emulator
+window with the pinned ticket-23 APKs. No further device operations were issued
+after detecting that concurrent installation. The original full-run result
+remains **141/156** and must not be relabelled as a clean run. Real Drive cleanup
+and permission acceptance also remains pending; ticket 22's separate real Drive
+replacement acceptance does not exercise this ticket's deletion protocol.
+
+### Completed integrated validation
+
+After the UI merge completed, the integrated `main` build based on `8744605`
+was tested in a new exclusive API 37 emulator, `emulator-5582`, with four virtual
+CPUs and 4 GB RAM. The full suite completed **156/156 passed, zero failures**, in
+1,174.47 seconds. This includes all previously interrupted follow-ups, all seven
+retention persistence cases, the storage confirmation/recreation/theme/text-size
+matrix, Drive pagination/version/permission transport checks, and the existing
+shop workflows. No source correction was needed for this validation run.
+
+Production/test Kotlin compilation, both APK builds and all seven JVM tests pass.
+Integrated Android lint reports **zero errors and 33 warnings**; the earlier
+pre-merge build had 18 warnings. All 94 generated theme checks pass. The later
+`8b6e759` change expands UI documentation and does not change application code.
+The log is `.scratch/retention-integrated-full.log` and the build record is
+`.scratch/retention-integrated-build.log`.
+
+This clean run completes the outstanding automated validation; the earlier
+interrupted and infrastructure-affected results above remain historical evidence.
+Real Drive cleanup/permission and physical-device/TalkBack acceptance remain
+pending. The signed-in acceptance emulator and physical S23 were not changed
+during this exclusive validation run.
 
 ## Implementation review
 
