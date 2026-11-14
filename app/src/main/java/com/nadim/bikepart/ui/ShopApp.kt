@@ -16,11 +16,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import com.nadim.bikepart.updates.*
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.*
@@ -40,7 +48,19 @@ private val destinations = listOf(
 fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) },
     labelUsb: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess = { context, cancelled ->
         com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
-    }) {
+    }, updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater }) {
+    val updateService = updater()
+    val updateState by updateService.state.collectAsStateWithLifecycle()
+    val updateScope = rememberCoroutineScope()
+    var updateJob by remember { mutableStateOf<Job?>(null) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, updateService) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) updateJob?.cancel()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer); updateJob?.cancel() }
+    }
     val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
     val state by model.state.collectAsStateWithLifecycle()
@@ -131,6 +151,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor),
                     )
                 },
+                floatingActionButton = {
+                    if (route == "main" && state != null && !busy && destination in listOf("Stock", "Carts")) {
+                        ExtendedFloatingActionButton(
+                            onClick = { if (destination == "Stock") addProduct() else newCart() },
+                            icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
+                            text = { Text(if (destination == "Stock") "Add product" else "New sale") },
+                            containerColor = colors.primaryContainer, contentColor = colors.onPrimaryContainer,
+                            modifier = Modifier.imePadding().semantics {
+                                text = AnnotatedString(if (destination == "Stock") "Add product" else "New sale")
+                            })
+                    }
+                },
                 bottomBar = {
                     if (route == "main" && !useRail) NavigationBar(containerColor = colors.surface, tonalElevation = 0.dp) {
                         destinations.forEach { item ->
@@ -168,7 +200,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     }
                     Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.TopCenter) {
                         Column(
-                            Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content),
+                            Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content)
+                                .padding(bottom = if (route == "main" && destination in listOf("Stock", "Carts")) 88.dp else 0.dp),
                             verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
                         ) {
                             val shop = state
@@ -200,8 +233,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     link = { code, target, revision, done -> model.write({ linkBarcode(code, target, expectedAssignmentRevision = revision) }, done) })
                                 "receive-products", "catalog-search" -> {
                                     val forCatalog = route == "catalog-search"
-                                    ShopSecondaryButton(onClick = { scan(if (forCatalog) ScanPurpose.Catalog else ScanPurpose.Receiving, route) }, enabled = !busy) { Text(if (forCatalog) "Scan catalog details" else "Scan for receiving") }
                                     ScanManualPicker(shop, forCatalog, busy, model::readPhoto,
+                                        onScan = { scan(if (forCatalog) ScanPurpose.Catalog else ScanPurpose.Receiving, route) },
                                         select = { if (forCatalog) { selectedId = it; route = "detail" } else receive(it) },
                                         template = { beginCatalog(shop.prefillTemplate(it), "create") }, create = { route = "create" })
                                 }
@@ -231,8 +264,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 "receipt" -> if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
                                     else Text("Receipt unavailable. Return to Sales history.")
                                 "cart-products" -> cartDraft?.let { draft ->
-                                    ShopSecondaryButton(onClick = { scan(ScanPurpose.Sale, "cart-products") }, enabled = !busy) { Text("Scan for sale") }
                                     CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
+                                        onScan = { scan(ScanPurpose.Sale, "cart-products") },
                                         onChange = { model.error.value = null }, add = { productId, pieces ->
                                             model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, productId, pieces) }, { model.openCart(draft.cart.id); route = "cart" })
                                         })
@@ -314,7 +347,17 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         onSales = { route = "sales" }, onSale = { selectedId = it; model.error.value = null; route = "receipt" },
                                         busy = busy)
                                     "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
-                                        StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth)
+                                        StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth, busy = busy,
+                                            onScan = { scan(ScanPurpose.Catalog, "main") },
+                                            onProductAction = { item, action ->
+                                                selectedId = item.id; model.error.value = null
+                                                when (action) {
+                                                    "edit" -> route = "edit"
+                                                    "copy" -> beginCatalog(shop.copyCatalog(item.id), "create")
+                                                    "labels" -> route = "labels"
+                                                    "receive" -> receive(item.id)
+                                                }
+                                            })
                                     }
                                     "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
                                     "More" -> {
@@ -324,7 +367,12 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             onFindingLookups = { route = "finding-lookups" },
                                             onArchived = { route = "archived-products" },
                                             onSales = { route = "sales" },
-                                            onTemplates = { route = "templates" }, onBackups = { route = "backups" })
+                                            onTemplates = { route = "templates" }, onBackups = { route = "backups" },
+                                            updates = { UpdateControls(updateService.installed, updateState) {
+                                                if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                                                    updateJob = updateScope.launch { updateService.check() }
+                                                }
+                                            } })
                                     }
                                 }
                             }

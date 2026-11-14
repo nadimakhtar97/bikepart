@@ -108,14 +108,14 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
 }
 
 @Composable
-internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null) {
+internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null, busy: Boolean = false,
+    onScan: () -> Unit = {}, onProductAction: (Product, String) -> Unit = { _, _ -> }) {
     if (shop.products.none { !it.archived }) {
-        ShopPrimaryButton("Add product", onClick = onAdd)
         if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
         else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
     } else {
-        ShopSectionHeader("Find a product", actionLabel = "Add product", onAction = onAdd)
-        StockSearch(shop, initialHealth, loadPhoto, onOpen)
+        ShopPageHeader("Find a product")
+        StockSearch(shop, initialHealth, loadPhoto, onOpen, busy, onScan, onProductAction)
     }
 }
 @Composable
@@ -226,7 +226,7 @@ internal fun ArchivedProducts(shop: ShopSnapshot, loadPhoto: PhotoLoader, onOpen
 
 @Composable
 internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
-    onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit) {
+    onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit, updates: @Composable () -> Unit) {
     ShopPageHeader("Your shop", "Catalog, appearance and recovery.")
     ShopSectionHeader("Appearance")
     ShopGroup(spacing = ShopSpacing.small) {
@@ -243,6 +243,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
         Text("System follows your phone's light or dark appearance.", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+    updates()
     ShopSectionHeader("Shop")
     ShopListGroup {
         ShopListRow("Sales history", supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,

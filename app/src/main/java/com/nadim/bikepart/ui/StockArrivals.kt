@@ -12,13 +12,14 @@ import com.nadim.bikepart.shop.*
 
 @Composable
 internal fun ScanManualPicker(shop: ShopSnapshot, catalog: Boolean, busy: Boolean, loadPhoto: PhotoLoader,
-    select: (String) -> Unit, template: (String) -> Unit = {}, create: () -> Unit = {}) {
+    select: (String) -> Unit, template: (String) -> Unit = {}, create: () -> Unit = {}, onScan: () -> Unit = {}) {
     var query by rememberSaveable { mutableStateOf("") }
     var limit by rememberSaveable(query) { mutableIntStateOf(30) }
     val search = remember(shop) { CatalogSearch(shop) }
     val results = remember(search, query) { search.find(ProductFilter(query = query)) }
     val templates = if (catalog) shop.templates.filter { !it.retired && it.catalog.title.contains(query, ignoreCase = true) } else emptyList()
-    ShopSearchField(query, { query = it }, "Search products manually", enabled = !busy)
+    ShopSearchField(query, { query = it }, "Search products manually", enabled = !busy,
+        trailing = { ShopScanButton(if (catalog) "Scan catalog details" else "Scan for receiving", !busy, onScan) })
     if (catalog) ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = create, enabled = !busy) { Text("Continue new product") }
     if (results.isEmpty()) ShopEmptyState("No matching products", "Try a title, SKU, fitment or location.", com.nadim.bikepart.R.drawable.ic_stock)
     else ShopListGroup {

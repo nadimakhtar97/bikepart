@@ -20,7 +20,7 @@ class CartWorkflowTest {
     private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     private fun click(text: String) {
         val node = compose.onNode(hasText(text) and hasClickAction())
-        if (text in listOf("Carts", "Home", "Back")) node.performClick() else node.performScrollTo().performClick()
+        if (text in listOf("Carts", "Home", "Back", "New sale")) node.performClick() else node.performScrollTo().performClick()
     }
     private fun snapshot() = runBlocking { Shop.open(context).use { it.snapshot() } }
     private fun waitSaved(customer: String) { compose.waitUntil(15_000) { snapshot().carts.any { it.customer == customer } } }
