@@ -10,9 +10,15 @@ import androidx.camera.core.Preview
 import androidx.camera.core.CameraState
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -48,7 +54,18 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
     LaunchedEffect(Unit) { if (!granted) permission.launch(Manifest.permission.CAMERA) }
     if (!granted) return
     val previewView = remember { PreviewView(context).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE } }
-    AndroidView(factory = { previewView }, modifier = Modifier.fillMaxWidth().height(240.dp).clipToBounds())
+    val previewShape = RoundedCornerShape(16.dp)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.fillMaxWidth().height(240.dp).clip(previewShape)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, previewShape)) {
+            AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize().clipToBounds())
+            // A framing guide keeps the label inside the recogniser's useful area.
+            Box(Modifier.align(Alignment.Center).fillMaxWidth(.7f).fillMaxHeight(.55f)
+                .border(3.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)))
+        }
+        Text("Align the shared label inside the frame. Codes are read on this phone.",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
     DisposableEffect(owner, previewView) {
         val disposed = AtomicBoolean(false)
         val processing = AtomicBoolean(false)

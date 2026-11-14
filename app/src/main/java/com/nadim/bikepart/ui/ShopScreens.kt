@@ -86,13 +86,15 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
         ShopListGroup {
             ShopListRow("Low stock: $lowStock ${if (lowStock == 1) "product" else "products"}",
                 supporting = "Positive stock at or below the set threshold",
-                icon = R.drawable.ic_warning, onClick = { onStock(StockHealth.LowStock) })
+                leading = { ShopStatusIconTile(R.drawable.ic_warning, ShopStatusTone.Warning) },
+                onClick = { onStock(StockHealth.LowStock) })
             ShopListRow("Out of stock: $outOfStock ${if (outOfStock == 1) "product" else "products"}",
                 supporting = "No pieces currently on hand",
-                icon = R.drawable.ic_no_stock, onClick = { onStock(StockHealth.OutOfStock) })
+                leading = { ShopStatusIconTile(R.drawable.ic_no_stock, ShopStatusTone.Danger) },
+                onClick = { onStock(StockHealth.OutOfStock) })
         }
     }
-    ShopSectionHeader("Recent orders", actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
+    ShopSectionHeader("Recent sales", actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
     if (recentSales.isEmpty()) Text("Completed cash sales will appear here.", style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     else ShopListGroup {
@@ -234,7 +236,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
                     .selectable(appearance == mode, enabled = !busy, role = Role.RadioButton, onClick = { onAppearance(mode) })
                     .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = appearance == mode, onClick = null)
-                    Text(mode.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.content))
+                    Text(mode.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = ShopSpacing.medium))
                 }
             }
         }
