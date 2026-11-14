@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">bikepart</string>
+    <string name="search_receipts">Search receipts or customer</string>
+    <string name="all_time">All time</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="this_week">This week</string>
+    <string name="this_month">This month</string>
+    <string name="date_range">Date range</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply_dates">Apply dates</string>
+    <string name="no_matching_sales">No matching sales</string>
+    <string name="sales_filter_hint">Try another receipt, customer or date range.</string>
+    <string name="clear_sales_filters">Clear sales filters</string>
+    <plurals name="completed_sales">
+        <item quantity="one">%d completed cash sale</item>
+        <item quantity="other">%d completed cash sales</item>
+    </plurals>
+    <plurals name="sales_day_summary">
+        <item quantity="one">%1$d sale · ₹%2$s</item>
+        <item quantity="other">%1$d sales · ₹%2$s</item>
+    </plurals>
+    <plurals name="product_lines">
+        <item quantity="one">%d product line</item>
+        <item quantity="other">%d product lines</item>
+    </plurals>
 </resources>

@@ -3,7 +3,8 @@ package com.nadim.bikepart.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -266,7 +268,38 @@ internal fun ShopSearchField(value: String, onValueChange: (String) -> Unit, lab
     OutlinedTextField(value, onValueChange, enabled = enabled, label = { Text(label) }, singleLine = true,
         leadingIcon = { Icon(painterResource(com.nadim.bikepart.R.drawable.ic_search), contentDescription = null) },
         supportingText = if (supporting == null) null else ({ Text(supporting) }),
-        trailingIcon = trailing, shape = MaterialTheme.shapes.medium, modifier = modifier.fillMaxWidth())
+        trailingIcon = trailing, shape = MaterialTheme.shapes.large,
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            unfocusedBorderColor = Color.Transparent), modifier = modifier.fillMaxWidth())
+}
+
+@Composable
+internal fun ShopScanButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
+        .semantics { text = AnnotatedString(label) }) {
+        Icon(painterResource(com.nadim.bikepart.R.drawable.ic_qr_code_scanner), contentDescription = null)
+    }
+}
+
+internal data class ShopMenuAction(val label: String, val icon: Int, val onClick: () -> Unit)
+
+@Composable
+internal fun ShopOverflowMenu(label: String, actions: List<ShopMenuAction>, enabled: Boolean = true) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }, enabled = enabled,
+            modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
+                .semantics { contentDescription = label }) {
+            Icon(painterResource(com.nadim.bikepart.R.drawable.ic_more_vert), contentDescription = null)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            actions.forEach { action -> DropdownMenuItem(text = { Text(action.label) },
+                leadingIcon = { Icon(painterResource(action.icon), contentDescription = null) },
+                enabled = enabled, onClick = { expanded = false; action.onClick() }) }
+        }
+    }
 }
 
 @Composable
