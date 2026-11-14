@@ -74,3 +74,38 @@ reconciliation. Manual physical-phone, TalkBack, Accessibility Scanner, Voice Ac
 and Switch Access checks were not performed. No real GitHub release was published
 and repository signing secrets were not accessed during local validation. The
 signed two-APK upgrade/installer acceptance path belongs to later tickets.
+
+## Review-fix verification
+
+The review pass added a native indeterminate Material linear progress indicator to
+Checking while retaining its polite live-region status and disabled check action.
+The existing real Settings workflow first failed because no indeterminate progress
+semantics node existed, then passed with the indicator. The appearance workflow
+now holds Checking long enough to assert its progress semantics and capture it in
+Light/Dark at 100%/200% font scale. The root reviewer inspected all four Checking
+captures and found the indicator, status and action readable with safe navigation
+clearance. These join the earlier eligible-release captures under
+`.scratch/issue-3-visual/updates-*-checking.png`.
+
+Publication now requires both a push event and a tag ref. Local evaluation of the
+actual YAML job condition through GitHub's `@actions/expressions` 0.3.61 parser and
+evaluator passed five independently specified cases: manual dispatch on a branch
+or tag skips publishing; branch pushes and pull requests skip publishing; a tag
+push enables publishing. `actionlint` also passes. No real workflow was dispatched.
+The publisher contract still passes all three scenarios after extracting a shared
+valid-release fixture; each scenario retains its independent GitHub behavior and
+assertions. The APK-derived metadata contract also passes.
+
+The review snapshot passes debug/test APK builds, debug/release Kotlin compilation,
+all 9 JVM unit tests, Android lint in both variants (0 errors, 30 existing warnings
+each), and all 94 theme checks. Review logs and the expression-evaluation script
+are preserved locally under `.scratch/issue-3-validation-logs/review-*`; the final
+app and instrumentation APKs are under `.scratch/issue-3-final/`.
+
+The post-fix device run passed all 3 update workflows and 8 of 10 existing shop
+workflows against the accumulated disposable fixture database. The existing
+fitment/save and inline-category cases timed out in that used state; each passed
+when rerun alone after clearing only the disposable emulator package data. These
+reruns confirm the failures depend on shared test fixtures; no shop behavior or
+shop tests were changed. Both original failures and clean-state results are
+retained in the review logs. The pre-review clean full run remains 21/21 passing.
