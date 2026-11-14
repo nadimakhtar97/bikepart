@@ -3,7 +3,7 @@
 The `App release` GitHub Actions workflow runs the configured unit tests and lints
 the release variant, then builds a signed APK and Android App Bundle using Java 25
 and Android SDK 37.
-Pushing a version tag publishes both files and SHA-256 checksums to GitHub Releases.
+Pushing a version tag publishes both files, SHA-256 checksums and APK-derived update metadata to GitHub Releases.
 Running the workflow manually builds downloadable artifacts without publishing.
 This workflow does not upload to Google Play or run device instrumentation tests.
 
@@ -51,8 +51,68 @@ git push origin v1.0
 
 For later releases, replace `v1.0` with the new version. The tag labels the release;
 the APK's version comes from the Gradle configuration and is not changed by the tag.
-Successful tag builds publish `bikepart.apk`, `bikepart.aab` and `SHA256SUMS.txt`.
+Successful tag builds publish `bikepart.apk`, `bikepart.aab`, `SHA256SUMS.txt` and `update.json`.
 An existing release is never overwritten. Use a new version tag for changed binaries.
 
 To verify signing before publishing, open Actions → App release → Run workflow,
 select `main`, and download the `bikepart-release` artifact after the run succeeds.
+
+
+## Update discovery contract
+
+`tools/release/metadata.py` reads the actual built APK with Android `aapt dump
+badging`, hashes its bytes and writes the version 1 `update.json` contract:
+
+| Field | Source |
+| --- | --- |
+| `formatVersion` | `1` |
+| `packageId` | APK package name (`com.nadim.bikepart`) |
+| `versionCode`, `versionName` | APK manifest values; tags do not order Android updates |
+| `minSdk` | APK minimum Android API |
+| `apkAssetName` | `bikepart.apk` |
+| `sizeBytes` | Exact APK file size |
+| `sha256` | Lowercase SHA-256 of the APK bytes |
+
+The existing keystore/signing configuration remains unchanged. Preparation verifies
+the APK signature with `apksigner`, generates metadata, tests that contract against
+the APK and retains the existing APK/App Bundle checksums. A checksum detects byte
+changes; it does not establish signing identity. Continue verifying the signing
+certificate against the version already distributed to staff before rollout.
+
+Publication creates a **draft** release and uploads all four files. The publisher
+then downloads the staged assets, compares every byte by SHA-256 and validates the
+metadata/checksum contract again before clearing the draft flag. Failed preparation
+creates no release; failed upload/validation leaves an undiscoverable draft. A rerun
+never replaces assets in an existing draft or published release. Investigate a
+failed draft and use a new version tag for a new publication attempt. Manual builds
+remain artifact-only.
+
+More > Application updates shows the installed version and a manual check. The
+app anonymously pages public stable releases from `nadimakhtar97/bikepart`, skips
+drafts/prereleases and incomplete or inconsistent assets, and selects the highest
+compatible Android version code above the installed version. All four named assets
+must be uploaded in the same release path; metadata must agree with APK size,
+checksums and any GitHub-provided asset digest. Release notes become a short
+plain-text summary. GitHub's latest label and version tag text do not decide
+eligibility.
+
+Network responses are limited to 1 MiB, connect/read timeouts to 10 seconds and a
+check to 30 seconds. Discovery stops safely rather than guessing if more than
+20 pages are required. Concurrent checks coalesce. Leaving the foreground cancels
+the manual check; there are no scheduled checks, prompts, downloads or installation
+actions in this first discovery slice. Failures appear only in update controls and
+never modify stock, sales, saved carts, shop schema or backups.
+
+Local contract checks (substitute your APK and build-tools paths):
+
+```powershell
+python tools/release/test_metadata.py app/build/outputs/apk/release/app-release.apk C:/Android/Sdk/build-tools/36.0.0/aapt.exe
+python tools/release/test_publish.py
+```
+
+Instrumentation `UpdateDiscoveryTest` uses the production HTTP implementation with
+a loopback server for pagination, network failures, timeouts and rate limits.
+`UpdateWorkflowTest` exercises Settings with real Room storage, verifies unchanged
+shop snapshots, foreground cancellation, and captures light/dark screens at normal
+and 200% font scale. Only debug builds allow cleartext loopback traffic for these
+tests; release networking remains HTTPS.

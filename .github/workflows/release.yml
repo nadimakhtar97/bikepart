@@ -63,8 +63,12 @@ jobs:
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk dist/bikepart.apk
           cp app/build/outputs/bundle/release/app-release.aab dist/bikepart.aab
-          cd dist
-          sha256sum bikepart.apk bikepart.aab > SHA256SUMS.txt
+          build_tools=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$build_tools/apksigner" verify --verbose dist/bikepart.apk
+          python3 tools/release/metadata.py dist/bikepart.apk "$build_tools/aapt" dist/update.json
+          python3 tools/release/test_metadata.py dist/bikepart.apk "$build_tools/aapt"
+          python3 tools/release/test_publish.py
+          (cd dist && sha256sum bikepart.apk bikepart.aab > SHA256SUMS.txt)
 
       - name: Upload release files
         uses: actions/upload-artifact@v4
@@ -87,16 +91,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - uses: actions/download-artifact@v4
         with:
           name: bikepart-release
           path: dist
 
-      - name: Create release with APK, App Bundle and checksums
+      - name: Validate draft assets and publish release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          # Existing releases remain immutable; reruns do not replace published binaries.
-          gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Bikepart $RELEASE_TAG"
+          python3 tools/release/publish.py dist "$RELEASE_TAG"
