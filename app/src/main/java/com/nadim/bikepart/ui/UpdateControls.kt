@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +24,10 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, check: 
             verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             when (state) {
                 UpdateState.Idle -> Text(stringResource(R.string.update_idle))
-                UpdateState.Checking -> Text(stringResource(R.string.update_checking_detail))
+                UpdateState.Checking -> {
+                    Text(stringResource(R.string.update_checking_detail))
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
                 UpdateState.NoUpdate -> Text(stringResource(R.string.update_none))
                 is UpdateState.Failed -> Text(stringResource(when (state.reason) {
                     UpdateFailure.Connection -> R.string.update_failed

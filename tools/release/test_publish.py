@@ -7,6 +7,15 @@ import unittest
 from publish import publish
 
 
+def prepare_valid_release(dist):
+    for name in ('bikepart.apk', 'bikepart.aab'):
+        (dist / name).write_bytes(b'signed artifact')
+    digest = hashlib.sha256(b'signed artifact').hexdigest()
+    (dist / 'SHA256SUMS.txt').write_text(f'{digest}  bikepart.apk\n{digest}  bikepart.aab\n')
+    (dist / 'update.json').write_text(json.dumps(dict(formatVersion=1, packageId='com.nadim.bikepart',
+        versionCode=2, versionName='2', minSdk=33, apkAssetName='bikepart.apk', sizeBytes=15, sha256=digest)))
+
+
 class PublicationContract(unittest.TestCase):
     def test_incomplete_assets_never_create_a_public_release(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -18,12 +27,7 @@ class PublicationContract(unittest.TestCase):
     def test_failed_upload_validation_leaves_draft_and_existing_binaries_untouched(self):
         with tempfile.TemporaryDirectory() as directory:
             dist = pathlib.Path(directory)
-            for name in ('bikepart.apk', 'bikepart.aab'):
-                (dist / name).write_bytes(b'signed artifact')
-            digest = hashlib.sha256(b'signed artifact').hexdigest()
-            (dist / 'SHA256SUMS.txt').write_text(f'{digest}  bikepart.apk\n{digest}  bikepart.aab\n')
-            (dist / 'update.json').write_text(json.dumps(dict(formatVersion=1, packageId='com.nadim.bikepart',
-                versionCode=2, versionName='2', minSdk=33, apkAssetName='bikepart.apk', sizeBytes=15, sha256=digest)))
+            prepare_valid_release(dist)
             remote = {'existing': b'previous binary'}
             def github(command):
                 if command[2] == 'create':
@@ -51,12 +55,7 @@ class PublicationContract(unittest.TestCase):
     def test_validated_uploaded_assets_become_public_together(self):
         with tempfile.TemporaryDirectory() as directory:
             dist = pathlib.Path(directory)
-            for name in ('bikepart.apk', 'bikepart.aab'):
-                (dist / name).write_bytes(b'signed artifact')
-            checksum = hashlib.sha256(b'signed artifact').hexdigest()
-            (dist / 'SHA256SUMS.txt').write_text(f'{checksum}  bikepart.apk\n{checksum}  bikepart.aab\n')
-            (dist / 'update.json').write_text(json.dumps(dict(formatVersion=1, packageId='com.nadim.bikepart',
-                versionCode=2, versionName='2', minSdk=33, apkAssetName='bikepart.apk', sizeBytes=15, sha256=checksum)))
+            prepare_valid_release(dist)
             remote = {}
             def github(command):
                 if command[2] == 'create':

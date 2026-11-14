@@ -3,6 +3,8 @@ package com.nadim.bikepart
 import android.content.Context
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.*
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -46,6 +48,8 @@ class UpdateWorkflowTest {
             compose.onNodeWithText("Installed version: 1.0 (1)").performScrollTo().assertIsDisplayed()
             click("Check for updates"); await("Checking for updates…")
             compose.onNodeWithText("Checking for updates…").performScrollTo().assertIsNotEnabled()
+            compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate))
+                .performScrollTo().assertIsDisplayed()
             finish.complete(Unit)
             await("Couldn't check for updates. Check your connection and try again.")
             click("Retry update check"); await("No compatible updates available.")
@@ -68,10 +72,13 @@ class UpdateWorkflowTest {
         val originalScale = android.provider.Settings.System.getFloat(context.contentResolver, android.provider.Settings.System.FONT_SCALE, 1f)
         val originalAppearance = snapshot().appearance
         val visibleState = kotlinx.coroutines.flow.MutableStateFlow<UpdateState>(UpdateState.Idle)
+        var finishCheck = CompletableDeferred<Unit>()
         val updater = object : AppUpdater {
             override val installed = InstalledApp(context.packageName, 1, "1.0", 33)
             override val state: kotlinx.coroutines.flow.StateFlow<UpdateState> = visibleState
             override suspend fun check() {
+                visibleState.value = UpdateState.Checking
+                finishCheck.await()
                 visibleState.value = UpdateState.Available(AvailableUpdate(2, 2, "1.1 Workshop improvements", 15_728_640,
                     "Faster stock searches and clearer saved cart details. Your stock, sales and unfinished bills stay available while you check for updates.",
                     "https://github.com/nadimakhtar97/bikepart/releases/download/v2/bikepart.apk", "a".repeat(64), 33))
@@ -90,9 +97,16 @@ class UpdateWorkflowTest {
                 runBlocking { Shop.open(context).use { it.setAppearance(mode) } }
                 val before = snapshot()
                 visibleState.value = UpdateState.Idle
+                finishCheck = CompletableDeferred()
                 ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                     scenario.onActivity { it.setContent { ShopApp(updater = { updater }) } }
                     await("Stock"); click("More"); click("Check for updates")
+                    await("Checking for updates…")
+                    compose.onNodeWithText("Checking for updates…").performScrollTo().assertIsNotEnabled()
+                    compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate))
+                        .performScrollTo().assertIsDisplayed()
+                    capture("updates-${mode.name.lowercase()}-$scale-checking")
+                    finishCheck.complete(Unit)
                     await("Version 1.1 Workshop improvements available")
                     compose.onNodeWithText("Version 1.1 Workshop improvements available").performScrollTo().assertIsDisplayed()
                     capture("updates-${mode.name.lowercase()}-$scale-summary")
