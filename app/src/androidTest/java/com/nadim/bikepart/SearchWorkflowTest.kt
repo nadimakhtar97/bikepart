@@ -40,8 +40,15 @@ class SearchWorkflowTest {
             appearance
         } }
         fun shell(command: String) { instrumentation.uiAutomation.executeShellCommand(command).use { android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() } }
-        fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
-        fun click(text: String) { compose.onNodeWithText(text).performScrollTo().performClick() }
+        fun await(text: String) {
+            try { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
+            catch (failure: Throwable) { throw AssertionError("Waiting for $text\n" + compose.onAllNodes(isRoot()).onFirst().printToString(), failure) }
+        }
+        fun click(text: String) {
+            // Tap the visible product title, rather than the centre of its tall
+            // merged row, which can sit beneath the FAB at 200% text size.
+            compose.onNodeWithText(text, useUnmergedTree = text == title).performScrollTo().performClick()
+        }
         fun choose(label: String, choice: String) {
             androidx.test.espresso.Espresso.closeSoftKeyboard()
             click("$label: Any")
@@ -72,8 +79,20 @@ class SearchWorkflowTest {
                 choose("Make", makeName)
                 choose("Model", "$makeName · Touring")
                 choose("Location", locationName)
+                choose("Decimal field", "Diameter · mm · $categoryName")
+                compose.onNodeWithText("Exact decimal value").performTextInput("1e3")
+                androidx.test.espresso.Espresso.closeSoftKeyboard()
+                androidx.test.espresso.Espresso.pressBack()
+                compose.waitUntil(15_000) { compose.onAllNodesWithText("Catalog filters").fetchSemanticsNodes().isEmpty() }
+                await("Enter a plain exact decimal, without grouping or exponent")
+                click("More filters")
+                compose.onNodeWithText("Exact decimal value").performScrollTo().performTextReplacement("8.000")
+                androidx.test.espresso.Espresso.closeSoftKeyboard()
+                click("Show results")
+                compose.waitUntil(15_000) { compose.onAllNodesWithText("Catalog filters").fetchSemanticsNodes().isEmpty() }
                 compose.onNodeWithText(title).performScrollTo().assertIsDisplayed()
                 click(title)
+                await("Low-stock threshold")
                 compose.onNodeWithText("Low-stock threshold").performScrollTo().performTextInput("-1")
                 click("Save threshold"); await("Low-stock threshold must be a nonnegative whole number")
                 compose.onNodeWithText("Low-stock threshold").performScrollTo().performTextReplacement("5")
@@ -102,6 +121,7 @@ class SearchWorkflowTest {
                 await("1 matching products"); click(title)
                 compose.onNodeWithText("Low-stock threshold").performScrollTo().performTextClearance()
                 click("Save threshold"); await("Threshold: Not set")
+                compose.waitUntil(15_000) { compose.onAllNodes(hasText("Back") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText("Back").performClick(); await("Search products")
                 click("Clear search and filters")
                 compose.onNodeWithText("Search products").performScrollTo().performTextInput(token)

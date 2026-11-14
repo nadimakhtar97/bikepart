@@ -679,6 +679,34 @@ Source: [Adapt widgets across form factors](https://developer.android.com/design
   host-specific widget guidance; the shop application's adopted theme remains
   the source for its in-app colors.
 
+## Screenshot-inspired refinement
+
+Approved 2026-11-14 in the [UI refinement brief](ui-refinement-brief.md): retain
+Now in Android Default tokens while adapting the user's shop-app screenshots
+for quieter search surfaces, creation FABs, product overflow actions, filter
+sheets and chronological sales logs. The screenshots supplement the existing
+reference; their payment/order model does not replace the shop's cart/cash-sale
+model.
+
+- Stock uses one labelled Add product FAB; Carts uses one labelled New sale FAB.
+  Place these through Scaffold, respect keyboard/safe insets and leave scroll
+  clearance so the final row remains reachable above the FAB.
+- Stock, cart selection and receiving/catalog search combine manual entry with
+  a trailing contextual scan action. Keep manual fallback and scanner return
+  state. Primary Save and Checkout actions remain visible.
+- Stock rows open details on tap. Their labelled three-dot menu offers edit,
+  receiving, copying and label shortcuts without removing full detail actions.
+- Stock-health/category chips expose common selections; advanced filters use a
+  scrollable sheet. Retain every existing lookup/decimal filter, active selection
+  summaries, validation and explicit clearing.
+- Sales history groups receipts newest-first by device-local calendar day, with
+  Today / Yesterday / date headings, count and exact whole-rupee daily total.
+  Totals must support the sum of multiple maximum-value receipts without overflow.
+  Date ranges include both endpoints. Search matches receipt, cart or customer.
+  Completed cash receipts remain immutable.
+- Bundle official Material Symbols locally and record provenance under
+  `third_party`; retain a consistent icon family and semantic theme colors.
+
 ## Verification
 
 Run Kotlin compilation during changes and the focused `ShopWorkflowTest` through

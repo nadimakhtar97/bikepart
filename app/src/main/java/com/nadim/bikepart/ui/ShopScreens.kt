@@ -108,14 +108,14 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
 }
 
 @Composable
-internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null) {
+internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null, busy: Boolean = false,
+    onScan: () -> Unit = {}, onProductAction: (Product, String) -> Unit = { _, _ -> }) {
     if (shop.products.none { !it.archived }) {
-        ShopPrimaryButton("Add product", onClick = onAdd)
         if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
         else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
     } else {
-        ShopSectionHeader("Find a product", actionLabel = "Add product", onAction = onAdd)
-        StockSearch(shop, initialHealth, loadPhoto, onOpen)
+        ShopPageHeader("Find a product")
+        StockSearch(shop, initialHealth, loadPhoto, onOpen, busy, onScan, onProductAction)
     }
 }
 @Composable

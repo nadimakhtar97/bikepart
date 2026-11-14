@@ -23,7 +23,6 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 @Composable
 internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOpen: (String) -> Unit) {
     ShopPageHeader("Unfinished carts", "Carts do not reserve stock. Prices stay quoted until a line is removed.")
-    ShopPrimaryButton("New sale", enabled = !busy, onClick = onNew)
     if (shop.carts.isEmpty()) {
         ShopEmptyState("No unfinished carts", "Start a sale to create an automatically saved customer bill.", R.drawable.ic_carts)
         return
@@ -131,7 +130,7 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
 
 @Composable
 internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: ShopError?, loadPhoto: PhotoLoader,
-    onChange: () -> Unit, add: (String, String) -> Unit) {
+    onChange: () -> Unit, add: (String, String) -> Unit, onScan: () -> Unit = {}) {
     var query by rememberSaveable { mutableStateOf("") }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var quantity by rememberSaveable { mutableStateOf("1") }
@@ -161,7 +160,8 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
         if (error != null) FormError(error.message)
         ShopPrimaryButton("Add to cart", enabled = !busy, onClick = { add(product.id, quantity) })
     } }
-    ShopSearchField(query, { query = it; selected = null; onChange() }, "Search products for cart", enabled = !busy)
+    ShopSearchField(query, { query = it; selected = null; onChange() }, "Search products for cart", enabled = !busy,
+        trailing = { ShopScanButton("Scan for sale", !busy, onScan) })
     if (results.isEmpty()) Text("No matching products", style = MaterialTheme.typography.bodyMedium)
     else {
         ShopSectionHeader("Products", supporting = "${results.size} matching")
