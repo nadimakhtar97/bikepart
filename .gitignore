@@ -17,7 +17,8 @@ node_modules/
 .kotlin/
 /.scratch/
 /.idea/
-/.agents/
+/.agents/*
+!/.agents/skills/
 /skills-lock.json
 *.jks
 *.keystore
