@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-const source=fs.readFileSync('app/src/main/java/com/nadim/bikepart/ui/theme/Theme.kt','utf8');
+const source=fs.readFileSync('app/src/main/java/com/nadim/bikepart/ui/theme/Theme.kt','utf8').replace(/\r\n/g,'\n');
 const reference=JSON.parse(fs.readFileSync('tools/theme/figma-tokens.json','utf8'));
 const luminance = hex => {
  const channels=hex.match(/../g).map(c=>parseInt(c,16)/255).map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);

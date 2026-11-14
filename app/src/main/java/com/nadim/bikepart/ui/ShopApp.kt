@@ -23,6 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import com.nadim.bikepart.updates.*
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.*
@@ -42,7 +48,19 @@ private val destinations = listOf(
 fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) },
     labelUsb: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess = { context, cancelled ->
         com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
-    }) {
+    }, updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater }) {
+    val updateService = updater()
+    val updateState by updateService.state.collectAsStateWithLifecycle()
+    val updateScope = rememberCoroutineScope()
+    var updateJob by remember { mutableStateOf<Job?>(null) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, updateService) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) updateJob?.cancel()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer); updateJob?.cancel() }
+    }
     val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
     val state by model.state.collectAsStateWithLifecycle()
@@ -349,7 +367,12 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             onFindingLookups = { route = "finding-lookups" },
                                             onArchived = { route = "archived-products" },
                                             onSales = { route = "sales" },
-                                            onTemplates = { route = "templates" }, onBackups = { route = "backups" })
+                                            onTemplates = { route = "templates" }, onBackups = { route = "backups" },
+                                            updates = { UpdateControls(updateService.installed, updateState) {
+                                                if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                                                    updateJob = updateScope.launch { updateService.check() }
+                                                }
+                                            } })
                                     }
                                 }
                             }
