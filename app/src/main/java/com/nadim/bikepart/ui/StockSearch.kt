@@ -28,8 +28,14 @@ private data class CatalogResult(val snapshot: ShopSnapshot, val filter: Product
 
 @Composable
 internal fun StockHealthIndicator(product: Product) {
-    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        Icon(painterResource(R.drawable.ic_stock), contentDescription = null)
+    // The icon follows the state instead of repeating a neutral stock glyph.
+    val icon = when (product.stockHealth) {
+        StockHealth.LowStock -> R.drawable.ic_warning
+        StockHealth.OutOfStock -> R.drawable.ic_no_stock
+        StockHealth.InStock -> R.drawable.ic_stock
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Icon(painterResource(icon), contentDescription = null)
         Text(product.stockHealth.label, style = MaterialTheme.typography.bodyMedium)
     }
 }

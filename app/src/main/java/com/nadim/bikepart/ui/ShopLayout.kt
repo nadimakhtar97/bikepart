@@ -125,16 +125,22 @@ internal fun ShopIconTile(icon: Int, modifier: Modifier = Modifier, size: Dp = 4
     }
 }
 
+/** Keeps one tone-to-role mapping for chips and status tiles. */
 @Composable
-internal fun ShopStatusChip(label: String, tone: ShopStatusTone = ShopStatusTone.Neutral, modifier: Modifier = Modifier) {
+private fun shopStatusColors(tone: ShopStatusTone): Pair<Color, Color> {
     val colors = MaterialTheme.colorScheme
-    val (container, content) = when (tone) {
+    return when (tone) {
         ShopStatusTone.Neutral -> colors.surfaceContainerHighest to colors.onSurfaceVariant
         ShopStatusTone.Accent -> colors.secondaryContainer to colors.onSecondaryContainer
         ShopStatusTone.Warning -> colors.secondaryFixed to colors.onSecondaryFixedVariant
         ShopStatusTone.Danger -> colors.errorContainer to colors.onErrorContainer
         ShopStatusTone.Success -> colors.tertiaryContainer to colors.onTertiaryContainer
     }
+}
+
+@Composable
+internal fun ShopStatusChip(label: String, tone: ShopStatusTone = ShopStatusTone.Neutral, modifier: Modifier = Modifier) {
+    val (container, content) = shopStatusColors(tone)
     Surface(modifier.heightIn(min = 24.dp), shape = RoundedCornerShape(8.dp), color = container, contentColor = content) {
         Box(Modifier.padding(horizontal = 8.dp, vertical = 2.dp), contentAlignment = Alignment.Center) {
             Text(label, style = MaterialTheme.typography.labelSmall)
@@ -143,6 +149,16 @@ internal fun ShopStatusChip(label: String, tone: ShopStatusTone = ShopStatusTone
 }
 
 internal enum class ShopStatusTone { Neutral, Accent, Warning, Danger, Success }
+
+/**
+ * An icon tile that carries the same status tone as [ShopStatusChip], so attention
+ * rows read at a glance without relying on copy alone.
+ */
+@Composable
+internal fun ShopStatusIconTile(icon: Int, tone: ShopStatusTone, modifier: Modifier = Modifier) {
+    val (container, content) = shopStatusColors(tone)
+    ShopIconTile(icon, modifier, container = container, contentColor = content)
+}
 
 /**
  * One product, order or settings row: leading icon/photo, title and supporting

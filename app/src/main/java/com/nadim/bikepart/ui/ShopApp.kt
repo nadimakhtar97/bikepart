@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,7 +11,11 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -96,9 +101,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val selectedCart = state?.carts?.find { it.id == selectedId }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
         val colors = MaterialTheme.colorScheme
+        // Material 3 scroll behaviour: the bar keeps its height, gains a tonal surface
+        // once content has scrolled under it, and resets when the screen changes.
+        // contentOffset accumulates negative consumed.y as content moves under the bar.
+        val topBarScroll = TopAppBarDefaults.pinnedScrollBehavior()
+        val scrolled by remember { derivedStateOf { topBarScroll.state.contentOffset < 0f } }
+        val topBarColor by animateColorAsState(
+            if (scrolled) colors.surfaceContainer else colors.surface, label = "topAppBarColor")
+        LaunchedEffect(route, destination, selectedId) { topBarScroll.state.contentOffset = 0f }
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val useRail = maxWidth >= 600.dp && route == "main"
             Scaffold(
+                modifier = Modifier.nestedScroll(topBarScroll.nestedScrollConnection),
                 containerColor = colors.surface,
                 topBar = {
                     if (route != "main") CenterAlignedTopAppBar(
@@ -114,7 +128,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         navigationIcon = {
                             ShopBackButton(onClick = { back() }, enabled = !busy)
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface),
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor),
                     )
                 },
                 bottomBar = {
@@ -158,7 +172,19 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
                         ) {
                             val shop = state
-                            if (shop == null) { Text(error?.message ?: "Opening your shop…"); return@Column }
+                            if (shop == null) {
+                                val openingError = error?.message
+                                if (openingError != null) Text(openingError)
+                                else Column(Modifier.fillMaxWidth().padding(top = ShopSpacing.section),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+                                    CircularProgressIndicator()
+                                    Text("Opening your shop…", style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                                }
+                                return@Column
+                            }
                             when (route) {
                                 "backups" -> {
                                     DriveBackupControls(model, shop.revision)

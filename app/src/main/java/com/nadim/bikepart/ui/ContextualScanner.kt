@@ -35,6 +35,8 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     }
     Text("Scan purpose: ${purpose.label}", style = MaterialTheme.typography.titleMedium)
     Text("Shared labels identify a product. Choose an action and enter pieces yourself. Scanning does not change stock.")
+    Text("Camera frames are read on this phone and are not uploaded.",
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; manual() }, enabled = !busy) { Text("Manual search") }
     if (running) key(attempt) {
         val currentAttempt = attempt
@@ -57,7 +59,8 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
         }
         when (val target = resolution?.getOrNull()) {
             is ScanTarget.StockedProduct -> ShopSection("Scanned product") {
-                Text(target.product.title, style = MaterialTheme.typography.titleMedium)
+                Text(target.product.title, style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 Text(target.product.sku)
                 Text("On hand: ${indianNumber(target.product.quantity)} pieces")
                 when (purpose) {

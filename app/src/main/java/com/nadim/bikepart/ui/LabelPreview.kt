@@ -12,6 +12,7 @@ import android.text.TextUtils
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withTranslation
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -22,6 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.semantics.Role
@@ -29,6 +31,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 import com.nadim.bikepart.ui.theme.ShopSpacing
@@ -120,8 +123,10 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
         val artwork = remember(bitmap) { bitmap.asImageBitmap() }
         ShopSection("Label preview") {
             Text("${selected.label} · $previewCopies copies")
+            val artworkShape = MaterialTheme.shapes.small
             Image(artwork, contentDescription = "Product label QR: $payload", filterQuality = FilterQuality.None,
-                modifier = Modifier.fillMaxWidth().aspectRatio(selected.widthMm.toFloat() / selected.heightMm))
+                modifier = Modifier.fillMaxWidth().aspectRatio(selected.widthMm.toFloat() / selected.heightMm)
+                    .clip(artworkShape).border(1.dp, MaterialTheme.colorScheme.outline, artworkShape))
             Text(product.title, style = MaterialTheme.typography.titleMedium)
             Text("SKU: ${product.sku}")
             Text("Artwork shows up to three title lines. Full product title is shown above. Price and stock are omitted.")
