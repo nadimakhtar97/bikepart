@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
@@ -92,7 +93,7 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
                 Icon(painterResource(R.drawable.ic_flash), contentDescription = "Flash", tint = Color.White)
             }
         }
-        Text("Position barcode within the frame", modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp),
+        Text(stringResource(R.string.camera_position_barcode), modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp),
             color = Color.White, style = MaterialTheme.typography.bodyLarge)
     }
     DisposableEffect(owner, previewView) {

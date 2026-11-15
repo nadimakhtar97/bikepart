@@ -1,10 +1,12 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
@@ -25,12 +27,12 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
     ShopSection(if (showLocations) "Fitment and locations" else "Fitment") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             FilterChip(selected = !assigned, enabled = !busy, onClick = { onAssigned(false); onModels(emptySet()) },
-                label = { Text("Unknown fitment") }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+                label = { Text(stringResource(R.string.finding_unknown_fitment)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
             FilterChip(selected = assigned, enabled = !busy, onClick = { onAssigned(true) },
-                label = { Text("Assigned fitment") }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+                label = { Text(stringResource(R.string.finding_assigned_fitment)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
         }
         if (assigned) {
-            Text("Select at least one motorcycle model. Compatibility is assigned by staff.", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.finding_select_model_note), style = MaterialTheme.typography.bodyMedium)
             LookupSelector("Search or add make", "Add make", shop.makes.filter { !it.retired }.map { it.id to it.name }, setOf(make), busy,
                 onSelect = { make = it }, onCreate = { name -> lookups.make(name) { make = it } })
             if (make.isNotEmpty()) key(make) {
@@ -41,13 +43,13 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
             shop.models.filter { it.id in models }.forEach { model ->
                 val parent = shop.makes.single { it.id == model.makeId }
                 Text(parent.name + " · " + model.name + if (parent.retired || model.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
-                ShopSecondaryButton(enabled = !busy, onClick = { onModels(models - model.id) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Remove " + model.name) }
+                ShopSecondaryButton(enabled = !busy, onClick = { onModels(models - model.id) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.remove) + model.name) }
             }
             if (error?.field == ProductField.Fitment) FormError(error.message)
-            if (models.isEmpty()) Text("Choose a model before saving assigned fitment.", style = MaterialTheme.typography.bodyMedium)
+            if (models.isEmpty()) Text(stringResource(R.string.finding_choose_model_note), style = MaterialTheme.typography.bodyMedium)
         }
         if (showLocations) {
-        Text("Finding locations · one combined stock count", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.finding_locations_note), style = MaterialTheme.typography.bodyMedium)
         LookupSelector("Search or add location", "Add location", shop.locations.filter { !it.retired || it.id in locations && it.id in product?.locationIds.orEmpty() }.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, locations, busy,
             onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
             onCreate = { name -> lookups.location(name) { onLocations(locations + it) } })
@@ -58,16 +60,16 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
 
 @Composable
 internal fun FindingSummary(shop: ShopSnapshot, product: Product) {
-    ShopSection("Fitment and locations") {
+    ShopSection(stringResource(R.string.finding_fitment_locations)) {
         Text(if (product.modelIds.isEmpty()) "Fitment: Unknown" else "Fitment: Assigned", style = MaterialTheme.typography.bodyMedium)
         shop.models.filter { it.id in product.modelIds }.forEach { model ->
             val make = shop.makes.single { it.id == model.makeId }
             Text(make.name + " · " + model.name + if (make.retired || model.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
         }
         shop.locations.filter { it.id in product.locationIds }.forEach {
-            Text("Location: " + it.name + if (it.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.location) + it.name + if (it.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
         }
-        if (product.locationIds.isEmpty()) Text("No finding locations assigned", style = MaterialTheme.typography.bodyMedium)
+        if (product.locationIds.isEmpty()) Text(stringResource(R.string.no_finding_locations_assigned), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -75,32 +77,32 @@ internal fun FindingSummary(shop: ShopSnapshot, product: Product) {
 internal fun FindingLookupSettings(shop: ShopSnapshot, busy: Boolean, retireMake: (String) -> Unit,
     retireModel: (String) -> Unit, retireLocation: (String) -> Unit) {
     var search by rememberSaveable { mutableStateOf("") }
-    Text("Retired names stay readable on existing products and cannot be newly selected.", style = MaterialTheme.typography.bodyMedium)
+    Text(stringResource(R.string.finding_retired_names_note), style = MaterialTheme.typography.bodyMedium)
     ShopSearchField(search, { search = it }, "Find make, model or location", enabled = !busy)
     fun matches(name: String) = LookupNames.key(name).contains(LookupNames.key(search))
-    ShopSection("Motorcycle makes") {
+    ShopSection(stringResource(R.string.finding_motorcycle_makes)) {
         shop.makes.filter { matches(it.name) }.forEach {
             LookupRetirement(it.name, it.retired, busy) { retireMake(it.id) }
         }
-        if (shop.makes.isEmpty()) Text("No makes added", style = MaterialTheme.typography.bodyMedium)
+        if (shop.makes.isEmpty()) Text(stringResource(R.string.finding_no_makes), style = MaterialTheme.typography.bodyMedium)
     }
-    ShopSection("Motorcycle models") {
+    ShopSection(stringResource(R.string.finding_motorcycle_models)) {
         shop.models.forEach { model ->
             val label = shop.makes.single { it.id == model.makeId }.name + " · " + model.name
             if (matches(label)) LookupRetirement(label, model.retired, busy) { retireModel(model.id) }
         }
-        if (shop.models.isEmpty()) Text("No models added", style = MaterialTheme.typography.bodyMedium)
+        if (shop.models.isEmpty()) Text(stringResource(R.string.finding_no_models), style = MaterialTheme.typography.bodyMedium)
     }
-    ShopSection("Storage locations") {
+    ShopSection(stringResource(R.string.finding_storage_locations)) {
         shop.locations.filter { matches(it.name) }.forEach {
             LookupRetirement(it.name, it.retired, busy) { retireLocation(it.id) }
         }
-        if (shop.locations.isEmpty()) Text("No locations added", style = MaterialTheme.typography.bodyMedium)
+        if (shop.locations.isEmpty()) Text(stringResource(R.string.finding_no_locations), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
 @Composable
 private fun LookupRetirement(name: String, retired: Boolean, busy: Boolean, retire: () -> Unit) {
     if (retired) Text(name + " (retired)", style = MaterialTheme.typography.bodyMedium)
-    else ShopSecondaryButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire: " + name) }
+    else ShopSecondaryButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire) + name) }
 }

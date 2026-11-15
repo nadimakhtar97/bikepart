@@ -4,10 +4,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.hardware.usb.UsbManager
+import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -54,25 +56,25 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
         ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         onDispose { cancelled.set(true); context.unregisterReceiver(receiver) }
     }
-    ShopSection("USB label printing") {
-        Text("TE244 · TSPL · 203 DPI · USB/OTG. Hardware acceptance is pending on the intended phone and printer.")
-        Text("Load and calibrate the ${media.widthMm} × ${media.heightMm} mm roll. Verify ribbon/material and printer settings before printing.")
-        Text("Cancellation stops unsent copies. It cannot retract a copy already being sent or queued in the printer.")
+    ShopSection(stringResource(R.string.label_print_section)) {
+        Text(stringResource(R.string.label_print_hardware))
+        Text(stringResource(R.string.load_and_calibrate_the_mm_roll_verify, media.widthMm, media.heightMm))
+        Text(stringResource(R.string.label_cancel_note))
         pending?.let { description ->
-            Text("Inspect previous output: $description", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-            Text("Check the physical labels. After interrupted output, power-cycle the TE244 to discard partial commands. Then enter only the remaining copies (or finish without reprinting).")
+            Text(stringResource(R.string.inspect_previous_output, description), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            Text(stringResource(R.string.check_the_physical_labels_after_interrupted_output))
             ShopSecondaryButton(enabled = !sending, onClick = {
                 try { printer.inspected(); pending = null; confirmed = false; inspected() }
                 catch (_: Exception) { feedback = "Could not save inspection. Printing remains blocked." }
-            }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("I inspected output and reset the printer") }
+            }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_inspected_btn)) }
         }
         Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(
             value = confirmed, enabled = !sending && pending == null, role = Role.Checkbox, onValueChange = { confirmed = it }),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Checkbox(checked = confirmed, enabled = !sending && pending == null, onCheckedChange = null)
-            Text("I confirm the loaded ${media.widthMm} × ${media.heightMm} mm roll, calibrated TSPL profile and $copies copies.")
+            Text(stringResource(R.string.i_confirm_the_loaded_mm_roll_calibrated, media.widthMm, media.heightMm, copies))
         }
-        ShopPrimaryButton("Print confirmed labels", enabled = !sending && pending == null && confirmed) {
+        ShopPrimaryButton(stringResource(R.string.label_print_confirmed), enabled = !sending && pending == null && confirmed) {
             sending = true
             cancelled.set(false)
             confirmed = false
@@ -92,7 +94,7 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
             }
         }
         if (sending) ShopSecondaryButton(onClick = { cancelled.set(true); feedback = "Cancelling unsent copies. Output already sent cannot be retracted." },
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Cancel unsent copies") }
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_cancel_unsent)) }
         feedback?.let { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
     }
 }

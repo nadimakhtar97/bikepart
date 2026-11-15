@@ -2,9 +2,11 @@ package com.nadim.bikepart.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.nadim.bikepart.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -33,10 +35,10 @@ internal fun LocalBackupControls(capture: LocalCapture?, currentRevision: Long, 
             "${if (recovery) "Recovery capture" else "Local capture complete"} · revision ${it.revision} · ${DateFormat.getDateTimeInstance().format(Date(it.capturedAt))}"
         } ?: "No complete local capture yet.", style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        if (!recovery && capture != null && currentRevision > capture.revision) Text("Newer shop changes are waiting for a local capture.", style = MaterialTheme.typography.bodyMedium)
+        if (!recovery && capture != null && currentRevision > capture.revision) Text(stringResource(R.string.local_backup_newer_changes), style = MaterialTheme.typography.bodyMedium)
         if (error != null) FormError(error)
         if (saved) Text(if (recovery) "Recovery copy saved." else "Backup copy saved.", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        if (!recovery) ShopPrimaryButton("Capture local backup", enabled = !busy, onClick = onCapture)
+        if (!recovery) ShopPrimaryButton(stringResource(R.string.local_backup_capture_btn), enabled = !busy, onClick = onCapture)
         if (capture != null) ShopSecondaryButton(enabled = !busy && selectedPath == null, onClick = {
             selectedPath = capture.file.path; selectedId = capture.id; selectedRevision = capture.revision; selectedTime = capture.capturedAt
             save.launch("shop-backup-${capture.id}.zip")

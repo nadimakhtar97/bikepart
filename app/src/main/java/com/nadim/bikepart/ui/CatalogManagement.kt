@@ -1,9 +1,11 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
@@ -20,11 +22,11 @@ internal class CatalogActions(
 
 @Composable
 internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, actions: CatalogActions) {
-    ShopSection("Product custom fields") {
-        Text("Custom fields belong only to ${product.title}. Promote a field explicitly to share it with this category.", style = MaterialTheme.typography.bodyMedium)
+    ShopSection(stringResource(R.string.catalog_custom_fields)) {
+        Text(stringResource(R.string.custom_fields_belong_only_to_promote_a, product.title), style = MaterialTheme.typography.bodyMedium)
         var creating by rememberSaveable { mutableStateOf(false) }
         ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy,
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add product custom field") }
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_add_custom_field)) }
         if (creating) FieldCreator(product.categoryId, busy, error?.takeIf { it.definitionId == null }, onChange) { setup -> actions.custom(setup) { creating = false } }
     }
     var search by rememberSaveable { mutableStateOf("") }
@@ -42,24 +44,24 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                         ShopSecondaryButton(onClick = { actions.required(field.id, !field.required) }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.required) "Make optional" else "Make required") }
                         ShopSecondaryButton(onClick = { actions.retire(field.id) }, enabled = !busy,
-                            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire field") }
+                            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_retire_field)) }
                         if (field.productId != null && !replacing) {
                             var name by rememberSaveable { mutableStateOf(field.name) }
                             val nameError = error?.takeIf { it.definitionId == field.id && it.field == ProductField.DefinitionName }
-                            OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text("Category field name") },
+                            OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.catalog_field_name_label)) },
                                 isError = nameError != null, supportingText = nameError?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
-                            Text("If the name conflicts, choose a distinct name and meaning. Promotion never merges fields.", style = MaterialTheme.typography.bodyMedium)
-                            ShopPrimaryButton("Promote to category", enabled = !busy) { actions.promote(field.id, name) }
+                            Text(stringResource(R.string.catalog_promotion_note), style = MaterialTheme.typography.bodyMedium)
+                            ShopPrimaryButton(stringResource(R.string.catalog_promote_to_category), enabled = !busy) { actions.promote(field.id, name) }
                         }
                         shop.options.filter { it.definitionId == field.id }.forEach { option ->
                             if (option.retired) Text(option.name + " (retired)", style = MaterialTheme.typography.bodyMedium)
                             else ShopSecondaryButton(onClick = { actions.retireOption(option.id) }, enabled = !busy,
-                                modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Retire option: ${option.name}") }
+                                modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire_option, option.name)) }
                         }
                         ShopSecondaryButton(onClick = { replacing = !replacing; onChange() }, enabled = !busy,
-                            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Replace field type") }
+                            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_replace_field_type)) }
                         if (replacing) {
-                            Text("Use a distinct name and a new type. The original field is retired and its values remain unchanged.", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.catalog_replace_note), style = MaterialTheme.typography.bodyMedium)
                             FieldCreator(product.categoryId, busy, error?.takeIf { it.definitionId == field.id }, onChange) { setup -> actions.replace(field.id, setup) { replacing = false } }
                         }
                     }

@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
@@ -60,28 +61,28 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
     val lowStock = activeProducts.count { it.stockHealth == StockHealth.LowStock }
     val outOfStock = activeProducts.count { it.stockHealth == StockHealth.OutOfStock }
     val recentSales = shop.sales.sortedByDescending { it.recordedAt }.take(3)
-    ShopPageHeader("Your parts counter", "Work offline. Your stock stays on this phone.")
-    ShopSectionHeader("Quick actions")
+    ShopPageHeader(stringResource(R.string.home_header), "Work offline. Your stock stays on this phone.")
+    ShopSectionHeader(stringResource(R.string.home_quick_actions))
     ShopTileGrid { tile ->
-        ShopActionTile("New sale", R.drawable.ic_cart, tile, enabled = !busy, primary = true, onClick = onNewSale)
-        ShopActionTile("Add product", R.drawable.ic_add, tile, enabled = !busy, onClick = onAdd)
-        ShopActionTile("Receive stock", R.drawable.ic_inventory, tile, enabled = !busy, onClick = onReceive)
-        ShopActionTile("Sales history", R.drawable.ic_receipt, tile, enabled = !busy, onClick = onSales)
+        ShopActionTile(stringResource(R.string.home_new_sale), R.drawable.ic_cart, tile, enabled = !busy, primary = true, onClick = onNewSale)
+        ShopActionTile(stringResource(R.string.home_add_product), R.drawable.ic_add, tile, enabled = !busy, onClick = onAdd)
+        ShopActionTile(stringResource(R.string.product_receive_stock), R.drawable.ic_inventory, tile, enabled = !busy, onClick = onReceive)
+        ShopActionTile(stringResource(R.string.more_sales_history), R.drawable.ic_receipt, tile, enabled = !busy, onClick = onSales)
     }
-    ShopSectionHeader("Shop overview")
+    ShopSectionHeader(stringResource(R.string.home_shop_overview))
     ShopTileGrid { tile ->
-        ShopStatCard("Unfinished carts", shop.carts.size.toString(), R.drawable.ic_pending,
+        ShopStatCard(stringResource(R.string.cart_list_header), shop.carts.size.toString(), R.drawable.ic_pending,
             modifier = tile, enabled = !busy, onClick = onCarts)
-        ShopStatCard("Active products", activeProducts.size.toString(), R.drawable.ic_inventory,
+        ShopStatCard(stringResource(R.string.home_active_products), activeProducts.size.toString(), R.drawable.ic_inventory,
             modifier = tile, enabled = !busy, onClick = { onStock(null) })
     }
     if (activeProducts.isEmpty()) {
-        if (shop.products.isEmpty()) ShopEmptyState("Start with your first product",
+        if (shop.products.isEmpty()) ShopEmptyState(stringResource(R.string.home_empty_title),
             "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
-        else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+        else ShopEmptyState(stringResource(R.string.home_no_active_title), "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
     }
     if (activeProducts.isNotEmpty()) {
-        ShopSectionHeader("Stock attention",
+        ShopSectionHeader(stringResource(R.string.home_stock_attention),
             supporting = if (lowStock + outOfStock == 0) "Nothing needs attention today" else "Counts at or below your thresholds")
         ShopListGroup {
             ShopListRow("Low stock: $lowStock ${if (lowStock == 1) "product" else "products"}",
@@ -94,14 +95,14 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
                 onClick = { onStock(StockHealth.OutOfStock) })
         }
     }
-    ShopSectionHeader("Recent sales", actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
-    if (recentSales.isEmpty()) Text("Completed cash sales will appear here.", style = MaterialTheme.typography.bodySmall,
+    ShopSectionHeader(stringResource(R.string.home_recent_sales), actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
+    if (recentSales.isEmpty()) Text(stringResource(R.string.home_no_recent_sales), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     else ShopListGroup {
         recentSales.forEach { sale ->
             ShopListRow("Cart ${sale.cartNumber}",
                 supporting = listOfNotNull(sale.customer.ifBlank { null }, "${sale.lines.size} lines").joinToString(" · "),
-                meta = "₹${indianNumber(sale.totalRupees)}", status = { ShopStatusChip("Paid", ShopStatusTone.Success) },
+                meta = "₹${indianNumber(sale.totalRupees)}", status = { ShopStatusChip(stringResource(R.string.shared_paid), ShopStatusTone.Success) },
                 actionLabel = "Open receipt · Cart ${sale.cartNumber}", onClick = { onSale(sale.cartId) })
         }
     }
@@ -111,10 +112,10 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
 internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null, busy: Boolean = false,
     onScan: () -> Unit = {}, onProductAction: (Product, String) -> Unit = { _, _ -> }) {
     if (shop.products.none { !it.archived }) {
-        if (shop.products.isEmpty()) ShopEmptyState("No products yet", "Add a product to start tracking your stock.", R.drawable.ic_stock)
-        else ShopEmptyState("No active products", "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+        if (shop.products.isEmpty()) ShopEmptyState(stringResource(R.string.stock_no_products_title), "Add a product to start tracking your stock.", R.drawable.ic_stock)
+        else ShopEmptyState(stringResource(R.string.home_no_active_title), "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
     } else {
-        ShopPageHeader("Find a product")
+        ShopPageHeader(stringResource(R.string.stock_find_product))
         StockSearch(shop, initialHealth, loadPhoto, onOpen, busy, onScan, onProductAction)
     }
 }
@@ -130,10 +131,10 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         Text(shop.categories.single { it.id == product.categoryId }.name, style = MaterialTheme.typography.bodySmall,
             color = colors.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
-        Text("${indianNumber(product.quantity)} pieces", style = MaterialTheme.typography.headlineSmall)
-        Text("Selling price: ₹${indianNumber(product.priceRupees)}", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.selling_price, indianNumber(product.priceRupees)), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(2.dp))
-        if (product.archived) Text("Archived product", style = MaterialTheme.typography.labelLarge,
+        if (product.archived) Text(stringResource(R.string.product_archived_label), style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         else StockHealthIndicator(product)
     }
@@ -147,10 +148,10 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp), content = summary)
         }
     }
-    if (!product.archived) ShopPrimaryButton("Edit details", enabled = !busy, onClick = onEdit)
-    if (shop.missingRequired(product.id).isNotEmpty()) Text("Catalog incomplete · complete required fields when editing. Stock and selling price remain available.", style = MaterialTheme.typography.bodyMedium)
+    if (!product.archived) ShopPrimaryButton(stringResource(R.string.product_edit_details), enabled = !busy, onClick = onEdit)
+    if (shop.missingRequired(product.id).isNotEmpty()) Text(stringResource(R.string.product_catalog_incomplete), style = MaterialTheme.typography.bodyMedium)
     if (!product.archived) {
-        ShopSectionHeader("Correct stock")
+        ShopSectionHeader(stringResource(R.string.product_correct_stock))
         ShopListGroup {
             CorrectionKind.entries.forEach { kind ->
                 ShopListRow("Record ${kind.label.lowercase()}",
@@ -163,7 +164,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             }
         }
     }
-    ShopSection("Product details") {
+    ShopSection(stringResource(R.string.product_details_section)) {
         Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
         shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && (!it.retired || it.id in product.attributes) }.forEach { definition ->
             val value = product.attributes[definition.id]
@@ -171,10 +172,10 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             Text(definition.name + (if (definition.retired) " (retired)" else "") + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
         }
         HorizontalDivider(color = colors.outlineVariant)
-        Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodyMedium)
-        Text("Opening stock: ${indianNumber(shop.openings[product.id]?.quantity ?: 0L)} pieces", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.sku, product.sku), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.opening_stock_pieces, indianNumber(shop.openings[product.id]?.quantity ?: 0L)), style = MaterialTheme.typography.bodyMedium)
     }
-    if (product.historicalAttributes.isNotEmpty()) ShopSection("Historical attributes") {
+    if (product.historicalAttributes.isNotEmpty()) ShopSection(stringResource(R.string.product_historical_attributes)) {
         product.historicalAttributes.forEach { (_, definitionId, value) ->
             val definition = shop.attributes.single { it.id == definitionId }
             Text(definition.name + ": " + attributeDisplay(shop, value) + " " + definition.unit, style = MaterialTheme.typography.bodyMedium)
@@ -182,26 +183,26 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     }
     CorrectionHistory(shop.corrections.filter { it.productId == product.id })
     FindingSummary(shop, product)
-    if (product.archived) ShopListRow("Preview product labels", supporting = "Package or shared-bin label",
+    if (product.archived) ShopListRow(stringResource(R.string.product_preview_labels), supporting = "Package or shared-bin label",
         icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
     if (!product.archived) {
-        ShopSectionHeader("Product actions")
+        ShopSectionHeader(stringResource(R.string.product_actions))
         ShopListGroup {
-            ShopListRow("Receive stock", supporting = "Add received pieces and purchase cost",
+            ShopListRow(stringResource(R.string.product_receive_stock), supporting = "Add received pieces and purchase cost",
                 icon = R.drawable.ic_inventory, enabled = !busy, onClick = onReceive)
-            ShopListRow("Preview product labels", supporting = "Package or shared-bin label",
+            ShopListRow(stringResource(R.string.product_preview_labels), supporting = "Package or shared-bin label",
                 icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
-            ShopListRow("Copy catalog details", supporting = "Start a new product with these details",
+            ShopListRow(stringResource(R.string.scanner_copy_catalog), supporting = "Start a new product with these details",
                 icon = R.drawable.ic_add, enabled = !busy, onClick = onCopy)
-            ShopListRow("Create template from product", supporting = "Reuse these details later",
+            ShopListRow(stringResource(R.string.product_create_template), supporting = "Reuse these details later",
                 icon = R.drawable.ic_template, enabled = !busy, onClick = onTemplate)
-            ShopListRow("Manage fields", supporting = "Custom and category fields",
+            ShopListRow(stringResource(R.string.product_manage_fields), supporting = "Custom and category fields",
                 icon = R.drawable.ic_settings, enabled = !busy, onClick = onManage)
         }
-        ShopSection("Archive unused product") {
-            Text("Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.", style = MaterialTheme.typography.bodyMedium)
+        ShopSection(stringResource(R.string.product_archive_section)) {
+            Text(stringResource(R.string.product_archive_desc), style = MaterialTheme.typography.bodyMedium)
             if (archiveError != null) FormError(archiveError)
-            ShopSecondaryButton(onClick = onArchive, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Archive product") }
+            ShopSecondaryButton(onClick = onArchive, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.product_archive_btn)) }
         }
     }
 }
@@ -211,24 +212,24 @@ internal fun ArchivedProducts(shop: ShopSnapshot, loadPhoto: PhotoLoader, onOpen
     var query by rememberSaveable { mutableStateOf("") }
     var limit by rememberSaveable(query) { mutableIntStateOf(40) }
     val archived = shop.products.filter { it.archived }
-    if (archived.isEmpty()) ShopEmptyState("No archived products", "Products archived at zero stock remain here with their details and history.", R.drawable.ic_stock)
+    if (archived.isEmpty()) ShopEmptyState(stringResource(R.string.archived_no_products_title), "Products archived at zero stock remain here with their details and history.", R.drawable.ic_stock)
     else {
         ShopSearchField(query, { query = it }, "Search archived products")
         val found = archived.filter { LookupNames.key(it.title + " " + it.sku).contains(LookupNames.key(query)) }
         ShopSectionHeader("${found.size} archived products", supporting = "Title or permanent SKU")
-        if (found.isEmpty()) ShopEmptyState("No matching archived products", "Try a title or permanent SKU.", R.drawable.ic_stock)
+        if (found.isEmpty()) ShopEmptyState(stringResource(R.string.archived_no_matching_title), "Try a title or permanent SKU.", R.drawable.ic_stock)
         else ShopListGroup {
             found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
         }
-        if (found.size > limit) ShopSecondaryButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Show more archived products") }
+        if (found.size > limit) ShopSecondaryButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.archived_show_more)) }
     }
 }
 
 @Composable
 internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
     onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit, updates: @Composable () -> Unit) {
-    ShopPageHeader("Your shop", "Catalog, appearance and recovery.")
-    ShopSectionHeader("Appearance")
+    ShopPageHeader(stringResource(R.string.more_header), "Catalog, appearance and recovery.")
+    ShopSectionHeader(stringResource(R.string.more_appearance))
     ShopGroup(spacing = ShopSpacing.small) {
         Column(Modifier.selectableGroup()) {
             Appearance.entries.forEach { mode ->
@@ -240,36 +241,36 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
                 }
             }
         }
-        Text("System follows your phone's light or dark appearance.", style = MaterialTheme.typography.bodySmall,
+        Text(stringResource(R.string.more_appearance_hint), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     updates()
-    ShopSectionHeader("Shop")
+    ShopSectionHeader(stringResource(R.string.more_shop))
     ShopListGroup {
-        ShopListRow("Sales history", supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,
+        ShopListRow(stringResource(R.string.more_sales_history), supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,
             enabled = !busy, onClick = onSales)
-        ShopListRow("Product templates", supporting = "Reusable catalog details", icon = R.drawable.ic_template,
+        ShopListRow(stringResource(R.string.more_product_templates), supporting = "Reusable catalog details", icon = R.drawable.ic_template,
             enabled = !busy, onClick = onTemplates)
-        ShopListRow("Archived products", supporting = "Retained details and history", icon = R.drawable.ic_archive,
+        ShopListRow(stringResource(R.string.more_archived_products), supporting = "Retained details and history", icon = R.drawable.ic_archive,
             enabled = !busy, onClick = onArchived)
     }
-    ShopSectionHeader("Backup and recovery")
+    ShopSectionHeader(stringResource(R.string.more_backup_recovery))
     ShopListGroup {
-        ShopListRow("Shop backups", supporting = "Drive, local copies and phone recovery", icon = R.drawable.ic_cloud,
+        ShopListRow(stringResource(R.string.more_shop_backups), supporting = "Drive, local copies and phone recovery", icon = R.drawable.ic_cloud,
             enabled = !busy, onClick = onBackups)
     }
-    ShopSectionHeader("Catalog")
+    ShopSectionHeader(stringResource(R.string.more_catalog))
     ShopListGroup {
-        ShopListRow("Edit categories", supporting = "${shop.categories.size} categories", icon = R.drawable.ic_category,
+        ShopListRow(stringResource(R.string.more_edit_categories), supporting = "${shop.categories.size} categories", icon = R.drawable.ic_category,
             enabled = !busy, onClick = onCategories)
-        ShopListRow("Manage fitment and locations", supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
+        ShopListRow(stringResource(R.string.more_manage_fitment), supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
             icon = R.drawable.ic_two_wheeler, enabled = !busy, onClick = onFindingLookups)
     }
 }
 
 @Composable
 internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (String, String) -> Unit) {
-    Text("Rename your starter categories to suit the shop.", style = MaterialTheme.typography.bodyMedium)
+    Text(stringResource(R.string.category_rename_hint), style = MaterialTheme.typography.bodyMedium)
     ShopListGroup {
         shop.categories.forEach { category ->
             key(category.id) {
@@ -283,16 +284,16 @@ internal fun CategorySettings(shop: ShopSnapshot, busy: Boolean, onRename: (Stri
                     onClick = { editing = true })
                 if (editing) AlertDialog(
                     onDismissRequest = { if (!busy) editing = false },
-                    title = { Text("Rename ${category.name}") },
+                    title = { Text(stringResource(R.string.rename, category.name)) },
                     text = { OutlinedTextField(name, { name = it }, enabled = !busy,
-                        label = { Text("Category name") }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
+                        label = { Text(stringResource(R.string.category_name_label)) }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
                     confirmButton = {
                         TextButton(enabled = !busy && name != category.name, onClick = {
                             editing = false
                             onRename(category.id, name)
-                        }) { Text("Save ${category.name}") }
+                        }) { Text(stringResource(R.string.save, category.name)) }
                     },
-                    dismissButton = { TextButton(onClick = { editing = false }) { Text("Cancel") } },
+                    dismissButton = { TextButton(onClick = { editing = false }) { Text(stringResource(R.string.cancel)) } },
                 )
             }
         }
@@ -329,25 +330,25 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
             selected(option.id)
         }
     }
-    if (templateMode || initialCatalog != null) Text("Catalog details only. Enter stock, selling price and locations separately for each new product.", style = MaterialTheme.typography.bodyMedium)
+    if (templateMode || initialCatalog != null) Text(stringResource(R.string.form_catalog_only_note), style = MaterialTheme.typography.bodyMedium)
     PhotoField(product?.photo ?: initialCatalog?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
         select = { photoUri = it; photoRemoved = false; onChange() },
         remove = { photoUri = null; photoRemoved = true; onChange() })
-    ShopSection("Basic details") {
+    ShopSection(stringResource(R.string.form_basic_details)) {
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
-        Text("Category (required)", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.form_category_required), style = MaterialTheme.typography.labelLarge)
         LookupSelector("Search or add category", "Add category", shop.categories.map { it.id to it.name }, setOf(category), busy,
             onSelect = { category = it; mappings = emptyMap(); distinct = false; onChange() },
             onCreate = { name -> lookups.category(name) { category = it; mappings = emptyMap(); distinct = false; onChange() } })
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
-    if (product != null && !product.archived && !templateMode) ShopSection("Selling price") {
+    if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {
         ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
             error?.takeIf { it.field == ProductField.SellingPrice }, number = true)
-        Text("Price changes update this product's lines in every unfinished cart.", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.form_price_update_note), style = MaterialTheme.typography.bodyMedium)
     }
-    if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text("Previous category values will be retained as historical attributes.", style = MaterialTheme.typography.bodyMedium)
+    if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text(stringResource(R.string.form_prev_category_note), style = MaterialTheme.typography.bodyMedium)
     if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
     if (category.isNotEmpty()) CategoryFields(formShop, category, values, busy, error, formLookups, if (product != null) product.id else "catalog-draft",
         onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
@@ -355,7 +356,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     FindingFields(shop, product, models, locations, busy, findingError ?: error, findingLookups, assigned,
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
-    if (product == null && !templateMode) ShopSection("Opening stock and price") {
+    if (product == null && !templateMode) ShopSection(stringResource(R.string.form_opening_stock_price)) {
         val stockField: @Composable (Modifier) -> Unit = { fieldModifier ->
             ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
                 error?.takeIf { it.field == ProductField.OpeningStock }, number = true, modifier = fieldModifier)
@@ -375,7 +376,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
                 priceField(Modifier.fillMaxWidth())
             }
         }
-        Text("Stock is counted in whole pieces. Prices use whole rupees.", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.form_stock_price_note), style = MaterialTheme.typography.bodyMedium)
     }
     if (error != null && error.field == null) FormError(error.message)
     if (error?.field == ProductField.DefinitionName && error.definitionId == null) FormError(error.message)
@@ -384,7 +385,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = distinct, onCheckedChange = null)
-        Text("Save as a distinct product", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
+        Text(stringResource(R.string.form_save_distinct), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
     }
     ShopPrimaryButton(if (busy) "Saving…" else if (templateMode) "Save template" else "Save product", enabled = !busy) {
         if (assigned && models.isEmpty()) {
@@ -415,12 +416,12 @@ internal fun FormError(message: String) {
 
 @Composable
 private fun CategoryMapping(shop: ShopSnapshot, product: Product, categoryId: String, mappings: Map<String, String>, busy: Boolean, onChange: (Map<String, String>) -> Unit) {
-    ShopSection("Category change") {
-        Text("Previous category values will be kept as historical attributes. Optionally copy compatible text or decimal values below.", style = MaterialTheme.typography.bodyMedium)
+    ShopSection(stringResource(R.string.category_change)) {
+        Text(stringResource(R.string.previous_category_values_will_be_kept_as), style = MaterialTheme.typography.bodyMedium)
         shop.attributes.filter { it.productId == null && it.categoryId == product.categoryId && it.id in product.attributes }.forEach { source ->
             val targets = shop.attributes.filter { it.productId == null && it.categoryId == categoryId && !it.retired && it.type == source.type && it.unit == source.unit && !it.type.isChoice }
             if (targets.isNotEmpty()) {
-                Text("Copy " + source.name, style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.copy) + source.name, style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                     targets.forEach { target ->
                         FilterChip(selected = mappings[source.id] == target.id, enabled = !busy,

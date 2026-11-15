@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -63,7 +64,7 @@ internal fun ProductPhoto(reference: PhotoReference?, load: PhotoLoader, modifie
 internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boolean, busy: Boolean,
     load: PhotoLoader, error: String?, select: (String) -> Unit, remove: () -> Unit) {
     val picker = rememberLauncherForActivityResult(PickVisualMedia()) { selected -> selected?.let { select(it.toString()) } }
-    ShopSection("Product photo (optional)") {
+    ShopSection(stringResource(R.string.photo_section)) {
         val hasPhoto = uri != null || (!removed && reference != null)
         val description = "Choose a photo from your phone. Saved photos stay with the product. Maximum 20 MB."
         if (hasPhoto) {
@@ -79,7 +80,7 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
             Text(if (hasPhoto) "Replace photo" else "Choose photo")
         }
         if (hasPhoto) ShopSecondaryButton(enabled = !busy, onClick = remove,
-            modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Remove photo") }
+            modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.photo_remove)) }
         if (error != null) FormError(error)
     }
 }
