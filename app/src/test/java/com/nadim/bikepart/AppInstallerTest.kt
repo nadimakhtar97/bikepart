@@ -3,6 +3,7 @@ package com.nadim.bikepart.updates
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
+import kotlinx.coroutines.runBlocking
 
 class AppInstallerTest {
     private val installed = InstalledApp("com.nadim.bikepart", 1L, "1.0", 33, setOf("signer1"))
@@ -31,11 +32,13 @@ class AppInstallerTest {
         }
     }
 
+    private fun release(file: File, code: Long = 2L) = AvailableUpdate(1, code, if (code == 1L) "1.0" else "2.0", file.length(), "", "url", if (file.exists()) sha256(file) else "hash123", 33)
+
     @Test
     fun revalidatesApkBeforeHandoffAndRejectsIfMissing() {
         val nonExistent = File("does_not_exist.apk")
         val installer = TestInstaller(installed, FakeInspector(ApkIdentity("com.nadim.bikepart", 2L, "2.0", 33, setOf("signer1"))))
-        val result = installer.install(nonExistent, expectedHash = "hash123")
+        val result = runBlocking { installer.install(nonExistent, release(nonExistent)) }
         assertEquals(InstallResult.InvalidApk, result)
         assertNull(installer.launchedWithApk)
     }
@@ -46,7 +49,7 @@ class AppInstallerTest {
         try {
             val inspector = FakeInspector(ApkIdentity("com.nadim.bikepart", 1L, "1.0", 33, setOf("signer1")))
             val installer = TestInstaller(installed, inspector)
-            val result = installer.install(tempApk, expectedHash = sha256(tempApk))
+            val result = runBlocking { installer.install(tempApk, release(tempApk)) }
             assertEquals(InstallResult.InvalidApk, result)
             assertNull(installer.launchedWithApk)
         } finally {
@@ -60,7 +63,7 @@ class AppInstallerTest {
         try {
             val inspector = FakeInspector(ApkIdentity("com.nadim.bikepart", 2L, "2.0", 33, setOf("signer1")))
             val installer = TestInstaller(installed, inspector, canInstall = false)
-            val result = installer.install(tempApk, expectedHash = sha256(tempApk))
+            val result = runBlocking { installer.install(tempApk, release(tempApk)) }
             assertEquals(InstallResult.PermissionRequired, result)
             assertTrue(installer.openedSettings)
             assertNull(installer.launchedWithApk)
@@ -75,11 +78,23 @@ class AppInstallerTest {
         try {
             val inspector = FakeInspector(ApkIdentity("com.nadim.bikepart", 2L, "2.0", 33, setOf("signer1")))
             val installer = TestInstaller(installed, inspector, canInstall = true)
-            val result = installer.install(tempApk, expectedHash = sha256(tempApk))
+            val result = runBlocking { installer.install(tempApk, release(tempApk)) }
             assertEquals(InstallResult.Success, result)
             assertEquals(tempApk, installer.launchedWithApk)
         } finally {
             tempApk.delete()
         }
     }
+    @Test
+    fun rejectsMetadataMismatchAndCancelsHandoffWhenWorkResumes() = runBlocking {
+        val apk = File.createTempFile("update", ".apk").apply { writeText("valid bytes") }
+        try {
+            val inspector = FakeInspector(ApkIdentity("com.nadim.bikepart", 2, "2.0", 33, setOf("signer1")))
+            val installer = TestInstaller(installed, inspector)
+            assertEquals(InstallResult.InvalidApk, installer.install(apk, release(apk).copy(versionName = "different")))
+            assertEquals(InstallResult.Cancelled, installer.install(apk, release(apk)) { false })
+            assertNull(installer.launchedWithApk)
+        } finally { apk.delete() }
+    }
+
 }

@@ -65,7 +65,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var updateJob by remember { mutableStateOf<Job?>(null) }
     val invalidApkMsg = stringResource(R.string.update_install_invalid)
     val permissionNeededMsg = stringResource(R.string.update_install_permission_needed)
+    val installFailedMsg = stringResource(R.string.update_install_failed)
     var installError by remember { mutableStateOf<String?>(null) }
+    var installing by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, updateService, reminderService) {
@@ -104,6 +106,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf("Home") }
     var route by rememberSaveable { mutableStateOf("main") }
+    val currentRoute by rememberUpdatedState(route)
+    val currentDestination by rememberUpdatedState(destination)
+    val currentBusy by rememberUpdatedState(busy)
+    val currentBackupBusy by rememberUpdatedState(backupBusy)
+    val currentDownloadState by rememberUpdatedState(downloadState)
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
     var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
@@ -415,15 +422,27 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                                                     updateJob = updateScope.launch { updateService.check() }
                                                 }
-                                            }, updateService::startDownload, updateService::cancelDownload,
-                                            installNow = {
+                                            }, { installError = null; updateService.startDownload() }, updateService::cancelDownload,
+                                            installError = installError, installing = installing, installNow = {
                                                 val ready = downloadState as? DownloadState.Ready
-                                                if (ready != null && !busy) {
-                                                    val res = installService.install(ready.apk, ready.release.sha256)
-                                                    if (res == InstallResult.InvalidApk) {
-                                                        installError = invalidApkMsg
-                                                    } else if (res == InstallResult.PermissionRequired) {
-                                                        installError = permissionNeededMsg
+                                                if (ready != null && !busy && !installing) {
+                                                    installing = true
+                                                    installError = null
+                                                    updateScope.launch {
+                                                        try {
+                                                            when (installService.install(ready.apk, ready.release) {
+                                                                currentRoute == "main" && currentDestination == "More" && !currentBusy && !currentBackupBusy &&
+                                                                    lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) && currentDownloadState == ready
+                                                            }) {
+                                                                InstallResult.InvalidApk -> {
+                                                                    updateService.discardInvalidDownload()
+                                                                    installError = invalidApkMsg
+                                                                }
+                                                                InstallResult.PermissionRequired -> installError = permissionNeededMsg
+                                                                InstallResult.Failed -> installError = installFailedMsg
+                                                                InstallResult.Success, InstallResult.Cancelled -> Unit
+                                                            }
+                                                        } finally { installing = false }
                                                     }
                                                 }
                                             },
@@ -440,23 +459,23 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                 }
             }
 
+            var reminderRevision by remember { mutableIntStateOf(0) }
             val availableUpdate = (updateState as? UpdateState.Available)?.release
-            var reminderDismissedSession by rememberSaveable { mutableStateOf<Long?>(null) }
-            val isIdle = route == "main" && !busy && error == null
-            if (isIdle && availableUpdate != null && reminderDismissedSession != availableUpdate.versionCode &&
-                reminderService.shouldShowReminder(availableUpdate) && downloadState !is DownloadState.Downloading &&
+            val isIdle = route == "main" && destination == "Home" && !busy && !backupBusy && error == null
+            if (isIdle && availableUpdate != null &&
+                reminderRevision >= 0 && reminderService.shouldShowReminder(availableUpdate) && downloadState !is DownloadState.Downloading &&
                 downloadState !is DownloadState.Verifying) {
                 UpdateReminderDialog(
                     release = availableUpdate,
                     onUpdate = {
                         reminderService.dismissReminder(availableUpdate)
-                        reminderDismissedSession = availableUpdate.versionCode
+                        reminderRevision++
                         destination = "More"
                         updateService.startDownload()
                     },
                     onDismiss = {
                         reminderService.dismissReminder(availableUpdate)
-                        reminderDismissedSession = availableUpdate.versionCode
+                        reminderRevision++
                     }
                 )
             }

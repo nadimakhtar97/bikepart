@@ -7,35 +7,34 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 enum class InstallResult {
     Success,
     PermissionRequired,
     InvalidApk,
-    Failed
+    Failed,
+    Cancelled
 }
 
 open class AppInstaller(
     val installed: InstalledApp,
     val inspector: ApkArchiveInspector
 ) {
-    fun install(apk: File, expectedHash: String): InstallResult {
-        if (!apk.exists() || !apk.isFile) return InstallResult.InvalidApk
-        if (sha256(apk) != expectedHash) return InstallResult.InvalidApk
-
-        val id = inspector.inspect(apk) ?: return InstallResult.InvalidApk
-        if (id.packageId != installed.packageId ||
-            id.versionCode <= installed.versionCode ||
-            id.minSdk > installed.androidApi ||
-            id.signerDigests != installed.signers) {
-            return InstallResult.InvalidApk
+    suspend fun install(apk: File, release: AvailableUpdate, canProceed: () -> Boolean = { true }): InstallResult {
+        val valid = withContext(Dispatchers.IO) {
+            try { verifyApk(apk, release, installed, inspector) == null }
+            catch (_: Exception) { false }
         }
-
+        if (!valid) return InstallResult.InvalidApk
+        if (!canProceed()) return InstallResult.Cancelled
         if (!canRequestPackageInstalls()) {
-            openInstallPermissionSettings()
-            return InstallResult.PermissionRequired
+            return try {
+                openInstallPermissionSettings()
+                InstallResult.PermissionRequired
+            } catch (_: Exception) { InstallResult.Failed }
         }
-
         return if (launchInstaller(apk)) InstallResult.Success else InstallResult.Failed
     }
 

@@ -47,6 +47,7 @@ interface AppUpdater {
     /** Starts a user-requested transfer. Implementations ignore duplicate starts. */
     fun startDownload() {}
     fun cancelDownload() {}
+    fun discardInvalidDownload() {}
     fun close() {}
 }
 data class UpdateHttpResponse(val status: Int, val body: String)
@@ -190,11 +191,17 @@ class GitHubUpdater(override val installed: InstalledApp,
     }
 
     override fun startDownload() {
-        (mutableState.value as? UpdateState.Available)?.let { downloads?.start(it.release) }
+        val release = (mutableState.value as? UpdateState.Available)?.release
+            ?: (downloadState.value as? DownloadState.Failed)?.release
+        release?.let { downloads?.start(it) }
     }
 
     override fun cancelDownload() {
         downloads?.cancel()
+    }
+
+    override fun discardInvalidDownload() {
+        downloads?.discardInvalid()
     }
 
     override fun close() {

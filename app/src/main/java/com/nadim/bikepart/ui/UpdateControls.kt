@@ -17,8 +17,10 @@ import kotlin.math.roundToInt
 @Composable
 internal fun UpdateControls(installed: InstalledApp, state: UpdateState, download: DownloadState,
     check: () -> Unit, startDownload: () -> Unit, cancelDownload: () -> Unit,
+    installError: String? = null, installing: Boolean = false,
     installNow: () -> Unit = {}, installLater: () -> Unit = {}) {
     ShopSectionHeader(stringResource(R.string.application_updates))
+    if (installError != null) FormError(installError)
     ShopGroup {
         Text(stringResource(R.string.installed_version, installed.versionName, installed.versionCode),
             style = MaterialTheme.typography.bodyMedium)
@@ -63,8 +65,8 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
                 ShopSecondaryButton(onClick = cancelDownload) { Text(stringResource(R.string.update_cancel_download)) }
             download is DownloadState.Ready -> {
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                    ShopPrimaryButton(stringResource(R.string.update_install_now), onClick = installNow)
-                    ShopSecondaryButton(onClick = installLater) { Text(stringResource(R.string.update_install_later)) }
+                    ShopPrimaryButton(stringResource(R.string.update_install_now), enabled = !installing, onClick = installNow)
+                    ShopSecondaryButton(onClick = installLater, enabled = !installing) { Text(stringResource(R.string.update_install_later)) }
                 }
             }
             release != null ->

@@ -60,5 +60,6 @@
     <string name="update_install_later">Install later</string>
     <string name="update_install_warning">Installing will close or restart the app. Ensure you have saved your work before proceeding.</string>
     <string name="update_install_invalid">The downloaded update file is missing, invalid or superseded. Please download again.</string>
+    <string name="update_install_failed">Could not open the Android installer. Try Install now again.</string>
     <string name="update_install_permission_needed">Install permission needed. Please allow installing unknown apps for Bikepart in Settings, then tap Install now again.</string>
 </resources>
