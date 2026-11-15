@@ -96,12 +96,23 @@ checksums and any GitHub-provided asset digest. Release notes become a short
 plain-text summary. GitHub's latest label and version tag text do not decide
 eligibility.
 
-Network responses are limited to 1 MiB, connect/read timeouts to 10 seconds and a
-check to 30 seconds. Discovery stops safely rather than guessing if more than
-20 pages are required. Concurrent checks coalesce. Leaving the foreground cancels
-the manual check; there are no scheduled checks, prompts, downloads or installation
-actions in this first discovery slice. Failures appear only in update controls and
-never modify stock, sales, saved carts, shop schema or backups.
+After the check offers a release, Download update starts a foreground-only APK
+transfer over the available Wi-Fi or mobile connection. The UI shows download
+size before transfer, determinate progress, Cancel, and a specific retryable
+failure. Duplicate taps coalesce, in-app navigation and rotation retain the
+transfer, and true process backgrounding cancels it. Downloads are written to
+private temporary storage and promoted only after exact size, SHA-256, package
+ID, minimum API, actual APK version code, metadata agreement and signing
+compatibility all pass. Completed APKs and their identity live in
+`filesDir/app-updates`, are revalidated when the app reopens, and are explicitly
+excluded from cloud backup and device transfer. A completed download never installs automatically. Staff can choose Install now or Install later in More > Application updates. Installing may close or restart the app. On first use, Android may ask the user to allow Bikepart as an installation source; return to the app and tap Install now again. Android then asks for confirmation. Denial or cancellation leaves the existing app and retained download available for retry. If the download is missing or invalid, download it again. Do not uninstall the existing app to work around a signing mismatch.
+
+Network responses are limited to 1 MiB for discovery, connect/read timeouts to
+10 seconds and a check to 30 seconds, with a separate 256 MiB cap for APK
+bodies. Discovery stops safely rather than guessing if more than 20 pages are
+required. Concurrent checks coalesce. Leaving the foreground cancels the manual
+check and any active download; automatic checks happen at most once per local day on launch or foreground return. Reminders wait for idle Home and can be postponed until the next day; there are no background transfers or system notifications. Failures appear only in update controls and never modify
+stock, sales, saved carts, shop schema or shop backups.
 
 Local contract checks (substitute your APK and build-tools paths):
 
@@ -116,3 +127,9 @@ a loopback server for pagination, network failures, timeouts and rate limits.
 shop snapshots, foreground cancellation, and captures light/dark screens at normal
 and 200% font scale. Only debug builds allow cleartext loopback traffic for these
 tests; release networking remains HTTPS.
+
+## Bootstrap and signing continuity
+
+For the first installation, obtain the verified release APK from the official GitHub release and use Android's installer. For every later update, compare the signing certificate of the new APK with the APK already distributed before rollout (for example, run `apksigner verify --print-certs` on both APKs). Stop rollout if they differ; restoring the original signing key is required. Never ask staff to uninstall, because doing so can remove shop data. Check the downloaded APK's SHA-256 against `SHA256SUMS.txt` and confirm its package, version code, size and hash agree with `update.json`.
+
+Before rollout, exercise a real upgrade on an isolated device using two APKs signed by the same key and increasing version codes. Seed products and stock, a completed sale and a saved cart in the older app; use Android's permission and installer screens to install the newer APK, reopen it, and verify the records and any applicable migration. Record device, versions, signing certificate and results. A simulated installer does not establish upgrade compatibility.

@@ -1,6 +1,9 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,33 +23,38 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     link: (String, BarcodeTarget, Long?, () -> Unit) -> Unit) {
     var raw by rememberSaveable { mutableStateOf<String?>(null) }
     var transportError by rememberSaveable { mutableStateOf<String?>(null) }
-    // Recreation always requires explicit start/resume, never silently restarts recognition.
-    var running by remember { mutableStateOf(false) }
+    // Opening any contextual scan route starts the camera; cancel/pause still requires an explicit resume.
+    var running by rememberSaveable { mutableStateOf(true) }
     var attempt by remember { mutableIntStateOf(0) }
-    var started by rememberSaveable { mutableStateOf(false) }
+    var started by rememberSaveable { mutableStateOf(true) }
     var quantity by rememberSaveable { mutableStateOf("") }
     var linking by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { running = false; attempt++ } }
     val resolution = raw?.let { runCatching { shop.resolveScan(it) } }
     if (linking && raw != null) {
-        BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
-            save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } })
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
+            save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } }) }
         return
     }
-    Text("Scan purpose: ${purpose.label}", style = MaterialTheme.typography.titleMedium)
-    Text("Shared labels identify a product. Choose an action and enter pieces yourself. Scanning does not change stock.")
-    Text("Camera frames are read on this phone and are not uploaded.",
-        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; manual() }, enabled = !busy) { Text("Manual search") }
-    if (running) key(attempt) {
-        val currentAttempt = attempt
-        camera({ value ->
-            if (running && attempt == currentAttempt) { running = false; raw = value; transportError = null; quantity = ""; onChange() }
-        }, { message ->
-            if (running && attempt == currentAttempt) { running = false; transportError = message; raw = null }
-        })
-        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { running = false; attempt++; transportError = "Camera cancelled. Use manual search or resume." }) { Text("Cancel camera") }
+    Column(Modifier.fillMaxSize()) {
+    if (running) {
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            key(attempt) {
+                val currentAttempt = attempt
+                camera({ value ->
+                    if (running && attempt == currentAttempt) { running = false; raw = value; transportError = null; quantity = ""; onChange() }
+                }, { message ->
+                    if (running && attempt == currentAttempt) { running = false; transportError = message; raw = null }
+                })
+            }
+        }
+        Box(Modifier.fillMaxWidth().padding(16.dp)) {
+            ShopPrimaryButton("Manual search", enabled = !busy) { running = false; attempt++; manual() }
+        }
     } else {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text("Manual search") }
         if (started) Text("Recognition paused", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         transportError?.let { FormError(it) }
         resolution?.exceptionOrNull()?.message?.let { FormError(it) }
@@ -66,7 +74,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                 when (purpose) {
                     ScanPurpose.Sale -> {
                         val line = cart?.lines?.find { it.productId == target.product.id }
-                        Text("${if (line == null) "Unit price" else "Retained quote"}: ₹${indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)}")
+                        Text("Unit price: ₹${indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)}")
                         OutlinedTextField(quantity, { quantity = it; onChange() }, label = { Text("Pieces to add") },
                             enabled = !busy, isError = error?.field == ProductField.CartQuantity,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), singleLine = true)
@@ -89,5 +97,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
         ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {
             Text(if (started) "Resume scanning" else "Start camera")
         }
+        }
+    }
     }
 }

@@ -1,5 +1,8 @@
 package com.nadim.bikepart.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
@@ -13,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -48,15 +52,39 @@ private val destinations = listOf(
 fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) },
     labelUsb: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess = { context, cancelled ->
         com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
-    }, updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater }) {
+    },
+    updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater },
+    reminders: @Composable () -> UpdateReminders = { viewModel<UpdateViewModel>().reminders },
+    installer: @Composable () -> AppInstaller = { viewModel<UpdateViewModel>().installer }) {
     val updateService = updater()
+    val reminderService = reminders()
+    val installService = installer()
     val updateState by updateService.state.collectAsStateWithLifecycle()
+    val downloadState by updateService.downloadState.collectAsStateWithLifecycle()
     val updateScope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
+    val invalidApkMsg = stringResource(R.string.update_install_invalid)
+    val permissionNeededMsg = stringResource(R.string.update_install_permission_needed)
+    val installFailedMsg = stringResource(R.string.update_install_failed)
+    var installError by remember { mutableStateOf<String?>(null) }
+    var installing by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle, updateService) {
+    DisposableEffect(lifecycle, updateService, reminderService) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) updateJob?.cancel()
+            if (event == Lifecycle.Event.ON_START) {
+                if (reminderService.shouldCheckAutomatically() && updateJob?.isActive != true) {
+                    reminderService.recordCheckAttempt()
+                    updateJob = updateScope.launch {
+                        try { updateService.check() } catch (_: Exception) {}
+                    }
+                }
+            } else if (event == Lifecycle.Event.ON_STOP) {
+                updateJob?.cancel()
+                // Rotation and in-app navigation keep a transfer; only actual
+                // backgrounding stops it. Process death leaves temporary files.
+                if (context.findActivity()?.isChangingConfigurations != true) updateService.cancelDownload()
+            }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); updateJob?.cancel() }
@@ -78,9 +106,15 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf("Home") }
     var route by rememberSaveable { mutableStateOf("main") }
+    val currentRoute by rememberUpdatedState(route)
+    val currentDestination by rememberUpdatedState(destination)
+    val currentBusy by rememberUpdatedState(busy)
+    val currentBackupBusy by rememberUpdatedState(backupBusy)
+    val currentDownloadState by rememberUpdatedState(downloadState)
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
     var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
+    var newCartId by rememberSaveable { mutableStateOf("") }
     var scanPurpose by rememberSaveable { mutableStateOf(ScanPurpose.Catalog.name) }
     var scanReturn by rememberSaveable { mutableStateOf("create") }
     var arrivalOperation by rememberSaveable { mutableStateOf("") }
@@ -104,11 +138,23 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val product = state?.products?.find { it.id == selectedId }
     fun back() {
         if (route == "scan") { route = scanReturn; model.error.value = null; return }
-        if (route == "cart") { model.flushCart { route = "main"; destination = "Carts" }; return }
+        if (route == "cart") {
+            val draft = cartDraft
+            val isUntouchedNewCart = newCartId == selectedId && draft != null &&
+                draft.customer.isBlank() && draft.quantities.isEmpty()
+            if (isUntouchedNewCart) {
+                model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, {
+                    newCartId = ""; route = "main"; destination = "Carts"
+                })
+            } else {
+                model.flushCart { newCartId = ""; route = "main"; destination = "Carts" }
+            }
+            return
+        }
         route = when (route) { "checkout", "cart-products" -> "cart"; "receipt" -> "sales"; "detail" -> if (product?.archived == true) "archived-products" else "main"; "edit", "fields", "correction", "labels" -> "detail"; "arrival" -> "receive-products"; "template-detail", "template-form" -> "templates"; else -> "main" }
         model.error.value = null
     }
-    fun newCart() { model.write({ selectedId = createCart() }, { model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
+    fun newCart() { model.write({ selectedId = createCart() }, { newCartId = selectedId; model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
     fun addProduct() { model.error.value = null; formSession++; catalogPayload = null; route = "create" }
     fun openStock(health: StockHealth?) {
         stockState.removeState("stock:$stockSession")
@@ -137,7 +183,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                 topBar = {
                     if (route != "main") CenterAlignedTopAppBar(
                         title = { Text(when (route) {
-                            "labels" -> "Product labels"; "scan" -> "Scan shared label"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
+                            "labels" -> "Product labels"; "scan" -> "Scan Barcode"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
                             "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
                             "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
                             "detail" -> "Product details"; "edit" -> "Edit details"
@@ -200,8 +246,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     }
                     Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.TopCenter) {
                         Column(
-                            Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content)
-                                .padding(bottom = if (route == "main" && destination in listOf("Stock", "Carts")) 88.dp else 0.dp),
+                            if (route == "scan") Modifier.fillMaxSize() else
+                                Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content)
+                                    .padding(bottom = if (route == "main" && destination in listOf("Stock", "Carts")) 88.dp else 0.dp),
                             verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
                         ) {
                             val shop = state
@@ -249,7 +296,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     remove = { productId -> cartDraft?.let { draft ->
                                         model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
                                     } },
-                                    discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { route = "main"; destination = "Carts" }) } })
+                                    discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { newCartId = ""; route = "main"; destination = "Carts" }) } })
                                 "checkout" -> {
                                     val cart = shop.carts.find { it.id == selectedId }
                                     if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
@@ -295,7 +342,10 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
                                             model.write({
                                                 if (route == "template-form") templateId = saveTemplate(input.catalog, templateId, photo)
-                                                else if (editing != null) editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
+                                                else if (editing != null) {
+                                                    editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
+                                                    setSellingPrice(editing.id, input.priceRupees)
+                                                }
                                                 else selectedId = createFromCatalog(input.catalog, input.openingPieces, input.priceRupees, input.allowSimilar, input.locationIds, photo)
                                             }, { route = if (route == "template-form") "template-detail" else "detail" })
                                         },
@@ -359,7 +409,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 }
                                             })
                                     }
-                                    "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
+                                    "Carts" -> CartList(shop, busy, ::newCart, onOpen = { newCartId = ""; selectedId = it; model.openCart(it); route = "cart" })
                                     "More" -> {
                                         MoreScreen(shop, shop.appearance, busy,
                                             onAppearance = { model.write({ setAppearance(it) }) },
@@ -368,11 +418,37 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             onArchived = { route = "archived-products" },
                                             onSales = { route = "sales" },
                                             onTemplates = { route = "templates" }, onBackups = { route = "backups" },
-                                            updates = { UpdateControls(updateService.installed, updateState) {
+                                            updates = { UpdateControls(updateService.installed, updateState, downloadState, {
                                                 if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                                                     updateJob = updateScope.launch { updateService.check() }
                                                 }
-                                            } })
+                                            }, { installError = null; updateService.startDownload() }, updateService::cancelDownload,
+                                            installError = installError, installing = installing, installNow = {
+                                                val ready = downloadState as? DownloadState.Ready
+                                                if (ready != null && !busy && !installing) {
+                                                    installing = true
+                                                    installError = null
+                                                    updateScope.launch {
+                                                        try {
+                                                            when (installService.install(ready.apk, ready.release) {
+                                                                currentRoute == "main" && currentDestination == "More" && !currentBusy && !currentBackupBusy &&
+                                                                    lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) && currentDownloadState == ready
+                                                            }) {
+                                                                InstallResult.InvalidApk -> {
+                                                                    updateService.discardInvalidDownload()
+                                                                    installError = invalidApkMsg
+                                                                }
+                                                                InstallResult.PermissionRequired -> installError = permissionNeededMsg
+                                                                InstallResult.Failed -> installError = installFailedMsg
+                                                                InstallResult.Success, InstallResult.Cancelled -> Unit
+                                                            }
+                                                        } finally { installing = false }
+                                                    }
+                                                }
+                                            },
+                                            installLater = {
+                                                // Retain completed file in ready state, keeping it accessible in More
+                                            }) })
                                     }
                                 }
                             }
@@ -382,6 +458,34 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     }
                 }
             }
+
+            var reminderRevision by remember { mutableIntStateOf(0) }
+            val availableUpdate = (updateState as? UpdateState.Available)?.release
+            val isIdle = route == "main" && destination == "Home" && !busy && !backupBusy && error == null
+            if (isIdle && availableUpdate != null &&
+                reminderRevision >= 0 && reminderService.shouldShowReminder(availableUpdate) && downloadState !is DownloadState.Downloading &&
+                downloadState !is DownloadState.Verifying) {
+                UpdateReminderDialog(
+                    release = availableUpdate,
+                    onUpdate = {
+                        reminderService.dismissReminder(availableUpdate)
+                        reminderRevision++
+                        destination = "More"
+                        updateService.startDownload()
+                    },
+                    onDismiss = {
+                        reminderService.dismissReminder(availableUpdate)
+                        reminderRevision++
+                    }
+                )
+            }
         }
     }
+}
+
+/** Configuration changes recreate the activity but must not stop an active transfer. */
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

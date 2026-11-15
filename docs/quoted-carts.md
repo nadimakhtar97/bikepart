@@ -11,10 +11,11 @@ grouping and whole rupees. Other-cart demand is informational: several carts
 can request the last piece, and carts never reduce or reserve stock.
 
 Each new line captures the current selling price in its database transaction.
-Quantity edits and additions to an existing line keep its quote. Removing the
-whole line commits the end of the quote; adding it again captures the current
-price. `Shop.setSellingPrice` changes the current catalog price without rewriting
-existing quotes. Cash payment and checkout are separate implementation ticket 11.
+Changing a product's selling price updates matching lines in every unfinished
+cart. Quantity edits and additions to an existing line keep its current quote.
+Removing the whole line ends it; adding it again captures the current product
+price. Completed sale snapshots are unchanged by later price edits. Cash payment
+and checkout are separate implementation ticket 11.
 
 ## Persistence and save behavior
 
@@ -39,7 +40,8 @@ draft is saved against that exact committed version before navigation proceeds.
 An intervening writer's version is rejected rather than silently rebased.
 
 Every changed cart edit, creation, discard and catalog price change advances the
-business revision atomically. Cart edits also advance a per-cart edit version.
+business revision atomically. Repricing a line also advances its cart's edit
+version. Cart edits advance a per-cart edit version.
 Saving or discarding with an old version fails without overwriting current work.
 An unchanged save writes nothing. A discarded cart cannot be recreated by an
 old draft. The ViewModel's `flushCart` is the save barrier for navigation and the
@@ -54,15 +56,15 @@ because independent valid carts can together exceed one 64-bit quantity.
 ## Verification
 
 The tests use the public `Shop` boundary and actual app UI with file-backed Room;
-there are no mocked cart repositories. `CartsTest` covers quote retention,
+there are no mocked cart repositories. `CartsTest` covers all-cart repricing,
 removal/re-add, reopening, competing demand, numbering, stale/concurrent writes,
 invalid inputs, quantity/total overflow and transaction interruption. Revision
 failures are injected at the SQLite storage boundary, with durable outcomes
 checked through `Shop` after reopening.
 
 `CartWorkflowTest` covers customer labels, manual search/selection, editable
-quantities, cart-list switching, no reservation, retained quotes after catalog
-price changes, activity recreation and fresh activity launch, stale-edit
+quantities, cart-list switching, no reservation, repricing after catalog price
+changes, activity recreation and fresh activity launch, stale-edit
 rejection/reload, removal/re-add and discard. It also captures actual app
 screens in Light/Dark at normal and 200% system text, including long product and
 customer names, maximum whole-rupee totals, empty carts and validation with the

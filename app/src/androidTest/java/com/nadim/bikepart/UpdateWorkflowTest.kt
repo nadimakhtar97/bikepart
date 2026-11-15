@@ -22,7 +22,7 @@ class UpdateWorkflowTest {
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
     private fun snapshot() = runBlocking { Shop.open(context).use { it.snapshot() } }
     private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
-    private fun click(text: String) { val node = compose.onNodeWithText(text); if (text !in listOf("More", "Stock")) node.performScrollTo(); node.performClick() }
+    private fun click(text: String) { val node = compose.onNodeWithText(text); if (text !in listOf("Home", "More", "Stock")) node.performScrollTo(); node.performClick() }
 
     @Test fun manualChecksShowCheckingFailureRetryAndNoUpdateWithoutChangingShop() {
         var seededCartId = ""
@@ -110,7 +110,7 @@ class UpdateWorkflowTest {
                     await("Version 1.1 Workshop improvements available")
                     compose.onNodeWithText("Version 1.1 Workshop improvements available").performScrollTo().assertIsDisplayed()
                     capture("updates-${mode.name.lowercase()}-$scale-summary")
-                    compose.onNodeWithText("Check for updates").performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("Download update").performScrollTo().assertIsDisplayed()
                         .assertHeightIsAtLeast(androidx.compose.ui.unit.Dp(48f))
                     capture("updates-${mode.name.lowercase()}-$scale-action")
                     click("Stock"); click("More")
@@ -146,6 +146,37 @@ class UpdateWorkflowTest {
             scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
             await("Check for updates")
             assertEquals(1, attempts.get())
+            assertEquals(before, snapshot())
+        }
+    }
+
+    @Test fun reminderWaitsForStockFilterAndPreservesItsInput() {
+        val visible = kotlinx.coroutines.flow.MutableStateFlow<UpdateState>(UpdateState.Idle)
+        val release = AvailableUpdate(9, 9, "9.0", 100, "Update", "url", "a".repeat(64), 26)
+        val updater = object : AppUpdater {
+            override val installed = InstalledApp(context.packageName, 1, "1.0", 33)
+            override val state: kotlinx.coroutines.flow.StateFlow<UpdateState> = visible
+            override suspend fun check() = Unit
+        }
+        val storage = object : ReminderStorage {
+            val values = mutableMapOf<String, String>()
+            override fun getString(key: String) = values[key]
+            override fun putString(key: String, value: String) { values[key] = value }
+        }
+        val reminders = UpdateReminders(storage)
+        reminders.recordCheckAttempt()
+        val before = snapshot()
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { it.setContent { ShopApp(updater = { updater }, reminders = { reminders }) } }
+            await("Stock"); click("Stock"); click("More filters"); click("Category: Any")
+            compose.onNodeWithText("Find Category").performTextInput("brake")
+            compose.runOnIdle { visible.value = UpdateState.Available(release) }
+            compose.waitForIdle()
+            compose.onNodeWithText("Find Category").assertTextContains("brake")
+            compose.onNodeWithText("Update available").assertDoesNotExist()
+            click("Close"); click("Show results"); click("Home")
+            await("Update available")
+            click("Later")
             assertEquals(before, snapshot())
         }
     }
