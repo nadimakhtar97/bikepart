@@ -589,4 +589,14 @@
     <string name="copies">%1$s · %2$s copies</string>
     <string name="custom_fields_belong_only_to_promote_a">Custom fields belong only to %1$s. Promote a field explicitly to share it with this category.</string>
     <string name="retire_option">Retire option: %1$s</string>
+    <string name="update_dialog_title">Update available</string>
+    <string name="update_dialog_version_size">Version %1$s • %2$s MB</string>
+    <string name="update_dialog_update">Update</string>
+    <string name="update_dialog_later">Later</string>
+    <string name="update_install_now">Install now</string>
+    <string name="update_install_later">Install later</string>
+    <string name="update_install_warning">Installing will close or restart the app. Ensure you have saved your work before proceeding.</string>
+    <string name="update_install_invalid">The downloaded update file is missing, invalid or superseded. Please download again.</string>
+    <string name="update_install_failed">Could not open the Android installer. Try Install now again.</string>
+    <string name="update_install_permission_needed">Install permission needed. Please allow installing unknown apps for Bikepart in Settings, then tap Install now again.</string>
 </resources>

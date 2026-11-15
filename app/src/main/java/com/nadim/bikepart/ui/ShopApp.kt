@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -52,17 +53,34 @@ private val destinations = listOf(
 fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) },
     labelUsb: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess = { context, cancelled ->
         com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
-    }, updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater }) {
+    },
+    updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater },
+    reminders: @Composable () -> UpdateReminders = { viewModel<UpdateViewModel>().reminders },
+    installer: @Composable () -> AppInstaller = { viewModel<UpdateViewModel>().installer }) {
     val updateService = updater()
+    val reminderService = reminders()
+    val installService = installer()
     val updateState by updateService.state.collectAsStateWithLifecycle()
     val downloadState by updateService.downloadState.collectAsStateWithLifecycle()
     val updateScope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
+    val invalidApkMsg = stringResource(R.string.update_install_invalid)
+    val permissionNeededMsg = stringResource(R.string.update_install_permission_needed)
+    val installFailedMsg = stringResource(R.string.update_install_failed)
+    var installError by remember { mutableStateOf<String?>(null) }
+    var installing by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle, updateService) {
+    DisposableEffect(lifecycle, updateService, reminderService) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
+            if (event == Lifecycle.Event.ON_START) {
+                if (reminderService.shouldCheckAutomatically() && updateJob?.isActive != true) {
+                    reminderService.recordCheckAttempt()
+                    updateJob = updateScope.launch {
+                        try { updateService.check() } catch (_: Exception) {}
+                    }
+                }
+            } else if (event == Lifecycle.Event.ON_STOP) {
                 updateJob?.cancel()
                 // Rotation and in-app navigation keep a transfer; only actual
                 // backgrounding stops it. Process death leaves temporary files.
@@ -89,6 +107,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf("Home") }
     var route by rememberSaveable { mutableStateOf("main") }
+    val currentRoute by rememberUpdatedState(route)
+    val currentDestination by rememberUpdatedState(destination)
+    val currentBusy by rememberUpdatedState(busy)
+    val currentBackupBusy by rememberUpdatedState(backupBusy)
+    val currentDownloadState by rememberUpdatedState(downloadState)
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
     var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
@@ -400,7 +423,33 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                                                     updateJob = updateScope.launch { updateService.check() }
                                                 }
-                                            }, updateService::startDownload, updateService::cancelDownload) })
+                                            }, { installError = null; updateService.startDownload() }, updateService::cancelDownload,
+                                            installError = installError, installing = installing, installNow = {
+                                                val ready = downloadState as? DownloadState.Ready
+                                                if (ready != null && !busy && !installing) {
+                                                    installing = true
+                                                    installError = null
+                                                    updateScope.launch {
+                                                        try {
+                                                            when (installService.install(ready.apk, ready.release) {
+                                                                currentRoute == "main" && currentDestination == "More" && !currentBusy && !currentBackupBusy &&
+                                                                    lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) && currentDownloadState == ready
+                                                            }) {
+                                                                InstallResult.InvalidApk -> {
+                                                                    updateService.discardInvalidDownload()
+                                                                    installError = invalidApkMsg
+                                                                }
+                                                                InstallResult.PermissionRequired -> installError = permissionNeededMsg
+                                                                InstallResult.Failed -> installError = installFailedMsg
+                                                                InstallResult.Success, InstallResult.Cancelled -> Unit
+                                                            }
+                                                        } finally { installing = false }
+                                                    }
+                                                }
+                                            },
+                                            installLater = {
+                                                // Retain completed file in ready state, keeping it accessible in More
+                                            }) })
                                     }
                                 }
                             }
@@ -409,6 +458,27 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         }
                     }
                 }
+            }
+
+            var reminderRevision by remember { mutableIntStateOf(0) }
+            val availableUpdate = (updateState as? UpdateState.Available)?.release
+            val isIdle = route == "main" && destination == "Home" && !busy && !backupBusy && error == null
+            if (isIdle && availableUpdate != null &&
+                reminderRevision >= 0 && reminderService.shouldShowReminder(availableUpdate) && downloadState !is DownloadState.Downloading &&
+                downloadState !is DownloadState.Verifying) {
+                UpdateReminderDialog(
+                    release = availableUpdate,
+                    onUpdate = {
+                        reminderService.dismissReminder(availableUpdate)
+                        reminderRevision++
+                        destination = "More"
+                        updateService.startDownload()
+                    },
+                    onDismiss = {
+                        reminderService.dismissReminder(availableUpdate)
+                        reminderRevision++
+                    }
+                )
             }
         }
     }

@@ -1,9 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,8 +16,11 @@ import kotlin.math.roundToInt
 
 @Composable
 internal fun UpdateControls(installed: InstalledApp, state: UpdateState, download: DownloadState,
-    check: () -> Unit, startDownload: () -> Unit, cancelDownload: () -> Unit) {
+    check: () -> Unit, startDownload: () -> Unit, cancelDownload: () -> Unit,
+    installError: String? = null, installing: Boolean = false,
+    installNow: () -> Unit = {}, installLater: () -> Unit = {}) {
     ShopSectionHeader(stringResource(R.string.application_updates))
+    if (installError != null) FormError(installError)
     ShopGroup {
         Text(stringResource(R.string.installed_version, installed.versionName, installed.versionCode),
             style = MaterialTheme.typography.bodyMedium)
@@ -41,7 +42,7 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
                 is DownloadState.Ready -> {
                     ReleaseSummary(download.release)
                     Text(stringResource(R.string.update_download_ready), style = MaterialTheme.typography.titleSmall)
-                    Text(stringResource(R.string.update_download_ready_detail), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.update_install_warning), style = MaterialTheme.typography.bodyMedium)
                 }
                 is DownloadState.Failed -> {
                     ReleaseSummary(download.release)
@@ -62,7 +63,13 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
         when {
             download is DownloadState.Downloading || download is DownloadState.Verifying ->
                 ShopSecondaryButton(onClick = cancelDownload) { Text(stringResource(R.string.update_cancel_download)) }
-            release != null && download !is DownloadState.Ready ->
+            download is DownloadState.Ready -> {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                    ShopPrimaryButton(stringResource(R.string.update_install_now), enabled = !installing, onClick = installNow)
+                    ShopSecondaryButton(onClick = installLater, enabled = !installing) { Text(stringResource(R.string.update_install_later)) }
+                }
+            }
+            release != null ->
                 ShopPrimaryButton(stringResource(if (download is DownloadState.Failed) R.string.update_download_retry
                     else R.string.update_download), enabled = state != UpdateState.Checking, onClick = startDownload)
             else -> ShopPrimaryButton(stringResource(when (state) {
@@ -102,3 +109,46 @@ private fun downloadFailure(reason: DownloadFailure) = stringResource(when (reas
     DownloadFailure.Signing -> R.string.update_download_signing
     DownloadFailure.Unknown -> R.string.update_download_unknown
 })
+
+@Composable
+internal fun UpdateReminderDialog(
+    release: AvailableUpdate,
+    onUpdate: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.update_dialog_title), style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)
+            ) {
+                Text(
+                    stringResource(R.string.update_dialog_version_size, release.versionName, megabytes(release.sizeBytes)),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    release.summary.ifBlank { stringResource(R.string.update_no_summary) },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onUpdate,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = MaterialTheme.colorScheme.inverseOnSurface
+                )
+            ) {
+                Text(stringResource(R.string.update_dialog_update))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.update_dialog_later))
+            }
+        }
+    )
+}
