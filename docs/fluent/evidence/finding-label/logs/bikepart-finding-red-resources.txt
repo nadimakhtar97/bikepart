@@ -1,0 +1,7 @@
+    resource 0x7f0f018f string/location
+      () "Location:"
+    resource 0x7f0f0190 string/m3_ref_typeface_brand_medium
+--
+    resource 0x7f0f02a6 string/retire
+      () "Retire:"
+    resource 0x7f0f02a7 string/retire_option
