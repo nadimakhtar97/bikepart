@@ -1,5 +1,7 @@
 package com.nadim.bikepart.updates
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -50,9 +52,10 @@ interface AppUpdater {
 data class UpdateHttpResponse(val status: Int, val body: String)
 
 /** Public GitHub requests only. Timeouts and response limits bound offline and hostile responses. */
-class UpdateHttp(private val timeoutMillis: Int = 10_000) {
+class UpdateHttp(private val timeoutMillis: Int = 10_000,
+    private val openConnection: (String) -> HttpURLConnection = { URL(it).openConnection() as HttpURLConnection }) {
     suspend fun get(url: String): UpdateHttpResponse = suspendCancellableCoroutine { continuation ->
-        val connection = URL(url).openConnection() as HttpURLConnection
+        val connection = openConnection(url)
         connection.connectTimeout = timeoutMillis
         connection.readTimeout = timeoutMillis
         connection.setRequestProperty("Accept", "application/vnd.github+json")
@@ -81,44 +84,57 @@ class UpdateHttp(private val timeoutMillis: Int = 10_000) {
      * body length is checked when present, [maxBytes] prevents oversized content
      * filling private storage, and cancellation disconnects the real socket.
      */
-    suspend fun download(url: String, destination: File, maxBytes: Long, onProgress: (Long) -> Unit): Long =
-        suspendCancellableCoroutine { continuation ->
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.connectTimeout = timeoutMillis
-            connection.readTimeout = timeoutMillis
-            connection.setRequestProperty("Accept", "application/octet-stream")
-            connection.setRequestProperty("User-Agent", "Bikepart-updater")
-            continuation.invokeOnCancellation { connection.disconnect() }
-            Dispatchers.IO.dispatch(continuation.context, Runnable {
-                try {
-                    if (!continuation.isActive) return@Runnable
-                    val status = connection.responseCode
-                    if (status != 200) throw HttpFailure(status)
-                    val declared = connection.contentLengthLong
-                    if (declared > maxBytes || declared > MAX_UPDATE_BYTES) throw UpdateTooLargeException()
-                    var total = 0L
-                    FileOutputStream(destination).use { output ->
-                        connection.inputStream.use { input ->
-                            val buffer = ByteArray(64 * 1024)
-                            while (true) {
-                                if (!continuation.isActive) throw CancellationException()
-                                val count = input.read(buffer)
-                                if (count < 0) break
-                                total += count
-                                if (total > maxBytes || total > MAX_UPDATE_BYTES) throw UpdateTooLargeException()
-                                output.write(buffer, 0, count)
-                                onProgress(total)
+    suspend fun download(url: String, destination: File, maxBytes: Long, onProgress: (Long) -> Unit): Long {
+        val workerFinished = CompletableDeferred<Unit>()
+        var dispatched = false
+        try {
+            return suspendCancellableCoroutine { continuation ->
+                val connection = openConnection(url)
+                connection.connectTimeout = timeoutMillis
+                connection.readTimeout = timeoutMillis
+                connection.setRequestProperty("Accept", "application/octet-stream")
+                connection.setRequestProperty("User-Agent", "Bikepart-updater")
+                continuation.invokeOnCancellation { connection.disconnect() }
+                Dispatchers.IO.dispatch(continuation.context, Runnable {
+                    try {
+                        if (!continuation.isActive) return@Runnable
+                        val status = connection.responseCode
+                        if (status != 200) throw HttpFailure(status)
+                        val declared = connection.contentLengthLong
+                        if (declared > maxBytes || declared > MAX_UPDATE_BYTES) throw UpdateTooLargeException()
+                        var total = 0L
+                        FileOutputStream(destination).use { output ->
+                            connection.inputStream.use { input ->
+                                val buffer = ByteArray(64 * 1024)
+                                while (true) {
+                                    if (!continuation.isActive) throw CancellationException()
+                                    val count = input.read(buffer)
+                                    if (count < 0) break
+                                    total += count
+                                    if (total > maxBytes || total > MAX_UPDATE_BYTES) throw UpdateTooLargeException()
+                                    output.write(buffer, 0, count)
+                                    onProgress(total)
+                                }
                             }
+                            output.fd.sync()
                         }
-                        output.fd.sync()
+                        if (declared >= 0 && total != declared) throw UpdateIntegrityException("Update download was truncated")
+                        continuation.resume(total)
+                    } catch (error: Exception) {
+                        continuation.resumeWithException(error)
+                    } finally {
+                        try { connection.disconnect() } finally { workerFinished.complete(Unit) }
                     }
-                    if (declared >= 0 && total != declared) throw UpdateIntegrityException("Update download was truncated")
-                    continuation.resume(total)
-                } catch (error: Exception) {
-                    continuation.resumeWithException(error)
-                } finally { connection.disconnect() }
-            })
+                })
+                dispatched = true
+            }
+        } finally {
+            if (!dispatched) workerFinished.complete(Unit)
+            // Cancellation disconnects the socket, but the blocking worker may still
+            // hold the destination file. Do not let cleanup or retry race that worker.
+            withContext(NonCancellable) { workerFinished.await() }
         }
+    }
 }
 
 private class HttpFailure(val status: Int) : IOException("Update server returned $status")

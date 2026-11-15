@@ -10,6 +10,11 @@ import com.nadim.bikepart.updates.UpdateDownloads
 import com.nadim.bikepart.updates.UpdateHttp
 import com.nadim.bikepart.updates.sha256
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.io.ByteArrayInputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.util.concurrent.Executors
@@ -152,6 +157,49 @@ class UpdateDownloadTest {
         }
         directory.deleteRecursively()
         Unit
+    }
+
+    @Test fun retryWaitsForCancelledHttpWriterToExit() = runBlocking {
+        val directory = temporaryDirectory()
+        val entered = CountDownLatch(1)
+        val releaseWriter = CountDownLatch(1)
+        val requests = AtomicInteger()
+        val http = UpdateHttp(openConnection = {
+            val attempt = requests.incrementAndGet()
+            object : HttpURLConnection(URL("http://localhost/update.apk")) {
+                override fun connect() {}
+                override fun disconnect() {}
+                override fun usingProxy() = false
+                override fun getResponseCode(): Int {
+                    if (attempt == 1) {
+                        entered.countDown()
+                        check(releaseWriter.await(5, TimeUnit.SECONDS))
+                    }
+                    return 200
+                }
+                override fun getContentLengthLong() = payload.size.toLong()
+                override fun getInputStream() = ByteArrayInputStream(payload)
+            }
+        })
+        val target = UpdateDownloads(directory, installed, inspector(), transfer = http::download,
+            availableBytes = { Long.MAX_VALUE })
+        try {
+            target.awaitRestored()
+            target.start(release())
+            assertTrue(entered.await(5, TimeUnit.SECONDS))
+            target.cancel()
+            target.start(release())
+            kotlinx.coroutines.delay(300)
+            assertEquals("Retry started before cancelled writer exited", 1, requests.get())
+            releaseWriter.countDown()
+            assertTrue(target.await(DownloadState::isReady) is DownloadState.Ready)
+            assertArrayEquals(payload, File(directory, "update.apk").readBytes())
+            assertEquals(2, requests.get())
+        } finally {
+            releaseWriter.countDown()
+            target.close()
+            directory.deleteRecursively()
+        }
     }
 
     @Test fun corruptTruncatedOversizedAndMismatchedApksAreRejected() = runBlocking {
