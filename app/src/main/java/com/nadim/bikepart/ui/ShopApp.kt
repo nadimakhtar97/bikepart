@@ -150,7 +150,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                 topBar = {
                     if (route != "main") CenterAlignedTopAppBar(
                         title = { Text(when (route) {
-                            "labels" -> "Product labels"; "scan" -> "Scan shared label"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
+                            "labels" -> "Product labels"; "scan" -> "Scan Barcode"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
                             "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
                             "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
                             "detail" -> "Product details"; "edit" -> "Edit details"
@@ -213,8 +213,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     }
                     Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.TopCenter) {
                         Column(
-                            Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content)
-                                .padding(bottom = if (route == "main" && destination in listOf("Stock", "Carts")) 88.dp else 0.dp),
+                            if (route == "scan") Modifier.fillMaxSize() else
+                                Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content)
+                                    .padding(bottom = if (route == "main" && destination in listOf("Stock", "Carts")) 88.dp else 0.dp),
                             verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
                         ) {
                             val shop = state
