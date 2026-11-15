@@ -32,7 +32,7 @@ Fallbacks must derive colors, typography and shapes from Fluent semantic tokens,
 
 ## Evidence and remaining gates
 
-- Test-first compilation failed on the missing trial; after implementation `:app:assembleDebug :app:assembleRelease :app:compileDebugAndroidTestKotlin` succeeded with JDK 25 and API 37 SDK. Release R8 ran, but the unreferenced trial can be removed by shrinking, so this is not a release-trial runtime check. The instrumentation interaction is not yet proven at runtime.
+- Test-first compilation failed on the missing trial; after implementation `:app:assembleDebug :app:assembleRelease :app:compileDebugAndroidTestKotlin` succeeded with JDK 25 and API 37 SDK. Release R8 ran with a shell-accessible trial activity retained in the manifest; this is not a release-trial runtime check. The instrumentation interaction is not yet proven at runtime.
 - Debug and release runtime reports resolve Fluent core 0.3.10 transitively to 0.3.11, icons 0.3.2, listitem 0.3.7, and upstream Compose BOM 2023.09.00 to 2026.02.01; `ui-android` resolves to 1.11.0. Resource merging succeeded in both builds; no runtime resource audit has been performed.
 - No connected device was present on inspection. API 33 and current API emulator availability and runtime checks remain outstanding.
 - Light/dark at 100%/200%, focused keyboard, TalkBack, focus order, contrast and release-shrunk runtime have not been inspected. No screenshots are claimed.
