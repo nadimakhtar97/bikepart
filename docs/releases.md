@@ -96,12 +96,25 @@ checksums and any GitHub-provided asset digest. Release notes become a short
 plain-text summary. GitHub's latest label and version tag text do not decide
 eligibility.
 
-Network responses are limited to 1 MiB, connect/read timeouts to 10 seconds and a
-check to 30 seconds. Discovery stops safely rather than guessing if more than
-20 pages are required. Concurrent checks coalesce. Leaving the foreground cancels
-the manual check; there are no scheduled checks, prompts, downloads or installation
-actions in this first discovery slice. Failures appear only in update controls and
-never modify stock, sales, saved carts, shop schema or backups.
+After the check offers a release, Download update starts a foreground-only APK
+transfer over the available Wi-Fi or mobile connection. The UI shows download
+size before transfer, determinate progress, Cancel, and a specific retryable
+failure. Duplicate taps coalesce, in-app navigation and rotation retain the
+transfer, and true process backgrounding cancels it. Downloads are written to
+private temporary storage and promoted only after exact size, SHA-256, package
+ID, minimum API, actual APK version code, metadata agreement and signing
+compatibility all pass. Completed APKs and their identity live in
+`filesDir/app-updates`, are revalidated when the app reopens, and are explicitly
+excluded from cloud backup and device transfer. Installation is a later slice;
+a completed download never installs automatically.
+
+Network responses are limited to 1 MiB for discovery, connect/read timeouts to
+10 seconds and a check to 30 seconds, with a separate 256 MiB cap for APK
+bodies. Discovery stops safely rather than guessing if more than 20 pages are
+required. Concurrent checks coalesce. Leaving the foreground cancels the manual
+check and any active download; there are no scheduled checks, prompts or
+background transfers. Failures appear only in update controls and never modify
+stock, sales, saved carts, shop schema or shop backups.
 
 Local contract checks (substitute your APK and build-tools paths):
 

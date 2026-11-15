@@ -16,12 +16,15 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
 /** Installation-local application boundary. No shop data or credentials enter discovery. */
-data class InstalledApp(val packageId: String, val versionCode: Long, val versionName: String, val androidApi: Int)
+data class InstalledApp(val packageId: String, val versionCode: Long, val versionName: String, val androidApi: Int,
+    val signers: Set<String> = emptySet())
 data class AvailableUpdate(val id: Long, val versionCode: Long, val versionName: String, val sizeBytes: Long,
     val summary: String, val apkUrl: String, val sha256: String, val minSdk: Int)
 enum class UpdateFailure { Connection, Timeout, RateLimited }
@@ -32,10 +35,17 @@ sealed interface UpdateState {
     data class Available(val release: AvailableUpdate) : UpdateState
     data class Failed(val reason: UpdateFailure) : UpdateState
 }
+private val noDownloadState = MutableStateFlow<DownloadState>(DownloadState.None).asStateFlow()
+
 interface AppUpdater {
     val installed: InstalledApp
     val state: StateFlow<UpdateState>
+    val downloadState: StateFlow<DownloadState> get() = noDownloadState
     suspend fun check()
+    /** Starts a user-requested transfer. Implementations ignore duplicate starts. */
+    fun startDownload() {}
+    fun cancelDownload() {}
+    fun close() {}
 }
 data class UpdateHttpResponse(val status: Int, val body: String)
 
@@ -65,21 +75,69 @@ class UpdateHttp(private val timeoutMillis: Int = 10_000) {
             } finally { connection.disconnect() }
         })
     }
+
+    /**
+     * Streams an APK into [destination] and reports cumulative bytes. The declared
+     * body length is checked when present, [maxBytes] prevents oversized content
+     * filling private storage, and cancellation disconnects the real socket.
+     */
+    suspend fun download(url: String, destination: File, maxBytes: Long, onProgress: (Long) -> Unit): Long =
+        suspendCancellableCoroutine { continuation ->
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.connectTimeout = timeoutMillis
+            connection.readTimeout = timeoutMillis
+            connection.setRequestProperty("Accept", "application/octet-stream")
+            connection.setRequestProperty("User-Agent", "Bikepart-updater")
+            continuation.invokeOnCancellation { connection.disconnect() }
+            Dispatchers.IO.dispatch(continuation.context, Runnable {
+                try {
+                    if (!continuation.isActive) return@Runnable
+                    val status = connection.responseCode
+                    if (status != 200) throw HttpFailure(status)
+                    val declared = connection.contentLengthLong
+                    if (declared > maxBytes || declared > MAX_UPDATE_BYTES) throw UpdateTooLargeException()
+                    var total = 0L
+                    FileOutputStream(destination).use { output ->
+                        connection.inputStream.use { input ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                if (!continuation.isActive) throw CancellationException()
+                                val count = input.read(buffer)
+                                if (count < 0) break
+                                total += count
+                                if (total > maxBytes || total > MAX_UPDATE_BYTES) throw UpdateTooLargeException()
+                                output.write(buffer, 0, count)
+                                onProgress(total)
+                            }
+                        }
+                        output.fd.sync()
+                    }
+                    if (declared >= 0 && total != declared) throw UpdateIntegrityException("Update download was truncated")
+                    continuation.resume(total)
+                } catch (error: Exception) {
+                    continuation.resumeWithException(error)
+                } finally { connection.disconnect() }
+            })
+        }
 }
 
 private class HttpFailure(val status: Int) : IOException("Update server returned $status")
 
+private const val MAX_UPDATE_BYTES = 256L * 1024 * 1024
+
 class GitHubUpdater(override val installed: InstalledApp,
+    private val downloads: UpdateDownloads? = null,
     private val get: suspend (String) -> UpdateHttpResponse = UpdateHttp()::get) : AppUpdater {
     private val mutableState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     override val state = mutableState.asStateFlow()
+    override val downloadState: StateFlow<DownloadState> get() = downloads?.state ?: noDownloadState
     private val checkLock = Mutex()
     override suspend fun check() {
         if (!checkLock.tryLock()) return
         val previous = mutableState.value
         mutableState.value = UpdateState.Checking
         try {
-            mutableState.value = withTimeout(30_000) {
+            val outcome = withTimeout(30_000) {
                 withContext(Dispatchers.IO) {
                     val seen = mutableSetOf<Long>()
                     val candidates = mutableListOf<AvailableUpdate>()
@@ -97,6 +155,14 @@ class GitHubUpdater(override val installed: InstalledApp,
                     candidates.maxByOrNull { it.versionCode }?.let(UpdateState::Available) ?: UpdateState.NoUpdate
                 }
             }
+            try {
+                downloads?.reconcile((outcome as? UpdateState.Available)?.release)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                // Retention cleanup is best effort; a completed discovery still stands.
+            }
+            mutableState.value = outcome
         } catch (_: TimeoutCancellationException) {
             mutableState.value = UpdateState.Failed(UpdateFailure.Timeout)
         } catch (cancelled: CancellationException) {
@@ -105,6 +171,18 @@ class GitHubUpdater(override val installed: InstalledApp,
         } catch (error: Exception) {
             mutableState.value = UpdateState.Failed(if (error is HttpFailure && error.status in listOf(403, 429)) UpdateFailure.RateLimited else UpdateFailure.Connection)
         } finally { checkLock.unlock() }
+    }
+
+    override fun startDownload() {
+        (mutableState.value as? UpdateState.Available)?.let { downloads?.start(it.release) }
+    }
+
+    override fun cancelDownload() {
+        downloads?.cancel()
+    }
+
+    override fun close() {
+        downloads?.close()
     }
     private suspend fun fetch(url: String): String {
         coroutineContext.ensureActive()

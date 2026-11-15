@@ -110,7 +110,7 @@ class UpdateWorkflowTest {
                     await("Version 1.1 Workshop improvements available")
                     compose.onNodeWithText("Version 1.1 Workshop improvements available").performScrollTo().assertIsDisplayed()
                     capture("updates-${mode.name.lowercase()}-$scale-summary")
-                    compose.onNodeWithText("Check for updates").performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("Download update").performScrollTo().assertIsDisplayed()
                         .assertHeightIsAtLeast(androidx.compose.ui.unit.Dp(48f))
                     capture("updates-${mode.name.lowercase()}-$scale-action")
                     click("Stock"); click("More")
