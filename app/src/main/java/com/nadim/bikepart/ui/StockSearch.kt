@@ -44,23 +44,6 @@ internal fun StockHealthIndicator(product: Product) {
     }
 }
 
-@Composable
-internal fun ThresholdForm(product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String) -> Unit) {
-    var pieces by rememberSaveable(product.id, product.lowStockThreshold) { mutableStateOf(product.lowStockThreshold?.toString().orEmpty()) }
-    val focusError = remember { BringIntoViewRequester() }
-    LaunchedEffect(error) { if (error?.field == ProductField.LowStockThreshold) focusError.bringIntoView() }
-    ShopSection(stringResource(R.string.threshold_section)) {
-        Text(product.lowStockThreshold?.let { "Threshold: ${indianNumber(it)} pieces" } ?: "Threshold: Not set",
-            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        Text(stringResource(R.string.threshold_note), style = MaterialTheme.typography.bodyMedium)
-        OutlinedTextField(pieces, { pieces = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.threshold_field_label)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true,
-            isError = error?.field == ProductField.LowStockThreshold, modifier = Modifier.fillMaxWidth().bringIntoViewRequester(focusError))
-        if (error?.field == ProductField.LowStockThreshold) FormError(error.message)
-        ShopPrimaryButton(stringResource(R.string.threshold_save), enabled = !busy, onClick = { save(pieces) })
-    }
-}
-
 /** Searchable manual choices remain bounded even with a large lookup catalog. */
 @Composable
 private fun SearchFilter(label: String, choices: List<Pair<String, String>>, selected: String?, onSelect: (String?) -> Unit) {
