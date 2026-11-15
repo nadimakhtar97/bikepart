@@ -5,9 +5,11 @@ import android.accounts.AccountManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import com.nadim.bikepart.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -64,7 +66,7 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
         val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
         if (email != null) authorize(email, DriveAction.Connect) else model.driveFailure("No Google account selected.")
     }
-    ShopSection("Google Drive backup") {
+    ShopSection(stringResource(R.string.drive_backup_section)) {
         Text(status?.target?.let { "Account: ${it.account}\nFolder: ${it.folderName}\nFolder ID: ${it.folderId}" } ?: "Choose the owner's Google account and a dedicated visible Drive folder.", style = MaterialTheme.typography.bodyMedium)
         Text(when {
             status?.coveredRevision != null -> "Verified backup · revision ${status!!.coveredRevision} · captured ${DateFormat.getDateTimeInstance().format(Date(status!!.capturedAt!!))}"
@@ -79,30 +81,30 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             status?.coveredRevision == revision -> "Up to date"
             else -> "Pending backup"
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
-        if (status?.coveredRevision?.let { it < revision } != false) Text("Shop changes are waiting for backup. Changes held only on a lost phone cannot be recovered.", style = MaterialTheme.typography.bodyMedium)
+        if (status?.coveredRevision?.let { it < revision } != false) Text(stringResource(R.string.shop_changes_are_waiting_for_backup_changes), style = MaterialTheme.typography.bodyMedium)
         val currentCapture = capture ?: status?.pendingRevision?.let { it to requireNotNull(status?.pendingCapturedAt) }
         if (currentCapture != null) {
             val (capturedRevision, time) = currentCapture
             Text("${if (busy || uploading) "Uploading capture" else "Pending backup"} · revision $capturedRevision · captured ${DateFormat.getDateTimeInstance().format(Date(time))}.", style = MaterialTheme.typography.bodyMedium)
-            if (revision > capturedRevision) Text("Newer shop changes are waiting for another backup.", style = MaterialTheme.typography.bodyMedium)
+            if (revision > capturedRevision) Text(stringResource(R.string.newer_shop_changes_are_waiting_for_another), style = MaterialTheme.typography.bodyMedium)
         }
         (error ?: status?.failure)?.let { FormError(it) }
-        Text("Automatic backups use Wi-Fi / unmetered networks by default. Android may delay work to save battery. Timing and recovery of changes still on this phone are not guaranteed.", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.drive_auto_backup_note), style = MaterialTheme.typography.bodyMedium)
         ShopSecondaryButton(enabled = !busy && !uploading, onClick = { model.setBackupMobileData(status?.allowMobileData != true) }) {
             Text(if (status?.allowMobileData == true) "Use Wi-Fi only" else "Allow mobile data for automatic backups")
         }
         ShopSecondaryButton(enabled = !busy, onClick = {
             chooseAccount.launch(AccountManager.newChooseAccountIntent(null, null, arrayOf("com.google"), null, null, null, null))
-        }) { Text("Connect or repair Drive") }
+        }) { Text(stringResource(R.string.drive_connect_repair)) }
         if (account != null) {
-            Text("Choose a folder for $account. Only folders granted to this app are listed.", style = MaterialTheme.typography.bodyMedium)
-            folders.forEach { folder -> ShopSecondaryButton(enabled = !busy, onClick = { model.selectDriveFolder(folder) }) { Text("${folder.name} · ${folder.id}") } }
-            OutlinedTextField(value = folderName, onValueChange = { folderName = it }, enabled = !busy, label = { Text("New dedicated folder name") })
-            ShopSecondaryButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text("Create and use folder") }
+            Text(stringResource(R.string.choose_a_folder_for_only_folders_granted, account.toString()), style = MaterialTheme.typography.bodyMedium)
+            folders.forEach { folder -> ShopSecondaryButton(enabled = !busy, onClick = { model.selectDriveFolder(folder) }) { Text(stringResource(R.string.formatted_text_2, folder.name, folder.id)) } }
+            OutlinedTextField(value = folderName, onValueChange = { folderName = it }, enabled = !busy, label = { Text(stringResource(R.string.drive_new_folder_label)) })
+            ShopSecondaryButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text(stringResource(R.string.drive_create_folder)) }
         }
-        ShopPrimaryButton("Back up now", enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired && status?.phoneState != ActivePhoneState.Mismatch && status?.takeoverPending != true,
+        ShopPrimaryButton(stringResource(R.string.drive_back_up_now), enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired && status?.phoneState != ActivePhoneState.Mismatch && status?.takeoverPending != true,
             onClick = { authorize(status!!.target!!.account, DriveAction.Publish) })
-        Text("Manual Drive-file edits do not edit the shop. Retire the previous phone before activating a replacement for shop work and backups.", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.drive_manual_edit_note), style = MaterialTheme.typography.bodyMedium)
     }
     PhoneReplacementControls(model, onReview = { authorize(status!!.target!!.account, DriveAction.ReviewPhone) },
         onActivate = { authorize(status!!.target!!.account, DriveAction.ActivatePhone) },
@@ -126,12 +128,12 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
     val backupBusy by model.backupBusy.collectAsState()
     var confirm by rememberSaveable { mutableStateOf(false) }
     val error by model.driveError.collectAsState()
-    ShopSection("Restore preview") {
-        if (complete) Text("Shop restored. A local recovery copy is saved. A new backup is pending; replacement-phone activation may be required before publication.",
+    ShopSection(stringResource(R.string.restore_section)) {
+        if (complete) Text(stringResource(R.string.shop_restored_a_local_recovery_copy_is),
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
-        Text("Inspect a complete Drive restore point before deciding to replace this phone's shop.", style = MaterialTheme.typography.bodyMedium)
-        ShopSecondaryButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text("Find restore points") }
-        if (points?.isEmpty() == true) Text("No complete supported restore points found. Incomplete, damaged or inaccessible copies are excluded.", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.inspect_a_complete_drive_restore_point_before), style = MaterialTheme.typography.bodyMedium)
+        ShopSecondaryButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text(stringResource(R.string.restore_find_points)) }
+        if (points?.isEmpty() == true) Text(stringResource(R.string.no_complete_supported_restore_points_found_incomplete), style = MaterialTheme.typography.bodyMedium)
         points?.forEach { point ->
             ShopSecondaryButton(enabled = !busy, onClick = { model.selectRestorePoint(point) }, shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.semantics { this.selected = selected == point }) {
@@ -139,21 +141,21 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
             }
         }
         selected?.let { point ->
-            Text("Selected capture: ${DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))}", style = MaterialTheme.typography.bodyMedium)
-            Text("Local changes absent from this restore point will not be restored. The current shop remains unchanged during preview and validation.", style = MaterialTheme.typography.bodyMedium)
-            ShopPrimaryButton("Validate selected restore point", enabled = !busy, onClick = onValidate)
+            Text(stringResource(R.string.selected_capture, DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.local_changes_absent_from_this_restore_point), style = MaterialTheme.typography.bodyMedium)
+            ShopPrimaryButton(stringResource(R.string.restore_validate), enabled = !busy, onClick = onValidate)
             error?.let { FormError(it) }
-            if (validated) Text("Validation passed. This copy is complete and consistent. Preview only; your current shop is unchanged.",
+            if (validated) Text(stringResource(R.string.validation_passed_this_copy_is_complete_and),
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
-            if (validated) ShopPrimaryButton("Replace shop with validated restore", enabled = !busy && !shopBusy && !backupBusy,
+            if (validated) ShopPrimaryButton(stringResource(R.string.restore_replace), enabled = !busy && !shopBusy && !backupBusy,
                 onClick = { confirm = true })
         }
     }
     if (confirm && validated) AlertDialog(
         onDismissRequest = { confirm = false },
-        title = { Text("Replace this phone's shop?") },
-        text = { Text("Local changes absent from this restore point will be replaced. A verified local recovery copy must be saved before replacement. Existing QR labels will keep working. Retire the previous shop phone before activating this phone for backups.") },
-        confirmButton = { TextButton(enabled = !busy && !shopBusy && !backupBusy, onClick = { confirm = false; model.activateSelectedRestore() }) { Text("Replace shop now") } },
-        dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } },
+        title = { Text(stringResource(R.string.restore_dialog_title)) },
+        text = { Text(stringResource(R.string.restore_dialog_body)) },
+        confirmButton = { TextButton(enabled = !busy && !shopBusy && !backupBusy, onClick = { confirm = false; model.activateSelectedRestore() }) { Text(stringResource(R.string.restore_replace_now)) } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.cancel)) } },
     )
 }

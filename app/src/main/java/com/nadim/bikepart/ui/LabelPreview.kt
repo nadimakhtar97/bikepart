@@ -11,6 +11,7 @@ import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withTranslation
+import com.nadim.bikepart.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.FilterQuality
@@ -91,8 +93,8 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
     }
     val media = LabelMedia.valueOf(mediaName)
     fun changed() { previewMedia = null; validation = null; onChange() }
-    Text("Labels identify this product, including a shared loose-item bin. They do not identify individual pieces or locations.")
-    ShopSection("Media and copies") {
+    Text(stringResource(R.string.label_identify_note))
+    ShopSection(stringResource(R.string.label_media_copies)) {
         Column(Modifier.selectableGroup()) { LabelMedia.entries.forEach { option ->
             Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
                 .selectable(media == option, enabled = !busy, role = Role.RadioButton, onClick = { mediaName = option.name; changed() }),
@@ -101,19 +103,19 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
                 Text(option.label, Modifier.padding(start = ShopSpacing.small))
             }
         } }
-        Text("Load the ${media.widthMm} × ${media.heightMm} mm roll. Changing profile requires changing the physical roll and calibrating the printer before printing.")
-        OutlinedTextField(copies, { copies = it; changed() }, label = { Text("Label copies") },
+        Text(stringResource(R.string.load_the_mm_roll_changing_profile_requires, media.widthMm, media.heightMm))
+        OutlinedTextField(copies, { copies = it; changed() }, label = { Text(stringResource(R.string.label_copies_label)) },
             enabled = !busy, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = validation != null || error?.field == ProductField.LabelCopies,
             modifier = Modifier.fillMaxWidth().bringIntoViewRequester(copiesRequester))
         (validation ?: error?.message)?.let { FormError(it) }
-        ShopPrimaryButton("Preview label", enabled = !busy) {
+        ShopPrimaryButton(stringResource(R.string.label_preview_btn), enabled = !busy) {
             try { previewCopies = parseLabelCopies(copies); previewMedia = media.name }
             catch (e: ShopValidation) { validation = e.message }
         }
         ShopSecondaryButton(onClick = { save(media, copies) }, enabled = !busy,
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Save label preferences") }
-        Text("Saved default: ${shop.labelPreferences.media.label} · ${shop.labelPreferences.copies} copies",
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_save_preferences)) }
+        Text(stringResource(R.string.saved_default_copies, shop.labelPreferences.media.label, shop.labelPreferences.copies),
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     }
     previewMedia?.let { name ->
@@ -121,15 +123,15 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
         val payload = ItemQr.product(shop.datasetId, product.id)
         val bitmap = remember(product.title, product.sku, payload, selected) { renderProductLabel(product, payload, selected) }
         val artwork = remember(bitmap) { bitmap.asImageBitmap() }
-        ShopSection("Label preview") {
-            Text("${selected.label} · $previewCopies copies")
+        ShopSection(stringResource(R.string.label_preview_section)) {
+            Text(stringResource(R.string.copies, selected.label, previewCopies))
             val artworkShape = MaterialTheme.shapes.small
             Image(artwork, contentDescription = "Product label QR: $payload", filterQuality = FilterQuality.None,
                 modifier = Modifier.fillMaxWidth().aspectRatio(selected.widthMm.toFloat() / selected.heightMm)
                     .clip(artworkShape).border(1.dp, MaterialTheme.colorScheme.outline, artworkShape))
             Text(product.title, style = MaterialTheme.typography.titleMedium)
-            Text("SKU: ${product.sku}")
-            Text("Artwork shows up to three title lines. Full product title is shown above. Price and stock are omitted.")
+            Text(stringResource(R.string.sku, product.sku))
+            Text(stringResource(R.string.label_artwork_note))
             key(selected, previewCopies, bitmap) {
                 LabelPrintControls(selected, previewCopies, product.sku, bitmap, usbAccess) { copies = ""; changed() }
             }

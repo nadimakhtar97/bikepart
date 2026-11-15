@@ -1,5 +1,6 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
@@ -54,7 +56,7 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
 @Composable
 internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<String, AttributeValue>, busy: Boolean,
     error: ShopError?, lookups: ProductLookups, productId: String? = null, onValue: (String, AttributeValue?) -> Unit) {
-    ShopSection("Category fields") {
+    ShopSection(stringResource(R.string.category_fields)) {
         var search by rememberSaveable(categoryId) { mutableStateOf("") }
         var creating by rememberSaveable(categoryId) { mutableStateOf(false) }
         ShopSearchField(search, { search = it }, "Search fields", enabled = !busy)
@@ -72,7 +74,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                             enabled = !busy, label = { Text(label) }, isError = fieldError != null,
                             keyboardOptions = KeyboardOptions(keyboardType = if (definition.type == AttributeType.Decimal) KeyboardType.Decimal else KeyboardType.Text),
                             modifier = Modifier.fillMaxWidth())
-                        if (definition.type == AttributeType.Decimal) Text("Up to 18 whole and 12 decimal digits. No exponent.", style = MaterialTheme.typography.bodySmall)
+                        if (definition.type == AttributeType.Decimal) Text(stringResource(R.string.up_to_18_whole_and_12_decimal), style = MaterialTheme.typography.bodySmall)
                     }
                     AttributeType.SingleChoice, AttributeType.MultipleChoice -> {
                         Text(label, style = MaterialTheme.typography.labelLarge)
@@ -91,7 +93,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                 if (fieldError != null) FormError(fieldError.message)
             }
         }
-        ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Add category field") }
+        ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_add_category_field)) }
         if (creating) FieldCreator(categoryId, busy, error) { setup ->
             lookups.attribute(setup) { creating = false; search = "" }
         }
@@ -104,7 +106,7 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
     var type by rememberSaveable { mutableStateOf(AttributeType.Text) }
     var unit by rememberSaveable { mutableStateOf("") }
     var required by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text("Field name") },
+    OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.field_name_label)) },
         isError = error?.field == ProductField.DefinitionName,
         supportingText = error?.takeIf { it.field == ProductField.DefinitionName }?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
@@ -112,12 +114,12 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
             label = { Text(item.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) }
     }
     if (error?.field == ProductField.DefinitionType) FormError(error.message)
-    OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text("Unit label") }, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text(stringResource(R.string.field_unit_label)) }, modifier = Modifier.fillMaxWidth())
     Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(required, enabled = !busy, role = Role.Checkbox, onValueChange = { required = it }), verticalAlignment = Alignment.CenterVertically) {
         Checkbox(required, onCheckedChange = null)
-        Text("Required field", modifier = Modifier.padding(ShopSpacing.small))
+        Text(stringResource(R.string.field_required), modifier = Modifier.padding(ShopSpacing.small))
     }
-    ShopPrimaryButton("Create field", enabled = !busy) { create(AttributeSetup(categoryId, name, type, required, unit)) }
+    ShopPrimaryButton(stringResource(R.string.field_create), enabled = !busy) { create(AttributeSetup(categoryId, name, type, required, unit)) }
 }
 
 internal fun attributeDisplay(shop: ShopSnapshot, value: AttributeValue?): String = when (value) {

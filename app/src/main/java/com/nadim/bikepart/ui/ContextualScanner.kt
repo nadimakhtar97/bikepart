@@ -1,5 +1,6 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.semantics.*
@@ -49,49 +51,49 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
             }
         }
         Box(Modifier.fillMaxWidth().padding(16.dp)) {
-            ShopPrimaryButton("Manual search", enabled = !busy) { running = false; attempt++; manual() }
+            ShopPrimaryButton(stringResource(R.string.scanner_manual_search), enabled = !busy) { running = false; attempt++; manual() }
         }
     } else {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text("Manual search") }
-        if (started) Text("Recognition paused", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text(stringResource(R.string.scanner_manual_search)) }
+        if (started) Text(stringResource(R.string.scanner_recognition_paused), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         transportError?.let { FormError(it) }
         resolution?.exceptionOrNull()?.message?.let { FormError(it) }
         raw?.takeIf { it.isNotEmpty() && !it.startsWith("bikepart:", ignoreCase = true) }?.let { code ->
             ShopSecondaryButton(onClick = { linking = true; onChange() }, enabled = !busy,
-                modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget)) { Text("Link barcode") }
+                modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget)) { Text(stringResource(R.string.scanner_link_barcode)) }
             for (assignment in shop.barcodeHistory.filter { it.namespace == "external" && it.code == code }) {
                 Text("Barcode history · revision ${assignment.revision}: ${assignment.previousTarget?.let { shop.barcodeTargetLabel(it) } ?: "Unassigned"} → ${shop.barcodeTargetLabel(assignment.target)}")
             }
         }
         when (val target = resolution?.getOrNull()) {
-            is ScanTarget.StockedProduct -> ShopSection("Scanned product") {
+            is ScanTarget.StockedProduct -> ShopSection(stringResource(R.string.scanner_scanned_product)) {
                 Text(target.product.title, style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 Text(target.product.sku)
-                Text("On hand: ${indianNumber(target.product.quantity)} pieces")
+                Text(stringResource(R.string.on_hand_pieces, indianNumber(target.product.quantity)))
                 when (purpose) {
                     ScanPurpose.Sale -> {
                         val line = cart?.lines?.find { it.productId == target.product.id }
-                        Text("Unit price: ₹${indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)}")
-                        OutlinedTextField(quantity, { quantity = it; onChange() }, label = { Text("Pieces to add") },
+                        Text(stringResource(R.string.unit_price, indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)))
+                        OutlinedTextField(quantity, { quantity = it; onChange() }, label = { Text(stringResource(R.string.scanner_pieces_to_add)) },
                             enabled = !busy, isError = error?.field == ProductField.CartQuantity,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), singleLine = true)
                         if (error != null) FormError(error.message)
-                        ShopPrimaryButton("Add to cart", enabled = !busy) { add(target.product.id, quantity) }
+                        ShopPrimaryButton(stringResource(R.string.scanner_add_to_cart), enabled = !busy) { add(target.product.id, quantity) }
                     }
-                    ScanPurpose.Receiving -> ShopPrimaryButton("Enter quantity and cost", enabled = !busy) { attempt++; receive(target.product.id) }
+                    ScanPurpose.Receiving -> ShopPrimaryButton(stringResource(R.string.scanner_enter_qty_cost), enabled = !busy) { attempt++; receive(target.product.id) }
                     ScanPurpose.Catalog -> {
-                        ShopPrimaryButton("Open existing", enabled = !busy) { attempt++; open(target.product.id) }
-                        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; copy(shop.copyCatalog(target.product.id)) }, enabled = !busy) { Text("Copy catalog details") }
+                        ShopPrimaryButton(stringResource(R.string.scanner_open_existing), enabled = !busy) { attempt++; open(target.product.id) }
+                        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; copy(shop.copyCatalog(target.product.id)) }, enabled = !busy) { Text(stringResource(R.string.scanner_copy_catalog)) }
                     }
                 }
             }
-            is ScanTarget.Template -> if (purpose == ScanPurpose.Catalog) ShopSection("Scanned template") {
+            is ScanTarget.Template -> if (purpose == ScanPurpose.Catalog) ShopSection(stringResource(R.string.scanner_scanned_template)) {
                 Text(target.template.catalog.title)
-                ShopPrimaryButton("Use template details", enabled = !busy) { attempt++; copy(shop.prefillTemplate(target.template.id)) }
-            } else FormError("Template codes only prefill new products. They cannot be sold or received.")
+                ShopPrimaryButton(stringResource(R.string.scanner_use_template), enabled = !busy) { attempt++; copy(shop.prefillTemplate(target.template.id)) }
+            } else FormError(stringResource(R.string.scanner_template_only_note))
             null -> Unit
         }
         ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {

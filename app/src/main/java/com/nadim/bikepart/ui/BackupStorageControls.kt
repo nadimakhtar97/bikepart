@@ -1,5 +1,6 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
@@ -7,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -29,37 +31,37 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
     var confirm by rememberSaveable(storage?.fingerprint) { mutableStateOf(false) }
     val canInspect = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired
     fun bytes(value: Long) = "${NumberFormat.getIntegerInstance().format(value)} bytes"
-    ShopSection("Backup storage") {
-        Text("Keep the latest seven complete captures, plus the latest capture on each India calendar day in the current day and previous 29 days. Days without a backup add no recovery point.", style = MaterialTheme.typography.bodyMedium)
-        Text("Google will ask for read-only Drive file metadata access to check the complete folder history. If access is declined or uncertain, cleanup stays paused.", style = MaterialTheme.typography.bodyMedium)
-        ShopSecondaryButton(onClick = onInspect, enabled = canInspect) { Text("Inspect backup storage") }
+    ShopSection(stringResource(R.string.storage_section)) {
+        Text(stringResource(R.string.keep_the_latest_seven_complete_captures_plus), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.google_will_ask_for_read_only_drive), style = MaterialTheme.typography.bodyMedium)
+        ShopSecondaryButton(onClick = onInspect, enabled = canInspect) { Text(stringResource(R.string.storage_inspect)) }
         progress?.let { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium) }
-        if (complete) Text("Reviewed cleanup finished. Protected recovery history is preserved.",
+        if (complete) Text(stringResource(R.string.reviewed_cleanup_finished_protected_recovery_history_is),
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         storage?.let { reviewed ->
-            Text("Current folder file data: ${bytes(reviewed.bytes)}. Drive revisions and trash may use additional storage.", style = MaterialTheme.typography.bodyMedium)
-            Text("${reviewed.completePoints} complete restore points · ${reviewed.retainedPoints} protected · ${reviewed.eligible.size} eligible older points", style = MaterialTheme.typography.bodyMedium)
-            Text("Up to ${bytes(reviewed.reclaimableBytes)} can be removed. Shared photos and pending captures stay protected. Files outside verified obsolete backups are left alone.", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.current_folder_file_data_drive_revisions_and, bytes(reviewed.bytes)), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.complete_restore_points_protected_eligible_older_points, reviewed.completePoints, reviewed.retainedPoints, reviewed.eligible.size), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.up_to_can_be_removed_shared_photos, bytes(reviewed.reclaimableBytes)), style = MaterialTheme.typography.bodyMedium)
             reviewed.eligible.forEach { point ->
-                Text("Eligible: ${DateFormat.getDateTimeInstance().format(Date(point.capturedAt))} · revision ${point.revision}", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.eligible_revision, DateFormat.getDateTimeInstance().format(Date(point.capturedAt)), point.revision), style = MaterialTheme.typography.bodyMedium)
             }
-            if (reviewed.cleanupPending) Text("A reviewed cleanup was interrupted. Continue to recheck the remaining files and finish safely.", style = MaterialTheme.typography.bodyMedium)
+            if (reviewed.cleanupPending) Text(stringResource(R.string.a_reviewed_cleanup_was_interrupted_continue_to), style = MaterialTheme.typography.bodyMedium)
             if (reviewed.eligible.isNotEmpty() || reviewed.cleanupPending) ShopSecondaryButton(enabled = canInspect, onClick = { confirm = true }) {
                 Text(if (reviewed.cleanupPending) "Continue reviewed cleanup" else "Remove eligible older backups")
-            } else Text("No older backup history is eligible for removal.", style = MaterialTheme.typography.bodyMedium)
+            } else Text(stringResource(R.string.no_older_backup_history_is_eligible_for), style = MaterialTheme.typography.bodyMedium)
         }
         error?.let { FormError(it) }
     }
     if (confirm && storage != null) AlertDialog(onDismissRequest = { confirm = false },
-        title = { Text("Remove older backup history?") },
+        title = { Text(stringResource(R.string.storage_dialog_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
                 Text("Account: ${storage!!.target.account}\nFolder: ${storage!!.target.folderName}")
-                Text("Permanently remove only the reviewed eligible history and its unshared files. Those older captures will no longer be available for recovery.")
-                Text("Recent and daily history, pending captures and shared photos stay protected.")
-                Text("Cleanup pauses if identity, permissions or history are uncertain.")
+                Text(stringResource(R.string.permanently_remove_only_the_reviewed_eligible_history))
+                Text(stringResource(R.string.recent_and_daily_history_pending_captures_and))
+                Text(stringResource(R.string.cleanup_pauses_if_identity_permissions_or_history))
             }
         },
-        confirmButton = { TextButton(enabled = !busy, onClick = { confirm = false; onCleanup() }) { Text("Delete reviewed history") } },
-        dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } })
+        confirmButton = { TextButton(enabled = !busy, onClick = { confirm = false; onCleanup() }) { Text(stringResource(R.string.storage_delete_history)) } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.cancel)) } })
 }
