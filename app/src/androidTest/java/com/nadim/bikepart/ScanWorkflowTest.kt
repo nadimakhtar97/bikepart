@@ -56,7 +56,7 @@ class ScanWorkflowTest {
             shop.createProduct(title, category, "", "4", "80")
         } }
         launch().use {
-            await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+            await("Add product"); click("Add product"); click("Scan catalog details")
             await("Substituted camera transport"); emit(code)
             val before = snapshot()
             await("Unknown barcode. Use manual search or explicitly link it.")
@@ -81,7 +81,7 @@ class ScanWorkflowTest {
         }
         val reopened = snapshot()
         launch().use {
-            await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+            await("Add product"); click("Add product"); click("Scan catalog details")
             await("Substituted camera transport"); emit(code); await("Use template details")
             compose.onAllNodesWithText("Barcode history · revision", substring = true).assertCountEquals(2)
             assertEquals(reopened, snapshot())
@@ -103,7 +103,7 @@ class ScanWorkflowTest {
         } }
         val before = snapshot()
         launch().use {
-            await("Receive stock"); click("Receive stock"); click("Scan for receiving"); click("Start camera")
+            await("Receive stock"); click("Receive stock"); click("Scan for receiving")
             await("Substituted camera transport"); emit(codes.first())
             await("Product is unknown or archived. Use manual search.")
             compose.onAllNodesWithText("Enter quantity and cost").assertCountEquals(0)
@@ -125,7 +125,7 @@ class ScanWorkflowTest {
         val before = snapshot()
         try {
             ActivityScenario.launch(MainActivity::class.java).use {
-                await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+                await("Add product"); click("Add product"); click("Scan catalog details")
                 compose.waitUntil(15_000) { automation.rootInActiveWindow?.findAccessibilityNodeInfosByViewId("com.android.permissioncontroller:id/permission_deny_button")?.isNotEmpty() == true }
                 automation.rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.android.permissioncontroller:id/permission_deny_button").first().performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
                 await("Camera permission denied. Use manual search or resume to try again.")
@@ -171,7 +171,7 @@ class ScanWorkflowTest {
             await("New sale"); click("New sale"); await("Add products")
             cartId = snapshot().carts.single { it.id !in priorCartIds }.id
             click("Add products")
-            click("Scan for sale"); await("Scan purpose: Sale"); click("Start camera")
+            click("Scan for sale"); await("Scan purpose: Sale")
             await("Substituted camera transport")
             val before = snapshot()
             val staleFrame = frame!!
@@ -189,7 +189,7 @@ class ScanWorkflowTest {
             assertEquals(4L, after.products.single { it.id == id }.quantity)
             compose.runOnIdle { staleFrame(payload) }
             assertEquals(after, snapshot())
-            click("Add products"); click("Scan for sale"); click("Start camera")
+            click("Add products"); click("Scan for sale")
             await("Substituted camera transport")
             emit("bikepart:2:bad"); await("Unsupported or malformed shop QR. Use manual search.")
             emit(payload)
@@ -215,7 +215,7 @@ class ScanWorkflowTest {
         val payload = scanCode(id, false, external)
         val scenario = launch()
         try {
-            await("Receive stock"); click("Receive stock"); click("Scan for receiving"); click("Start camera")
+            await("Receive stock"); click("Receive stock"); click("Scan for receiving")
             await("Substituted camera transport")
             val before = snapshot()
             emit(payload); emit(payload)
@@ -261,25 +261,25 @@ class ScanWorkflowTest {
         try {
             await("Add product"); click("Add product")
             compose.onNodeWithText("Title (required)").performScrollTo().performTextReplacement("Unsaved draft $token")
-            click("Scan catalog details"); click("Start camera"); await("Substituted camera transport")
+            click("Scan catalog details"); await("Substituted camera transport")
             compose.runOnIdle { failure!!("Camera permission denied. Use manual search or resume to try again.") }
             await("Recognition paused"); click("Manual search"); await("Search products manually")
             click("Continue new product")
             compose.onNodeWithText("Title (required)").assertTextContains("Unsaved draft $token")
             assertEquals(before, snapshot())
-            click("Scan catalog details"); click("Start camera"); await("Substituted camera transport")
+            click("Scan catalog details"); await("Substituted camera transport")
             emit(productQr); await("Open existing"); click("Open existing"); await("Shop description")
             assertEquals(before, snapshot())
-            click("Back"); await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+            click("Back"); await("Add product"); click("Add product"); click("Scan catalog details")
             await("Substituted camera transport"); emit(productQr)
             click("Copy catalog details"); await("Catalog details only. Enter stock, selling price and locations separately for each new product.")
             compose.onNodeWithText("Title (required)").assertTextContains(title)
             compose.onNodeWithText("Opening stock (pieces)").performScrollTo().assertTextEquals("Opening stock (pieces)", "")
             assertEquals(before, snapshot())
-            click("Scan catalog details"); click("Start camera"); await("Substituted camera transport"); emit(templateQr)
+            click("Scan catalog details"); await("Substituted camera transport"); emit(templateQr)
             click("Use template details"); compose.onNodeWithText("Title (required)").assertTextContains("Template nut $token")
             assertEquals(before, snapshot())
-            click("Back"); await("Receive stock"); click("Receive stock"); click("Scan for receiving"); click("Start camera")
+            click("Back"); await("Receive stock"); click("Receive stock"); click("Scan for receiving")
             await("Substituted camera transport"); emit(templateQr)
             await("Template codes only prefill new products. They cannot be sold or received.")
             compose.onAllNodesWithText("Enter quantity and cost").assertCountEquals(0)
@@ -317,7 +317,7 @@ class ScanWorkflowTest {
                 runBlocking { Shop.open(context).use { it.setAppearance(appearance) } }
                 val before = snapshot()
                 launch().use {
-                    await("Add product"); click("Add product"); click("Scan catalog details"); click("Start camera")
+                    await("Add product"); click("Add product"); click("Scan catalog details")
                     await("Substituted camera transport"); emit(payload)
                     compose.onNodeWithText("Open existing").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                     capture("scan-catalog-${appearance.name}-$scale")
@@ -346,7 +346,7 @@ class ScanWorkflowTest {
                     click("Manual search"); await("Search products manually")
                     compose.onNodeWithText("Search products manually").performTextInput("No matching scan $token")
                     compose.onNodeWithText("No matching products").assertExists()
-                    click("Back"); await("Receive stock"); click("Receive stock"); click("Scan for receiving"); click("Start camera")
+                    click("Back"); await("Receive stock"); click("Receive stock"); click("Scan for receiving")
                     await("Substituted camera transport"); emit(payload); click("Enter quantity and cost")
                     compose.onNodeWithText("Received pieces").performScrollTo().performClick().performTextInput("0")
                     compose.onNodeWithText("Purchase unit cost (₹)").performScrollTo().performTextInput("2")

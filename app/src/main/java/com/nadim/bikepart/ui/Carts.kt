@@ -22,7 +22,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOpen: (String) -> Unit) {
-    ShopPageHeader("Unfinished carts", "Carts do not reserve stock. Prices stay quoted until a line is removed.")
+    ShopPageHeader("Unfinished carts", "Carts do not reserve stock. Product price changes update matching lines in every unfinished cart.")
     if (shop.carts.isEmpty()) {
         ShopEmptyState("No unfinished carts", "Start a sale to create an automatically saved customer bill.", R.drawable.ic_carts)
         return
@@ -149,7 +149,7 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
         Text("On hand: ${indianNumber(product.quantity)} pieces")
         Text("Other carts: ${shop.otherCartDemand(cart.id, product.id)} pieces")
         val line = cart.lines.find { it.productId == product.id }
-        Text("${if (line == null) "Unit price" else "Retained quote"}: ₹${indianNumber(line?.quotedPriceRupees ?: product.priceRupees)}",
+        Text("Unit price: ₹${indianNumber(line?.quotedPriceRupees ?: product.priceRupees)}",
             style = MaterialTheme.typography.titleMedium)
         if (line != null) Text("Already in this cart: ${indianNumber(line.quantity)} pieces",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

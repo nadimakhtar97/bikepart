@@ -20,10 +20,10 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     link: (String, BarcodeTarget, Long?, () -> Unit) -> Unit) {
     var raw by rememberSaveable { mutableStateOf<String?>(null) }
     var transportError by rememberSaveable { mutableStateOf<String?>(null) }
-    // Recreation always requires explicit start/resume, never silently restarts recognition.
-    var running by remember { mutableStateOf(false) }
+    // Opening any contextual scan route starts the camera; cancel/pause still requires an explicit resume.
+    var running by rememberSaveable { mutableStateOf(true) }
     var attempt by remember { mutableIntStateOf(0) }
-    var started by rememberSaveable { mutableStateOf(false) }
+    var started by rememberSaveable { mutableStateOf(true) }
     var quantity by rememberSaveable { mutableStateOf("") }
     var linking by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { running = false; attempt++ } }
@@ -66,7 +66,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                 when (purpose) {
                     ScanPurpose.Sale -> {
                         val line = cart?.lines?.find { it.productId == target.product.id }
-                        Text("${if (line == null) "Unit price" else "Retained quote"}: ₹${indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)}")
+                        Text("Unit price: ₹${indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)}")
                         OutlinedTextField(quantity, { quantity = it; onChange() }, label = { Text("Pieces to add") },
                             enabled = !busy, isError = error?.field == ProductField.CartQuantity,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), singleLine = true)

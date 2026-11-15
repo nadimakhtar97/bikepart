@@ -130,10 +130,10 @@ class CheckoutTest {
             shop.saveCart(cart, 0, "Ravi", mapOf(product to "2"))
             shop.setSellingPrice(product, "95")
             val before = shop.snapshot().revision
-            val sale = shop.checkout(cart, 1, "200")
-            assertEquals(160L, sale.totalRupees)
+            val sale = shop.checkout(cart, 2, "200")
+            assertEquals(190L, sale.totalRupees)
             assertEquals(200L, sale.cashRupees)
-            assertEquals(40L, sale.changeRupees)
+            assertEquals(10L, sale.changeRupees)
             assertEquals("Ravi", sale.customer)
             assertEquals("Brake pad", sale.lines.single().title)
             assertEquals("Brake pads", sale.lines.single().category)

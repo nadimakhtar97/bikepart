@@ -35,7 +35,7 @@ class CartWorkflowTest {
         await("Saved on this phone")
     }
 
-    @Test fun cashierSwitchesAutosavedCartsRetainsQuotesAndRecoversStaleEdits() {
+    @Test fun cashierSwitchesAutosavedCartsRepricesLinesAndRecoversStaleEdits() {
         val token = System.nanoTime().toString()
         val title = "Counter bolt $token"
         val customer = "Ravi $token"
@@ -60,12 +60,15 @@ class CartWorkflowTest {
             click("Save and return to carts"); click("Open ${first.name}")
             runBlocking { Shop.open(context).use { it.setSellingPrice(product, "95") } }
             compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("5")
-            await("Saved cart total: ₹400")
-            scenario.recreate(); await("Saved cart total: ₹400")
+            await("This cart changed. Reload the saved cart before editing again.")
+            click("Reload saved cart"); await("Saved cart total: ₹285")
+            compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("5")
+            await("Saved cart total: ₹475")
+            scenario.recreate(); await("Saved cart total: ₹475")
             scenario.close()
             scenario = ActivityScenario.launch(MainActivity::class.java)
             await("Carts"); click("Carts"); click("Open ${first.name}")
-            await("Saved cart total: ₹400")
+            await("Saved cart total: ₹475")
             compose.onNodeWithText("Customer label (optional)").assertTextContains(customer)
             runBlocking { Shop.open(context).use { shop ->
                 val current = shop.snapshot().carts.single { it.id == first.id }
@@ -85,7 +88,7 @@ class CartWorkflowTest {
             click("Discard cart"); compose.onNodeWithText("Discard").performClick()
             await("New sale")
             assertFalse(snapshot().carts.any { it.id == first.id })
-            click("Open ${second.name}"); await("Saved cart total: ₹80")
+            click("Open ${second.name}"); await("Saved cart total: ₹95")
             assertEquals(1L, snapshot().products.single { it.id == product }.quantity)
             // Hold the real writer lock so typing during a commit is deterministic.
             val storage = ShopStorage(context, "shop.db")

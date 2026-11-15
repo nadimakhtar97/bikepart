@@ -648,7 +648,27 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val price = parseWhole(rupees, ProductField.SellingPrice)
         val product = requireActiveProduct(id)
         if (product.priceRupees != price) {
+            val lines = dao.cartLines()
+            val affected = lines.filter { it.productId == id }.groupBy { it.cartId }
+            try {
+                affected.forEach { (cartId, _) ->
+                    lines.asSequence().filter { it.cartId == cartId }.fold(0L) { total, line ->
+                        val linePrice = if (line.productId == id) price else line.quotedPriceRupees
+                        Math.addExact(total, Math.multiplyExact(line.quantity, linePrice))
+                    }
+                }
+            } catch (_: ArithmeticException) {
+                throw ShopValidation(ProductField.SellingPrice, "Selling price makes an unfinished cart total exceed the supported whole-rupee limit")
+            }
             dao.updateProduct(product.copy(priceRupees = price))
+            if (affected.isNotEmpty()) {
+                dao.repriceCartLines(id, price)
+                val carts = dao.carts().associateBy { it.id }
+                affected.keys.forEach { cartId ->
+                    val cart = requireNotNull(carts[cartId])
+                    dao.updateCart(cart.copy(editVersion = Math.addExact(cart.editVersion, 1)))
+                }
+            }
             advanceRevision()
         }
     }
