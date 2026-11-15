@@ -16,7 +16,8 @@ import kotlin.math.roundToInt
 
 @Composable
 internal fun UpdateControls(installed: InstalledApp, state: UpdateState, download: DownloadState,
-    check: () -> Unit, startDownload: () -> Unit, cancelDownload: () -> Unit) {
+    check: () -> Unit, startDownload: () -> Unit, cancelDownload: () -> Unit,
+    installNow: () -> Unit = {}, installLater: () -> Unit = {}) {
     ShopSectionHeader(stringResource(R.string.application_updates))
     ShopGroup {
         Text(stringResource(R.string.installed_version, installed.versionName, installed.versionCode),
@@ -39,7 +40,7 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
                 is DownloadState.Ready -> {
                     ReleaseSummary(download.release)
                     Text(stringResource(R.string.update_download_ready), style = MaterialTheme.typography.titleSmall)
-                    Text(stringResource(R.string.update_download_ready_detail), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.update_install_warning), style = MaterialTheme.typography.bodyMedium)
                 }
                 is DownloadState.Failed -> {
                     ReleaseSummary(download.release)
@@ -60,7 +61,13 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
         when {
             download is DownloadState.Downloading || download is DownloadState.Verifying ->
                 ShopSecondaryButton(onClick = cancelDownload) { Text(stringResource(R.string.update_cancel_download)) }
-            release != null && download !is DownloadState.Ready ->
+            download is DownloadState.Ready -> {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                    ShopPrimaryButton(stringResource(R.string.update_install_now), onClick = installNow)
+                    ShopSecondaryButton(onClick = installLater) { Text(stringResource(R.string.update_install_later)) }
+                }
+            }
+            release != null ->
                 ShopPrimaryButton(stringResource(if (download is DownloadState.Failed) R.string.update_download_retry
                     else R.string.update_download), enabled = state != UpdateState.Checking, onClick = startDownload)
             else -> ShopPrimaryButton(stringResource(when (state) {

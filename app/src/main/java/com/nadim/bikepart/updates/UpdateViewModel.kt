@@ -16,6 +16,7 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
         PackageManagerApkInspector(application))
     val updater: AppUpdater = GitHubUpdater(installed, downloads = downloads)
     val reminders: UpdateReminders = UpdateReminders(SharedPreferencesReminderStorage(application))
+    val installer: AppInstaller = AndroidAppInstaller(application, installed, PackageManagerApkInspector(application))
 
     override fun onCleared() {
         updater.close()

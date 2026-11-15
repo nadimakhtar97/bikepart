@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -53,13 +54,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
     },
     updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater },
-    reminders: @Composable () -> UpdateReminders = { viewModel<UpdateViewModel>().reminders }) {
+    reminders: @Composable () -> UpdateReminders = { viewModel<UpdateViewModel>().reminders },
+    installer: @Composable () -> AppInstaller = { viewModel<UpdateViewModel>().installer }) {
     val updateService = updater()
     val reminderService = reminders()
+    val installService = installer()
     val updateState by updateService.state.collectAsStateWithLifecycle()
     val downloadState by updateService.downloadState.collectAsStateWithLifecycle()
     val updateScope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
+    val invalidApkMsg = stringResource(R.string.update_install_invalid)
+    val permissionNeededMsg = stringResource(R.string.update_install_permission_needed)
+    var installError by remember { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, updateService, reminderService) {
@@ -409,7 +415,21 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                                                     updateJob = updateScope.launch { updateService.check() }
                                                 }
-                                            }, updateService::startDownload, updateService::cancelDownload) })
+                                            }, updateService::startDownload, updateService::cancelDownload,
+                                            installNow = {
+                                                val ready = downloadState as? DownloadState.Ready
+                                                if (ready != null && !busy) {
+                                                    val res = installService.install(ready.apk, ready.release.sha256)
+                                                    if (res == InstallResult.InvalidApk) {
+                                                        installError = invalidApkMsg
+                                                    } else if (res == InstallResult.PermissionRequired) {
+                                                        installError = permissionNeededMsg
+                                                    }
+                                                }
+                                            },
+                                            installLater = {
+                                                // Retain completed file in ready state, keeping it accessible in More
+                                            }) })
                                     }
                                 }
                             }
