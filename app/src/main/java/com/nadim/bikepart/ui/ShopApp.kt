@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
@@ -259,7 +260,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
                                     CircularProgressIndicator()
-                                    Text("Opening your shop…", style = MaterialTheme.typography.bodyMedium,
+                                    Text(stringResource(R.string.opening_shop), style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                                 }
@@ -305,11 +306,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         complete = { cash ->
                                             model.write({ checkout(cart.id, checkoutVersion, cash) }, { route = "receipt" })
                                         })
-                                    else Text("This cart is no longer available. Return to the cart list.")
+                                    else Text(stringResource(R.string.cart_unavailable))
                                 }
                                 "sales" -> SalesHistory(shop) { selectedId = it; model.error.value = null; route = "receipt" }
                                 "receipt" -> if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
-                                    else Text("Receipt unavailable. Return to Sales history.")
+                                    else Text(stringResource(R.string.receipt_unavailable))
                                 "cart-products" -> cartDraft?.let { draft ->
                                     CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
                                         onScan = { scan(ScanPurpose.Sale, "cart-products") },
@@ -318,8 +319,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         })
                                 }
                                 "create", "edit", "template-form" -> stockState.SaveableStateProvider("form:$formSession:$route:$selectedId:$catalogPayload") { key(route, selectedId, catalogPayload) {
-                                    if (route == "create") ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, "create") }, enabled = !busy) { Text("Scan catalog details") }
-                                    if (route == "create" && catalog == null) ShopSecondaryButton(onClick = { route = "templates" }, enabled = !busy) { Text("Choose template") }
+                                    if (route == "create") ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, "create") }, enabled = !busy) { Text(stringResource(R.string.manual_scan_catalog)) }
+                                    if (route == "create" && catalog == null) ShopSecondaryButton(onClick = { route = "templates" }, enabled = !busy) { Text(stringResource(R.string.btn_choose_template)) }
                                     ProductForm(shop, if (route == "edit") product else null, busy, error,
                                         onChange = { model.error.value = null },
                                         lookups = ProductLookups(

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">bikepart</string>
     <string name="search_receipts">Search receipts or customer</string>
@@ -52,6 +53,542 @@
     <string name="update_download_identity">The downloaded file is not a compatible update for this app.</string>
     <string name="update_download_signing">The downloaded update is not signed for this app. It was not kept.</string>
     <string name="update_download_unknown">Couldn\'t prepare the update. Try again.</string>
+
+    <!-- Navigation destinations (also used as route IDs; keep values stable) -->
+    <string name="dest_home">Home</string>
+    <string name="dest_stock">Stock</string>
+    <string name="dest_carts">Carts</string>
+    <string name="dest_more">More</string>
+
+    <!-- App bar titles -->
+    <string name="title_product_labels">Product labels</string>
+    <string name="title_scan_barcode">Scan Barcode</string>
+    <string name="title_receive_stock">Receive stock</string>
+    <string name="title_find_catalog">Find catalog details</string>
+    <string name="title_product_templates">Product templates</string>
+    <string name="title_template_fallback">Template</string>
+    <string name="title_new_template">New template</string>
+    <string name="title_edit_template">Edit template</string>
+    <string name="title_new_product">New product</string>
+    <string name="title_product_details">Product details</string>
+    <string name="title_edit_details">Edit details</string>
+    <string name="title_archived_products">Archived products</string>
+    <string name="title_cash_checkout">Cash checkout</string>
+    <string name="title_receipt">Receipt</string>
+    <string name="title_sales_history">Sales history</string>
+    <string name="title_unfinished_bill">Unfinished bill</string>
+    <string name="title_add_to_cart">Add to cart</string>
+    <string name="title_shop_backups">Shop backups</string>
+    <string name="title_fitment_locations">Fitment and locations</string>
+    <string name="title_categories">Categories</string>
+    <string name="title_catalog_fields">Catalog fields</string>
+
+    <!-- FAB labels -->
+    <string name="fab_add_product">Add product</string>
+    <string name="fab_new_sale">New sale</string>
+
+    <!-- Loading / error -->
+    <string name="opening_shop">Opening your shop…</string>
+    <string name="cart_unavailable">This cart is no longer available. Return to the cart list.</string>
+    <string name="receipt_unavailable">Receipt unavailable. Return to Sales history.</string>
+
+    <!-- ShopApp scan/template buttons -->
+    <string name="btn_scan_catalog_details">Scan catalog details</string>
+    <string name="btn_choose_template">Choose template</string>
+
+    <!-- Home screen -->
+    <string name="home_header">Your parts counter</string>
+    <string name="home_subtitle">Work offline. Your stock stays on this phone.</string>
+    <string name="home_quick_actions">Quick actions</string>
+    <string name="home_new_sale">New sale</string>
+    <string name="home_add_product">Add product</string>
+    <string name="home_receive_stock">Receive stock</string>
+    <string name="home_sales_history">Sales history</string>
+    <string name="home_shop_overview">Shop overview</string>
+    <string name="home_unfinished_carts">Unfinished carts</string>
+    <string name="home_active_products">Active products</string>
+    <string name="home_empty_title">Start with your first product</string>
+    <string name="home_empty_desc">Record its opening stock and whole-rupee selling price.</string>
+    <string name="home_no_active_title">No active products</string>
+    <string name="home_no_active_desc">Add a product for current work. Archived products and their history are available under More.</string>
+    <string name="home_stock_attention">Stock attention</string>
+    <string name="home_nothing_needs_attention">Nothing needs attention today</string>
+    <string name="home_counts_at_threshold">Counts at or below your thresholds</string>
+    <string name="home_low_stock">Low stock: %1$d %2$s</string>
+    <string name="home_out_of_stock">Out of stock: %1$d %2$s</string>
+    <string name="home_low_stock_supporting">Positive stock at or below the set threshold</string>
+    <string name="home_out_of_stock_supporting">No pieces currently on hand</string>
+    <string name="home_recent_sales">Recent sales</string>
+    <string name="home_view_all">View all</string>
+    <string name="home_no_recent_sales">Completed cash sales will appear here.</string>
+
+    <!-- Stock screen -->
+    <string name="stock_find_product">Find a product</string>
+    <string name="stock_no_products_title">No products yet</string>
+    <string name="stock_no_products_desc">Add a product to start tracking your stock.</string>
+
+    <!-- Product details -->
+    <string name="product_pieces">%s pieces</string>
+    <string name="product_selling_price">Selling price: ₹%s</string>
+    <string name="product_archived_label">Archived product</string>
+    <string name="product_edit_details">Edit details</string>
+    <string name="product_catalog_incomplete">Catalog incomplete · complete required fields when editing. Stock and selling price remain available.</string>
+    <string name="product_correct_stock">Correct stock</string>
+    <string name="product_physical_count_supporting">Enter the total pieces counted</string>
+    <string name="product_damage_supporting">Remove damaged pieces from stock</string>
+    <string name="product_loss_supporting">Remove lost pieces from stock</string>
+    <string name="product_details_section">Product details</string>
+    <string name="product_no_description">No description</string>
+    <string name="product_sku_label">SKU: %s</string>
+    <string name="product_opening_stock_label">Opening stock: %s pieces</string>
+    <string name="product_historical_attributes">Historical attributes</string>
+    <string name="product_preview_labels">Preview product labels</string>
+    <string name="product_preview_labels_supporting">Package or shared-bin label</string>
+    <string name="product_actions">Product actions</string>
+    <string name="product_receive_stock">Receive stock</string>
+    <string name="product_receive_stock_supporting">Add received pieces and purchase cost</string>
+    <string name="product_copy_catalog">Copy catalog details</string>
+    <string name="product_copy_catalog_supporting">Start a new product with these details</string>
+    <string name="product_create_template">Create template from product</string>
+    <string name="product_create_template_supporting">Reuse these details later</string>
+    <string name="product_manage_fields">Manage fields</string>
+    <string name="product_manage_fields_supporting">Custom and category fields</string>
+    <string name="product_archive_section">Archive unused product</string>
+    <string name="product_archive_desc">Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.</string>
+    <string name="product_archive_btn">Archive product</string>
+
+    <!-- Archived products -->
+    <string name="archived_no_products_title">No archived products</string>
+    <string name="archived_no_products_desc">Products archived at zero stock remain here with their details and history.</string>
+    <string name="archived_search_placeholder">Search archived products</string>
+    <string name="archived_title_or_sku">Title or permanent SKU</string>
+    <string name="archived_no_matching_title">No matching archived products</string>
+    <string name="archived_no_matching_desc">Try a title or permanent SKU.</string>
+    <string name="archived_show_more">Show more archived products</string>
+
+    <!-- More screen -->
+    <string name="more_header">Your shop</string>
+    <string name="more_subtitle">Catalog, appearance and recovery.</string>
+    <string name="more_appearance">Appearance</string>
+    <string name="more_appearance_hint">System follows your phone\'s light or dark appearance.</string>
+    <string name="more_shop">Shop</string>
+    <string name="more_sales_history">Sales history</string>
+    <string name="more_sales_history_supporting">Completed cash sales and receipts</string>
+    <string name="more_product_templates">Product templates</string>
+    <string name="more_product_templates_supporting">Reusable catalog details</string>
+    <string name="more_archived_products">Archived products</string>
+    <string name="more_archived_products_supporting">Retained details and history</string>
+    <string name="more_backup_recovery">Backup and recovery</string>
+    <string name="more_shop_backups">Shop backups</string>
+    <string name="more_shop_backups_supporting">Drive, local copies and phone recovery</string>
+    <string name="more_catalog">Catalog</string>
+    <string name="more_edit_categories">Edit categories</string>
+    <string name="more_manage_fitment">Manage fitment and locations</string>
+
+    <!-- Category settings -->
+    <string name="category_rename_hint">Rename your starter categories to suit the shop.</string>
+    <string name="category_name_label">Category name</string>
+
+    <!-- Product form -->
+    <string name="form_catalog_only_note">Catalog details only. Enter stock, selling price and locations separately for each new product.</string>
+    <string name="form_basic_details">Basic details</string>
+    <string name="form_title_required">Title (required)</string>
+    <string name="form_category_required">Category (required)</string>
+    <string name="form_search_add_category">Search or add category</string>
+    <string name="form_add_category">Add category</string>
+    <string name="form_description_label">Description</string>
+    <string name="form_selling_price">Selling price</string>
+    <string name="form_selling_price_label">Selling price (whole rupees)</string>
+    <string name="form_price_update_note">Price changes update this product\'s lines in every unfinished cart.</string>
+    <string name="form_prev_category_note">Previous category values will be retained as historical attributes.</string>
+    <string name="form_opening_stock_price">Opening stock and price</string>
+    <string name="form_opening_stock_label">Opening stock (pieces)</string>
+    <string name="form_stock_price_note">Stock is counted in whole pieces. Prices use whole rupees.</string>
+    <string name="form_save_distinct">Save as a distinct product</string>
+    <string name="form_saving">Saving…</string>
+    <string name="form_save_template">Save template</string>
+    <string name="form_save_product">Save product</string>
+
+    <!-- Carts -->
+    <string name="cart_list_header">Unfinished carts</string>
+    <string name="cart_list_subtitle">Carts do not reserve stock. Product price changes update matching lines in every unfinished cart.</string>
+    <string name="cart_no_carts_title">No unfinished carts</string>
+    <string name="cart_no_carts_desc">Start a sale to create an automatically saved customer bill.</string>
+    <string name="cart_customer_label">Customer label (optional)</string>
+    <string name="cart_saving">Saving cart…</string>
+    <string name="cart_changes_not_saved">Changes not saved</string>
+    <string name="cart_unsaved_changes">Unsaved changes…</string>
+    <string name="cart_saved">Saved on this phone</string>
+    <string name="cart_status_not_saved">Not saved</string>
+    <string name="cart_status_saving">Saving</string>
+    <string name="cart_status_unsaved">Unsaved</string>
+    <string name="cart_status_saved">Saved</string>
+    <string name="cart_retry_saving">Retry saving cart</string>
+    <string name="cart_reload_saved">Reload saved cart</string>
+    <string name="cart_no_products">No products in this cart. Add a product to begin.</string>
+    <string name="cart_on_hand_pieces">On hand: %s pieces</string>
+    <string name="cart_other_carts_pieces">Other carts: %s pieces</string>
+    <string name="cart_quoted_unit_price">Quoted unit price: ₹%s</string>
+    <string name="cart_pieces_label">Pieces</string>
+    <string name="cart_invalid_quantity">Enter a positive whole-piece quantity.</string>
+    <string name="cart_saved_line_total">Saved line total: ₹%s</string>
+    <string name="cart_remove_line">Remove line</string>
+    <string name="cart_saved_total">Saved cart total: ₹%s</string>
+    <string name="cart_add_products">Add products</string>
+    <string name="cart_add_products_supporting">Search or scan another product</string>
+    <string name="cart_checkout">Checkout</string>
+    <string name="cart_save_return">Save and return to carts</string>
+    <string name="cart_discard">Discard cart</string>
+    <string name="cart_discard_stock_note">This removes the unfinished bill. Stock stays unchanged.</string>
+    <string name="cart_discard_confirm">Discard</string>
+    <string name="cart_keep">Keep cart</string>
+    <string name="cart_product_picker_search">Search products for cart</string>
+    <string name="cart_no_matching">No matching products</string>
+    <string name="cart_selected_product">Selected product</string>
+    <string name="cart_unit_price">Unit price: ₹%s</string>
+    <string name="cart_already_in">Already in this cart: %s pieces</string>
+    <string name="cart_pieces_to_add">Pieces to add</string>
+    <string name="cart_add_to_cart">Add to cart</string>
+    <string name="cart_show_more">Show more products</string>
+
+    <!-- Stock corrections -->
+    <string name="correction_current_stock">Current stock: %s pieces</string>
+    <string name="correction_physical_count_note">Enter the total pieces counted. The difference is calculated against stock when saved.</string>
+    <string name="correction_remove_note">Enter the pieces to remove for %s.</string>
+    <string name="correction_counted_pieces">Counted pieces</string>
+    <string name="correction_pieces_to_remove">Pieces to remove</string>
+    <string name="correction_reason">Reason</string>
+    <string name="correction_save">Save correction</string>
+    <string name="correction_history">Stock correction history</string>
+    <string name="correction_no_stock_change">No stock change · counted %s pieces</string>
+    <string name="correction_removed_pieces">Removed %s pieces</string>
+    <string name="correction_added_pieces">Added %s pieces</string>
+    <string name="correction_record">Record %s</string>
+
+    <!-- Stock arrivals -->
+    <string name="arrival_details">Arrival details</string>
+    <string name="arrival_current_stock">Current stock: %s pieces</string>
+    <string name="arrival_save_note">Save the arrival to add these pieces to stock.</string>
+    <string name="arrival_received_pieces">Received pieces</string>
+    <string name="arrival_purchase_cost">Purchase unit cost (₹)</string>
+    <string name="arrival_save">Save arrival</string>
+    <string name="arrival_history">Stock arrival history</string>
+    <string name="arrival_received_summary">Received %1$s pieces · ₹%2$s per piece</string>
+    <string name="arrival_stock_change">%1$s → %2$s pieces</string>
+
+    <!-- Stock search -->
+    <string name="search_products">Search products</string>
+    <string name="search_products_supporting">Title, SKU, description, fields, fitment or location</string>
+    <string name="search_scan_stock">Scan stock</string>
+    <string name="search_all_stock">All stock</string>
+    <string name="search_more_filters">More filters</string>
+    <string name="search_clear_and_filters">Clear search and filters</string>
+    <string name="search_catalog_filters">Catalog filters</string>
+    <string name="search_clear_filters">Clear filters</string>
+    <string name="search_exact_decimal">Exact decimal value</string>
+    <string name="search_decimal_error">Enter a plain exact decimal, without grouping or exponent</string>
+    <string name="search_show_results">Show results</string>
+    <string name="search_searching">Searching products…</string>
+    <string name="search_no_matching_title">No matching products</string>
+    <string name="search_no_matching_desc">Try another description or clear the filters to browse all stock.</string>
+    <string name="search_show_more">Show more products</string>
+    <string name="search_matching_count">%d matching products</string>
+
+    <!-- Manual picker -->
+    <string name="manual_search_products">Search products manually</string>
+    <string name="manual_scan_catalog">Scan catalog details</string>
+    <string name="manual_scan_receiving">Scan for receiving</string>
+    <string name="manual_continue_product">Continue new product</string>
+    <string name="manual_no_matching_title">No matching products</string>
+    <string name="manual_no_matching_desc">Try a title, SKU, fitment or location.</string>
+    <string name="manual_show_more">Show more results</string>
+
+    <!-- Contextual scanner -->
+    <string name="scanner_manual_search">Manual search</string>
+    <string name="scanner_recognition_paused">Recognition paused</string>
+    <string name="scanner_link_barcode">Link barcode</string>
+    <string name="scanner_add_to_cart">Add to cart</string>
+    <string name="scanner_enter_qty_cost">Enter quantity and cost</string>
+    <string name="scanner_open_existing">Open existing</string>
+    <string name="scanner_copy_catalog">Copy catalog details</string>
+    <string name="scanner_scanned_product">Scanned product</string>
+    <string name="scanner_on_hand">On hand: %s pieces</string>
+    <string name="scanner_unit_price">Unit price: ₹%s</string>
+    <string name="scanner_pieces_to_add">Pieces to add</string>
+    <string name="scanner_scanned_template">Scanned template</string>
+    <string name="scanner_use_template">Use template details</string>
+    <string name="scanner_template_only_note">Template codes only prefill new products. They cannot be sold or received.</string>
+    <string name="scanner_resume">Resume scanning</string>
+    <string name="scanner_start_camera">Start camera</string>
+
+    <!-- Scan camera -->
+    <string name="camera_position_barcode">Position barcode within the frame</string>
+    <string name="camera_flash">Flash</string>
+    <string name="camera_flash_on">On</string>
+    <string name="camera_flash_off">Off</string>
+
+    <!-- Barcode linker -->
+    <string name="barcode_link_section">Link external barcode</string>
+    <string name="barcode_link_note">Linking changes how future scans resolve. It does not change stock or prices.</string>
+    <string name="barcode_find_target">Find barcode target</string>
+    <string name="barcode_no_targets">No active targets found. Use manual search to create a product or template first.</string>
+    <string name="barcode_show_more">Show more barcode targets</string>
+    <string name="barcode_cancel_link">Cancel barcode link</string>
+    <string name="barcode_confirm_reassignment">Confirm reassignment</string>
+    <string name="barcode_save_link">Save barcode link</string>
+
+    <!-- Fitment and locations -->
+    <string name="finding_fitment_locations">Fitment and locations</string>
+    <string name="finding_fitment_only">Fitment</string>
+    <string name="finding_unknown_fitment">Unknown fitment</string>
+    <string name="finding_assigned_fitment">Assigned fitment</string>
+    <string name="finding_select_model_note">Select at least one motorcycle model. Compatibility is assigned by staff.</string>
+    <string name="finding_search_add_make">Search or add make</string>
+    <string name="finding_add_make">Add make</string>
+    <string name="finding_search_add_model">Search or add model</string>
+    <string name="finding_add_model">Add model</string>
+    <string name="finding_locations_note">Finding locations · one combined stock count</string>
+    <string name="finding_search_add_location">Search or add location</string>
+    <string name="finding_add_location">Add location</string>
+    <string name="finding_choose_model_note">Choose a model before saving assigned fitment.</string>
+    <string name="finding_motorcycle_makes">Motorcycle makes</string>
+    <string name="finding_motorcycle_models">Motorcycle models</string>
+    <string name="finding_storage_locations">Storage locations</string>
+    <string name="finding_no_makes">No makes added</string>
+    <string name="finding_no_models">No models added</string>
+    <string name="finding_no_locations">No locations added</string>
+    <string name="finding_find_lookup">Find make, model or location</string>
+    <string name="finding_retired_names_note">Retired names stay readable on existing products and cannot be newly selected.</string>
+
+    <!-- Product photos -->
+    <string name="photo_section">Product photo (optional)</string>
+    <string name="photo_description">Choose a photo from your phone. Saved photos stay with the product. Maximum 20 MB.</string>
+    <string name="photo_replace">Replace photo</string>
+    <string name="photo_choose">Choose photo</string>
+    <string name="photo_remove">Remove photo</string>
+
+    <!-- Label preview / print -->
+    <string name="label_identify_note">Labels identify this product, including a shared loose-item bin. They do not identify individual pieces or locations.</string>
+    <string name="label_media_copies">Media and copies</string>
+    <string name="label_copies_label">Label copies</string>
+    <string name="label_preview_btn">Preview label</string>
+    <string name="label_save_preferences">Save label preferences</string>
+    <string name="label_preview_section">Label preview</string>
+    <string name="label_sku">SKU: %s</string>
+    <string name="label_artwork_note">Artwork shows up to three title lines. Full product title is shown above. Price and stock are omitted.</string>
+    <string name="label_print_section">USB label printing</string>
+    <string name="label_print_hardware">TE244 · TSPL · 203 DPI · USB/OTG. Hardware acceptance is pending on the intended phone and printer.</string>
+    <string name="label_cancel_note">Cancellation stops unsent copies. It cannot retract a copy already being sent or queued in the printer.</string>
+    <string name="label_cancel_unsent">Cancel unsent copies</string>
+    <string name="label_print_confirmed">Print confirmed labels</string>
+    <string name="label_inspected_btn">I inspected output and reset the printer</string>
+
+    <!-- Catalog management -->
+    <string name="catalog_custom_fields">Product custom fields</string>
+    <string name="catalog_add_custom_field">Add product custom field</string>
+    <string name="catalog_find_definition">Find definition</string>
+    <string name="catalog_add_category_field">Add category field</string>
+    <string name="catalog_field_name_label">Category field name</string>
+    <string name="catalog_promotion_note">If the name conflicts, choose a distinct name and meaning. Promotion never merges fields.</string>
+    <string name="catalog_promote_to_category">Promote to category</string>
+    <string name="catalog_retire_field">Retire field</string>
+    <string name="catalog_replace_field_type">Replace field type</string>
+    <string name="catalog_replace_note">Use a distinct name and a new type. The original field is retired and its values remain unchanged.</string>
+
+    <!-- Category fields -->
+    <string name="field_search">Search fields</string>
+    <string name="field_name_label">Field name</string>
+    <string name="field_unit_label">Unit label</string>
+    <string name="field_required">Required field</string>
+    <string name="field_create">Create field</string>
+    <string name="field_make_optional">Make optional</string>
+    <string name="field_make_required">Make required</string>
+
+    <!-- Templates -->
+    <string name="template_note">Reusable catalog details. Templates have no SKU or stock.</string>
+    <string name="template_create">Create template</string>
+    <string name="template_search">Search templates</string>
+    <string name="template_active">Active templates</string>
+    <string name="template_retired">Retired templates</string>
+    <string name="template_no_matching_title">No matching templates</string>
+    <string name="template_no_matching_desc">Create a template or try another search.</string>
+    <string name="template_open">Open template</string>
+    <string name="template_use">Use template</string>
+    <string name="template_edit">Edit template</string>
+    <string name="template_retire">Retire template</string>
+    <string name="template_retired_label">Retired template · retained for reference</string>
+    <string name="template_product_label">Product template</string>
+    <string name="template_catalog_details">Catalog details</string>
+    <string name="template_no_description">No description</string>
+    <string name="template_use_primary">Use template</string>
+    <string name="template_custom_fields">Custom fields for this copy</string>
+    <string name="template_custom_fields_note">These definitions and their choices belong to this draft. Saved copies are independent.</string>
+    <string name="template_custom_field_name">Custom field name</string>
+    <string name="template_add_custom_to_draft">Add custom field to draft</string>
+
+    <!-- Threshold form -->
+    <string name="threshold_section">Low-stock alert</string>
+    <string name="threshold_not_set">Threshold: Not set</string>
+    <string name="threshold_value">Threshold: %s pieces</string>
+    <string name="threshold_note">Positive stock at or below this threshold is low. Zero is always out of stock. Leave blank to clear.</string>
+    <string name="threshold_field_label">Low-stock threshold</string>
+    <string name="threshold_save">Save threshold</string>
+
+    <!-- Local backup -->
+    <string name="local_backup_recovery_title">Before-restore recovery copy</string>
+    <string name="local_backup_title">Local backup</string>
+    <string name="local_backup_recovery_desc">The shop saved before replacement. Save this copy to keep it elsewhere.</string>
+    <string name="local_backup_desc">Saved on this phone. This does not confirm a Drive backup.</string>
+    <string name="local_backup_preparing">Preparing local backup…</string>
+    <string name="local_backup_no_capture">No complete local capture yet.</string>
+    <string name="local_backup_newer_changes">Newer shop changes are waiting for a local capture.</string>
+    <string name="local_backup_copy_saved">Backup copy saved.</string>
+    <string name="local_recovery_copy_saved">Recovery copy saved.</string>
+    <string name="local_backup_capture_btn">Capture local backup</string>
+    <string name="local_save_recovery_copy">Save recovery copy…</string>
+    <string name="local_save_copy">Save a copy…</string>
+
+    <!-- Drive backup -->
+    <string name="drive_backup_section">Google Drive backup</string>
+    <string name="drive_no_verified">No verified Drive backup for this connection.</string>
+    <string name="drive_auto_backup_note">Automatic backups use Wi-Fi / unmetered networks by default. Android may delay work to save battery. Timing and recovery of changes still on this phone are not guaranteed.</string>
+    <string name="drive_connect_repair">Connect or repair Drive</string>
+    <string name="drive_new_folder_label">New dedicated folder name</string>
+    <string name="drive_create_folder">Create and use folder</string>
+    <string name="drive_back_up_now">Back up now</string>
+    <string name="drive_manual_edit_note">Manual Drive-file edits do not edit the shop. Retire the previous phone before activating a replacement for shop work and backups.</string>
+    <string name="drive_use_wifi_only">Use Wi-Fi only</string>
+    <string name="drive_allow_mobile">Allow mobile data for automatic backups</string>
+
+    <!-- Phone replacement -->
+    <string name="phone_active_section">Active shop phone</string>
+    <string name="phone_check_active">Check active phone</string>
+    <string name="phone_review_replacement">Review replacement phone</string>
+    <string name="phone_retired_checkbox">I have retired the old installation</string>
+    <string name="phone_activate_replacement">Activate replacement phone</string>
+    <string name="phone_cancel_replacement">Cancel replacement review</string>
+    <string name="phone_retire_this">Retire this installation</string>
+    <string name="phone_retire_dialog_title">Retire this installation?</string>
+    <string name="phone_retire_dialog_body">Backups from this installation will stop. Verify the replacement and recovery copies, stop using this phone for shop work, then uninstall the app or clear its data. Offline local edits cannot be remotely prevented.</string>
+    <string name="phone_retire_now">Retire this phone now</string>
+
+    <!-- Backup storage -->
+    <string name="storage_section">Backup storage</string>
+    <string name="storage_inspect">Inspect backup storage</string>
+    <string name="storage_delete_history">Delete reviewed history</string>
+    <string name="storage_dialog_title">Remove older backup history?</string>
+
+    <!-- Restore preview -->
+    <string name="restore_section">Restore preview</string>
+    <string name="restore_find_points">Find restore points</string>
+    <string name="restore_validate">Validate selected restore point</string>
+    <string name="restore_replace">Replace shop with validated restore</string>
+    <string name="restore_dialog_title">Replace this phone\'s shop?</string>
+    <string name="restore_dialog_body">Local changes absent from this restore point will be replaced. A verified local recovery copy must be saved before replacement. Existing QR labels will keep working. Retire the previous shop phone before activating this phone for backups.</string>
+    <string name="restore_replace_now">Replace shop now</string>
+
+    <!-- Shared / common -->
+    <string name="product_label">product</string>
+    <string name="products_label">products</string>
+    <string name="shared_close">Close</string>
+    <string name="shared_save">Save %s</string>
+    <string name="shared_paid">Paid</string>
+    <string name="shared_unfinished">Unfinished</string>
+    <string name="shared_archived">Archived</string>
+    <string name="shared_catalog_incomplete">Catalog incomplete</string>
+    <string name="shared_low_stock_alert_set">Threshold: %s pieces</string>
+    <string name="no_matching_choices">No matching choices</string>
+    <string name="check_the_physical_labels_after_interrupted_output">Check the physical labels. After interrupted output, power-cycle the TE244 to discard partial commands. Then enter only the remaining copies (or finish without reprinting).</string>
+    <string name="activation_may_have_reached_drive_check_active">Activation may have reached Drive. Check active phone to reconcile it before retrying replacement. Existing recovery history is preserved.</string>
+    <string name="stop_using_the_old_phone_verify_the">Stop using the old phone. Verify the replacement and recovery copies, then uninstall the old app or clear its app data. An offline old phone can still edit locally. Drive cannot revoke just that installation\'s writer access.</string>
+    <string name="no_restore_provenance_is_recorded_for_this">No restore provenance is recorded for this local shop. Confirm that this is the intended dataset before replacing its backup writer.</string>
+    <string name="activation_creates_a_fresh_writer_generation_a">Activation creates a fresh writer generation. A new verified backup is still required; the restored point does not establish this phone\'s coverage.</string>
+    <string name="previous_category_values_will_be_kept_as">Previous category values will be kept as historical attributes. Optionally copy compatible text or decimal values below.</string>
+    <string name="copy">Copy </string>
+    <string name="cash_received">Cash received (₹)</string>
+    <string name="exact_amount">Exact amount</string>
+    <string name="edit_cart">Edit cart</string>
+    <string name="the_whole_sale_is_saved_on_this">The whole sale is saved on this phone only when every line has enough stock.</string>
+    <string name="sale_saved_on_this_phone">Sale saved on this phone</string>
+    <string name="this_receipt_remains_available_offline_in_sales">This receipt remains available offline in Sales history.</string>
+    <string name="remove">Remove </string>
+    <string name="location">Location: </string>
+    <string name="no_finding_locations_assigned">No finding locations assigned</string>
+    <string name="retire">Retire: </string>
+    <string name="shop_changes_are_waiting_for_backup_changes">Shop changes are waiting for backup. Changes held only on a lost phone cannot be recovered.</string>
+    <string name="newer_shop_changes_are_waiting_for_another">Newer shop changes are waiting for another backup.</string>
+    <string name="shop_restored_a_local_recovery_copy_is">Shop restored. A local recovery copy is saved. A new backup is pending; replacement-phone activation may be required before publication.</string>
+    <string name="inspect_a_complete_drive_restore_point_before">Inspect a complete Drive restore point before deciding to replace this phone\'s shop.</string>
+    <string name="no_complete_supported_restore_points_found_incomplete">No complete supported restore points found. Incomplete, damaged or inaccessible copies are excluded.</string>
+    <string name="local_changes_absent_from_this_restore_point">Local changes absent from this restore point will not be restored. The current shop remains unchanged during preview and validation.</string>
+    <string name="validation_passed_this_copy_is_complete_and">Validation passed. This copy is complete and consistent. Preview only; your current shop is unchanged.</string>
+    <string name="keep_the_latest_seven_complete_captures_plus">Keep the latest seven complete captures, plus the latest capture on each India calendar day in the current day and previous 29 days. Days without a backup add no recovery point.</string>
+    <string name="google_will_ask_for_read_only_drive">Google will ask for read-only Drive file metadata access to check the complete folder history. If access is declined or uncertain, cleanup stays paused.</string>
+    <string name="reviewed_cleanup_finished_protected_recovery_history_is">Reviewed cleanup finished. Protected recovery history is preserved.</string>
+    <string name="a_reviewed_cleanup_was_interrupted_continue_to">A reviewed cleanup was interrupted. Continue to recheck the remaining files and finish safely.</string>
+    <string name="no_older_backup_history_is_eligible_for">No older backup history is eligible for removal.</string>
+    <string name="permanently_remove_only_the_reviewed_eligible_history">Permanently remove only the reviewed eligible history and its unshared files. Those older captures will no longer be available for recovery.</string>
+    <string name="recent_and_daily_history_pending_captures_and">Recent and daily history, pending captures and shared photos stay protected.</string>
+    <string name="cleanup_pauses_if_identity_permissions_or_history">Cleanup pauses if identity, permissions or history are uncertain.</string>
+    <string name="up_to_18_whole_and_12_decimal">Up to 18 whole and 12 decimal digits. No exponent.</string>
+    <string name="actions_for">Actions for </string>
+    <string name="products">Products</string>
+    <string name="scan_for_sale">Scan for sale</string>
+    <string name="category_change">Category change</string>
+    <string name="no_completed_cash_sales_yet">No completed cash sales yet.</string>
+    <string name="cart">Cart </string>
+    <string name="sale_stock_history">Sale stock history</string>
+    <string name="category_fields">Category fields</string>
+    <string name="formatted_text">%1$s: %2$s</string>
+    <string name="find">Find %1$s</string>
+    <string name="any">Any %1$s</string>
+    <string name="matching_products">%1$s matching products</string>
+    <string name="load_and_calibrate_the_mm_roll_verify">Load and calibrate the %1$s × %2$s mm roll. Verify ribbon/material and printer settings before printing.</string>
+    <string name="inspect_previous_output">Inspect previous output: %1$s</string>
+    <string name="i_confirm_the_loaded_mm_roll_calibrated">I confirm the loaded %1$s × %2$s mm roll, calibrated TSPL profile and %3$s copies.</string>
+    <string name="on_hand_pieces">On hand: %1$s pieces</string>
+    <string name="other_carts_pieces">Other carts: %1$s pieces</string>
+    <string name="quoted_unit_price">Quoted unit price: ₹%1$s</string>
+    <string name="saved_line_total">Saved line total: ₹%1$s</string>
+    <string name="saved_cart_total">Saved cart total: ₹%1$s</string>
+    <string name="discard">Discard %1$s?</string>
+    <string name="unit_price">Unit price: ₹%1$s</string>
+    <string name="already_in_this_cart_pieces">Already in this cart: %1$s pieces</string>
+    <string name="writer_generation">Writer generation: %1$s</string>
+    <string name="remove_custom_field">Remove custom field: %1$s</string>
+    <string name="pieces">%1$s pieces</string>
+    <string name="selling_price">Selling price: ₹%1$s</string>
+    <string name="sku">SKU: %1$s</string>
+    <string name="opening_stock_pieces">Opening stock: %1$s pieces</string>
+    <string name="rename">Rename %1$s</string>
+    <string name="save">Save %1$s</string>
+    <string name="use_template">Use template: %1$s</string>
+    <string name="current_stock_pieces">Current stock: %1$s pieces</string>
+    <string name="pieces_2">%1$s pieces × ₹%2$s = ₹%3$s</string>
+    <string name="cart_total">Cart total: ₹%1$s</string>
+    <string name="cash_sale_cart">Cash sale · Cart %1$s</string>
+    <string name="receipt">Receipt: %1$s</string>
+    <string name="total">Total: ₹%1$s</string>
+    <string name="cash_received_2">Cash received: ₹%1$s</string>
+    <string name="change">Change: ₹%1$s</string>
+    <string name="cash_sale_cart_2">Cash sale · Cart %1$s · %2$s</string>
+    <string name="removed_pieces_pieces">Removed %1$s pieces · %2$s → %3$s pieces</string>
+    <string name="choose_a_folder_for_only_folders_granted">Choose a folder for %1$s. Only folders granted to this app are listed.</string>
+    <string name="formatted_text_2">%1$s · %2$s</string>
+    <string name="selected_capture">Selected capture: %1$s</string>
+    <string name="exact_barcode">Exact barcode: %1$s</string>
+    <string name="current_target">Current target: %1$s</string>
+    <string name="pieces_3">%1$s pieces · ₹%2$s</string>
+    <string name="selected_target">Selected target: %1$s</string>
+    <string name="current_folder_file_data_drive_revisions_and">Current folder file data: %1$s. Drive revisions and trash may use additional storage.</string>
+    <string name="complete_restore_points_protected_eligible_older_points">%1$s complete restore points · %2$s protected · %3$s eligible older points</string>
+    <string name="up_to_can_be_removed_shared_photos">Up to %1$s can be removed. Shared photos and pending captures stay protected. Files outside verified obsolete backups are left alone.</string>
+    <string name="eligible_revision">Eligible: %1$s · revision %2$s</string>
+    <string name="load_the_mm_roll_changing_profile_requires">Load the %1$s × %2$s mm roll. Changing profile requires changing the physical roll and calibrating the printer before printing.</string>
+    <string name="saved_default_copies">Saved default: %1$s · %2$s copies</string>
+    <string name="copies">%1$s · %2$s copies</string>
+    <string name="custom_fields_belong_only_to_promote_a">Custom fields belong only to %1$s. Promote a field explicitly to share it with this category.</string>
+    <string name="retire_option">Retire option: %1$s</string>
     <string name="update_dialog_title">Update available</string>
     <string name="update_dialog_version_size">Version %1$s • %2$s MB</string>
     <string name="update_dialog_update">Update</string>

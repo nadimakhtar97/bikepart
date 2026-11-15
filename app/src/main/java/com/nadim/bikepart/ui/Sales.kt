@@ -46,29 +46,29 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(product.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                Text("${indianNumber(line.quantity)} pieces × ₹${indianNumber(line.quotedPriceRupees)} = ₹${indianNumber(line.totalRupees)}",
+                Text(stringResource(R.string.pieces_2, indianNumber(line.quantity), indianNumber(line.quotedPriceRupees), indianNumber(line.totalRupees)),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Text("Cart total: ₹${indianNumber(cart.totalRupees)}", style = MaterialTheme.typography.headlineSmall,
+        Text(stringResource(R.string.cart_total, indianNumber(cart.totalRupees)), style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     }
     ShopGroup("Cash payment") {
         OutlinedTextField(cash, { cash = it; onChange() }, enabled = !busy,
-            label = { Text("Cash received (₹)") }, singleLine = true,
+            label = { Text(stringResource(R.string.cash_received)) }, singleLine = true,
             isError = error?.field == ProductField.CashReceived, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth())
         ShopSecondaryButton(onClick = { cash = cart.totalRupees.toString(); onChange() }, enabled = !busy,
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text("Exact amount") }
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.exact_amount)) }
         val tender = cash.trim().takeIf { it.matches(Regex("[0-9]+")) }?.toLongOrNull()
         Text(if (tender != null && tender >= cart.totalRupees) "Change: ₹${indianNumber(Math.subtractExact(tender, cart.totalRupees))}" else "Enter enough cash to calculate change.",
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.titleMedium)
         if (error != null) Column(Modifier.bringIntoViewRequester(errorView)) { FormError(error.message) }
     }
     ShopPrimaryButton(if (busy) "Saving sale…" else "Complete cash sale", enabled = !busy, onClick = { complete(cash) })
-    TextButton(onClick = edit, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Edit cart") }
-    Text("The whole sale is saved on this phone only when every line has enough stock.", style = MaterialTheme.typography.bodySmall,
+    TextButton(onClick = edit, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.edit_cart)) }
+    Text(stringResource(R.string.the_whole_sale_is_saved_on_this), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
@@ -110,7 +110,7 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
     Text(pluralStringResource(R.plurals.completed_sales, days.sumOf { it.sales.size }, days.sumOf { it.sales.size }),
         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-    if (shop.sales.isEmpty()) ShopEmptyState("No completed cash sales yet.",
+    if (shop.sales.isEmpty()) ShopEmptyState(stringResource(R.string.no_completed_cash_sales_yet),
         "Completed sales and their receipts appear here after cash checkout.", R.drawable.ic_receipt)
     else if (days.isEmpty()) {
         ShopEmptyState(stringResource(R.string.no_matching_sales), stringResource(R.string.sales_filter_hint), R.drawable.ic_receipt)
@@ -130,7 +130,7 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
             day.sales.forEach { sale ->
                 val time = Instant.ofEpochMilli(sale.recordedAt).atZone(zone)
                     .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-                ShopListRow("Cart "+sale.cartNumber,
+                ShopListRow(stringResource(R.string.cart)+sale.cartNumber,
                     supporting = listOfNotNull(sale.customer.ifBlank { null }, time,
                         pluralStringResource(R.plurals.product_lines, sale.lines.size, sale.lines.size), sale.id).joinToString(" · "),
                     meta = "₹"+indianNumber(sale.totalRupees),
@@ -167,25 +167,25 @@ internal fun SaleReceipt(sale: Sale, history: () -> Unit) {
     Surface(shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.primary.copy(alpha = .08f).compositeOver(MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Sale saved on this phone", style = MaterialTheme.typography.titleMedium,
+            Text(stringResource(R.string.sale_saved_on_this_phone), style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-            Text("Cash sale · Cart ${sale.cartNumber}", style = MaterialTheme.typography.bodySmall,
+            Text(stringResource(R.string.cash_sale_cart, sale.cartNumber), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(saleDate(sale.recordedAt), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Receipt: ${sale.id}", style = MaterialTheme.typography.bodySmall,
+            Text(stringResource(R.string.receipt, sale.id), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (sale.customer.isNotEmpty()) Text(sale.customer, style = MaterialTheme.typography.titleMedium)
-            Text("Total: ₹${indianNumber(sale.totalRupees)}", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.total, indianNumber(sale.totalRupees)), style = MaterialTheme.typography.headlineSmall)
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("Cash received: ₹${indianNumber(sale.cashRupees)}", style = MaterialTheme.typography.bodyMedium)
-                Text("Change: ₹${indianNumber(sale.changeRupees)}", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.cash_received_2, indianNumber(sale.cashRupees)), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.change, indianNumber(sale.changeRupees)), style = MaterialTheme.typography.bodyMedium)
             }
-            Text("This receipt remains available offline in Sales history.", style = MaterialTheme.typography.bodySmall,
+            Text(stringResource(R.string.this_receipt_remains_available_offline_in_sales), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-    ShopSectionHeader("Products", supporting = "${sale.lines.size} ${if (sale.lines.size == 1) "line" else "lines"}")
+    ShopSectionHeader(stringResource(R.string.products), supporting = "${sale.lines.size} ${if (sale.lines.size == 1) "line" else "lines"}")
     ShopGroup(spacing = ShopSpacing.small) {
         sale.lines.forEach { line ->
             Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow) {
@@ -197,24 +197,24 @@ internal fun SaleReceipt(sale: Sale, history: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (line.description.isNotEmpty()) Text(line.description, style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("${indianNumber(line.quantity)} pieces × ₹${indianNumber(line.quotedPriceRupees)} = ₹${indianNumber(line.totalRupees)}",
+                    Text(stringResource(R.string.pieces_2, indianNumber(line.quantity), indianNumber(line.quotedPriceRupees), indianNumber(line.totalRupees)),
                         style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
     }
-    TextButton(onClick = history, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text("Sales history") }
+    TextButton(onClick = history, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.more_sales_history)) }
 }
 
 @Composable
 internal fun SaleStockHistory(shop: ShopSnapshot, productId: String) {
     val sales = shop.sales.filter { sale -> sale.lines.any { it.productId == productId } }
     if (sales.isEmpty()) return
-    ShopSection("Sale stock history") {
+    ShopSection(stringResource(R.string.sale_stock_history)) {
         sales.forEach { sale ->
             val line = sale.lines.single { it.productId == productId }
-            Text("Cash sale · Cart ${sale.cartNumber} · ${saleDate(sale.recordedAt)}", style = MaterialTheme.typography.titleMedium)
-            Text("Removed ${indianNumber(line.quantity)} pieces · ${indianNumber(line.previousBalance)} → ${indianNumber(line.resultingBalance)} pieces")
+            Text(stringResource(R.string.cash_sale_cart_2, sale.cartNumber, saleDate(sale.recordedAt)), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.removed_pieces_pieces, indianNumber(line.quantity), indianNumber(line.previousBalance), indianNumber(line.resultingBalance)))
         }
     }
 }
