@@ -41,5 +41,3 @@ Selector used: (Text + InputText + EditableText contains 'Apply' (ignoreCase: fa
 
 FAILURES!!!
 Tests run: 1,  Failures: 1
-
-
