@@ -56,6 +56,8 @@ android {
 }
 
 dependencies {
+    implementation("com.microsoft.fluentui:fluentui_core:0.3.11")
+    implementation("com.microsoft.fluentui:fluentui_controls:0.3.3")
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation(libs.google.play.services.auth)
     implementation(libs.androidx.camera.camera2)
@@ -70,6 +72,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
