@@ -1,9 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -102,3 +100,47 @@ private fun downloadFailure(reason: DownloadFailure) = stringResource(when (reas
     DownloadFailure.Signing -> R.string.update_download_signing
     DownloadFailure.Unknown -> R.string.update_download_unknown
 })
+
+@Composable
+internal fun UpdateReminderDialog(
+    release: AvailableUpdate,
+    onUpdate: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.update_dialog_title), style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)
+            ) {
+                Text(
+                    stringResource(R.string.update_dialog_version_size, release.versionName, megabytes(release.sizeBytes)),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    release.summary.ifBlank { stringResource(R.string.update_no_summary) },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onUpdate,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = MaterialTheme.colorScheme.inverseOnSurface
+                )
+            ) {
+                Text(stringResource(R.string.update_dialog_update))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.update_dialog_later))
+            }
+        }
+    )
+}
+

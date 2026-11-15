@@ -52,4 +52,8 @@
     <string name="update_download_identity">The downloaded file is not a compatible update for this app.</string>
     <string name="update_download_signing">The downloaded update is not signed for this app. It was not kept.</string>
     <string name="update_download_unknown">Couldn\'t prepare the update. Try again.</string>
+    <string name="update_dialog_title">Update available</string>
+    <string name="update_dialog_version_size">Version %1$s • %2$s MB</string>
+    <string name="update_dialog_update">Update</string>
+    <string name="update_dialog_later">Later</string>
 </resources>

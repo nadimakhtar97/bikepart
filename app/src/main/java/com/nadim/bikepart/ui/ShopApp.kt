@@ -51,17 +51,27 @@ private val destinations = listOf(
 fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { result, failed -> ScanCamera(result, failed) },
     labelUsb: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess = { context, cancelled ->
         com.nadim.bikepart.printing.UsbLabelPrinter(context, cancelled)
-    }, updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater }) {
+    },
+    updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater },
+    reminders: @Composable () -> UpdateReminders = { viewModel<UpdateViewModel>().reminders }) {
     val updateService = updater()
+    val reminderService = reminders()
     val updateState by updateService.state.collectAsStateWithLifecycle()
     val downloadState by updateService.downloadState.collectAsStateWithLifecycle()
     val updateScope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle, updateService) {
+    DisposableEffect(lifecycle, updateService, reminderService) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
+            if (event == Lifecycle.Event.ON_START) {
+                if (reminderService.shouldCheckAutomatically() && updateJob?.isActive != true) {
+                    reminderService.recordCheckAttempt()
+                    updateJob = updateScope.launch {
+                        try { updateService.check() } catch (_: Exception) {}
+                    }
+                }
+            } else if (event == Lifecycle.Event.ON_STOP) {
                 updateJob?.cancel()
                 // Rotation and in-app navigation keep a transfer; only actual
                 // backgrounding stops it. Process death leaves temporary files.
@@ -408,6 +418,27 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         }
                     }
                 }
+            }
+
+            val availableUpdate = (updateState as? UpdateState.Available)?.release
+            var reminderDismissedSession by rememberSaveable { mutableStateOf<Long?>(null) }
+            val isIdle = route == "main" && !busy && error == null
+            if (isIdle && availableUpdate != null && reminderDismissedSession != availableUpdate.versionCode &&
+                reminderService.shouldShowReminder(availableUpdate) && downloadState !is DownloadState.Downloading &&
+                downloadState !is DownloadState.Verifying) {
+                UpdateReminderDialog(
+                    release = availableUpdate,
+                    onUpdate = {
+                        reminderService.dismissReminder(availableUpdate)
+                        reminderDismissedSession = availableUpdate.versionCode
+                        destination = "More"
+                        updateService.startDownload()
+                    },
+                    onDismiss = {
+                        reminderService.dismissReminder(availableUpdate)
+                        reminderDismissedSession = availableUpdate.versionCode
+                    }
+                )
             }
         }
     }
