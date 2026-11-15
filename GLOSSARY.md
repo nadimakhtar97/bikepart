@@ -24,7 +24,7 @@ A manufacturer or other external barcode explicitly linked by staff to one local
 An unfinished sale that staff can pause and resume while serving other customers.
 
 **Quoted unit price**:
-The selling price retained for a product line in a cart, including additional quantities on that line. Removing the whole line ends that quote; adding the product again uses its current selling price.
+The product's selling price for a line in an unfinished cart, including additional quantities on that line. Changing the product's selling price updates that line in every unfinished cart; removing the whole line ends it, and adding the product again uses its current selling price.
 
 **Opening stock**:
 The starting quantity of a stocked product when the shop begins tracking it.

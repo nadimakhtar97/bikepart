@@ -32,17 +32,17 @@ class CartsTest {
             val expensive = shop.createProduct("Expensive", shop.snapshot().categories.first().id, "", "0", Long.MAX_VALUE.toString())
             rejects { shop.saveCart(cart, 2, "Sum overflow", mapOf(product to "1", expensive to "1")) }
             shop.setSellingPrice(product, "0")
-            shop.saveCart(cart, 2, "", emptyMap())
-            shop.saveCart(cart, 3, "", mapOf(product to Long.MAX_VALUE.toString()))
+            shop.saveCart(cart, 3, "", emptyMap())
+            shop.saveCart(cart, 4, "", mapOf(product to Long.MAX_VALUE.toString()))
             val maximum = shop.snapshot()
             assertEquals(0L, maximum.carts.single().totalRupees)
-            rejects { shop.addCartProduct(cart, 4, product, "1") }
+            rejects { shop.addCartProduct(cart, 5, product, "1") }
             assertEquals(maximum, shop.snapshot())
             val other = shop.createCart()
             shop.saveCart(other, 0, "", mapOf(product to "1"))
             assertEquals("9223372036854775808", shop.snapshot().otherCartDemand("another-customer", product))
             assertEquals(1L, shop.snapshot().products.single { it.id == product }.quantity)
-            shop.discardCart(cart, 4)
+            shop.discardCart(cart, 5)
             rejects { shop.saveCart(cart, 4, "", emptyMap()) }
         }
     }
@@ -96,7 +96,7 @@ class CartsTest {
         try { Shop.open(context, name).use { block(it, context, name) } } finally { context.deleteDatabase(name) }
     }
 
-    @Test fun cartsKeepQuotesAcrossPriceChangesAndReopenWithoutReservingStock() = runBlocking {
+    @Test fun priceChangesRepriceEveryUnfinishedCartAndReopenWithoutReservingStock() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "carts-${UUID.randomUUID()}.db"
         try {
@@ -107,11 +107,12 @@ class CartsTest {
                 shop.saveCart(first, 0, "Ravi", mapOf(product to "2"))
                 shop.saveCart(second, 0, "", mapOf(product to "1"))
                 shop.setSellingPrice(product, "95")
-                shop.saveCart(first, 1, "Ravi", mapOf(product to "3"))
+                shop.saveCart(first, 2, "Ravi", mapOf(product to "3"))
                 val snapshot = shop.snapshot()
                 val cart = snapshot.carts.single { it.id == first }
                 assertEquals("Cart 1", cart.name)
-                assertEquals(240L, cart.totalRupees)
+                assertEquals(285L, cart.totalRupees)
+                assertEquals(95L, cart.lines.single().quotedPriceRupees)
                 assertEquals("1", snapshot.otherCartDemand(first, product))
                 assertEquals(1L, snapshot.products.single().quantity)
             }
@@ -120,7 +121,7 @@ class CartsTest {
                 val first = snapshot.carts.single { it.number == 1L }
                 val product = snapshot.products.single().id
                 assertEquals("Ravi", first.customer)
-                assertEquals(80L, first.lines.single().quotedPriceRupees)
+                assertEquals(95L, first.lines.single().quotedPriceRupees)
                 shop.saveCart(first.id, first.editVersion, "Ravi", emptyMap())
                 shop.saveCart(first.id, first.editVersion + 1, "Ravi", mapOf(product to "2"))
                 assertEquals(190L, shop.snapshot().carts.single { it.id == first.id }.totalRupees)

@@ -81,6 +81,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var correctionKind by rememberSaveable { mutableStateOf(CorrectionKind.PhysicalCount.name) }
     var correctionOperation by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
+    var newCartId by rememberSaveable { mutableStateOf("") }
     var scanPurpose by rememberSaveable { mutableStateOf(ScanPurpose.Catalog.name) }
     var scanReturn by rememberSaveable { mutableStateOf("create") }
     var arrivalOperation by rememberSaveable { mutableStateOf("") }
@@ -104,11 +105,23 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val product = state?.products?.find { it.id == selectedId }
     fun back() {
         if (route == "scan") { route = scanReturn; model.error.value = null; return }
-        if (route == "cart") { model.flushCart { route = "main"; destination = "Carts" }; return }
+        if (route == "cart") {
+            val draft = cartDraft
+            val isUntouchedNewCart = newCartId == selectedId && draft != null &&
+                draft.customer.isBlank() && draft.quantities.isEmpty()
+            if (isUntouchedNewCart) {
+                model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, {
+                    newCartId = ""; route = "main"; destination = "Carts"
+                })
+            } else {
+                model.flushCart { newCartId = ""; route = "main"; destination = "Carts" }
+            }
+            return
+        }
         route = when (route) { "checkout", "cart-products" -> "cart"; "receipt" -> "sales"; "detail" -> if (product?.archived == true) "archived-products" else "main"; "edit", "fields", "correction", "labels" -> "detail"; "arrival" -> "receive-products"; "template-detail", "template-form" -> "templates"; else -> "main" }
         model.error.value = null
     }
-    fun newCart() { model.write({ selectedId = createCart() }, { model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
+    fun newCart() { model.write({ selectedId = createCart() }, { newCartId = selectedId; model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
     fun addProduct() { model.error.value = null; formSession++; catalogPayload = null; route = "create" }
     fun openStock(health: StockHealth?) {
         stockState.removeState("stock:$stockSession")
@@ -249,7 +262,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     remove = { productId -> cartDraft?.let { draft ->
                                         model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
                                     } },
-                                    discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { route = "main"; destination = "Carts" }) } })
+                                    discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { newCartId = ""; route = "main"; destination = "Carts" }) } })
                                 "checkout" -> {
                                     val cart = shop.carts.find { it.id == selectedId }
                                     if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
@@ -295,7 +308,10 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
                                             model.write({
                                                 if (route == "template-form") templateId = saveTemplate(input.catalog, templateId, photo)
-                                                else if (editing != null) editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
+                                                else if (editing != null) {
+                                                    editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
+                                                    setSellingPrice(editing.id, input.priceRupees)
+                                                }
                                                 else selectedId = createFromCatalog(input.catalog, input.openingPieces, input.priceRupees, input.allowSimilar, input.locationIds, photo)
                                             }, { route = if (route == "template-form") "template-detail" else "detail" })
                                         },
@@ -359,7 +375,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 }
                                             })
                                     }
-                                    "Carts" -> CartList(shop, busy, ::newCart, onOpen = { selectedId = it; model.openCart(it); route = "cart" })
+                                    "Carts" -> CartList(shop, busy, ::newCart, onOpen = { newCartId = ""; selectedId = it; model.openCart(it); route = "cart" })
                                     "More" -> {
                                         MoreScreen(shop, shop.appearance, busy,
                                             onAppearance = { model.write({ setAppearance(it) }) },

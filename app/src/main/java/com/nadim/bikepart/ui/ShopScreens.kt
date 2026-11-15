@@ -311,7 +311,7 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     var category by rememberSaveable { mutableStateOf(product?.categoryId ?: initialCatalog?.categoryId ?: "") }
     var description by rememberSaveable { mutableStateOf(product?.description ?: initialCatalog?.description ?: "") }
     var quantity by rememberSaveable { mutableStateOf(if (initialCatalog != null && !templateMode) "" else "0") }
-    var price by rememberSaveable { mutableStateOf("") }
+    var price by rememberSaveable { mutableStateOf(product?.priceRupees?.toString() ?: "") }
     var distinct by rememberSaveable { mutableStateOf(false) }
     var mappings by rememberSaveable(stateSaver = mappingDraftSaver) { mutableStateOf(emptyMap<String, String>()) }
     var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: initialCatalog?.attributes ?: emptyMap()) }
@@ -341,6 +341,11 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
             onCreate = { name -> lookups.category(name) { category = it; mappings = emptyMap(); distinct = false; onChange() } })
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
+    }
+    if (product != null && !product.archived && !templateMode) ShopSection("Selling price") {
+        ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
+            error?.takeIf { it.field == ProductField.SellingPrice }, number = true)
+        Text("Price changes update this product's lines in every unfinished cart.", style = MaterialTheme.typography.bodyMedium)
     }
     if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text("Previous category values will be retained as historical attributes.", style = MaterialTheme.typography.bodyMedium)
     if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }

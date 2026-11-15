@@ -360,6 +360,11 @@ input or overflow rolls the whole transaction back. Informational demand across
 other carts uses an arbitrary-precision sum because independent valid carts may
 together exceed a single 64-bit quantity; it never becomes a stock reservation.
 
+Current pricing policy: changing a product's selling price reprices matching
+lines in every unfinished cart. Affected cart edit versions advance so buffered
+drafts based on an older price are rejected. Completed sale snapshots remain
+historical and are not rewritten.
+
 The ViewModel debounces cart field edits and reports saved state only after
 commit. Returning to the list flushes pending edits through the same write
 boundary. Structural actions and navigation are disabled during the commit;

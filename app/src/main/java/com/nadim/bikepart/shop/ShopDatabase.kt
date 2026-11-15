@@ -87,6 +87,7 @@ internal interface ShopDao {
     @Query("SELECT * FROM carts ORDER BY number DESC") suspend fun carts(): List<CartRow>
     @Query("SELECT * FROM carts WHERE id = :id") suspend fun cart(id: String): CartRow?
     @Query("SELECT * FROM cart_lines ORDER BY cartId, productId") suspend fun cartLines(): List<CartLineRow>
+    @Query("UPDATE cart_lines SET quotedPriceRupees = :price WHERE productId = :productId") suspend fun repriceCartLines(productId: String, price: Long)
     @Query("SELECT * FROM cart_sequence WHERE id = 1") suspend fun cartSequence(): CartSequenceRow?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putCartSequence(row: CartSequenceRow)
     @Insert suspend fun insertCart(row: CartRow)
