@@ -116,6 +116,15 @@ class UpdateDownloads(
         if (value is DownloadState.Downloading || value is DownloadState.Verifying) mutableState.value = DownloadState.None
     }
 
+    /** Makes a missing or damaged retained file retryable without changing shop data. */
+    fun discardInvalid() {
+        synchronized(startLock) {
+            val ready = mutableState.value as? DownloadState.Ready ?: return
+            generation++
+            mutableState.value = DownloadState.Failed(ready.release, DownloadFailure.Integrity)
+        }
+    }
+
     /** Drops a retained APK or stale failure that no longer matches the release offered by discovery. */
     suspend fun reconcile(available: AvailableUpdate?) {
         restored.await()

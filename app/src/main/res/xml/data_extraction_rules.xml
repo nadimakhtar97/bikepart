@@ -5,8 +5,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="app-updates/" />
+        <exclude domain="sharedpref" path="bikepart_update_reminders.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="app-updates/" />
+        <exclude domain="sharedpref" path="bikepart_update_reminders.xml" />
     </device-transfer>
 </data-extraction-rules>
