@@ -1,6 +1,10 @@
 # Fluent compatibility gate (issue #23)
 
-Status: **NO GO — compatibility remains unproved.** Do not start dependent migration slices until the runtime, release and accessibility checks below pass. This is an investigation, not approval for a fork or toolchain downgrade.
+Status: **GO for the scoped theme/appearance/shared-button pilot.** The final
+minimal harness passes debug and shrunk-release runtime on minimum API33 and
+current API37 using supported Fluent tokens and accessibility adapters. This is
+not full-screen migration or production-release approval. The final verdict and
+matrix below supersede the historical investigation checkpoints.
 
 ## Artifact selection
 
@@ -138,9 +142,9 @@ controls 0.3.3 as latest/release; raw metadata is retained under
 [evidence/dependencies](evidence/dependencies/). The Compose runtime-livedata
 adapter is required by native TextField and is aligned through the app BOM.
 
-The gate remains **NO GO** pending final current/minimum API shrunk runtime,
-comprehensive reachable-state/control
-verification and actual-app Room workflow results. Unperformed TalkBack, assistive
+At this intermediate checkpoint the runtime gate remained **NO GO** pending final
+current/minimum API shrunk runtime. Comprehensive reachable-state/control
+verification and actual-app Room workflows remain later-slice requirements. Unperformed TalkBack, assistive
 focus/navigation, complete contrast state matrix and platform-layout checks are
 not claimed as passes. No binary/runtime incompatibility, fork requirement or
 need for a downgrade has been established by the corrected probe.
@@ -180,3 +184,44 @@ AVD was relaunched with its existing data preserved. This interrupts the final
 shrunk-runtime check; it does not turn a build result into a runtime pass. The
 previous physical release interaction and minimum-API release launch/input
 predate only the supported resting-stroke token override.
+
+
+## Final pilot verdict — GO
+
+The final accessible-divider variant was signed with the local debug key and
+installed under the isolated `com.nadim.bikepart.compatibilitytrial` package on
+both emulators. Each accepted `ReleaseProbe` through the editable field and
+exposed **Applied: ReleaseProbe** after the native Apply action. The actual
+Android hierarchies are preserved for
+[API33](evidence/corrected-trial/fluent-emulator-5554-final-release.xml) and
+[API37](evidence/corrected-trial/fluent-emulator-5556-final-release.xml), with
+separate command-result logs alongside them. The API33 System UI ANR required
+Close app before the probe could run; subsequent app entry/action succeeded.
+No shop records or persistence/service contracts were changed.
+
+| Minimal compatibility gate | Result |
+| --- | --- |
+| Published modular version recheck and static pins | PASS: core 0.3.11 / controls 0.3.3; runtime-livedata aligned to app Compose BOM. |
+| Existing supported stack, debug/release resources and resolution | PASS: no downgrade or maintained fork; debug/release graphs captured; resource merging and R8 passed. |
+| API33 minimum debug | PASS: ActivityScenario input/Apply/button semantics and 48dp target regression. |
+| API37 current debug | PASS: final accessible-divider input/Apply/button regression. |
+| API33 minimum shrunk release | PASS: final native input entry and Applied result through actual Android hierarchy. |
+| API37 current shrunk release | PASS: final native input entry and Applied result through actual Android hierarchy. |
+| Initial light/dark/scaling/IME and essential native-adapter coverage | PASS for probe scope: physical 100%/200% light/dark, pinned Apply above IME; final light/dark divider contrast 6.19:1/7.84:1 measured on API37. |
+| Reachable-family mapping and native/fallback candidates | Source inventory and published API audit recorded above; each introduced module and migrated staff state requires its own validation. |
+
+This GO permits the persisted-appearance/shared-button pilot to proceed. Keep the
+Button semantics/target and TextField resting-stroke adaptations centralized in
+the owning shared components. The pilot must validate Auto/Light/Dark persistence,
+all relevant button states, focus, errors, long labels and every unchanged caller.
+The final token override was not re-run on the disconnected physical V2250;
+that limitation does not erase the min/current emulator checks.
+
+Full-screen migration, complete workflow/Room regression, TalkBack and other
+assistive input, all-state contrast, adaptive/system navigation and genuine
+production-signed upgrade gates belong to their specified later slices and
+release validation. They are unperformed here, not compatibility failures or
+production approvals. The parent workflow is separately checking the ownership
+extraction's existing workflow failures against baseline. Additional Fluent
+modules listed as candidates have not been added or runtime-approved by this
+minimal core/controls trial.
