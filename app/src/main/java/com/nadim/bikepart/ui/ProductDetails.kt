@@ -111,4 +111,3 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         }
     }
 }
-

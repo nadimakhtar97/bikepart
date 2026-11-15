@@ -43,4 +43,3 @@ internal fun ThresholdForm(product: Product, busy: Boolean, error: ShopError?, o
         ShopPrimaryButton(stringResource(R.string.threshold_save), enabled = !busy, onClick = { save(pieces) })
     }
 }
-
