@@ -30,6 +30,7 @@
         </provider>
         <activity
             android:name=".FluentCompatibilityActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:permission="android.permission.DUMP" />
         <activity
