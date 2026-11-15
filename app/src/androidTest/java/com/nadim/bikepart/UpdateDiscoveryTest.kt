@@ -64,7 +64,7 @@ class UpdateDiscoveryTest {
                 else -> UpdateHttpResponse(200, "${"a".repeat(64)}  bikepart.apk\n${"b".repeat(64)}  bikepart.aab\n")
             }
         }.use { server ->
-            val updater = GitHubUpdater(InstalledApp("com.nadim.bikepart", 1, "1", 33), server::get)
+            val updater = GitHubUpdater(InstalledApp("com.nadim.bikepart", 1, "1", 33), get = server::get)
             updater.check()
             assertEquals(9L, (updater.state.value as UpdateState.Available).release.versionCode)
             assertEquals("Workshop improvements", (updater.state.value as UpdateState.Available).release.summary)
@@ -76,7 +76,7 @@ class UpdateDiscoveryTest {
         var status = 429
         var body = "[]"
         UpdateTestServer { UpdateHttpResponse(status, body) }.use { server ->
-            val updater = GitHubUpdater(InstalledApp("com.nadim.bikepart", 1, "1", 33), server::get)
+            val updater = GitHubUpdater(InstalledApp("com.nadim.bikepart", 1, "1", 33), get = server::get)
             for (error in listOf(429, 403, 500)) {
                 status = error; updater.check()
                 assertTrue(updater.state.value is UpdateState.Failed)
@@ -149,7 +149,7 @@ class UpdateDiscoveryTest {
                     else -> UpdateHttpResponse(200, "${"b".repeat(64)}  bikepart.apk\n${"b".repeat(64)}  bikepart.aab\n")
                 }
             }.use { server ->
-                val updater = GitHubUpdater(InstalledApp("com.nadim.bikepart", 1, "1", 33), server::get)
+                val updater = GitHubUpdater(InstalledApp("com.nadim.bikepart", 1, "1", 33), get = server::get)
                 updater.check()
                 assertEquals(UpdateState.NoUpdate, updater.state.value)
             }

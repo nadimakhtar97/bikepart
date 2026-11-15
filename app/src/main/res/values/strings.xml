@@ -38,4 +38,18 @@
     <string name="update_checking">Checking for updates…</string>
     <string name="update_retry">Retry update check</string>
     <string name="update_check">Check for updates</string>
+    <string name="update_download">Download update</string>
+    <string name="update_download_retry">Retry download</string>
+    <string name="update_cancel_download">Cancel download</string>
+    <string name="update_downloading">Downloading update: %1$d%% (%2$s MB of %3$s MB)</string>
+    <string name="update_verifying">Verifying the downloaded update.</string>
+    <string name="update_download_ready">Update downloaded and verified.</string>
+    <string name="update_download_ready_detail">The verified APK is kept on this phone for a separate installation step.</string>
+    <string name="update_download_failed">Couldn\'t download the update. Check your connection and try again.</string>
+    <string name="update_download_timeout">The update download timed out. Try again.</string>
+    <string name="update_download_storage">Not enough storage for the update. Free some space and try again.</string>
+    <string name="update_download_integrity">The downloaded update is damaged. Try again.</string>
+    <string name="update_download_identity">The downloaded file is not a compatible update for this app.</string>
+    <string name="update_download_signing">The downloaded update is not signed for this app. It was not kept.</string>
+    <string name="update_download_unknown">Couldn\'t prepare the update. Try again.</string>
 </resources>

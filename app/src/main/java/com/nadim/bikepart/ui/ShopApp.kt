@@ -1,5 +1,8 @@
 package com.nadim.bikepart.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
@@ -51,12 +54,19 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }, updater: @Composable () -> AppUpdater = { viewModel<UpdateViewModel>().updater }) {
     val updateService = updater()
     val updateState by updateService.state.collectAsStateWithLifecycle()
+    val downloadState by updateService.downloadState.collectAsStateWithLifecycle()
     val updateScope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, updateService) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) updateJob?.cancel()
+            if (event == Lifecycle.Event.ON_STOP) {
+                updateJob?.cancel()
+                // Rotation and in-app navigation keep a transfer; only actual
+                // backgrounding stops it. Process death leaves temporary files.
+                if (context.findActivity()?.isChangingConfigurations != true) updateService.cancelDownload()
+            }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); updateJob?.cancel() }
@@ -385,11 +395,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             onArchived = { route = "archived-products" },
                                             onSales = { route = "sales" },
                                             onTemplates = { route = "templates" }, onBackups = { route = "backups" },
-                                            updates = { UpdateControls(updateService.installed, updateState) {
+                                            updates = { UpdateControls(updateService.installed, updateState, downloadState, {
                                                 if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                                                     updateJob = updateScope.launch { updateService.check() }
                                                 }
-                                            } })
+                                            }, updateService::startDownload, updateService::cancelDownload) })
                                     }
                                 }
                             }
@@ -401,4 +411,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
             }
         }
     }
+}
+
+/** Configuration changes recreate the activity but must not stop an active transfer. */
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
