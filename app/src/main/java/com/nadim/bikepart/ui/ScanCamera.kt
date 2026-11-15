@@ -4,24 +4,32 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.core.CameraState
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import com.nadim.bikepart.R
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,18 +61,39 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
     }
     LaunchedEffect(Unit) { if (!granted) permission.launch(Manifest.permission.CAMERA) }
     if (!granted) return
+    var boundCamera by remember { mutableStateOf<Camera?>(null) }
+    var torchEnabled by remember { mutableStateOf(false) }
     val previewView = remember { PreviewView(context).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE } }
-    val previewShape = RoundedCornerShape(16.dp)
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Box(Modifier.fillMaxWidth().height(240.dp).clip(previewShape)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, previewShape)) {
-            AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize().clipToBounds())
-            // A framing guide keeps the label inside the recogniser's useful area.
-            Box(Modifier.align(Alignment.Center).fillMaxWidth(.7f).fillMaxHeight(.55f)
-                .border(3.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)))
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize().clipToBounds())
+        Canvas(Modifier.align(Alignment.Center).fillMaxWidth(.7f).aspectRatio(1f)) {
+            val stroke = 4.dp.toPx()
+            val length = size.width * .12f
+            val right = size.width - stroke / 2
+            val bottom = size.height - stroke / 2
+            val left = stroke / 2
+            val top = stroke / 2
+            listOf(
+                Offset(left, top) to Offset(left + length, top), Offset(left, top) to Offset(left, top + length),
+                Offset(right, top) to Offset(right - length, top), Offset(right, top) to Offset(right, top + length),
+                Offset(left, bottom) to Offset(left + length, bottom), Offset(left, bottom) to Offset(left, bottom - length),
+                Offset(right, bottom) to Offset(right - length, bottom), Offset(right, bottom) to Offset(right, bottom - length),
+            ).forEach { (start, end) -> drawLine(Color.White, start, end, stroke) }
         }
-        Text("Align the shared label inside the frame. Codes are read on this phone.",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        boundCamera?.takeIf { it.cameraInfo.hasFlashUnit() }?.let { activeCamera ->
+            IconButton(onClick = {
+                val next = !torchEnabled
+                activeCamera.cameraControl.enableTorch(next).addListener({
+                    torchEnabled = activeCamera.cameraInfo.torchState.value == androidx.camera.core.TorchState.ON
+                }, ContextCompat.getMainExecutor(context))
+            }, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                .background(Color.Black.copy(alpha = .6f), androidx.compose.foundation.shape.CircleShape)
+                .semantics { stateDescription = if (torchEnabled) "On" else "Off" }) {
+                Icon(painterResource(R.drawable.ic_flash), contentDescription = "Flash", tint = Color.White)
+            }
+        }
+        Text("Position barcode within the frame", modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp),
+            color = Color.White, style = MaterialTheme.typography.bodyLarge)
     }
     DisposableEffect(owner, previewView) {
         val disposed = AtomicBoolean(false)
@@ -104,12 +133,15 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
             if (!disposed.get()) try {
                 provider = future.get()
                 val camera = requireNotNull(provider).bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
+                boundCamera = camera
                 cameraState = camera.cameraInfo.cameraState
                 cameraState?.observe(owner, observer)
             } catch (_: Exception) { if (!disposed.get()) failure("Camera unavailable. Use manual search or resume to try again.") }
         }, executor)
         onDispose {
             disposed.set(true)
+            boundCamera = null
+            torchEnabled = false
             cameraState?.removeObserver(observer)
             analysis.clearAnalyzer()
             provider?.unbind(preview, analysis)
