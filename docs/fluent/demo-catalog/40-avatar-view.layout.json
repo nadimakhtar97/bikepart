@@ -1,0 +1,190 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:32",
+        "content-desc": "3:32 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "AvatarView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "AvatarView",
+        "bounds": "[210,166][480,237]",
+        "center": "[345,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Circle style",
+            "bounds": "[42,317][1038,428]",
+            "center": "[540,372]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_xxlarge_size",
+            "text": "XXLarge",
+            "content-desc": "Double Extra Large",
+            "bounds": "[42,526][200,583]",
+            "center": "[121,554]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Mauricio August",
+            "bounds": "[547,471][715,639]",
+            "center": "[631,555]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_xlarge_size",
+            "text": "XLarge",
+            "content-desc": "Extra Large",
+            "bounds": "[42,699][200,756]",
+            "center": "[121,727]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_large_size",
+            "text": "Large",
+            "bounds": "[42,841][200,898]",
+            "center": "[121,869]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_medium_size",
+            "text": "Medium",
+            "bounds": "[42,956][200,1013]",
+            "center": "[121,984]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_small_size",
+            "text": "Small",
+            "bounds": "[42,1051][200,1108]",
+            "center": "[121,1079]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_xsmall_size",
+            "text": "XSmall",
+            "content-desc": "Extra Small",
+            "bounds": "[42,1132][200,1189]",
+            "center": "[121,1160]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Square style",
+            "bounds": "[42,1231][1038,1342]",
+            "center": "[540,1286]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_xxlarge_size_square",
+            "text": "XXLarge",
+            "content-desc": "Double Extra Large",
+            "bounds": "[42,1440][200,1497]",
+            "center": "[121,1468]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_xlarge_size_square",
+            "text": "XLarge",
+            "content-desc": "Extra Large",
+            "bounds": "[42,1613][200,1670]",
+            "center": "[121,1641]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_large_size_square",
+            "text": "Large",
+            "bounds": "[42,1755][200,1812]",
+            "center": "[121,1783]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_medium_size_square",
+            "text": "Medium",
+            "bounds": "[42,1870][200,1927]",
+            "center": "[121,1898]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_small_size_square",
+            "text": "Small",
+            "bounds": "[42,1965][200,2022]",
+            "center": "[121,1993]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_example_xsmall_size_square",
+            "text": "XSmall",
+            "content-desc": "Extra Small",
+            "bounds": "[42,2046][200,2103]",
+            "center": "[121,2074]"
+          }
+        ]
+      }
+    ]
+  }
+]

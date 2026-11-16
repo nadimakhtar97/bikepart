@@ -1,0 +1,373 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 2,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:29",
+        "content-desc": "3:29 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Pop-Up Window",
+    "type": "APPLICATION",
+    "layer": 1,
+    "bounds": "[75,412][306,607]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Title",
+        "bounds": "[96,462][181,511]",
+        "center": "[138,486]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Tooltip Text",
+        "bounds": "[96,532][285,575]",
+        "center": "[190,553]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.view.View",
+        "resource-id": "Top Start",
+        "text": "Tap for Tooltip",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,302][339,428]",
+        "center": "[190,365]"
+      },
+      {
+        "class": "android.view.View",
+        "resource-id": "Top End",
+        "text": "Tap for Tooltip",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[741,302][1038,428]",
+        "center": "[889,365]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,647][1038,782]",
+        "center": "[540,714]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Offset X (in dp)",
+            "bounds": "[84,712][560,761]",
+            "center": "[322,736]"
+          },
+          {
+            "class": "android.widget.EditText",
+            "resource-id": "Fluent TEXT_FIELD",
+            "text": "0",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[644,641][839,767]",
+            "center": "[741,704]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Clear Text",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[839,641][965,767]",
+            "center": "[902,704]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,782][1038,917]",
+        "center": "[540,849]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Offset Y (in dp)",
+            "bounds": "[84,847][560,896]",
+            "center": "[322,871]"
+          },
+          {
+            "class": "android.widget.EditText",
+            "resource-id": "Fluent TEXT_FIELD",
+            "text": "0",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[644,776][839,902]",
+            "center": "[741,839]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Clear Text",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[839,776][965,902]",
+            "center": "[902,839]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,917][1038,1052]",
+        "center": "[540,984]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Tip Offset (in dp)",
+            "bounds": "[84,982][560,1031]",
+            "center": "[322,1006]"
+          },
+          {
+            "class": "android.widget.EditText",
+            "resource-id": "Fluent TEXT_FIELD",
+            "text": "0",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[644,911][839,1037]",
+            "center": "[741,974]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Clear Text",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[839,911][965,1037]",
+            "center": "[902,974]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1052][1038,1187]",
+        "center": "[540,1119]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Title",
+            "bounds": "[84,1117][560,1166]",
+            "center": "[322,1141]"
+          },
+          {
+            "class": "android.widget.EditText",
+            "resource-id": "Fluent TEXT_FIELD",
+            "text": "Title",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[644,1046][839,1172]",
+            "center": "[741,1109]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Clear Text",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[839,1046][965,1172]",
+            "center": "[902,1109]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1187][1038,1322]",
+        "center": "[540,1254]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Tooltip Text",
+            "bounds": "[84,1252][560,1301]",
+            "center": "[322,1276]"
+          },
+          {
+            "class": "android.widget.EditText",
+            "resource-id": "Fluent TEXT_FIELD",
+            "text": "Tooltip Text",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[644,1181][839,1307]",
+            "center": "[741,1244]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Clear Text",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[839,1181][965,1307]",
+            "center": "[902,1244]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "resource-id": "Custom Center",
+        "text": "Tap for Custom Content Tooltip",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[257,1588][824,1714]",
+        "center": "[540,1651]"
+      },
+      {
+        "class": "android.view.View",
+        "resource-id": "Center",
+        "text": "Tap for Tooltip",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[392,1918][689,2044]",
+        "center": "[540,1981]"
+      },
+      {
+        "class": "android.view.View",
+        "resource-id": "Bottom Start",
+        "text": "Tap for Tooltip",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,2248][339,2374]",
+        "center": "[190,2311]"
+      },
+      {
+        "class": "android.view.View",
+        "resource-id": "Bottom End",
+        "text": "Tap for Tooltip",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[741,2248][1038,2374]",
+        "center": "[889,2311]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 ToolTip",
+        "bounds": "[168,171][421,233]",
+        "center": "[294,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

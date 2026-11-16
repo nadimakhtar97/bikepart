@@ -1,0 +1,158 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:28",
+        "content-desc": "3:28 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,401]",
+        "center": "[540,338]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "{Modifiable Parameters}.Collapsed",
+            "bounds": "[0,275][1080,401]",
+            "center": "[540,338]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,401][1080,2400]",
+        "center": "[540,1400]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Label",
+            "bounds": "[147,1312][222,1343]",
+            "center": "[184,1327]"
+          },
+          {
+            "class": "android.widget.EditText",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[147,1343][819,1469]",
+            "center": "[483,1406]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Hint",
+                "bounds": "[147,1381][224,1430]",
+                "center": "[185,1405]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Secondary",
+            "bounds": "[840,1381][1038,1430]",
+            "center": "[939,1405]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Assistive Text",
+            "bounds": "[147,1474][339,1511]",
+            "center": "[243,1492]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 TextField",
+        "bounds": "[168,171][458,233]",
+        "center": "[313,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

@@ -222,60 +222,6 @@
     "slug": "v2-tool-tip"
   },
   {
-    "version": 2,
-    "title": "AppBarLayout",
-    "activity": "AppBarLayoutActivity",
-    "slug": "app-bar-layout"
-  },
-  {
-    "version": 2,
-    "title": "BottomSheet",
-    "activity": "BottomSheetActivity",
-    "slug": "bottom-sheet"
-  },
-  {
-    "version": 2,
-    "title": "CalendarView",
-    "activity": "CalendarViewActivity",
-    "slug": "calendar-view"
-  },
-  {
-    "version": 2,
-    "title": "Drawer",
-    "activity": "DrawerActivity",
-    "slug": "drawer"
-  },
-  {
-    "version": 2,
-    "title": "PeoplePickerView",
-    "activity": "PeoplePickerViewActivity",
-    "slug": "people-picker-view"
-  },
-  {
-    "version": 2,
-    "title": "DateTimePicker",
-    "activity": "DateTimePickerActivity",
-    "slug": "date-time-picker"
-  },
-  {
-    "version": 2,
-    "title": "PopupMenu",
-    "activity": "PopupMenuActivity",
-    "slug": "popup-menu"
-  },
-  {
-    "version": 2,
-    "title": "Snackbar",
-    "activity": "SnackbarActivity",
-    "slug": "snackbar"
-  },
-  {
-    "version": 2,
-    "title": "Tooltip",
-    "activity": "TooltipActivity",
-    "slug": "tooltip"
-  },
-  {
     "version": 1,
     "title": "ActionBarLayout",
     "activity": "ActionBarLayoutActivity",
