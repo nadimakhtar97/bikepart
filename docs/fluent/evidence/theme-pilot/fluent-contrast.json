@@ -1,5 +1,5 @@
 {
-  "sourceSha256": "3f1f33199051fe1f7da64f7cc07f6301398f0c8b1394a1a44ed973210fc3690f",
+  "sourceSha256": "a7513bf8f521a6faf40c333dcc99022bfd90b6af07a0fcb02abc25e35409d8f2",
   "themes": [
     {
       "appearance": "light",
@@ -95,6 +95,12 @@
           "minimum": 3
         },
         {
+          "name": "bridge.surface.outlineVariant",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
           "name": "bridge.low.text",
           "foreground": "242424",
           "background": "FFFFFF",
@@ -114,6 +120,12 @@
         },
         {
           "name": "bridge.low.outline",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.low.outlineVariant",
           "foreground": "616161",
           "background": "FFFFFF",
           "minimum": 3
@@ -143,6 +155,12 @@
           "minimum": 3
         },
         {
+          "name": "bridge.container.outlineVariant",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
           "name": "bridge.high.text",
           "foreground": "242424",
           "background": "FFFFFF",
@@ -167,6 +185,12 @@
           "minimum": 3
         },
         {
+          "name": "bridge.high.outlineVariant",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
           "name": "bridge.highest.text",
           "foreground": "242424",
           "background": "FAFAFA",
@@ -186,6 +210,12 @@
         },
         {
           "name": "bridge.highest.outline",
+          "foreground": "616161",
+          "background": "FAFAFA",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.highest.outlineVariant",
           "foreground": "616161",
           "background": "FAFAFA",
           "minimum": 3
@@ -216,6 +246,12 @@
         },
         {
           "name": "bridge.group.outline",
+          "foreground": "616161",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.group.outlineVariant",
           "foreground": "616161",
           "background": "ECF3FA",
           "minimum": 3
@@ -353,6 +389,24 @@
           "minimum": 4.5
         },
         {
+          "name": "button.secondary.rest.outline.0",
+          "foreground": "0F6CBD",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.pressed.outline.0",
+          "foreground": "0E4775",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.customSelected.outline.0",
+          "foreground": "0F6CBD",
+          "background": "CFE4FA",
+          "minimum": 3
+        },
+        {
           "name": "button.secondary.disabled.exempt",
           "foreground": "BDBDBD",
           "background": "FFFFFF",
@@ -466,6 +520,12 @@
           "minimum": 3
         },
         {
+          "name": "bridge.surface.outlineVariant",
+          "foreground": "9E9E9E",
+          "background": "000000",
+          "minimum": 3
+        },
+        {
           "name": "bridge.low.text",
           "foreground": "FFFFFF",
           "background": "1F1F1F",
@@ -485,6 +545,12 @@
         },
         {
           "name": "bridge.low.outline",
+          "foreground": "9E9E9E",
+          "background": "1F1F1F",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.low.outlineVariant",
           "foreground": "9E9E9E",
           "background": "1F1F1F",
           "minimum": 3
@@ -514,6 +580,12 @@
           "minimum": 3
         },
         {
+          "name": "bridge.container.outlineVariant",
+          "foreground": "9E9E9E",
+          "background": "1F1F1F",
+          "minimum": 3
+        },
+        {
           "name": "bridge.high.text",
           "foreground": "FFFFFF",
           "background": "292929",
@@ -538,6 +610,12 @@
           "minimum": 3
         },
         {
+          "name": "bridge.high.outlineVariant",
+          "foreground": "9E9E9E",
+          "background": "292929",
+          "minimum": 3
+        },
+        {
           "name": "bridge.highest.text",
           "foreground": "FFFFFF",
           "background": "292929",
@@ -557,6 +635,12 @@
         },
         {
           "name": "bridge.highest.outline",
+          "foreground": "9E9E9E",
+          "background": "292929",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.highest.outlineVariant",
           "foreground": "9E9E9E",
           "background": "292929",
           "minimum": 3
@@ -587,6 +671,12 @@
         },
         {
           "name": "bridge.group.outline",
+          "foreground": "9E9E9E",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.group.outlineVariant",
           "foreground": "9E9E9E",
           "background": "060C13",
           "minimum": 3
@@ -722,6 +812,24 @@
           "foreground": "77B7F7",
           "background": "060C13",
           "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.rest.outline.0",
+          "foreground": "479EF5",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.pressed.outline.0",
+          "foreground": "96C6FA",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.customSelected.outline.0",
+          "foreground": "479EF5",
+          "background": "0A2E4A",
+          "minimum": 3
         },
         {
           "name": "button.secondary.disabled.exempt",

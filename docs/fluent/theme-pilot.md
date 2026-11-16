@@ -70,6 +70,9 @@ the subsequent matrix passed. Screenshot inspection then found that the
 emulator's hardware keyboard suppressed the IME. The final matrix explicitly
 enables the software keyboard and asserts IME visibility before capture.
 Historical failed and interrupted logs remain named separately from final logs.
+The final release smoke also corrected a startup-timing probe that tapped the
+More location before Home was ready; the final check navigates from the captured
+live hierarchy. It then passed on the final shrunk APK.
 
 `ThemeContrastExportTest` is a runtime measurement tool, not a substitute shop
 workflow. It resolves both appearances from the production scope, composites
@@ -103,16 +106,17 @@ keyboard and target checks do not replace those checks. No release is published.
 | Shrunk release APK / R8 | Built; debug-key-signed copy exercised only on the disposable emulator |
 | Android lint | Passed, zero errors; 207 warnings remain (mostly unused resources and existing dependency/style checks) |
 | Unit tests | 30 passed, zero failures/errors |
-| Actual-app focused instrumentation | 7 passed; corrected measurement-only rerun also passed |
-| Effective Fluent/bridge contrast | 118 pairs passed with current source fingerprint; stale exports and below-threshold colors are rejected |
+| Actual-app focused instrumentation | 7 passed; after the boundary adaptation, 4 targeted appearance/button/measurement checks passed |
+| Effective Fluent/bridge contrast | 136 pairs passed with current source fingerprint; stale exports and below-threshold colors are rejected |
 | Actual shrunk-release smoke | Launch, More, Light/Dark, original System restoration, navigation, shared action and required-title validation passed |
 
 The release smoke used the local disposable debug signing key, preserved the
 emulator's shop records, restored the original System appearance, and restored
 the debug APK afterwards. It is not a production-signed upgrade or release.
 
-Final logs: [build/lint/unit](evidence/theme-pilot/logs/final-build-lint-unit.txt),
-[actual-app run](evidence/theme-pilot/logs/final-runtime.txt),
+Final logs: [build/lint/unit](evidence/theme-pilot/logs/outline-final-build-lint-unit.txt),
+[initial actual-app run](evidence/theme-pilot/logs/final-runtime.txt),
+[targeted final run](evidence/theme-pilot/logs/outline-final-runtime.txt),
 [contrast](evidence/theme-pilot/logs/contrast.txt),
 [rejection checks](evidence/theme-pilot/logs/tooling-rejection-checks.txt), and
 [release smoke](evidence/theme-pilot/logs/release-smoke-ui.txt).

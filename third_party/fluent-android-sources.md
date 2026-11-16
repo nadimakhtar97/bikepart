@@ -14,7 +14,7 @@ The fallback adapts native button tokens to wrapping Compose slots and ordinary
 button semantics because the published string-only button truncates to one line
 and exposes editable-text semantics. Native state brushes, text, borders, padding,
 typography, and corner radius remain authoritative. Android's 48dp minimum target
-and a documented dark Material-bridge contrast adaptation are applied.
+and documented Material-bridge text/boundary contrast adaptations are applied.
 
 No demo brand classes, application logos, or new icon assets are copied in this
 pilot. Existing Google Material Symbols retain their separate Apache 2.0 license

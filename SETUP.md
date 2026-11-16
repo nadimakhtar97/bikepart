@@ -10,7 +10,7 @@ Read this before installing build tools or running Gradle or theme commands.
   currently listed as `platforms;android-37.0`; check `sdkmanager --list` if the
   package name changes.
 - Android SDK Platform Tools for `adb` when using a connected device.
-- Node.js and npm for the theme tooling.
+- Node.js for the theme contrast validator (no external dependencies).
 
 Point Gradle at the SDK with `ANDROID_HOME` or a local `local.properties` file
 containing `sdk.dir=<absolute SDK path>`. `local.properties` is ignored by Git
