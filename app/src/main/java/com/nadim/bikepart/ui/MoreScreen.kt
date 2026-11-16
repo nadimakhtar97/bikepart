@@ -29,6 +29,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
+    customization: com.nadim.bikepart.ui.theme.ShopThemeCustomization, onBrand: (com.nadim.bikepart.ui.theme.ShopBrand) -> Unit,
     onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit, updates: @Composable () -> Unit) {
     ShopPageHeader(stringResource(R.string.more_header), "Catalog, appearance and recovery.")
     ShopSectionHeader(stringResource(R.string.more_appearance))
@@ -49,6 +50,22 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
         }
         Text(stringResource(R.string.more_appearance_hint), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    ShopSectionHeader("Choose brand theme")
+    ShopGroup(spacing = ShopSpacing.small) {
+        Column(Modifier.selectableGroup()) {
+            com.nadim.bikepart.ui.theme.ShopBrand.entries.forEach { brand ->
+                Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+                    .selectable(customization.brand == brand, enabled = !busy, role = Role.RadioButton,
+                        onClick = { onBrand(brand) }).padding(horizontal = ShopSpacing.small),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    ShopAppearanceIndicator(selected = customization.brand == brand, enabled = !busy,
+                        interaction = remember { MutableInteractionSource() })
+                    Text(brand.label, style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = ShopSpacing.medium))
+                }
+            }
+        }
     }
     updates()
     ShopSectionHeader(stringResource(R.string.more_shop))

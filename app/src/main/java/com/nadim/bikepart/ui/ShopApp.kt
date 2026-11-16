@@ -92,6 +92,10 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
     val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
+    val customization by model.themePreferences.state.collectAsStateWithLifecycle()
+    val themeConfiguration = remember(customization.brand) {
+        com.nadim.bikepart.ui.theme.ShopThemeConfiguration(aliasTokens = customization.brand.aliasTokens)
+    }
     val state by model.state.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
@@ -166,7 +170,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
     BackHandler(route != "main") { if (!busy) back() }
     val selectedCart = state?.carts?.find { it.id == selectedId }
-    BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
+    BikepartTheme(appearance = state?.appearance ?: Appearance.System, configuration = themeConfiguration) {
         val colors = MaterialTheme.colorScheme
         // Material 3 scroll behaviour: the bar keeps its height, gains a tonal surface
         // once content has scrolled under it, and resets when the screen changes.
@@ -414,6 +418,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     "More" -> {
                                         MoreScreen(shop, shop.appearance, busy,
                                             onAppearance = { model.write({ setAppearance(it) }) },
+                                            customization = customization, onBrand = model.themePreferences::setBrand,
                                             onCategories = { route = "categories" },
                                             onFindingLookups = { route = "finding-lookups" },
                                             onArchived = { route = "archived-products" },
