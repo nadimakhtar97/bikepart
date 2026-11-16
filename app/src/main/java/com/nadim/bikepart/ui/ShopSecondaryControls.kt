@@ -48,6 +48,6 @@ internal fun ShopBackButton(onClick: () -> Unit, enabled: Boolean = true) {
     IconButton(onClick = onClick, enabled = enabled,
         modifier = Modifier.semantics { text = AnnotatedString("Back") }) {
         Icon(painterResource(com.nadim.bikepart.R.drawable.ic_arrow_back), contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface)
+            tint = LocalContentColor.current)
     }
 }

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-const file = process.argv[2] ?? 'docs/fluent/evidence/theme-pilot/fluent-contrast.json';
+const file = process.argv[2] ?? 'docs/fluent/evidence/dynamic-theme/fluent-contrast.json';
 const exportData = JSON.parse(fs.readFileSync(file, 'utf8'));
 const paths = JSON.parse(fs.readFileSync('tools/theme/source-files.json', 'utf8'));
 const hash = crypto.createHash('sha256');
@@ -12,16 +12,19 @@ const luminance = hex => {
 };
 let checked = 0;
 const failures = [];
-for (const appearance of ['light', 'dark']) {
-  const themes = exportData.themes.filter(t => t.appearance === appearance);
-  if (themes.length !== 1 || !themes[0].pairs.length) throw Error(`Missing or duplicated ${appearance} theme`);
+const brands = ['Fluent', 'OneNote', 'Word', 'Excel', 'PowerPoint', 'M365', 'Teams'];
+if (exportData.themes.length !== 28) throw Error('Expected all 28 brand/style/appearance scopes');
+for (const brand of brands) for (const style of ['Brand', 'Neutral']) for (const appearance of ['light', 'dark']) {
+  const identity = `${brand}/${style}/${appearance}`;
+  const themes = exportData.themes.filter(t => t.appearance === appearance && t.brand === brand && t.style === style);
+  if (themes.length !== 1 || !themes[0].pairs.length) throw Error(`Missing or duplicated ${identity} theme`);
   for (const pair of themes[0].pairs) {
     if (!/^[0-9A-F]{6}$/i.test(pair.foreground) || !/^[0-9A-F]{6}$/i.test(pair.background)) throw Error(`Invalid colors: ${pair.name}`);
     if (pair.minimum === 0 && pair.name.endsWith('.disabled.exempt')) continue;
     if (![3, 4.5].includes(pair.minimum)) throw Error(`Invalid threshold: ${pair.name}`);
     const [hi, lo] = [luminance(pair.foreground), luminance(pair.background)].sort((a, b) => b - a);
     const ratio = (hi + .05) / (lo + .05);
-    if (ratio < pair.minimum) failures.push(`${appearance} ${pair.name}: ${ratio.toFixed(2)} < ${pair.minimum}`);
+    if (ratio < pair.minimum) failures.push(`${identity} ${pair.name}: ${ratio.toFixed(2)} < ${pair.minimum}`);
     checked++;
   }
 }

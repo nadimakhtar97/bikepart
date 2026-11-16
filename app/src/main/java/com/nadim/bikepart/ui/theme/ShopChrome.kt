@@ -8,7 +8,10 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import com.microsoft.fluentui.theme.FluentTheme
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.*
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandBackgroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandForegroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens
 import com.microsoft.fluentui.theme.token.FluentStyle
 import com.microsoft.fluentui.theme.token.ControlTokens.ControlType
 import com.microsoft.fluentui.theme.token.controlTokens.AppBarInfo

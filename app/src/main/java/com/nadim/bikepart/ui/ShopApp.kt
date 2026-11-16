@@ -175,9 +175,6 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         val colors = MaterialTheme.colorScheme
         val navigationColors = com.nadim.bikepart.ui.theme.shopNavigationColors()
         val appBarColors = com.nadim.bikepart.ui.theme.shopAppBarColors()
-        com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
-            statusBackground = if (route == "main") colors.surface else appBarColors.background,
-            navigationBackground = colors.surface)
         // Material 3 scroll behaviour: the bar keeps its height, gains a tonal surface
         // once content has scrolled under it, and resets when the screen changes.
         // contentOffset accumulates negative consumed.y as content moves under the bar.
@@ -185,6 +182,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         val scrolled by remember { derivedStateOf { topBarScroll.state.contentOffset < 0f } }
         val topBarColor by animateColorAsState(
             appBarColors.background, label = "topAppBarColor")
+        com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
+            statusBackground = if (route == "main") colors.surface else topBarColor,
+            navigationBackground = colors.surface)
         LaunchedEffect(route, destination, selectedId) { topBarScroll.state.contentOffset = 0f }
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val useRail = maxWidth >= 600.dp && route == "main"
