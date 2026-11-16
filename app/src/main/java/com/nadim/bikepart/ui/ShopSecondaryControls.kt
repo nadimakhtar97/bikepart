@@ -29,10 +29,10 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 /** Secondary actions share the same touch target and wrapping behavior as the primary action. */
 @Composable
 internal fun ShopSecondaryButton(onClick: () -> Unit, modifier: Modifier = Modifier,
-    enabled: Boolean = true, shape: Shape = ButtonDefaults.outlinedShape,
-    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(), content: @Composable RowScope.() -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier.heightIn(min = ShopSpacing.touchTarget),
-        enabled = enabled, shape = shape, colors = colors, content = content)
+    enabled: Boolean = true, shape: Shape? = null,
+    colors: ButtonColors? = null, content: @Composable RowScope.() -> Unit) {
+    ShopFluentButton(onClick, modifier, enabled,
+        com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle.OutlinedButton, shape, colors, content)
 }
 
 @Composable

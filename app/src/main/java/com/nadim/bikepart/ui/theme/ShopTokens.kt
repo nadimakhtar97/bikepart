@@ -7,30 +7,25 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.TypographyTokens.*
+import com.microsoft.fluentui.theme.token.FluentGlobalTokens.CornerRadiusTokens.*
 
-// Applied styles in Figma 12:138, rather than the occasionally inconsistent specimen captions.
-private fun type(size: Int, height: Int, spacing: Float = 0f, weight: FontWeight = FontWeight.Normal) = TextStyle(
-    fontFamily = FontFamily.SansSerif, fontSize = size.sp, lineHeight = height.sp,
-    letterSpacing = spacing.sp, fontWeight = weight,
-)
-
-val Typography = Typography(
-    displayLarge = type(57, 64, -.25f), displayMedium = type(45, 52), displaySmall = type(36, 44),
-    headlineLarge = type(32, 40), headlineMedium = type(28, 36), headlineSmall = type(24, 32),
-    titleLarge = type(22, 28, weight = FontWeight.Bold),
-    titleMedium = type(16, 24, .15f, FontWeight.Bold),
-    titleSmall = type(14, 20, .1f, FontWeight.Medium),
-    bodyLarge = type(16, 24, .5f), bodyMedium = type(14, 20, .25f), bodySmall = type(12, 16, .4f),
-    labelLarge = type(14, 20, .1f, FontWeight.Bold),
-    labelMedium = type(12, 16, .5f, FontWeight.Bold),
-    labelSmall = type(11, 16, .5f, FontWeight.Bold),
-)
+// Fluent roles remain the source when a later brand supplies a different type ramp.
+internal fun fluentTypography(tokens: com.microsoft.fluentui.theme.token.IAliasTokens): Typography {
+    val type = tokens.typography
+    return Typography(
+        displayLarge = type[Display], displayMedium = type[Display], displaySmall = type[LargeTitle],
+        headlineLarge = type[LargeTitle], headlineMedium = type[Title1], headlineSmall = type[Title2],
+        titleLarge = type[Title2], titleMedium = type[Title3], titleSmall = type[Body1Strong],
+        bodyLarge = type[Body1], bodyMedium = type[Body2], bodySmall = type[Caption1],
+        labelLarge = type[Body1Strong], labelMedium = type[Body2Strong], labelSmall = type[Caption1Strong],
+    )
+}
 
 val ShopShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp), small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(16.dp), large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    extraSmall = RoundedCornerShape(CornerRadius20.value), small = RoundedCornerShape(CornerRadius40.value),
+    medium = RoundedCornerShape(CornerRadius80.value), large = RoundedCornerShape(CornerRadius120.value),
+    extraLarge = RoundedCornerShape(CornerRadius160.value),
 )
 
 object ShopSpacing {

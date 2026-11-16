@@ -1,0 +1,12 @@
+[
+  "app/build.gradle.kts",
+  "gradle/libs.versions.toml",
+  "app/src/main/java/com/nadim/bikepart/ui/theme/Theme.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/theme/ShopTokens.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/ShopButtons.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/ShopSecondaryControls.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/MoreScreen.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/ShopLayout.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/ProductDetails.kt",
+  "app/src/androidTest/java/com/nadim/bikepart/ThemeContrastExportTest.kt"
+]
