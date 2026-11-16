@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
@@ -39,7 +40,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
             horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
             Text("Accent", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             com.microsoft.fluentui.tokenized.controls.ToggleSwitch(
-                modifier = Modifier.clearAndSetSemantics { }, checkedState = customization.accent,
+                modifier = Modifier.focusProperties { canFocus = false }.clearAndSetSemantics { }, checkedState = customization.accent,
                 enabledSwitch = !busy, onValueChange = onAccent)
         }
     }

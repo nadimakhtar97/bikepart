@@ -12,5 +12,6 @@
   "app/src/main/java/com/nadim/bikepart/ui/theme/DemoBrandAliasTokens.kt",
   "app/src/main/java/com/nadim/bikepart/ui/theme/ShopChrome.kt",
   "app/src/main/java/com/nadim/bikepart/ui/theme/ShopThemePreferences.kt",
-  "app/src/main/java/com/nadim/bikepart/ui/ShopApp.kt"
+  "app/src/main/java/com/nadim/bikepart/ui/ShopApp.kt",
+  "app/src/main/java/com/nadim/bikepart/ui/theme/ShopControlTokens.kt"
 ]

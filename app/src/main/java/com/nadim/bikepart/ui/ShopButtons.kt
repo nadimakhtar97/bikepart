@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -33,7 +36,11 @@ internal fun ShopFluentButton(onClick: () -> Unit, modifier: Modifier, enabled: 
     val token = FluentTheme.controlTokens.tokens[ControlType.ButtonControlType] as ButtonTokens
     val info = ButtonInfo(style, ButtonSize.Large)
     val interaction = remember { MutableInteractionSource() }
-    val outline = token.borderStroke(info).getBorderStrokeByState(enabled, false, interaction)
+    val focused by interaction.collectIsFocusedAsState()
+    val outline = token.borderStroke(info).getBorderStrokeByState(enabled, false, interaction).map {
+        shopButtonBoundaryStroke(it, customColors = colors != null && style == ButtonStyle.OutlinedButton,
+            enabled = enabled, focused = focused)
+    }
     val buttonShape = shape ?: RoundedCornerShape(token.cornerRadius(info))
     var border: Modifier = Modifier
     // Match the SDK's nested focus rings; strokes remain visible on both the fill and parent.
@@ -68,3 +75,15 @@ internal fun ShopAppearanceIndicator(selected: Boolean, enabled: Boolean, intera
         if (selected) drawCircle(dot, token.innerCircleRadius.toPx())
     }
 }
+
+/** Custom selected containers can differ from the native button's expected parent.
+ * Word's native BrandStroke1 is only 2.79:1 on its selected barcode container.
+ * Keep normal native states and nested focus rings; use the SDK accessible boundary for custom fills.
+ */
+@Composable
+internal fun shopButtonBoundaryStroke(stroke: BorderStroke, customColors: Boolean,
+    enabled: Boolean, focused: Boolean): BorderStroke =
+    if (customColors && enabled && !focused) BorderStroke(stroke.width,
+        SolidColor(FluentTheme.aliasTokens.neutralStrokeColor[
+            com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralStrokeColorTokens.StrokeAccessible]
+            .value(FluentTheme.themeMode))) else stroke

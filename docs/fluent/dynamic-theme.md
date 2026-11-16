@@ -18,3 +18,28 @@ color changes and unfinished input preservation still require runtime evidence.
 
 Final runtime/effective-contrast evidence and limitations will be recorded here
 when checks finish. No release is published by this slice.
+
+## Measured accessibility adaptations
+
+The first 28-scope runtime export is retained as `fluent-contrast-initial.json`
+and its validation failure log. Actual native unchecked ToggleSwitch geometry has
+no independent outline; its track is only 1.01–1.83:1 on actual group parents and
+its light knob/track is 1.14:1. A captured unchecked More switch confirms the
+barely visible track. Selected dark white knobs also fail on four brands
+(2.08–2.84:1). Scoped `ShopControlTokens` retains native geometry/interactions,
+selected tracks, and disabled colors, substitutes native StrokeAccessible for
+enabled unchecked tracks and native ForegroundOnColor for enabled knobs.
+
+M365's inherited dark Color100 link measures 4.10:1 on Background2 and 3.62:1
+on Background3. Only its transitional Material link role uses its own native
+Color110 ramp step. Complete copied alias classes remain untouched. Word's
+native secondary border is 2.79:1 on its selected barcode container; custom-fill
+secondary button boundaries use native StrokeAccessible while ordinary native
+button states and nested focus rings remain intact. These are measured role
+adaptations, not a new palette engine.
+
+Accent changes Brand/Neutral navigation and native AppBar styling. Native controls
+without a FluentStyle parameter retain their selected brand palette, matching the
+demo's distinction between component style and brand choice. System bar icons
+are chosen from actual rendered backgrounds (including animated branded headers),
+with the Back glyph inheriting the app bar's navigation foreground.

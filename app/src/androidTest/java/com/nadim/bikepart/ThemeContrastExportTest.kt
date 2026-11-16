@@ -12,6 +12,7 @@ import com.nadim.bikepart.ui.theme.ShopBrand
 import com.nadim.bikepart.ui.theme.ShopThemeConfiguration
 import com.nadim.bikepart.ui.theme.shopNavigationColors
 import com.nadim.bikepart.ui.theme.shopAppBarColors
+import com.nadim.bikepart.ui.shopButtonBoundaryStroke
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.microsoft.fluentui.theme.FluentTheme
@@ -112,7 +113,7 @@ class ThemeContrastExportTest {
                         }
                     }
                     if (style == ButtonStyle.OutlinedButton) for ((i, stroke) in borders.rest.withIndex())
-                        pair("button.secondary.customSelected.outline.$i", (stroke.brush as SolidColor).value, c.secondaryContainer, 3.0)
+                        pair("button.secondary.customSelected.outline.$i", (shopButtonBoundaryStroke(stroke, customColors = true, enabled = true, focused = false).brush as SolidColor).value, c.secondaryContainer, 3.0)
                     // Disabled controls are exempt from WCAG contrast; export them visibly with an explicit exemption.
                     pair("button.$name.disabled.exempt", text.disabled, (fill.disabled as SolidColor).value, 0.0)
                     for ((i, border) in borders.focused.withIndex()) pair("button.$name.focus.$i",
