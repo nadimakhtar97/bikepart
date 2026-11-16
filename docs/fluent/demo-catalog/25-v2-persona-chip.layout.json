@@ -1,0 +1,372 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:22",
+        "content-desc": "3:22 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Enable/Disable close button on selected state",
+        "bounds": "[42,344][571,374]",
+        "center": "[306,359]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[613,296][750,422]",
+        "center": "[681,359]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Basic Persona chip",
+        "bounds": "[42,443][486,505]",
+        "center": "[264,474]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Neutral",
+        "bounds": "[42,547][364,590]",
+        "center": "[203,568]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,573][265,685]",
+        "center": "[153,629]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[307,575][624,701]",
+        "center": "[465,638]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Brand",
+        "bounds": "[42,685][340,728]",
+        "center": "[191,706]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,711][265,823]",
+        "center": "[153,767]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[307,713][624,839]",
+        "center": "[465,776]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Danger",
+        "bounds": "[42,823][361,849]",
+        "center": "[201,836]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[42,887][1038,940]",
+        "center": "[540,913]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "allan.munger@microsoft.com Not Selected Enabled",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,849][517,975]",
+            "center": "[279,912]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "allan.munger@microsoft.com Not Selected Enabled",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[559,851][1080,977]",
+            "center": "[819,914]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Severe Warning",
+        "bounds": "[42,961][494,987]",
+        "center": "[268,974]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[42,1025][1038,1078]",
+        "center": "[540,1051]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "allan.munger@microsoft.com Not Selected Enabled",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,987][517,1113]",
+            "center": "[279,1050]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "allan.munger@microsoft.com Not Selected Enabled",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[559,989][1080,1115]",
+            "center": "[819,1052]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Warning",
+        "bounds": "[42,1099][379,1142]",
+        "center": "[210,1120]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Anonymous Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1125][245,1237]",
+        "center": "[143,1181]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Anonymous Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[287,1127][585,1253]",
+        "center": "[436,1190]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Success",
+        "bounds": "[42,1237][382,1280]",
+        "center": "[212,1258]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1263][265,1375]",
+        "center": "[153,1319]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[307,1265][624,1391]",
+        "center": "[465,1328]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Person Chip Disabled",
+        "bounds": "[42,1375][386,1418]",
+        "center": "[214,1396]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Disabled",
+        "interactions": [
+          "CLICKABLE"
+        ],
+        "bounds": "[42,1401][265,1527]",
+        "center": "[153,1464]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger Not Selected Disabled",
+        "interactions": [
+          "CLICKABLE"
+        ],
+        "bounds": "[307,1403][624,1529]",
+        "center": "[465,1466]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "SearchBox Basic Persona chip",
+        "bounds": "[42,1534][747,1596]",
+        "center": "[394,1565]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Persona chip Neutral",
+        "bounds": "[42,1638][380,1681]",
+        "center": "[211,1659]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1667][265,1778]",
+        "center": "[153,1722]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Allan Munger",
+            "bounds": "[53,1707][254,1747]",
+            "center": "[153,1727]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Persona chip Brand",
+        "bounds": "[42,1778][356,1808]",
+        "center": "[199,1793]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1808][359,1934]",
+        "center": "[200,1871]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  ",
+            "bounds": "[63,1850][105,1892]",
+            "center": "[84,1871]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Allan Munger",
+            "bounds": "[126,1847][338,1890]",
+            "center": "[232,1868]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 PersonaChip",
+        "bounds": "[168,171][543,233]",
+        "center": "[355,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

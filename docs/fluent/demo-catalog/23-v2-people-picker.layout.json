@@ -1,0 +1,102 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:20",
+        "content-desc": "3:20 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "bikepart",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Fluent compatibility trial",
+        "bounds": "[0,128][1080,690]",
+        "center": "[540,409]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Trial input",
+        "bounds": "[42,722][181,753]",
+        "center": "[111,737]"
+      },
+      {
+        "class": "android.widget.EditText",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE",
+          "EDITABLE"
+        ],
+        "bounds": "[42,753][1038,879]",
+        "center": "[540,816]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Trial input",
+            "bounds": "[42,791][1038,840]",
+            "center": "[540,815]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.EditText",
+        "text": "Apply",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,858][155,968]",
+        "center": "[77,913]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Applied: ",
+        "bounds": "[0,968][593,1152]",
+        "center": "[296,1060]"
+      }
+    ]
+  }
+]
