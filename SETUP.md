@@ -36,7 +36,7 @@ colors on a connected Android runtime, then validate them (Node built-ins only):
 ```sh
 ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.nadim.bikepart.ThemeContrastExportTest
-adb pull /data/local/tmp/fluent-contrast.json docs/fluent/evidence/theme-pilot/fluent-contrast.json
+adb pull /data/local/tmp/fluent-contrast.json docs/fluent/evidence/dynamic-theme/fluent-contrast.json
 node tools/theme/validate.mjs
 ```
 

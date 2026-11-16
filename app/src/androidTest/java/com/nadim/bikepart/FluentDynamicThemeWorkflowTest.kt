@@ -164,9 +164,17 @@ class FluentDynamicThemeWorkflowTest {
         fun capture(name: String) {
             compose.waitForIdle(); instrumentation.waitForIdleSync()
             val file = java.io.File(context.getExternalFilesDir(null), "$name.png")
-            instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
-                file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
+            // UiAutomation.takeScreenshot can return null during repeated API37 captures.
+            // Capture the same actual display through the shell service and verify a real PNG.
+            val descriptor = instrumentation.uiAutomation.executeShellCommand("screencap -p")
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
+                file.outputStream().use { output -> input.copyTo(output) }
             }
+            val bitmap = checkNotNull(android.graphics.BitmapFactory.decodeFile(file.absolutePath)) {
+                "Actual display capture must be a valid PNG: $name"
+            }
+            assertTrue("Actual display capture must have content", bitmap.width > 0 && bitmap.height > 0)
+            bitmap.recycle()
             shell("cp ${file.absolutePath} /data/local/tmp/$name.png")
         }
         try {
