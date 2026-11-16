@@ -1,0 +1,522 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:12",
+        "content-desc": "3:12 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.view.View",
+        "text": "-",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[93,273][219,399]",
+        "center": "[156,336]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Max Visible Avatar 1",
+            "bounds": "[118,288][194,383]",
+            "center": "[156,335]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "1",
+        "bounds": "[299,314][319,357]",
+        "center": "[309,335]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "+",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[404,273][530,399]",
+        "center": "[467,336]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Max Visible Avatar 1",
+            "bounds": "[425,288][509,383]",
+            "center": "[467,335]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "text": "Show Activity Dot",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[614,273][962,399]",
+        "center": "[788,336]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Activity Dot Disabled",
+            "bounds": "[614,288][962,383]",
+            "center": "[788,335]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "text": "Swap Active State",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[135,407][490,533]",
+        "center": "[312,470]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Active Status Inactive",
+            "bounds": "[135,422][490,517]",
+            "center": "[312,469]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "text": "Toggle Presence",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[613,407][945,533]",
+        "center": "[779,470]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Presence Status Enabled",
+            "bounds": "[613,422][945,517]",
+            "center": "[779,469]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[0,559][1080,2400]",
+        "center": "[540,1479]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Stack Group Style",
+            "bounds": "[0,559][411,621]",
+            "center": "[205,590]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 16: ",
+            "bounds": "[0,642][134,685]",
+            "center": "[67,663]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,642][234,684]",
+            "center": "[194,663]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,642][197,684]",
+            "center": "[176,663]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[192,642][234,684]",
+            "center": "[213,663]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 20: ",
+            "bounds": "[0,736][134,779]",
+            "center": "[67,757]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,726][276,789]",
+            "center": "[215,757]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,726][218,789]",
+            "center": "[186,757]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[213,726][276,789]",
+            "center": "[244,757]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 24: ",
+            "bounds": "[0,841][134,884]",
+            "center": "[67,862]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,831][276,894]",
+            "center": "[215,862]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,831][218,894]",
+            "center": "[186,862]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[213,831][276,894]",
+            "center": "[244,862]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 32: ",
+            "bounds": "[0,957][134,1000]",
+            "center": "[67,978]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,936][313,1020]",
+            "center": "[234,978]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,936][239,1020]",
+            "center": "[197,978]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[229,936][313,1020]",
+            "center": "[271,978]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 40: ",
+            "bounds": "[0,1093][134,1136]",
+            "center": "[67,1114]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1062][344,1167]",
+            "center": "[249,1114]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,1062][260,1167]",
+            "center": "[207,1114]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[239,1062][344,1167]",
+            "center": "[291,1114]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 56: ",
+            "bounds": "[0,1261][134,1304]",
+            "center": "[67,1282]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1209][418,1356]",
+            "center": "[286,1282]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,1209][302,1356]",
+            "center": "[228,1282]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[271,1209][418,1356]",
+            "center": "[344,1282]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 72: ",
+            "bounds": "[0,1471][134,1514]",
+            "center": "[67,1492]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1398][502,1587]",
+            "center": "[328,1492]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger.   Inactive",
+            "bounds": "[155,1398][344,1587]",
+            "center": "[249,1492]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[313,1398][502,1587]",
+            "center": "[407,1492]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Pile Group Style",
+            "bounds": "[0,1608][368,1670]",
+            "center": "[184,1639]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 16: ",
+            "bounds": "[0,1691][134,1734]",
+            "center": "[67,1712]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1691][250,1733]",
+            "center": "[202,1712]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Inactive",
+            "bounds": "[155,1691][197,1733]",
+            "center": "[176,1712]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[208,1691][250,1733]",
+            "center": "[229,1712]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 20: ",
+            "bounds": "[0,1785][134,1828]",
+            "center": "[67,1806]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1775][292,1838]",
+            "center": "[223,1806]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Inactive",
+            "bounds": "[155,1775][218,1838]",
+            "center": "[186,1806]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[229,1775][292,1838]",
+            "center": "[260,1806]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 24: ",
+            "bounds": "[0,1890][134,1933]",
+            "center": "[67,1911]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1880][292,1943]",
+            "center": "[223,1911]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Inactive",
+            "bounds": "[155,1880][218,1943]",
+            "center": "[186,1911]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[229,1880][292,1943]",
+            "center": "[260,1911]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 32: ",
+            "bounds": "[0,2006][134,2049]",
+            "center": "[67,2027]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,1985][344,2069]",
+            "center": "[249,2027]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Inactive",
+            "bounds": "[155,1985][239,2069]",
+            "center": "[197,2027]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[260,1985][344,2069]",
+            "center": "[302,2027]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 40: ",
+            "bounds": "[0,2142][134,2185]",
+            "center": "[67,2163]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,2111][386,2216]",
+            "center": "[270,2163]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Inactive",
+            "bounds": "[155,2111][260,2216]",
+            "center": "[207,2163]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[281,2111][386,2216]",
+            "center": "[333,2163]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Size 56: ",
+            "bounds": "[0,2310][134,2353]",
+            "center": "[67,2331]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Group Name: Fluent UI Android. Total 7 members. ",
+            "bounds": "[155,2258][470,2400]",
+            "center": "[312,2329]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Inactive",
+            "bounds": "[155,2258][302,2400]",
+            "center": "[228,2329]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "+ 6 Avatar More",
+            "bounds": "[323,2258][470,2400]",
+            "center": "[396,2329]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Avatar Group",
+        "bounds": "[168,171][548,233]",
+        "center": "[358,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

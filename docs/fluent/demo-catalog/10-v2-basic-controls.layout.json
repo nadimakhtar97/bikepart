@@ -1,0 +1,201 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:13",
+        "content-desc": "3:13 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Toggle Switch enable",
+        "bounds": "[42,338][822,381]",
+        "center": "[432,359]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[901,296][1038,422]",
+        "center": "[969,359]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Toggle Global/Alias Theme",
+        "bounds": "[42,477][822,520]",
+        "center": "[432,498]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE"
+        ],
+        "state": [
+          "CHECKED"
+        ],
+        "bounds": "[901,435][1038,561]",
+        "center": "[969,498]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Toggle Global/Alias Theme",
+        "bounds": "[42,571][906,614]",
+        "center": "[474,592]"
+      },
+      {
+        "class": "android.widget.CheckBox",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE"
+        ],
+        "bounds": "[949,530][1075,656]",
+        "center": "[1012,593]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CHECKABLE",
+          "FOCUSABLE"
+        ],
+        "state": [
+          "CHECKED"
+        ],
+        "bounds": "[42,614][1038,703]",
+        "center": "[540,658]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Theme 1",
+            "bounds": "[42,655][896,698]",
+            "center": "[469,676]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "content-desc": "Radio Button",
+            "interactions": [
+              "CHECKABLE"
+            ],
+            "state": [
+              "CHECKED"
+            ],
+            "bounds": "[944,614][1070,703]",
+            "center": "[1007,658]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,703][1038,829]",
+        "center": "[540,766]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Theme 2",
+            "bounds": "[42,744][896,787]",
+            "center": "[469,765]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "content-desc": "Radio Button",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE"
+            ],
+            "bounds": "[944,703][1070,829]",
+            "center": "[1007,766]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Basic Controls",
+        "bounds": "[168,171][584,233]",
+        "center": "[376,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]
