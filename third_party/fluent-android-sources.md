@@ -25,3 +25,15 @@ must be checked separately before adopting those assets.
 
 The [scope amendment](../docs/fluent-scope-amendment.md) and issue #47 track the
 later demo brand/Accent settings; they are separate from this default-theme pilot.
+
+## Demo brand themes (#47)
+
+`ui/theme/DemoBrandAliasTokens.kt` copies all six complete alias subclasses
+from `FluentUI.Demo/src/main/java/com/example/theme/token/CustomizedAliasTokens.kt`
+at official tag `v0.3.14`, commit `71be08ca96fd3c1b449920cb8d3e1c268f3dfe35`.
+Only the application package/header is adapted. Complete semantic overrides and
+brand ramps remain upstream definitions; Fluent Brand uses SDK `AliasTokens`.
+The full required Microsoft copyright and MIT permission notice is preserved in
+[fluentui-android-MIT.txt](fluentui-android-MIT.txt). No demo logos are copied.
+The matching control behavior and version comparison are recorded in
+[demo source research](../docs/fluent/demo-source.md).
