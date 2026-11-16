@@ -1,0 +1,219 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:22",
+        "content-desc": "3:22 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ScrollView",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[42,317][986,2358]",
+        "center": "[514,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "ProgressIndicators",
+            "bounds": "[42,317][484,379]",
+            "center": "[263,348]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "XXXSmall - 2dp",
+            "bounds": "[42,421][272,461]",
+            "center": "[157,441]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "XSmall - 12dp",
+            "bounds": "[42,496][305,536]",
+            "center": "[173,516]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Small - 16dp",
+            "bounds": "[42,606][305,646]",
+            "center": "[173,626]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Medium - 24dp",
+            "bounds": "[42,716][305,756]",
+            "center": "[173,736]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Large - 32dp",
+            "bounds": "[42,834][305,874]",
+            "center": "[173,854]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "XLarge - 36dp",
+            "bounds": "[42,981][305,1021]",
+            "center": "[173,1001]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Determinate ProgressIndicator",
+            "bounds": "[42,1127][755,1189]",
+            "center": "[398,1158]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Linear ProgressIndicator",
+            "bounds": "[42,1231][415,1271]",
+            "center": "[228,1251]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "77%",
+            "bounds": "[756,1304][819,1344]",
+            "center": "[787,1324]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Circular ProgressIndicator",
+            "bounds": "[42,1397][438,1437]",
+            "center": "[240,1417]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "100%",
+            "bounds": "[231,1491][313,1531]",
+            "center": "[272,1511]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "InDeterminate ProgressIndicator",
+            "bounds": "[42,1584][799,1646]",
+            "center": "[420,1615]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Linear ProgressIndicator",
+            "bounds": "[42,1688][415,1728]",
+            "center": "[228,1708]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Circular ProgressIndicator",
+            "bounds": "[42,1854][438,1894]",
+            "center": "[240,1874]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Progress Text",
+            "bounds": "[42,2041][365,2103]",
+            "center": "[203,2072]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Publishing...",
+            "bounds": "[84,2167][313,2216]",
+            "center": "[198,2191]"
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[53,2306][179,2400]",
+            "center": "[116,2353]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Ok... I'll summarize what you missed this morning",
+            "bounds": "[168,2312][853,2358]",
+            "center": "[510,2335]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Progress",
+        "bounds": "[168,171][454,233]",
+        "center": "[311,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

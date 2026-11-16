@@ -1,0 +1,183 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:31",
+        "content-desc": "3:31 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "ActionBarLayout",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "ActionBarLayout",
+        "bounds": "[210,166][607,237]",
+        "center": "[408,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "ActionBar Position",
+            "bounds": "[42,317][431,380]",
+            "center": "[236,348]"
+          },
+          {
+            "class": "android.widget.RadioGroup",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_position_rgroup",
+            "content-desc": "ActionBar Position",
+            "bounds": "[42,380][562,515]",
+            "center": "[302,447]",
+            "children": [
+              {
+                "class": "android.widget.RadioButton",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_position_top",
+                "text": "Top",
+                "interactions": [
+                  "CHECKABLE",
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,380][273,515]",
+                "center": "[157,447]"
+              },
+              {
+                "class": "android.widget.RadioButton",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_position_bottom",
+                "text": "Bottom",
+                "interactions": [
+                  "CHECKABLE",
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[273,380][562,515]",
+                "center": "[417,447]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "ActionBar Type",
+            "bounds": "[42,599][360,662]",
+            "center": "[201,630]"
+          },
+          {
+            "class": "android.widget.RadioGroup",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_type_rgroup",
+            "content-desc": "ActionBar Type",
+            "bounds": "[42,662][852,797]",
+            "center": "[447,729]",
+            "children": [
+              {
+                "class": "android.widget.RadioButton",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_type_basic",
+                "text": "Basic",
+                "interactions": [
+                  "CHECKABLE",
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,662][300,797]",
+                "center": "[171,729]"
+              },
+              {
+                "class": "android.widget.RadioButton",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_type_icon",
+                "text": "Icon",
+                "interactions": [
+                  "CHECKABLE",
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[300,662][538,797]",
+                "center": "[419,729]"
+              },
+              {
+                "class": "android.widget.RadioButton",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/action_bar_type_carousel",
+                "text": "Carousel",
+                "interactions": [
+                  "CHECKABLE",
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[538,662][852,797]",
+                "center": "[695,729]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/start_demo_btn",
+            "text": "START DEMO",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[385,881][694,976]",
+            "center": "[539,928]"
+          }
+        ]
+      }
+    ]
+  }
+]

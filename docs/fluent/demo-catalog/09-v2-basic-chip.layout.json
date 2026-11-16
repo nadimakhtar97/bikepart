@@ -1,0 +1,254 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:13",
+        "content-desc": "3:13 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Basic Chip",
+        "bounds": "[42,317][242,366]",
+        "center": "[142,341]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Word Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,388][191,514]",
+        "center": "[116,451]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Excel Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[212,388][361,514]",
+        "center": "[286,451]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "PowerPoint Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[382,388][633,514]",
+        "center": "[507,451]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "PDF Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[654,388][785,514]",
+        "center": "[719,451]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Chip States",
+        "bounds": "[42,535][259,584]",
+        "center": "[150,559]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Enabled Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,606][234,732]",
+        "center": "[138,669]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Selected Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[255,606][457,732]",
+        "center": "[356,669]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Disabled Not Selected Disabled",
+        "bounds": "[478,626][682,711]",
+        "center": "[580,668]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Static Not Selected Enabled",
+        "bounds": "[703,626][860,711]",
+        "center": "[781,668]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Time (Custom Color)",
+        "bounds": "[42,753][435,802]",
+        "center": "[238,777]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Today Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,824][203,950]",
+        "center": "[122,887]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Yesterday Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[224,824][447,950]",
+        "center": "[335,887]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Last Week Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[468,824][699,950]",
+        "center": "[583,887]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Custom UI Chips",
+        "bounds": "[42,971][355,1020]",
+        "center": "[198,995]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Label Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1052][277,1178]",
+        "center": "[159,1115]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Label Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[298,1052][533,1178]",
+        "center": "[415,1115]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Custom Color Chips",
+        "bounds": "[42,1209][416,1258]",
+        "center": "[229,1233]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Label Not Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,1280][193,1406]",
+        "center": "[117,1343]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Basic Chip",
+        "bounds": "[168,171][491,233]",
+        "center": "[329,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

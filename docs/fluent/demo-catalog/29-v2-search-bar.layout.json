@@ -1,0 +1,220 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:24",
+        "content-desc": "3:24 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,401]",
+        "center": "[540,338]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "{Modifiable Parameters}.Collapsed",
+            "bounds": "[0,275][1080,401]",
+            "center": "[540,338]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Search",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[17,391][143,506]",
+        "center": "[80,448]"
+      },
+      {
+        "class": "android.widget.EditText",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE",
+          "EDITABLE"
+        ],
+        "bounds": "[159,391][805,506]",
+        "center": "[482,448]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Search",
+            "bounds": "[159,429][805,478]",
+            "center": "[482,453]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Search",
+            "bounds": "[159,429][288,478]",
+            "center": "[223,453]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Microphone",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[822,391][938,506]",
+        "center": "[880,448]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[938,391][1064,506]",
+        "center": "[1001,448]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Office",
+            "bounds": "[959,427][1012,480]",
+            "center": "[985,453]"
+          },
+          {
+            "class": "android.view.View",
+            "content-desc": "Chevron",
+            "bounds": "[1012,438][1044,470]",
+            "center": "[1028,454]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Allan Munger, nullStatus: Available",
+        "bounds": "[0,506][1080,619]",
+        "center": "[540,562]"
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Amanda Brady, nullStatus: Offline",
+        "bounds": "[0,619][1080,732]",
+        "center": "[540,675]"
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Abhay Singh, nullStatus: DND",
+        "bounds": "[0,732][1080,845]",
+        "center": "[540,788]"
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Carlos Slathery, nullStatus: Busy",
+        "bounds": "[0,845][1080,958]",
+        "center": "[540,901]"
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Celeste Burton, nullStatus: Away",
+        "bounds": "[0,958][1080,1071]",
+        "center": "[540,1014]"
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Ankit Gupta, nullStatus: Unknown",
+        "bounds": "[0,1071][1080,1184]",
+        "center": "[540,1127]"
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Miguel Garcia, nullStatus: Blocked",
+        "bounds": "[0,1184][1080,1297]",
+        "center": "[540,1240]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 SearchBar",
+        "bounds": "[168,171][485,233]",
+        "center": "[326,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

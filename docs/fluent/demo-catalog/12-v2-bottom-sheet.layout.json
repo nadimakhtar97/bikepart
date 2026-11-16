@@ -1,0 +1,738 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:14",
+        "content-desc": "3:14 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Drag Handle",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[478,239][604,328]",
+        "center": "[541,283]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[0,328][1080,2400]",
+        "center": "[540,1364]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,328][1080,454]",
+            "center": "[540,391]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Default: Wrapped",
+                "bounds": "[42,384][1038,433]",
+                "center": "[540,408]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "SCROLLABLE"
+            ],
+            "bounds": "[42,454][1080,591]",
+            "center": "[561,522]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[39,454][158,591]",
+                "center": "[98,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Email",
+                    "bounds": "[42,454][162,591]",
+                    "center": "[102,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[158,454][279,591]",
+                "center": "[218,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Reply",
+                    "bounds": "[162,454][279,591]",
+                    "center": "[220,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE"
+                ],
+                "bounds": "[279,454][435,591]",
+                "center": "[357,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Forward",
+                    "bounds": "[279,454][435,591]",
+                    "center": "[357,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE"
+                ],
+                "bounds": "[435,454][589,591]",
+                "center": "[512,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Favorite",
+                    "bounds": "[435,454][589,591]",
+                    "center": "[512,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[589,454][818,591]",
+                "center": "[703,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Long Info text",
+                    "bounds": "[589,454][821,591]",
+                    "center": "[705,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[818,454][938,591]",
+                "center": "[878,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Menu",
+                    "bounds": "[821,454][940,591]",
+                    "center": "[880,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[938,454][1061,591]",
+                "center": "[999,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Share",
+                    "bounds": "[940,454][1061,591]",
+                    "center": "[1000,522]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[1061,454][1080,591]",
+                "center": "[1070,522]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Delete",
+                    "bounds": "[1061,454][1080,591]",
+                    "center": "[1070,522]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,636][1080,762]",
+            "center": "[540,699]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Fixed width",
+                "bounds": "[42,692][1038,741]",
+                "center": "[540,716]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "SCROLLABLE"
+            ],
+            "bounds": "[42,762][1080,899]",
+            "center": "[561,830]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,762][252,899]",
+                "center": "[147,830]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Email",
+                    "bounds": "[42,762][252,899]",
+                    "center": "[147,830]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[252,762][462,899]",
+                "center": "[357,830]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Reply",
+                    "bounds": "[252,762][462,899]",
+                    "center": "[357,830]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE"
+                ],
+                "bounds": "[462,762][672,899]",
+                "center": "[567,830]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Forward",
+                    "bounds": "[462,762][672,899]",
+                    "center": "[567,830]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE"
+                ],
+                "bounds": "[672,762][882,899]",
+                "center": "[777,830]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Favorite",
+                    "bounds": "[672,762][882,899]",
+                    "center": "[777,830]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[882,762][1080,899]",
+                "center": "[981,830]",
+                "children": [
+                  {
+                    "class": "android.view.View",
+                    "content-desc": "Long Info text",
+                    "bounds": "[882,762][1080,899]",
+                    "center": "[981,830]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,944][1080,1070]",
+            "center": "[540,1007]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Vertical Grid",
+                "bounds": "[42,1000][1038,1049]",
+                "center": "[540,1024]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1070][374,1207]",
+            "center": "[208,1138]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Email",
+                "bounds": "[42,1070][374,1207]",
+                "center": "[208,1138]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[374,1070][706,1207]",
+            "center": "[540,1138]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Reply",
+                "bounds": "[374,1070][706,1207]",
+                "center": "[540,1138]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[706,1070][1038,1207]",
+            "center": "[872,1138]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Forward",
+                "bounds": "[706,1070][1038,1207]",
+                "center": "[872,1138]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[42,1207][374,1344]",
+            "center": "[208,1275]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Favorite",
+                "bounds": "[42,1207][374,1344]",
+                "center": "[208,1275]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[374,1207][706,1344]",
+            "center": "[540,1275]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Long Info text",
+                "bounds": "[374,1207][706,1344]",
+                "center": "[540,1275]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[706,1207][1038,1344]",
+            "center": "[872,1275]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Menu",
+                "bounds": "[706,1207][1038,1344]",
+                "center": "[872,1275]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1344][374,1481]",
+            "center": "[208,1412]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Share",
+                "bounds": "[42,1344][374,1481]",
+                "center": "[208,1412]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[374,1344][706,1481]",
+            "center": "[540,1412]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Delete",
+                "bounds": "[374,1344][706,1481]",
+                "center": "[540,1412]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1526][1080,1652]",
+            "center": "[540,1589]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Vertical Grid: Equidistant",
+                "bounds": "[42,1582][1038,1631]",
+                "center": "[540,1606]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1652][374,1789]",
+            "center": "[208,1720]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Email",
+                "bounds": "[42,1652][374,1789]",
+                "center": "[208,1720]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[374,1652][706,1789]",
+            "center": "[540,1720]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Reply",
+                "bounds": "[374,1652][706,1789]",
+                "center": "[540,1720]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[706,1652][1038,1789]",
+            "center": "[872,1720]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Forward",
+                "bounds": "[706,1652][1038,1789]",
+                "center": "[872,1720]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[42,1789][374,1926]",
+            "center": "[208,1857]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Favorite",
+                "bounds": "[42,1789][374,1926]",
+                "center": "[208,1857]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[374,1789][706,1926]",
+            "center": "[540,1857]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Long Info text",
+                "bounds": "[374,1789][706,1926]",
+                "center": "[540,1857]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[706,1789][1038,1926]",
+            "center": "[872,1857]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Menu",
+                "bounds": "[706,1789][1038,1926]",
+                "center": "[872,1857]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1926][540,2063]",
+            "center": "[291,1994]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Share",
+                "bounds": "[42,1926][540,2063]",
+                "center": "[291,1994]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[540,1926][1038,2063]",
+            "center": "[789,1994]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Delete",
+                "bounds": "[540,1926][1038,2063]",
+                "center": "[789,1994]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2063][1080,2189]",
+            "center": "[540,2126]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Double Line List",
+                "bounds": "[42,2119][1038,2168]",
+                "center": "[540,2143]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2189][1080,2345]",
+            "center": "[540,2267]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Camera",
+                "bounds": "[147,2221][293,2270]",
+                "center": "[220,2245]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "text": "Take a photo",
+                "bounds": "[147,2270][355,2313]",
+                "center": "[251,2291]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE"
+            ],
+            "bounds": "[0,2345][1080,2400]",
+            "center": "[540,2372]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Gallery",
+                "bounds": "[147,2377][276,2400]",
+                "center": "[211,2388]"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 BottomSheet",
+        "bounds": "[168,171][550,233]",
+        "center": "[359,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

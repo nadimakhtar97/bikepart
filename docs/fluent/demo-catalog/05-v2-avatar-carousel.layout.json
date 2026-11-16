@@ -1,0 +1,220 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:11",
+        "content-desc": "3:11 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Large Avatar Carousel",
+        "bounds": "[21,296][375,339]",
+        "center": "[198,317]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[0,381][1080,716]",
+        "center": "[540,548]",
+        "children": [
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Allan Munger.   Active",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,381][231,716]",
+            "center": "[115,548]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Amanda Brady.   Active",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[231,381][462,716]",
+            "center": "[346,548]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Ashley McCarthy.   ",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[462,381][693,716]",
+            "center": "[577,548]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Wanda Howard.   ",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[693,381][924,716]",
+            "center": "[808,548]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Celeste Burton.   ",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[924,381][1080,716]",
+            "center": "[1002,548]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Medium Avatar Carousel with Presence indicator",
+        "bounds": "[21,803][802,846]",
+        "center": "[411,824]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[0,888][1080,1159]",
+        "center": "[540,1023]",
+        "children": [
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Allan. Status, Available,  Active",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,888][231,1159]",
+            "center": "[115,1023]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Amanda. Status, Away,  Active",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[231,888][462,1159]",
+            "center": "[346,1023]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Ashley. Status, Blocked,  ",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[462,888][693,1159]",
+            "center": "[577,1023]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Wanda. Status, Busy,  ",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[693,888][924,1159]",
+            "center": "[808,1023]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Celeste. Status, Blocked,  ",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[924,888][1080,1159]",
+            "center": "[1002,1023]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Avatar Carousel",
+        "bounds": "[168,171][614,233]",
+        "center": "[391,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

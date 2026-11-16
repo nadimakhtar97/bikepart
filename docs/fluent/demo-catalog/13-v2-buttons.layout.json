@@ -1,0 +1,338 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:15",
+        "content-desc": "3:15 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Button to update Theme via Global & Alias token",
+        "bounds": "[153,317][928,360]",
+        "center": "[540,338]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Theme 1",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[221,345][425,471]",
+        "center": "[323,408]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Theme 2",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[438,345][642,471]",
+        "center": "[540,408]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Theme 3",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[655,345][859,471]",
+        "center": "[757,408]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[42,510][1038,2358]",
+        "center": "[540,1434]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Activity level customization with Auto theme",
+            "bounds": "[42,510][755,553]",
+            "center": "[398,531]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Theme1",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[339,538][534,664]",
+            "center": "[436,601]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Theme2",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[547,538][742,664]",
+            "center": "[644,601]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Click to Disable",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,661][440,787]",
+            "center": "[241,724]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Button 0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[334,840][747,966]",
+            "center": "[540,903]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Long text displayed on this button. This Is long text.",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,977][1038,1103]",
+            "center": "[540,1040]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Outlined Button 0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[327,1087][754,1213]",
+            "center": "[540,1150]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Text Button 0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[359,1187][721,1313]",
+            "center": "[540,1250]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Button with selected theme, auto mode and overridden control token",
+            "bounds": "[42,1316][1038,1402]",
+            "center": "[540,1359]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Click to Disable",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1402][440,1560]",
+            "center": "[241,1481]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Button 0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[334,1613][747,1771]",
+            "center": "[540,1692]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Long text displayed on this button. This Is long text.",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1797][1038,1923]",
+            "center": "[540,1860]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Outlined Button 0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[327,1939][754,2065]",
+            "center": "[540,2002]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Text Button 0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[359,2070][721,2196]",
+            "center": "[540,2133]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Radio Button Group with selected theme",
+            "bounds": "[42,2214][690,2257]",
+            "center": "[366,2235]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Text",
+            "bounds": "[68,2275][137,2318]",
+            "center": "[102,2296]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "content-desc": "Radio Button",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[159,2234][285,2313]",
+            "center": "[222,2273]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Text",
+            "bounds": "[68,2354][137,2358]",
+            "center": "[102,2356]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "content-desc": "Radio Button",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[159,2313][285,2392]",
+            "center": "[222,2352]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "content-desc": "Radio Button",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[159,2392][285,2400]",
+            "center": "[222,2396]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[747,2237][1038,2363]",
+        "center": "[892,2300]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "FAB Text",
+            "bounds": "[747,2241][1038,2358]",
+            "center": "[892,2299]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Buttons",
+        "bounds": "[168,171][427,233]",
+        "center": "[297,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

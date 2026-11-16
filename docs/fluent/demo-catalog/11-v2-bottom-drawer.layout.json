@@ -1,0 +1,226 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:14",
+        "content-desc": "3:14 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Pop-Up Window",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Drag Handle",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[478,1228][604,1317]",
+        "center": "[541,1272]"
+      },
+      {
+        "class": "androidx.recyclerview.widget.RecyclerView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/drawer_demo_persona_list",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,1317][1080,2400]",
+        "center": "[540,1858]",
+        "children": [
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1319][1080,1510]",
+            "center": "[540,1414]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Amanda Brady",
+                "bounds": "[189,1358][1038,1415]",
+                "center": "[613,1386]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Manager",
+                "bounds": "[189,1420][335,1471]",
+                "center": "[262,1445]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1512][1080,1703]",
+            "center": "[540,1607]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Lydia Bauer",
+                "bounds": "[189,1551][1038,1608]",
+                "center": "[613,1579]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Researcher",
+                "bounds": "[189,1613][376,1664]",
+                "center": "[282,1638]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1705][1080,1896]",
+            "center": "[540,1800]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Daisy Phillips",
+                "bounds": "[189,1744][1038,1801]",
+                "center": "[613,1772]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Designer",
+                "bounds": "[189,1806][335,1857]",
+                "center": "[262,1831]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1898][1080,2089]",
+            "center": "[540,1993]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Allan Munger (long text example to test truncation)",
+                "bounds": "[189,1937][1038,1994]",
+                "center": "[613,1965]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Manager",
+                "bounds": "[189,1999][335,2050]",
+                "center": "[262,2024]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2091][1080,2282]",
+            "center": "[540,2186]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Kat Larsson",
+                "bounds": "[189,2130][1038,2187]",
+                "center": "[613,2158]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Designer",
+                "bounds": "[189,2192][335,2243]",
+                "center": "[262,2217]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2284][1080,2400]",
+            "center": "[540,2342]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Ashley McCarthy",
+                "bounds": "[189,2323][1038,2380]",
+                "center": "[613,2351]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Engineer",
+                "bounds": "[189,2385][333,2400]",
+                "center": "[261,2392]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
