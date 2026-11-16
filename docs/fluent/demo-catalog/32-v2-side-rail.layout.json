@@ -1,0 +1,307 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:26",
+        "content-desc": "3:26 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[169,275][1080,401]",
+        "center": "[624,338]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "SideRail Style",
+            "bounds": "[211,331][1038,380]",
+            "center": "[624,355]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Icon Only",
+        "bounds": "[211,453][933,496]",
+        "center": "[572,474]"
+      },
+      {
+        "class": "android.widget.RadioButton",
+        "content-desc": "Radio Button",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[944,412][1070,501]",
+        "center": "[1007,456]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "With Text",
+        "bounds": "[211,542][933,585]",
+        "center": "[572,563]"
+      },
+      {
+        "class": "android.widget.RadioButton",
+        "content-desc": "Radio Button",
+        "interactions": [
+          "CHECKABLE",
+          "FOCUSABLE"
+        ],
+        "state": [
+          "CHECKED"
+        ],
+        "bounds": "[944,501][1070,627]",
+        "center": "[1007,564]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[169,637][1080,763]",
+        "center": "[624,700]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Top Tab Items",
+            "bounds": "[211,693][794,742]",
+            "center": "[502,717]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "+",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[815,632][937,758]",
+            "center": "[876,695]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "-",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[937,632][1063,758]",
+            "center": "[1000,695]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[169,763][1080,889]",
+        "center": "[624,826]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Bottom Tab Items",
+            "bounds": "[211,819][794,868]",
+            "center": "[502,843]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "+",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[815,758][937,884]",
+            "center": "[876,821]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "-",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[937,758][1063,884]",
+            "center": "[1000,821]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[169,128][316,275]",
+        "center": "[242,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 SideRail",
+        "bounds": "[337,171][602,233]",
+        "center": "[469,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Available,  ",
+        "bounds": "[42,233][126,317]",
+        "center": "[84,275]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,359][168,558]",
+        "center": "[84,458]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,558][168,757]",
+        "center": "[84,657]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "123+",
+            "bounds": "[102,603][171,640]",
+            "center": "[136,621]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,757][168,956]",
+        "center": "[84,856]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,956][168,1155]",
+        "center": "[84,1055]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "10",
+            "bounds": "[102,1001][136,1038]",
+            "center": "[119,1019]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,1761][168,1960]",
+        "center": "[84,1860]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,1960][168,2159]",
+        "center": "[84,2059]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "123+",
+            "bounds": "[102,2005][171,2042]",
+            "center": "[136,2023]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,2159][168,2358]",
+        "center": "[84,2258]"
+      }
+    ]
+  }
+]

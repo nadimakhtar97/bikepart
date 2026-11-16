@@ -1,0 +1,317 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:27",
+        "content-desc": "3:27 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ScrollView",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "text": "Button #0",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,313][1038,439]",
+            "center": "[540,376]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Button #1",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,456][1038,582]",
+            "center": "[540,519]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Button #2",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,599][1038,725]",
+            "center": "[540,662]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Button #3",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,742][1038,868]",
+            "center": "[540,805]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Button #4",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,885][1038,1011]",
+            "center": "[540,948]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,1116][1017,1245]",
+            "center": "[540,1180]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,1287][1017,1416]",
+            "center": "[540,1351]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,1458][1017,1587]",
+            "center": "[540,1522]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,1629][1017,1758]",
+            "center": "[540,1693]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,1800][1017,1929]",
+            "center": "[540,1864]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,2253][1017,2271]",
+            "center": "[540,2262]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "bounds": "[63,2313][1017,2400]",
+            "center": "[540,2356]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "1 of 2 Snackbar #0, Expand, Close",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[67,2044][1013,2062]",
+        "center": "[540,2053]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "text": "Expand",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[722,2050][873,2062]",
+            "center": "[797,2056]"
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[903,2050][1023,2062]",
+            "center": "[963,2056]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "Close",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[903,2050][1023,2062]",
+                "center": "[963,2056]"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "2 of 2 Snackbar #1, Expand, Close",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "state": [
+          "FOCUSED"
+        ],
+        "bounds": "[42,2062][1038,2200]",
+        "center": "[540,2131]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Snackbar #1",
+            "bounds": "[84,2110][285,2153]",
+            "center": "[184,2131]"
+          },
+          {
+            "class": "android.view.View",
+            "text": "Expand",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[732,2068][891,2194]",
+            "center": "[811,2131]"
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[923,2068][1049,2195]",
+            "center": "[986,2131]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "Close",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[923,2068][1049,2195]",
+                "center": "[986,2131]"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "text": "Add Snackbar",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[131,2264][419,2390]",
+        "center": "[275,2327]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Clear All",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[451,2264][650,2390]",
+        "center": "[550,2327]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Keep Adding",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[682,2264][949,2390]",
+        "center": "[815,2327]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 StackableSnackbar",
+        "bounds": "[168,171][690,233]",
+        "center": "[429,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]
