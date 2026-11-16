@@ -72,7 +72,7 @@ The generated 'copy()' will change its visibility in future releases.
 To suppress the warning do one of the following:
 - Annotate the data class with the '@ConsistentCopyVisibility' annotation.
 - Use the '-Xconsistent-data-class-copy-visibility' compiler flag.
-- Annotate the data class with the '@ExposedCopyVisibility' annotation 
+- Annotate the data class with the '@ExposedCopyVisibility' annotation
   (Discouraged, but can be used to keep binary compatibility).
 
 To learn more, see the documentation of the '@ConsistentCopyVisibility' and '@ExposedCopyVisibility' annotations.
