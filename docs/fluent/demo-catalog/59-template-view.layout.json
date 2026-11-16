@@ -1,0 +1,345 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:40",
+        "content-desc": "3:40 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "TemplateView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "TemplateView",
+        "bounds": "[210,166][548,237]",
+        "center": "[379,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.view.ViewGroup",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/horizontal_cell",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,317][1038,416]",
+            "center": "[540,366]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                "text": "Title: Cell",
+                "bounds": "[63,338][233,395]",
+                "center": "[148,366]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                "text": "Description: Tap to change orientation",
+                "bounds": "[254,343][877,394]",
+                "center": "[565,368]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/vertical_cell",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,437][1038,592]",
+            "center": "[540,514]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                "text": "Title: Cell",
+                "bounds": "[63,458][1017,515]",
+                "center": "[540,486]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                "text": "Description: Tap to change orientation",
+                "bounds": "[63,520][1017,571]",
+                "center": "[540,545]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,613][530,2168]",
+            "center": "[286,1390]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Template List",
+                "bounds": "[42,613][530,670]",
+                "center": "[286,641]"
+              },
+              {
+                "class": "androidx.recyclerview.widget.RecyclerView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/template_list_view",
+                "interactions": [
+                  "SCROLLABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,696][530,2009]",
+                "center": "[286,1352]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 0",
+                    "bounds": "[63,717][509,774]",
+                    "center": "[286,745]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 0",
+                    "bounds": "[63,779][509,830]",
+                    "center": "[286,804]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 1",
+                    "bounds": "[63,872][509,929]",
+                    "center": "[286,900]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 1",
+                    "bounds": "[63,934][509,985]",
+                    "center": "[286,959]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 2",
+                    "bounds": "[63,1027][509,1084]",
+                    "center": "[286,1055]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 2",
+                    "bounds": "[63,1089][509,1140]",
+                    "center": "[286,1114]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 3",
+                    "bounds": "[63,1182][509,1239]",
+                    "center": "[286,1210]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 3",
+                    "bounds": "[63,1244][509,1295]",
+                    "center": "[286,1269]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 4",
+                    "bounds": "[63,1337][509,1394]",
+                    "center": "[286,1365]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 4",
+                    "bounds": "[63,1399][509,1450]",
+                    "center": "[286,1424]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 5",
+                    "bounds": "[63,1492][509,1549]",
+                    "center": "[286,1520]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 5",
+                    "bounds": "[63,1554][509,1605]",
+                    "center": "[286,1579]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 6",
+                    "bounds": "[63,1647][509,1704]",
+                    "center": "[286,1675]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 6",
+                    "bounds": "[63,1709][509,1760]",
+                    "center": "[286,1734]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 7",
+                    "bounds": "[63,1802][509,1859]",
+                    "center": "[286,1830]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 7",
+                    "bounds": "[63,1864][509,1915]",
+                    "center": "[286,1889]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 8",
+                    "bounds": "[63,1957][509,2009]",
+                    "center": "[286,1983]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.Button",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/calculate_cells_button",
+                "text": "LOAD/CALCULATE 100 CELLS",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,2030][530,2168]",
+                "center": "[286,2099]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[551,613][1038,2168]",
+            "center": "[794,1390]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "text": "Regular List",
+                "bounds": "[551,613][1038,670]",
+                "center": "[794,641]"
+              },
+              {
+                "class": "androidx.recyclerview.widget.RecyclerView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/regular_list_view",
+                "interactions": [
+                  "SCROLLABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[551,696][1038,2009]",
+                "center": "[794,1352]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_title",
+                    "text": "Title 0",
+                    "bounds": "[572,717][1017,774]",
+                    "center": "[794,745]"
+                  },
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/cell_description",
+                    "text": "Description 0",
+                    "bounds": "[572,779][1017,830]",
+                    "center": "[794,804]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.Button",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/calculate_layouts_button",
+                "text": "LOAD/CALCULATE 100 LAYOUTS",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[551,2030][1038,2168]",
+                "center": "[794,2099]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

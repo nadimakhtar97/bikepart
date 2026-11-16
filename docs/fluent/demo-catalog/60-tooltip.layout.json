@@ -1,0 +1,206 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 2,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:40",
+        "content-desc": "3:40 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Popup Window",
+    "type": "APPLICATION",
+    "layer": 1,
+    "bounds": "[453,412][1075,523]",
+    "content": [
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_content_frame",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[453,430][1075,523]",
+        "center": "[764,476]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_text",
+            "text": "Top End Tooltip with 10dp offsetX",
+            "bounds": "[453,430][1075,523]",
+            "center": "[764,476]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "window-title": "Tooltip",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Tooltip",
+        "bounds": "[210,166][375,237]",
+        "center": "[292,201]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/action_flag",
+        "content-desc": "Flag",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[848,138][975,264]",
+        "center": "[911,201]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More options",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[975,138][1080,264]",
+        "center": "[1027,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_top_start",
+        "text": "TAP CUSTOM COLOR TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,317][634,412]",
+        "center": "[338,364]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_top_end",
+        "text": "TAP FOR TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[652,317][1038,412]",
+        "center": "[845,364]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_calendar_demo",
+        "text": "TAP FOR CUSTOM CALENDAR TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[170,804][911,899]",
+        "center": "[540,851]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_center",
+        "text": "TAP FOR DISMISS INSIDE TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[211,1290][870,1385]",
+        "center": "[540,1337]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_custom_view",
+        "text": "TAP FOR CUSTOM VIEW TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[220,1786][861,1881]",
+        "center": "[540,1833]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_bottom_start",
+        "text": "TAP FOR TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,2263][428,2358]",
+        "center": "[235,2310]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/tooltip_anchor_bottom_end",
+        "text": "TAP FOR TOOLTIP",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[652,2263][1038,2358]",
+        "center": "[845,2310]"
+      }
+    ]
+  }
+]
