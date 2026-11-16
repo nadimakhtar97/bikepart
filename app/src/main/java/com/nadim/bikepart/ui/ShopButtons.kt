@@ -77,7 +77,8 @@ internal fun ShopAppearanceIndicator(selected: Boolean, enabled: Boolean, intera
 }
 
 /** Custom selected containers can differ from the native button's expected parent.
- * Word's native BrandStroke1 is only 2.79:1 on its selected barcode container.
+ * Word's native BrandStroke1 is only 2.79:1 on its selected barcode container;
+ * StrokeAccessible is also only 2.67:1. Use the SDK strong (black/light, white/dark) stroke.
  * Keep normal native states and nested focus rings; use the SDK accessible boundary for custom fills.
  */
 @Composable
@@ -85,5 +86,5 @@ internal fun shopButtonBoundaryStroke(stroke: BorderStroke, customColors: Boolea
     enabled: Boolean, focused: Boolean): BorderStroke =
     if (customColors && enabled && !focused) BorderStroke(stroke.width,
         SolidColor(FluentTheme.aliasTokens.neutralStrokeColor[
-            com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralStrokeColorTokens.StrokeAccessible]
+            com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralStrokeColorTokens.StrokeFocus2]
             .value(FluentTheme.themeMode))) else stroke

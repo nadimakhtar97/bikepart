@@ -34,8 +34,12 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
     onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit, updates: @Composable () -> Unit) {
     ShopPageHeader(stringResource(R.string.more_header), "Catalog, appearance and recovery.")
     ShopGroup(spacing = ShopSpacing.small) {
+        val accentInteraction = remember { MutableInteractionSource() }
+        val accentFocused by accentInteraction.collectIsFocusedAsState()
         Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
-            .toggleable(value = customization.accent, enabled = !busy, role = Role.Switch, onValueChange = onAccent)
+            .toggleable(value = customization.accent, enabled = !busy, role = Role.Switch,
+                interactionSource = accentInteraction, indication = null, onValueChange = onAccent)
+            .then(if (accentFocused) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small) else Modifier)
             .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
             Text("Accent", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
@@ -67,12 +71,16 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
     ShopGroup(spacing = ShopSpacing.small) {
         Column(Modifier.selectableGroup()) {
             com.nadim.bikepart.ui.theme.ShopBrand.entries.forEach { brand ->
+                val interaction = remember { MutableInteractionSource() }
+                val focused by interaction.collectIsFocusedAsState()
                 Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
                     .selectable(customization.brand == brand, enabled = !busy, role = Role.RadioButton,
-                        onClick = { onBrand(brand) }).padding(horizontal = ShopSpacing.small),
+                        interactionSource = interaction, indication = null, onClick = { onBrand(brand) })
+                    .then(if (focused) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small) else Modifier)
+                    .padding(horizontal = ShopSpacing.small),
                     verticalAlignment = Alignment.CenterVertically) {
                     ShopAppearanceIndicator(selected = customization.brand == brand, enabled = !busy,
-                        interaction = remember { MutableInteractionSource() })
+                        interaction = interaction)
                     Text(brand.label, style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = ShopSpacing.medium))
                 }

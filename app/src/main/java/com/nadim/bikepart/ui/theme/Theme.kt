@@ -21,12 +21,14 @@ import com.nadim.bikepart.shop.Appearance
  * Future brand choices supply complete alias tokens here, rather than global SDK mutations.
  */
 class ShopThemeConfiguration(
-    val aliasTokens: IAliasTokens = AliasTokens(),
+    aliasTokens: IAliasTokens = AliasTokens(),
     val controlTokens: IControlTokens = ShopControlTokens(),
     val shapes: Shapes = ShopShapes,
     val icons: Map<Int, Int> = emptyMap(),
     val style: FluentStyle = FluentStyle.Brand,
-)
+) {
+    val aliasTokens: IAliasTokens = shopAccessibleAliasTokens(aliasTokens)
+}
 private val defaultConfiguration = ShopThemeConfiguration()
 
 @Composable
@@ -64,10 +66,7 @@ internal fun fluentMaterialColors(tokens: IAliasTokens, dark: Boolean): ColorSch
     fun FluentColor.resolve() = if (dark) this.dark else light
     fun background(token: FluentAliasTokens.NeutralBackgroundColorTokens) = tokens.neutralBackgroundColor[token].resolve()
     fun foreground(token: FluentAliasTokens.NeutralForegroundColorTokens) = tokens.neutralForegroundColor[token].resolve()
-    // M365 inherits a dark Color100 link: 3.62:1 on native Background3 / 4.10:1 on Background2.
-    // Its existing Color110 ramp step restores text contrast on all bridge surfaces.
-    val brand = if (dark && tokens is M365AliasTokens) tokens.brandColor[FluentAliasTokens.BrandColorTokens.Color110]
-        else tokens.brandForegroundColor[BrandForeground1].resolve()
+    val brand = tokens.brandForegroundColor[BrandForeground1].resolve()
     val fill = tokens.brandBackgroundColor[BrandBackground1].resolve()
     val tint = tokens.brandBackgroundColor[BrandBackgroundTint].resolve()
     val onBrand = foreground(ForegroundOnColor)

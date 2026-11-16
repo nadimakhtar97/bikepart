@@ -31,10 +31,10 @@ selected tracks, and disabled colors, substitutes native StrokeAccessible for
 enabled unchecked tracks and native ForegroundOnColor for enabled knobs.
 
 M365's inherited dark Color100 link measures 4.10:1 on Background2 and 3.62:1
-on Background3. Only its transitional Material link role uses its own native
-Color110 ramp step. Complete copied alias classes remain untouched. Word's
-native secondary border is 2.79:1 on its selected barcode container; custom-fill
-secondary button boundaries use native StrokeAccessible while ordinary native
+on Background3. Its scoped BrandForeground1 dark role uses its own native Color110 ramp step
+for both native controls and the Material bridge. Complete copied alias classes remain untouched. Word's
+native secondary border is 2.79:1 on its selected barcode container; native StrokeAccessible also measures only 2.67:1 there, so custom-fill
+secondary button boundaries use native StrokeFocus2 while ordinary native
 button states and nested focus rings remain intact. These are measured role
 adaptations, not a new palette engine.
 

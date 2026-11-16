@@ -14,12 +14,15 @@ import org.junit.Rule
 import org.junit.Test
 
 /** The real MainActivity and Room-backed shop, operated through staff-visible controls. */
+@OptIn(ExperimentalTestApi::class)
 class FluentDynamicThemeWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
     private fun await(text: String) = compose.waitUntil(20_000) {
         compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
     }
     @Test fun selectedBrandSurvivesActivityAndFreshLaunch() {
+        val preferences = com.nadim.bikepart.ui.theme.ShopThemePreferences(InstrumentationRegistry.getInstrumentation().targetContext)
+        val original = preferences.state.value
         var scenario = ActivityScenario.launch(MainActivity::class.java)
         try {
             await("More"); compose.onNodeWithText("More").performClick()
@@ -32,10 +35,13 @@ class FluentDynamicThemeWorkflowTest {
             await("More"); compose.onNodeWithText("More").performClick()
             compose.onNodeWithText("Excel").performScrollTo().assertIsSelected()
             compose.onNodeWithText("Fluent Brand").performScrollTo().performClick()
-        } finally { scenario.close() }
+        } finally { scenario.close(); preferences.setBrand(original.brand); preferences.setAccent(original.accent) }
     }
     @Test fun accentChangesVisibleNavigationAndNativeSwitchWithoutClearingBrandOrShopData() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val preferences = com.nadim.bikepart.ui.theme.ShopThemePreferences(context)
+        val originalCustomization = preferences.state.value
+        preferences.setAccent(true)
         val original = runBlocking { Shop.open(context).use { it.snapshot().appearance } }
         runBlocking { Shop.open(context).use { it.setAppearance(Appearance.Light) } }
         val before = runBlocking { Shop.open(context).use { it.snapshot() } }
@@ -51,9 +57,16 @@ class FluentDynamicThemeWorkflowTest {
             accent.assertIsOn().assertHeightIsAtLeast(48.dp)
             compose.onAllNodes(isToggleable()).assertCountEquals(1)
             assertTrue("Native switch immediately uses selected Excel", containsColor(accent, Color(0xFF107C41)))
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("input keyevent 61").use {
+                android.os.ParcelFileDescriptor.AutoCloseInputStream(it).readBytes()
+            }
+            accent.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus) { it() }
+            accent.assertIsFocused().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Spacebar) }
+            accent.assertIsOff().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Spacebar) }
+            accent.assertIsOn()
             val branded = compose.onNodeWithText("More").captureToImage()
             // Hit the native switch itself; its callback must toggle once without a nested accessible action.
-            accent.performTouchInput { click(androidx.compose.ui.geometry.Offset(size.width - 30f, center.y)) }
+            accent.performTouchInput { click(androidx.compose.ui.geometry.Offset(width - 30f, center.y)) }
             accent.assertIsOff()
             val neutral = compose.onNodeWithText("More").captureToImage()
             val brandedPixels = branded.toPixelMap(); val neutralPixels = neutral.toPixelMap()
@@ -71,6 +84,7 @@ class FluentDynamicThemeWorkflowTest {
             compose.onNodeWithText("Fluent Brand").performScrollTo().performClick()
         } finally {
             scenario.close()
+            preferences.setBrand(originalCustomization.brand); preferences.setAccent(originalCustomization.accent)
             runBlocking { Shop.open(context).use { it.setAppearance(original) } }
         }
     }
