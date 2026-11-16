@@ -1,0 +1,446 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:11",
+        "content-desc": "3:11 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Avatar Cutout",
+        "bounds": "[84,317][304,360]",
+        "center": "[194,338]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larsson. Status, Available,  Active",
+        "bounds": "[82,418][187,523]",
+        "center": "[134,470]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "heart",
+        "bounds": "[150,486][192,528]",
+        "center": "[171,507]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larsson. Status, Available,  Active",
+        "bounds": "[219,418][324,523]",
+        "center": "[271,470]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larsson. Status, Available,  Active",
+        "bounds": "[356,418][461,523]",
+        "center": "[408,470]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larsson. Status, Available,  Active",
+        "bounds": "[493,397][640,544]",
+        "center": "[566,470]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larsson. Status, Available,  Active",
+        "bounds": "[672,397][819,544]",
+        "center": "[745,470]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larsson. Status, Available,  Active",
+        "bounds": "[851,397][998,544]",
+        "center": "[924,470]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Toggle Activity Ring",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[208,606][591,732]",
+        "center": "[399,669]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Activity Ring enabled",
+            "bounds": "[208,621][591,716]",
+            "center": "[399,668]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "text": "Toggle OOO",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[617,606][873,732]",
+        "center": "[745,669]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "OOO status disabled",
+            "bounds": "[617,621][873,716]",
+            "center": "[745,668]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "text": "Toggle Activity Dot",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[357,738][724,864]",
+        "center": "[540,801]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Activity Dot disabled",
+            "bounds": "[357,753][724,848]",
+            "center": "[540,800]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[98,999][140,1041]",
+        "center": "[119,1020]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[172,988][235,1051]",
+        "center": "[203,1019]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[267,988][330,1051]",
+        "center": "[298,1019]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[362,978][446,1062]",
+        "center": "[404,1020]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[478,967][583,1072]",
+        "center": "[530,1019]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[615,946][762,1093]",
+        "center": "[688,1019]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  Active",
+        "bounds": "[794,925][983,1114]",
+        "center": "[888,1019]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[98,1225][140,1267]",
+        "center": "[119,1246]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[172,1214][235,1277]",
+        "center": "[203,1245]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[267,1214][330,1277]",
+        "center": "[298,1245]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[362,1204][446,1288]",
+        "center": "[404,1246]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[478,1193][583,1298]",
+        "center": "[530,1245]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[615,1172][762,1319]",
+        "center": "[688,1245]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Amanda Brady. Status, Away,  Active",
+        "bounds": "[794,1151][983,1340]",
+        "center": "[888,1245]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[98,1451][140,1493]",
+        "center": "[119,1472]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[172,1440][235,1503]",
+        "center": "[203,1471]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[267,1440][330,1503]",
+        "center": "[298,1471]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[362,1430][446,1514]",
+        "center": "[404,1472]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[478,1419][583,1524]",
+        "center": "[530,1471]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[615,1398][762,1545]",
+        "center": "[688,1471]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Kat Larson. Status, Busy,  ",
+        "bounds": "[794,1377][983,1566]",
+        "center": "[888,1471]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Robin Counts. Status, DND,  Active",
+        "bounds": "[98,1677][140,1719]",
+        "center": "[119,1698]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Robin Counts. Status, DND,  Active",
+        "bounds": "[172,1666][235,1729]",
+        "center": "[203,1697]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Robin Counts. Status, DND,  Active",
+        "bounds": "[267,1666][330,1729]",
+        "center": "[298,1697]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Robin Counts. Status, DND,  Active",
+        "bounds": "[362,1656][446,1740]",
+        "center": "[404,1698]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "123 456. Status, DND,  Active",
+        "bounds": "[478,1645][583,1750]",
+        "center": "[530,1697]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "123 456. Status, DND,  Active",
+        "bounds": "[615,1624][762,1771]",
+        "center": "[688,1697]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "123 456. Status, DND,  Active",
+        "bounds": "[794,1603][983,1792]",
+        "center": "[888,1697]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Wanda Howard. Status, Offline,  ",
+        "bounds": "[98,1903][140,1945]",
+        "center": "[119,1924]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Wanda Howard. Status, Offline,  Active",
+        "bounds": "[172,1892][235,1955]",
+        "center": "[203,1923]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Wanda Howard. Status, Offline,  Active",
+        "bounds": "[267,1892][330,1955]",
+        "center": "[298,1923]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Wanda Howard. Status, Offline,  Active",
+        "bounds": "[362,1882][446,1966]",
+        "center": "[404,1924]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Anonymous. Status, Offline,  ",
+        "bounds": "[478,1871][583,1976]",
+        "center": "[530,1923]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Anonymous. Status, Offline,  Active",
+        "bounds": "[615,1850][762,1997]",
+        "center": "[688,1923]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Anonymous. Status, Offline,  Active",
+        "bounds": "[794,1829][983,2018]",
+        "center": "[888,1923]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Gang Of 4 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[98,2129][140,2171]",
+        "center": "[119,2150]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Gang Of 4 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[172,2118][235,2181]",
+        "center": "[203,2149]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Gang Of 4 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[267,2118][330,2181]",
+        "center": "[298,2149]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Gang Of 4 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[362,2108][446,2192]",
+        "center": "[404,2150]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Anonymous 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[478,2097][583,2202]",
+        "center": "[530,2149]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Gang Of 4 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[615,2076][762,2223]",
+        "center": "[688,2149]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Group Name Anonymous 4 members. AllanMunger\nWandaHoward\nKatLarson\nAmandaBrady\n",
+        "bounds": "[794,2055][983,2244]",
+        "center": "[888,2149]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Avatar",
+        "bounds": "[168,171][395,233]",
+        "center": "[281,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

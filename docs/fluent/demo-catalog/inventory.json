@@ -1,0 +1,422 @@
+[
+  {
+    "version": 2,
+    "title": "V2 Acrylic Pane",
+    "activity": "V2AcrylicPaneActivity",
+    "slug": "v2-acrylic-pane"
+  },
+  {
+    "version": 2,
+    "title": "V2 ActionBar",
+    "activity": "V2ActionBarActivity",
+    "slug": "v2-action-bar"
+  },
+  {
+    "version": 2,
+    "title": "V2 AppBarLayout",
+    "activity": "V2AppBarActivity",
+    "slug": "v2-app-bar"
+  },
+  {
+    "version": 2,
+    "title": "V2 Avatar",
+    "activity": "V2AvatarActivity",
+    "slug": "v2-avatar"
+  },
+  {
+    "version": 2,
+    "title": "V2 Avatar Carousel",
+    "activity": "V2AvatarCarouselActivity",
+    "slug": "v2-avatar-carousel"
+  },
+  {
+    "version": 2,
+    "title": "V2 Avatar Group",
+    "activity": "V2AvatarGroupActivity",
+    "slug": "v2-avatar-group"
+  },
+  {
+    "version": 2,
+    "title": "V2 Badge",
+    "activity": "V2BadgeActivity",
+    "slug": "v2-badge"
+  },
+  {
+    "version": 2,
+    "title": "V2 Banner",
+    "activity": "V2BannerActivity",
+    "slug": "v2-banner"
+  },
+  {
+    "version": 2,
+    "title": "V2 Basic Chip",
+    "activity": "V2BasicChipActivity",
+    "slug": "v2-basic-chip"
+  },
+  {
+    "version": 2,
+    "title": "V2 Basic Controls",
+    "activity": "V2BasicControlsActivity",
+    "slug": "v2-basic-controls"
+  },
+  {
+    "version": 2,
+    "title": "V2 Bottom Drawer",
+    "activity": "V2BottomDrawerActivity",
+    "slug": "v2-bottom-drawer"
+  },
+  {
+    "version": 2,
+    "title": "V2 BottomSheet",
+    "activity": "V2BottomSheetActivity",
+    "slug": "v2-bottom-sheet"
+  },
+  {
+    "version": 2,
+    "title": "V2 Buttons",
+    "activity": "V2ButtonsActivity",
+    "slug": "v2-buttons"
+  },
+  {
+    "version": 2,
+    "title": "V2 Card",
+    "activity": "V2CardActivity",
+    "slug": "v2-card"
+  },
+  {
+    "version": 2,
+    "title": "V2 Card Nudge",
+    "activity": "V2CardNudgeActivity",
+    "slug": "v2-card-nudge"
+  },
+  {
+    "version": 2,
+    "title": "V2 Citation",
+    "activity": "V2CitationActivity",
+    "slug": "v2-citation"
+  },
+  {
+    "version": 2,
+    "title": "V2 ContextualCommandBar",
+    "activity": "V2ContextualCommandBarActivity",
+    "slug": "v2-contextual-command-bar"
+  },
+  {
+    "version": 2,
+    "title": "V2 Dialog",
+    "activity": "V2DialogActivity",
+    "slug": "v2-dialog"
+  },
+  {
+    "version": 2,
+    "title": "V2 Drawer",
+    "activity": "V2DrawerActivity",
+    "slug": "v2-drawer"
+  },
+  {
+    "version": 2,
+    "title": "V2 Label",
+    "activity": "V2LabelActivity",
+    "slug": "v2-label"
+  },
+  {
+    "version": 2,
+    "title": "V2 ListItem",
+    "activity": "V2ListItemActivity",
+    "slug": "v2-list-item"
+  },
+  {
+    "version": 2,
+    "title": "V2 Menu",
+    "activity": "V2MenuActivity",
+    "slug": "v2-menu"
+  },
+  {
+    "version": 2,
+    "title": "V2 People Picker",
+    "activity": "V2PeoplePickerActivity",
+    "slug": "v2-people-picker"
+  },
+  {
+    "version": 2,
+    "title": "V2 Persona",
+    "activity": "V2PersonaActivity",
+    "slug": "v2-persona"
+  },
+  {
+    "version": 2,
+    "title": "V2 PersonaChip",
+    "activity": "V2PersonaChipActivity",
+    "slug": "v2-persona-chip"
+  },
+  {
+    "version": 2,
+    "title": "V2 PersonaList",
+    "activity": "V2PersonaListActivity",
+    "slug": "v2-persona-list"
+  },
+  {
+    "version": 2,
+    "title": "V2 Progress",
+    "activity": "V2ProgressActivity",
+    "slug": "v2-progress"
+  },
+  {
+    "version": 2,
+    "title": "V2 Scaffold",
+    "activity": "V2ScaffoldActivity",
+    "slug": "v2-scaffold"
+  },
+  {
+    "version": 2,
+    "title": "V2 SearchBar",
+    "activity": "V2SearchBarActivity",
+    "slug": "v2-search-bar"
+  },
+  {
+    "version": 2,
+    "title": "V2 SegmentedControl",
+    "activity": "V2SegmentedControlActivity",
+    "slug": "v2-segmented-control"
+  },
+  {
+    "version": 2,
+    "title": "V2 Shimmer",
+    "activity": "V2ShimmerActivity",
+    "slug": "v2-shimmer"
+  },
+  {
+    "version": 2,
+    "title": "V2 SideRail",
+    "activity": "V2SideRailActivity",
+    "slug": "v2-side-rail"
+  },
+  {
+    "version": 2,
+    "title": "V2 Snackbar",
+    "activity": "V2SnackbarActivity",
+    "slug": "v2-snackbar"
+  },
+  {
+    "version": 2,
+    "title": "V2 StackableSnackbar",
+    "activity": "V2StackableSnackbarActivity",
+    "slug": "v2-stackable-snackbar"
+  },
+  {
+    "version": 2,
+    "title": "V2 TabBar",
+    "activity": "V2TabBarActivity",
+    "slug": "v2-tab-bar"
+  },
+  {
+    "version": 2,
+    "title": "V2 TextField",
+    "activity": "V2TextFieldActivity",
+    "slug": "v2-text-field"
+  },
+  {
+    "version": 2,
+    "title": "V2 ToolTip",
+    "activity": "V2ToolTipActivity",
+    "slug": "v2-tool-tip"
+  },
+  {
+    "version": 2,
+    "title": "AppBarLayout",
+    "activity": "AppBarLayoutActivity",
+    "slug": "app-bar-layout"
+  },
+  {
+    "version": 2,
+    "title": "BottomSheet",
+    "activity": "BottomSheetActivity",
+    "slug": "bottom-sheet"
+  },
+  {
+    "version": 2,
+    "title": "CalendarView",
+    "activity": "CalendarViewActivity",
+    "slug": "calendar-view"
+  },
+  {
+    "version": 2,
+    "title": "Drawer",
+    "activity": "DrawerActivity",
+    "slug": "drawer"
+  },
+  {
+    "version": 2,
+    "title": "PeoplePickerView",
+    "activity": "PeoplePickerViewActivity",
+    "slug": "people-picker-view"
+  },
+  {
+    "version": 2,
+    "title": "DateTimePicker",
+    "activity": "DateTimePickerActivity",
+    "slug": "date-time-picker"
+  },
+  {
+    "version": 2,
+    "title": "PopupMenu",
+    "activity": "PopupMenuActivity",
+    "slug": "popup-menu"
+  },
+  {
+    "version": 2,
+    "title": "Snackbar",
+    "activity": "SnackbarActivity",
+    "slug": "snackbar"
+  },
+  {
+    "version": 2,
+    "title": "Tooltip",
+    "activity": "TooltipActivity",
+    "slug": "tooltip"
+  },
+  {
+    "version": 1,
+    "title": "ActionBarLayout",
+    "activity": "ActionBarLayoutActivity",
+    "slug": "action-bar-layout"
+  },
+  {
+    "version": 1,
+    "title": "AppBarLayout",
+    "activity": "AppBarLayoutActivity",
+    "slug": "app-bar-layout"
+  },
+  {
+    "version": 1,
+    "title": "AvatarView",
+    "activity": "AvatarViewActivity",
+    "slug": "avatar-view"
+  },
+  {
+    "version": 1,
+    "title": "AvatarGroupView",
+    "activity": "AvatarGroupViewActivity",
+    "slug": "avatar-group-view"
+  },
+  {
+    "version": 1,
+    "title": "Basic Inputs",
+    "activity": "BasicInputsActivity",
+    "slug": "basic-inputs"
+  },
+  {
+    "version": 1,
+    "title": "BottomNavigation",
+    "activity": "BottomNavigationActivity",
+    "slug": "bottom-navigation"
+  },
+  {
+    "version": 1,
+    "title": "BottomSheet",
+    "activity": "BottomSheetActivity",
+    "slug": "bottom-sheet"
+  },
+  {
+    "version": 1,
+    "title": "CalendarView",
+    "activity": "CalendarViewActivity",
+    "slug": "calendar-view"
+  },
+  {
+    "version": 1,
+    "title": "ContextualCommandBar",
+    "activity": "ContextualCommandBarActivity",
+    "slug": "contextual-command-bar"
+  },
+  {
+    "version": 1,
+    "title": "DateTimePicker",
+    "activity": "DateTimePickerActivity",
+    "slug": "date-time-picker"
+  },
+  {
+    "version": 1,
+    "title": "Drawer",
+    "activity": "DrawerActivity",
+    "slug": "drawer"
+  },
+  {
+    "version": 1,
+    "title": "ListItemView",
+    "activity": "ListItemViewActivity",
+    "slug": "list-item-view"
+  },
+  {
+    "version": 1,
+    "title": "PeoplePickerView",
+    "activity": "PeoplePickerViewActivity",
+    "slug": "people-picker-view"
+  },
+  {
+    "version": 1,
+    "title": "PersistentBottomSheet",
+    "activity": "PersistentBottomSheetActivity",
+    "slug": "persistent-bottom-sheet"
+  },
+  {
+    "version": 1,
+    "title": "PersonaChipView",
+    "activity": "PersonaChipViewActivity",
+    "slug": "persona-chip-view"
+  },
+  {
+    "version": 1,
+    "title": "PersonaListView",
+    "activity": "PersonaListViewActivity",
+    "slug": "persona-list-view"
+  },
+  {
+    "version": 1,
+    "title": "PersonaView",
+    "activity": "PersonaViewActivity",
+    "slug": "persona-view"
+  },
+  {
+    "version": 1,
+    "title": "PopupMenu",
+    "activity": "PopupMenuActivity",
+    "slug": "popup-menu"
+  },
+  {
+    "version": 1,
+    "title": "Progress",
+    "activity": "ProgressActivity",
+    "slug": "progress"
+  },
+  {
+    "version": 1,
+    "title": "Snackbar",
+    "activity": "SnackbarActivity",
+    "slug": "snackbar"
+  },
+  {
+    "version": 1,
+    "title": "TabLayout",
+    "activity": "TabLayoutActivity",
+    "slug": "tab-layout"
+  },
+  {
+    "version": 1,
+    "title": "TemplateView",
+    "activity": "TemplateViewActivity",
+    "slug": "template-view"
+  },
+  {
+    "version": 1,
+    "title": "Tooltip",
+    "activity": "TooltipActivity",
+    "slug": "tooltip"
+  },
+  {
+    "version": 1,
+    "title": "Typography",
+    "activity": "TypographyActivity",
+    "slug": "typography"
+  }
+]
