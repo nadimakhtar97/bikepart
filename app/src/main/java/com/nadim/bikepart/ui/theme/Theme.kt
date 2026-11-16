@@ -21,11 +21,14 @@ import com.nadim.bikepart.shop.Appearance
  * Future brand choices supply complete alias tokens here, rather than global SDK mutations.
  */
 class ShopThemeConfiguration(
-    val aliasTokens: IAliasTokens = AliasTokens(),
-    val controlTokens: IControlTokens = ControlTokens(),
+    aliasTokens: IAliasTokens = AliasTokens(),
+    val controlTokens: IControlTokens = ShopControlTokens(),
     val shapes: Shapes = ShopShapes,
     val icons: Map<Int, Int> = emptyMap(),
-)
+    val style: FluentStyle = FluentStyle.Brand,
+) {
+    val aliasTokens: IAliasTokens = shopAccessibleAliasTokens(aliasTokens)
+}
 private val defaultConfiguration = ShopThemeConfiguration()
 
 @Composable
@@ -51,7 +54,7 @@ fun BikepartTheme(appearance: Appearance = Appearance.System,
         }
     }
     FluentTheme(aliasTokens = configuration.aliasTokens, controlTokens = configuration.controlTokens, themeMode = mode) {
-        CompositionLocalProvider(LocalShopIcons provides configuration.icons) {
+        CompositionLocalProvider(LocalShopIcons provides configuration.icons, LocalShopFluentStyle provides configuration.style) {
             MaterialTheme(colorScheme = fluentMaterialColors(FluentTheme.aliasTokens, dark),
                 typography = fluentTypography(FluentTheme.aliasTokens), shapes = configuration.shapes, content = content)
         }

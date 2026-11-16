@@ -1,0 +1,94 @@
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=
+com.nadim.bikepart.FluentDynamicThemeWorkflowTest:
+INSTRUMENTATION_STATUS: test=everyBrandRendersAtNormalAndDoubleTextWithReadableChrome
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stack=java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.Bitmap.compress(android.graphics.Bitmap$CompressFormat, int, java.io.OutputStream)' on a null object reference
+	at com.nadim.bikepart.FluentDynamicThemeWorkflowTest.everyBrandRendersAtNormalAndDoubleTextWithReadableChrome$capture(FluentDynamicThemeWorkflowTest.kt:168)
+	at com.nadim.bikepart.FluentDynamicThemeWorkflowTest.everyBrandRendersAtNormalAndDoubleTextWithReadableChrome(FluentDynamicThemeWorkflowTest.kt:183)
+
+INSTRUMENTATION_STATUS: stream=
+Error in everyBrandRendersAtNormalAndDoubleTextWithReadableChrome(com.nadim.bikepart.FluentDynamicThemeWorkflowTest):
+java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.Bitmap.compress(android.graphics.Bitmap$CompressFormat, int, java.io.OutputStream)' on a null object reference
+	at com.nadim.bikepart.FluentDynamicThemeWorkflowTest.everyBrandRendersAtNormalAndDoubleTextWithReadableChrome$capture(FluentDynamicThemeWorkflowTest.kt:168)
+	at com.nadim.bikepart.FluentDynamicThemeWorkflowTest.everyBrandRendersAtNormalAndDoubleTextWithReadableChrome(FluentDynamicThemeWorkflowTest.kt:183)
+
+INSTRUMENTATION_STATUS: test=everyBrandRendersAtNormalAndDoubleTextWithReadableChrome
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=accentChangesVisibleNavigationAndNativeSwitchWithoutClearingBrandOrShopData
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=accentChangesVisibleNavigationAndNativeSwitchWithoutClearingBrandOrShopData
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=selectedBrandSurvivesActivityAndFreshLaunch
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=selectedBrandSurvivesActivityAndFreshLaunch
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=shopRecordsAndStoredAppearanceSurviveCustomizationAndReopening
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=shopRecordsAndStoredAppearanceSurviveCustomizationAndReopening
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=explicitThemeReplacementPreservesUnfinishedInputAndNavigation
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=5
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=explicitThemeReplacementPreservesUnfinishedInputAndNavigation
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 231.435
+There was 1 failure:
+1) everyBrandRendersAtNormalAndDoubleTextWithReadableChrome(com.nadim.bikepart.FluentDynamicThemeWorkflowTest)
+java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.Bitmap.compress(android.graphics.Bitmap$CompressFormat, int, java.io.OutputStream)' on a null object reference
+	at com.nadim.bikepart.FluentDynamicThemeWorkflowTest.everyBrandRendersAtNormalAndDoubleTextWithReadableChrome$capture(FluentDynamicThemeWorkflowTest.kt:168)
+	at com.nadim.bikepart.FluentDynamicThemeWorkflowTest.everyBrandRendersAtNormalAndDoubleTextWithReadableChrome(FluentDynamicThemeWorkflowTest.kt:183)
+
+FAILURES!!!
+Tests run: 5,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

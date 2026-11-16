@@ -9,18 +9,21 @@ From the repository root, using the toolchain in [SETUP.md](../../SETUP.md):
 ```sh
 ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.nadim.bikepart.ThemeContrastExportTest
-adb pull /data/local/tmp/fluent-contrast.json docs/fluent/evidence/theme-pilot/fluent-contrast.json
+adb pull /data/local/tmp/fluent-contrast.json docs/fluent/evidence/dynamic-theme/fluent-contrast.json
 node tools/theme/validate.mjs
 ```
 
 Select the intended emulator with `ANDROID_SERIAL` when more than one is running.
 The instrumentation measurement resolves the production Fluent scope, Material
 bridge, and button state tokens on Android. It records composited foreground /
-background colors in both appearances, including disabled-state exemptions.
-The validator requires 4.5:1 text and 3:1 meaningful outlines/focus indicators.
+background colors in all seven brands × Brand/Neutral Accent styles × light/dark appearances
+(28 scopes), including disabled-state exemptions and actual chrome/system-bar pairs.
+The validator requires every scope exactly once, 4.5:1 text and 3:1 meaningful
+outlines/focus indicators.
 It rejects an export whose SHA-256 fingerprint differs from the source list in
 `source-files.json`; regenerate after theme/control/dependency changes.
 
 Screenshots, staff workflow checks, keyboard focus, target sizing, and assistive
 technology remain separate requirements. Numeric contrast is not proof of a
-usable screen. See [pilot evidence](../../docs/fluent/theme-pilot.md).
+usable screen. See [dynamic-theme evidence](../../docs/fluent/dynamic-theme.md) and the original
+[pilot evidence](../../docs/fluent/theme-pilot.md).

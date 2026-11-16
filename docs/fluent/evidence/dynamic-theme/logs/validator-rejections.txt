@@ -1,0 +1,4 @@
+stale: rejected=True, exit=1, expected=Stale runtime export
+missing: rejected=True, exit=1, expected=Expected all 28
+duplicate: rejected=True, exit=1, expected=Missing or duplicated
+low-contrast: rejected=True, exit=1, expected=< 4.5

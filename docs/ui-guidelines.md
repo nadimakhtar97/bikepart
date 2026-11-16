@@ -22,9 +22,14 @@ BikePart rendering and behavior require separate actual-app checks.
 system-bar brightness. Existing `Appearance.System`, `Light`, `Dark` persistence
 maps to SDK `Auto`, `Light`, `Dark`. System follows configuration changes;
 explicit choices override device brightness. Stored names/schema are unchanged.
-`ShopThemeConfiguration` accepts complete alias/control tokens and shared shapes.
-Future brand controls must feed this scope so native controls, bridge roles and
-fallbacks update together. Do not mutate the SDK singleton alongside fixed local
+`ShopThemeConfiguration` accepts complete alias/control tokens, shared shapes,
+icons and a scoped `FluentStyle`. More offers Accent and the demo's seven fixed
+brands under the accepted [scope amendment](fluent-scope-amendment.md). Brand and
+Accent are app-local preferences; Appearance retains its existing Shop/Room and
+backup contract. Turning Accent off changes applicable chrome to Neutral and
+retains the chosen brand. Native controls without a style parameter keep their
+brand tokens. These controls feed the same scope so native controls, bridge roles
+and fallbacks update together. Do not mutate the SDK singleton alongside fixed local
 tokens. Wallpaper-derived color is not enabled.
 
 `ui/theme/ShopTokens.kt` maps Fluent typography and global corner radii into the
@@ -38,7 +43,8 @@ replaced. Fluent icon adoption requires its own module/API and asset-term check.
 
 The old Figma generator is retired. Run the runtime theme export and
 `node tools/theme/validate.mjs` as documented in [theme tooling](../tools/theme/README.md).
-The validator checks resolved light/dark bridge and Fluent control pairs and
+The validator checks all 28 brand/style/appearance scopes, including resolved
+bridge/control and actual chrome/system-bar pairs, and
 rejects exports whose source fingerprint is stale. Rendered screenshots and
 behavioral checks remain required; numeric tokens do not prove usable screens.
 
@@ -49,7 +55,12 @@ restore summaries. Callbacks, caller modifiers, selected semantics, custom
 shape/colors, busy labels and disabled state remain supported. See
 [the pilot](fluent/theme-pilot.md) for scope and evidence. Appearance uses one
 labelled selectable radio row with a passive Fluent-token indicator, avoiding
-nested independent row/radio actions.
+nested independent row/radio actions. Accent is one labelled 48dp switch row;
+the native inner switch has no separate semantics or keyboard focus. New brand
+rows expose selected state and a keyboard focus ring. The measured switch,
+M365 foreground and custom-fill secondary boundary adaptations are documented in
+[dynamic themes](fluent/dynamic-theme.md). Full copied demo licenses are retained
+in `third_party` and packaged in the APK's `assets/third_party` directory.
 
 ## Platform foundations and visual styles
 

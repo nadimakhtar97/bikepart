@@ -1,0 +1,17 @@
+Serving...
+All files should be loaded. Notifying the device.
+Performing Incremental Install
+Success
+Install command complete in 512 ms
+Installed shrunk APK SHA256: 15da4c799d9610542bb1687533d29c444e25d7639bffd52bb959d75a8664bee2
+versionCode=1 minSdk=33 targetSdk=37
+flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE ]
+privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PARTIALLY_DIRECT_BOOT_AWARE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE ]
+privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PARTIALLY_DIRECT_BOOT_AWARE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+android.permission.CAMERA: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+PASS cold force-stop/relaunch: M365 + Accent off + Light persisted.
+PASS shrunk runtime: brightness, Accent, native switch and product navigation.
+Performing Streamed Install
+Success
+RESTORED debug APK, System, Fluent Brand, Accent on, original font and night settings.

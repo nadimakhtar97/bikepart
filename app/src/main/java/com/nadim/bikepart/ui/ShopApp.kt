@@ -92,6 +92,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
     val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
+    val customization by model.themePreferences.state.collectAsStateWithLifecycle()
+    val themeConfiguration = remember(customization.brand, customization.accent) {
+        com.nadim.bikepart.ui.theme.ShopThemeConfiguration(aliasTokens = customization.brand.aliasTokens,
+            style = if (customization.accent) com.microsoft.fluentui.theme.token.FluentStyle.Brand else com.microsoft.fluentui.theme.token.FluentStyle.Neutral)
+    }
     val state by model.state.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
@@ -166,15 +171,17 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
     BackHandler(route != "main") { if (!busy) back() }
     val selectedCart = state?.carts?.find { it.id == selectedId }
-    BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
+    BikepartTheme(appearance = state?.appearance ?: Appearance.System, configuration = themeConfiguration) {
         val colors = MaterialTheme.colorScheme
-        // Material 3 scroll behaviour: the bar keeps its height, gains a tonal surface
-        // once content has scrolled under it, and resets when the screen changes.
-        // contentOffset accumulates negative consumed.y as content moves under the bar.
+        val navigationColors = com.nadim.bikepart.ui.theme.shopNavigationColors()
+        val appBarColors = com.nadim.bikepart.ui.theme.shopAppBarColors()
+        // The transitional header uses the native Fluent Brand/Neutral app-bar roles.
         val topBarScroll = TopAppBarDefaults.pinnedScrollBehavior()
-        val scrolled by remember { derivedStateOf { topBarScroll.state.contentOffset < 0f } }
         val topBarColor by animateColorAsState(
-            if (scrolled) colors.surfaceContainer else colors.surface, label = "topAppBarColor")
+            appBarColors.background, label = "topAppBarColor")
+        com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
+            statusBackground = if (route == "main") colors.surface else topBarColor,
+            navigationBackground = colors.surface)
         LaunchedEffect(route, destination, selectedId) { topBarScroll.state.contentOffset = 0f }
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val useRail = maxWidth >= 600.dp && route == "main"
@@ -195,7 +202,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         navigationIcon = {
                             ShopBackButton(onClick = { back() }, enabled = !busy)
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor),
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor, titleContentColor = appBarColors.title,
+                            navigationIconContentColor = appBarColors.navigation),
                     )
                 },
                 floatingActionButton = {
@@ -221,8 +229,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
                                 label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = colors.primaryContainer, selectedIconColor = colors.onPrimaryContainer,
-                                    selectedTextColor = colors.primary, unselectedIconColor = colors.onSurface,
+                                    indicatorColor = navigationColors.indicator, selectedIconColor = navigationColors.icon,
+                                    selectedTextColor = navigationColors.label, unselectedIconColor = colors.onSurface,
                                     unselectedTextColor = colors.onSurface,
                                 ),
                             )
@@ -240,8 +248,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
                                 icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
                                 label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
-                                colors = NavigationRailItemDefaults.colors(indicatorColor = colors.primaryContainer,
-                                    selectedIconColor = colors.onPrimaryContainer, selectedTextColor = colors.primary,
+                                colors = NavigationRailItemDefaults.colors(indicatorColor = navigationColors.indicator,
+                                    selectedIconColor = navigationColors.icon, selectedTextColor = navigationColors.label,
                                     unselectedIconColor = colors.onSurface, unselectedTextColor = colors.onSurface))
                         }
                     }
@@ -414,6 +422,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     "More" -> {
                                         MoreScreen(shop, shop.appearance, busy,
                                             onAppearance = { model.write({ setAppearance(it) }) },
+                                            customization = customization, onBrand = model.themePreferences::setBrand, onAccent = model.themePreferences::setAccent,
                                             onCategories = { route = "categories" },
                                             onFindingLookups = { route = "finding-lookups" },
                                             onArchived = { route = "archived-products" },

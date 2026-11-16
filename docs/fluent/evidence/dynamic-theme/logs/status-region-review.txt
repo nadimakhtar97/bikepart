@@ -1,0 +1,3 @@
+dynamic-excel-light-2.0.png: non-background pixels in status text exclusion region = 0
+dynamic-m365-dark-2.0.png: non-background pixels in status text exclusion region = 0
+dynamic-powerpoint-light-2.0.png: non-background pixels in status text exclusion region = 0

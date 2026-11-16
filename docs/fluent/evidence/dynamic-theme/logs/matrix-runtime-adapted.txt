@@ -1,0 +1,40 @@
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.ThemeContrastExportTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.nadim.bikepart.ThemeContrastExportTest:
+INSTRUMENTATION_STATUS: test=exportEffectiveThemePairs
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.ThemeContrastExportTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=exportEffectiveThemePairs
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 6.716
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+/data/local/tmp/fluent-contrast.json: 1 file pulled, 0 skipped. 8.1 MB/s (360168 bytes in 0.042s)
+file://wsl.localhost/Ubuntu/home/nadimakhtar97/.codex/worktrees/fluent-dynamic-theme/bikepart/tools/theme/validate.mjs:31
+if (failures.length) throw Error(failures.join('\n'));
+                           ^
+
+Error: Word/Brand/light button.secondary.customSelected.outline.0: 2.67 < 3
+Word/Neutral/light button.secondary.customSelected.outline.0: 2.67 < 3
+    at file://wsl.localhost/Ubuntu/home/nadimakhtar97/.codex/worktrees/fluent-dynamic-theme/bikepart/tools/theme/validate.mjs:31:28
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.13.1

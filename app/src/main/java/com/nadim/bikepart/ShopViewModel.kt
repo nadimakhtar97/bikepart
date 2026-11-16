@@ -16,6 +16,7 @@ data class CartDraft(val cart: Cart, val customer: String = cart.customer,
 data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
 enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore, ReviewPhone, ActivatePhone, CheckPhone, InspectStorage, CleanupStorage }
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
+    val themePreferences = com.nadim.bikepart.ui.theme.ShopThemePreferences(application)
     private var shop: Shop? = null
     private val readyShop = kotlinx.coroutines.flow.MutableStateFlow<Shop?>(null)
     private var openFailure: Throwable? = null

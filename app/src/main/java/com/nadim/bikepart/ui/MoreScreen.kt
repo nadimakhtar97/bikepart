@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
@@ -29,8 +30,24 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
+    customization: com.nadim.bikepart.ui.theme.ShopThemeCustomization, onBrand: (com.nadim.bikepart.ui.theme.ShopBrand) -> Unit, onAccent: (Boolean) -> Unit,
     onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit, updates: @Composable () -> Unit) {
     ShopPageHeader(stringResource(R.string.more_header), "Catalog, appearance and recovery.")
+    ShopGroup(spacing = ShopSpacing.small) {
+        val accentInteraction = remember { MutableInteractionSource() }
+        val accentFocused by accentInteraction.collectIsFocusedAsState()
+        Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+            .toggleable(value = customization.accent, enabled = !busy, role = Role.Switch,
+                interactionSource = accentInteraction, indication = null, onValueChange = onAccent)
+            .then(if (accentFocused) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small) else Modifier)
+            .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+            Text(stringResource(R.string.more_accent), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            com.microsoft.fluentui.tokenized.controls.ToggleSwitch(
+                modifier = Modifier.focusProperties { canFocus = false }.clearAndSetSemantics { }, checkedState = customization.accent,
+                enabledSwitch = !busy, onValueChange = onAccent)
+        }
+    }
     ShopSectionHeader(stringResource(R.string.more_appearance))
     ShopGroup(spacing = ShopSpacing.small) {
         Column(Modifier.selectableGroup()) {
@@ -49,6 +66,26 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
         }
         Text(stringResource(R.string.more_appearance_hint), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    ShopSectionHeader(stringResource(R.string.more_choose_brand_theme))
+    ShopGroup(spacing = ShopSpacing.small) {
+        Column(Modifier.selectableGroup()) {
+            com.nadim.bikepart.ui.theme.ShopBrand.entries.forEach { brand ->
+                val interaction = remember { MutableInteractionSource() }
+                val focused by interaction.collectIsFocusedAsState()
+                Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+                    .selectable(customization.brand == brand, enabled = !busy, role = Role.RadioButton,
+                        interactionSource = interaction, indication = null, onClick = { onBrand(brand) })
+                    .then(if (focused) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small) else Modifier)
+                    .padding(horizontal = ShopSpacing.small),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    ShopAppearanceIndicator(selected = customization.brand == brand, enabled = !busy,
+                        interaction = interaction)
+                    Text(brand.label, style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = ShopSpacing.medium))
+                }
+            }
+        }
     }
     updates()
     ShopSectionHeader(stringResource(R.string.more_shop))
