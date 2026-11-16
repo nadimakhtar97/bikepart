@@ -512,9 +512,10 @@
     <string name="sale_saved_on_this_phone">Sale saved on this phone</string>
     <string name="this_receipt_remains_available_offline_in_sales">This receipt remains available offline in Sales history.</string>
     <string name="remove">Remove </string>
-    <string name="location">Location: </string>
+    <string name="location">Location: %1$s</string>
+    <string name="location_retired">Location: %1$s (retired)</string>
     <string name="no_finding_locations_assigned">No finding locations assigned</string>
-    <string name="retire">Retire: </string>
+    <string name="retire">Retire: %1$s</string>
     <string name="shop_changes_are_waiting_for_backup_changes">Shop changes are waiting for backup. Changes held only on a lost phone cannot be recovered.</string>
     <string name="newer_shop_changes_are_waiting_for_another">Newer shop changes are waiting for another backup.</string>
     <string name="shop_restored_a_local_recovery_copy_is">Shop restored. A local recovery copy is saved. A new backup is pending; replacement-phone activation may be required before publication.</string>

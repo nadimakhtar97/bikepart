@@ -44,3 +44,27 @@ ownership evidence under a distinct ownership directory. Record light/dark at
 100%/200%, focused-field/keyboard visibility, accessible actions and relevant
 48dp targets. Compilation and source-movement checks do not replace these
 rendering and behavior checks. TalkBack/assistive-input checks were not performed.
+
+## Follow-up baseline comparison
+
+Current extraction `e4bdd54` and baseline `e779ddd` both compiled as isolated
+`com.nadim.bikepart.ownershipverify` installations on the same API 37 emulator.
+The unchanged actual-app/Room create/edit/reopen test passed on the extraction
+in 51.547 seconds. The three historical methods were rerun without assertion
+changes; see [runtime results and limits](fluent/evidence/ownership/runtime.md)
+and adjacent raw JUnit logs.
+
+The correction method now passed its former Save correction visibility/48dp
+failure, then failed closing the keyboard under a System UI ANR in both builds.
+The finding method reproduced the missing Retire label in both builds. Both
+fitment runs progressed beyond the historical stock-quantity assertion; after
+reopening, the current build missed a Location label and the baseline missed
+the preceding Fitment label. No extraction-only regression was demonstrated;
+this is bounded evidence rather than a green full workflow suite.
+
+Both APK resource tables confirm inherited spacing loss in the Location/Retire
+prefixes; [issue #48](https://github.com/nadimakhtar97/bikepart/issues/48) tracks
+that repair. System UI obscured the screenshots, so they provide no clean visual
+acceptance. Full rendering/assistive and broader workflow checks remain open.
+The mechanical extraction and focused product workflow are sufficient to begin
+the theme pilot while those recorded checks continue.
