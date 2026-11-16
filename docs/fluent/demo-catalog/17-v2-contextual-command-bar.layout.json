@@ -1,0 +1,251 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:16",
+        "content-desc": "3:16 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Action Button",
+        "bounds": "[21,304][275,353]",
+        "center": "[148,328]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "state": [
+          "CHECKED"
+        ],
+        "bounds": "[301,265][438,376]",
+        "center": "[369,320]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Toggle action button position",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,376][552,502]",
+        "center": "[286,439]"
+      },
+      {
+        "class": "android.view.View",
+        "text": "Multiline CCB on Drawer",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,492][476,618]",
+        "center": "[248,555]"
+      },
+      {
+        "class": "android.widget.EditText",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE",
+          "EDITABLE"
+        ],
+        "bounds": "[183,647][918,794]",
+        "center": "[550,720]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Type your text here",
+            "bounds": "[225,689][529,732]",
+            "center": "[377,710]"
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[127,2274][1059,2379]",
+        "center": "[593,2326]",
+        "children": [
+          {
+            "class": "android.widget.Button",
+            "content-desc": "EmailSelected",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[127,2264][248,2390]",
+            "center": "[187,2327]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Refresh",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE"
+            ],
+            "bounds": "[248,2264][369,2390]",
+            "center": "[308,2327]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Done",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[369,2264][490,2390]",
+            "center": "[429,2327]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Add",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE"
+            ],
+            "bounds": "[490,2264][614,2390]",
+            "center": "[552,2327]"
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Call",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[614,2264][740,2390]",
+            "center": "[677,2327]"
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[779,2264][915,2390]",
+            "center": "[847,2327]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "content-desc": "Bold",
+                "bounds": "[779,2274][915,2379]",
+                "center": "[847,2326]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.Button",
+            "content-desc": "Edit",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[955,2264][1080,2390]",
+            "center": "[1017,2327]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.Button",
+        "content-desc": "Dismiss",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,2253][127,2400]",
+        "center": "[63,2326]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 ContextualCommandBar",
+        "bounds": "[168,171][815,233]",
+        "center": "[491,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]
