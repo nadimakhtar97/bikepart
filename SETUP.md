@@ -30,13 +30,18 @@ downloads the wrapper distribution and project dependencies on the first build.
 
 ## Theme tooling
 
-Install the locked Node dependency before running theme commands:
+The historical Figma/Material generator is retired. Export the effective Fluent
+colors on a connected Android runtime, then validate them (Node built-ins only):
 
 ```sh
-npm ci --prefix tools/theme
-node tools/theme/generate.mjs
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.nadim.bikepart.ThemeContrastExportTest
+adb pull /data/local/tmp/fluent-contrast.json docs/fluent/evidence/theme-pilot/fluent-contrast.json
 node tools/theme/validate.mjs
 ```
+
+Set `ANDROID_SERIAL` when more than one device is connected. On a WSL setup
+with only Windows Node installed, use `node.exe` for the validation command.
 
 See `tools/theme/README.md` and `docs/ui-guidelines.md` for the theme source and design constraints.
 

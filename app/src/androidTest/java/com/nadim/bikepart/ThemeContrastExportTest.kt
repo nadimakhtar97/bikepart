@@ -50,6 +50,19 @@ class ThemeContrastExportTest {
                     pair("bridge.$name.error", c.error, surface)
                     pair("bridge.$name.outline", c.outline, surface, 3.0)
                 }
+                val group = c.primary.copy(alpha = .08f).compositeOver(c.surface)
+                pair("bridge.group.text", c.onSurface, group)
+                pair("bridge.group.supporting", c.onSurfaceVariant, group)
+                pair("bridge.group.link", c.primary, group)
+                pair("bridge.group.error", c.error, group)
+                pair("bridge.group.outline", c.outline, group, 3.0)
+                val radio = FluentTheme.controlTokens.tokens[ControlType.RadioButtonControlType] as RadioButtonTokens
+                for (selected in listOf(false, true)) {
+                    val info = RadioButtonInfo(selected)
+                    val stroke = radio.backgroundBrush(info)
+                    pair("radio.$selected.stroke", ((if (selected) stroke.selected else stroke.rest) as SolidColor).value, group, 3.0)
+                    if (selected) pair("radio.selected.dot", radio.iconColor(info).selected, group, 3.0)
+                }
                 val tokens = FluentTheme.controlTokens.tokens[ControlType.ButtonControlType] as ButtonTokens
                 for ((name, style) in listOf("primary" to ButtonStyle.Button, "secondary" to ButtonStyle.OutlinedButton)) {
                     val info = ButtonInfo(style, ButtonSize.Large)
@@ -60,6 +73,7 @@ class ThemeContrastExportTest {
                         Triple("pressed", text.pressed, fill.pressed), Triple("focused", text.focused, fill.focused),
                         Triple("selected", text.selected, fill.selected))) {
                         pair("button.$name.$state", fg, (brush as SolidColor).value)
+                        pair("button.$name.$state.group", fg, brush.value.compositeOver(group))
                     }
                     // Disabled controls are exempt from WCAG contrast; export them visibly with an explicit exemption.
                     pair("button.$name.disabled.exempt", text.disabled, (fill.disabled as SolidColor).value, 0.0)

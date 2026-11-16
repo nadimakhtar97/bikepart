@@ -1,5 +1,5 @@
 {
-  "sourceSha256": "f1f4bb81fe6d7a19ec4cc0d6e2e0e01aacdb79b7bbdde3afd5c52aa50597d1e3",
+  "sourceSha256": "20fedfb97af9979f06d38782588cc6e5f3487ea0449d3b25a85b6c438ec2df0f",
   "themes": [
     {
       "appearance": "light",
@@ -191,7 +191,61 @@
           "minimum": 3
         },
         {
+          "name": "bridge.group.text",
+          "foreground": "242424",
+          "background": "ECF3FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.supporting",
+          "foreground": "616161",
+          "background": "ECF3FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.link",
+          "foreground": "0F6CBD",
+          "background": "ECF3FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.error",
+          "foreground": "BC2F32",
+          "background": "ECF3FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.outline",
+          "foreground": "616161",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
+          "name": "radio.false.stroke",
+          "foreground": "616161",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
+          "name": "radio.true.stroke",
+          "foreground": "616161",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
+          "name": "radio.selected.dot",
+          "foreground": "ECF3FA",
+          "background": "ECF3FA",
+          "minimum": 3
+        },
+        {
           "name": "button.primary.rest",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.rest.group",
           "foreground": "FFFFFF",
           "background": "0F6CBD",
           "minimum": 4.5
@@ -203,13 +257,31 @@
           "minimum": 4.5
         },
         {
+          "name": "button.primary.pressed.group",
+          "foreground": "FFFFFF",
+          "background": "0E4775",
+          "minimum": 4.5
+        },
+        {
           "name": "button.primary.focused",
           "foreground": "FFFFFF",
           "background": "0F6CBD",
           "minimum": 4.5
         },
         {
+          "name": "button.primary.focused.group",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
           "name": "button.primary.selected",
+          "foreground": "FFFFFF",
+          "background": "0F548C",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.selected.group",
           "foreground": "FFFFFF",
           "background": "0F548C",
           "minimum": 4.5
@@ -239,9 +311,21 @@
           "minimum": 4.5
         },
         {
+          "name": "button.secondary.rest.group",
+          "foreground": "0F6CBD",
+          "background": "ECF3FA",
+          "minimum": 4.5
+        },
+        {
           "name": "button.secondary.pressed",
           "foreground": "0E4775",
           "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.pressed.group",
+          "foreground": "0E4775",
+          "background": "ECF3FA",
           "minimum": 4.5
         },
         {
@@ -251,9 +335,21 @@
           "minimum": 4.5
         },
         {
+          "name": "button.secondary.focused.group",
+          "foreground": "0F6CBD",
+          "background": "ECF3FA",
+          "minimum": 4.5
+        },
+        {
           "name": "button.secondary.selected",
           "foreground": "0F548C",
           "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.selected.group",
+          "foreground": "0F548C",
+          "background": "ECF3FA",
           "minimum": 4.5
         },
         {
@@ -466,7 +562,61 @@
           "minimum": 3
         },
         {
+          "name": "bridge.group.text",
+          "foreground": "FFFFFF",
+          "background": "060C13",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.supporting",
+          "foreground": "D6D6D6",
+          "background": "060C13",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.link",
+          "foreground": "479EF5",
+          "background": "060C13",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.error",
+          "foreground": "E37D80",
+          "background": "060C13",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.group.outline",
+          "foreground": "9E9E9E",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
+          "name": "radio.false.stroke",
+          "foreground": "9E9E9E",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
+          "name": "radio.true.stroke",
+          "foreground": "9E9E9E",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
+          "name": "radio.selected.dot",
+          "foreground": "060C13",
+          "background": "060C13",
+          "minimum": 3
+        },
+        {
           "name": "button.primary.rest",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.rest.group",
           "foreground": "000000",
           "background": "479EF5",
           "minimum": 4.5
@@ -478,13 +628,31 @@
           "minimum": 4.5
         },
         {
+          "name": "button.primary.pressed.group",
+          "foreground": "000000",
+          "background": "96C6FA",
+          "minimum": 4.5
+        },
+        {
           "name": "button.primary.focused",
           "foreground": "000000",
           "background": "479EF5",
           "minimum": 4.5
         },
         {
+          "name": "button.primary.focused.group",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
           "name": "button.primary.selected",
+          "foreground": "000000",
+          "background": "77B7F7",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.selected.group",
           "foreground": "000000",
           "background": "77B7F7",
           "minimum": 4.5
@@ -514,9 +682,21 @@
           "minimum": 4.5
         },
         {
+          "name": "button.secondary.rest.group",
+          "foreground": "479EF5",
+          "background": "060C13",
+          "minimum": 4.5
+        },
+        {
           "name": "button.secondary.pressed",
           "foreground": "96C6FA",
           "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.pressed.group",
+          "foreground": "96C6FA",
+          "background": "060C13",
           "minimum": 4.5
         },
         {
@@ -526,9 +706,21 @@
           "minimum": 4.5
         },
         {
+          "name": "button.secondary.focused.group",
+          "foreground": "479EF5",
+          "background": "060C13",
+          "minimum": 4.5
+        },
+        {
           "name": "button.secondary.selected",
           "foreground": "77B7F7",
           "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.selected.group",
+          "foreground": "77B7F7",
+          "background": "060C13",
           "minimum": 4.5
         },
         {

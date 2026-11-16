@@ -1,0 +1,11 @@
+Original appearance: System
+Tapped Light
+Captured more-light
+Tapped Dark
+Captured more-dark
+Tapped System
+Tapped Home
+Tapped Add product
+Tapped Save product
+Captured validation
+PASS: signed shrunk actual app launches, navigates, changes appearance, restores original, and validates Save product without saving.

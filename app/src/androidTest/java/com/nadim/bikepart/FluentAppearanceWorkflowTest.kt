@@ -90,6 +90,7 @@ class FluentAppearanceWorkflowTest {
         }
         val scale = shell("settings get system font_scale").ifBlank { "1.0" }
         val night = shell("settings get secure ui_night_mode")
+        val hardwareIme = shell("settings get secure show_ime_with_hard_keyboard")
         val original = runBlocking { Shop.open(context).use { it.snapshot().appearance } }
         fun await(label: String) = compose.waitUntil(20_000) {
             compose.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
@@ -103,6 +104,7 @@ class FluentAppearanceWorkflowTest {
             shell("cp ${file.absolutePath} /data/local/tmp/$name.png")
         }
         try {
+            shell("settings put secure show_ime_with_hard_keyboard 1")
             for (font in listOf("1.0", "2.0")) for (mode in listOf(Appearance.Light, Appearance.Dark)) {
                 shell("settings put system font_scale $font")
                 // Explicit appearance must override the opposite device brightness.
@@ -128,7 +130,13 @@ class FluentAppearanceWorkflowTest {
                     capture("pilot-button-focus-${mode.name.lowercase()}-$font")
                     action.performClick(); await("Enter a product title")
                     val field = compose.onNodeWithText("Title (required)").performScrollTo()
-                    field.performTextInput("Workshop brake pad with a long product description")
+                    field.performClick().performTextInput("Workshop brake pad with a long product description")
+                    compose.waitUntil(20_000) {
+                        var shown = false
+                        scenario.onActivity { activity -> shown = androidx.core.view.ViewCompat.getRootWindowInsets(activity.window.decorView)
+                            ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true }
+                        shown
+                    }
                     field.assertIsFocused().assertIsDisplayed()
                     capture("pilot-keyboard-${mode.name.lowercase()}-$font")
                 }
@@ -149,10 +157,17 @@ class FluentAppearanceWorkflowTest {
                         matches
                     }
                     compose.onNodeWithText("System").assertIsSelected()
+                    val pixels = compose.onNodeWithText("Check for updates").performScrollTo().captureToImage().toPixelMap()
+                    val expected = if (dark) Color(0xFF479EF5) else Color(0xFF0F6CBD)
+                    assertTrue("Auto must follow actual rendered device brightness", (0 until pixels.height).any { y ->
+                        (0 until pixels.width).any { x -> pixels[x, y] == expected }
+                    })
                 }
             }
         } finally {
             shell("settings put system font_scale $scale")
+            if (hardwareIme == "null") shell("settings delete secure show_ime_with_hard_keyboard")
+            else shell("settings put secure show_ime_with_hard_keyboard $hardwareIme")
             shell("cmd uimode night ${when (night) { "2" -> "yes"; "1" -> "no"; else -> "auto" }}")
             runBlocking { Shop.open(context).use { it.setAppearance(original) } }
         }

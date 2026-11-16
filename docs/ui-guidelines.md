@@ -31,7 +31,8 @@ tokens. Wallpaper-derived color is not enabled.
 Material compatibility interface. `ShopSpacing` expresses shop layout and 48dp
 touch constraints. Screens consume semantic roles rather than local color/font
 constants. Amounts retain whole rupees and Indian grouping. Semantic `ic_*`
-resource names remain the centralized icon substitution boundary during migration;
+resource names and `ShopThemeConfiguration.icons` supply the centralized icon
+substitution boundary during migration;
 remaining Material Symbols consumers retain their provenance and license until
 replaced. Fluent icon adoption requires its own module/API and asset-term check.
 
@@ -383,8 +384,9 @@ Source: [Images and graphics](https://developer.android.com/design/ui/mobile/gui
 The shop keeps its domain-specific destinations, inventory controls and bundled
 Material Symbols. Reference news illustrations, avatars, account data, content
 photos and news actions are not shop content. There are no runtime Figma asset
-URLs. For new applicable static assets, download the exact assets supplied by
-Figma and verify their native size, placement and local file before shipping.
+URLs. For new assets, inspect the approved Fluent source and applicable asset terms,
+then verify native size, placement and the bundled local file before shipping.
+See [Fluent provenance](../third_party/fluent-android-sources.md).
 
 ## Components
 
@@ -682,7 +684,8 @@ model.
   Date ranges include both endpoints. Search matches receipt, cart or customer.
   Completed cash receipts remain immutable.
 - Bundle official Material Symbols locally and record provenance under
-  `third_party`; retain a consistent icon family and semantic theme colors.
+  `third_party`; replace families through the shared scoped icon configuration
+  after checking the new assets’ terms, and retain semantic theme colors.
 
 ## Verification
 

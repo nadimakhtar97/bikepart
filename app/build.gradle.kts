@@ -120,5 +120,7 @@ val exportThemeFingerprint = tasks.register<ExportThemeFingerprint>("exportTheme
     sources.from(paths.map { rootProject.file(it) })
     outputDirectory.set(themeFingerprintAssets)
 }
-android.sourceSets.getByName("androidTest").assets.directories.add(themeFingerprintAssets.get().asFile.path)
-tasks.matching { it.name == "mergeDebugAndroidTestAssets" }.configureEach { dependsOn(exportThemeFingerprint) }
+androidComponents.onVariants { variant ->
+    variant.androidTest?.sources?.assets?.addGeneratedSourceDirectory(
+        exportThemeFingerprint, ExportThemeFingerprint::outputDirectory)
+}
