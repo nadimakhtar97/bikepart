@@ -1,0 +1,458 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:35",
+        "content-desc": "3:35 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "ListItemView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "ListItemView",
+        "bounds": "[210,166][520,237]",
+        "center": "[365,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]"
+      },
+      {
+        "class": "androidx.recyclerview.widget.RecyclerView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/list_example",
+        "interactions": [
+          "SCROLLABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,296][1080,422]",
+            "center": "[540,359]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                "text": "Single-line list with gray sub header text",
+                "bounds": "[42,296][912,422]",
+                "center": "[477,359]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "text": "Action",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[912,312][1080,405]",
+                "center": "[996,358]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,422][1080,552]",
+            "center": "[540,487]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "bounds": "[42,455][105,518]",
+                "center": "[73,486]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,456][1038,513]",
+                "center": "[613,484]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,554][1080,684]",
+            "center": "[540,619]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "bounds": "[42,587][105,650]",
+                "center": "[73,618]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,588][954,645]",
+                "center": "[571,616]"
+              },
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[954,566][1080,671]",
+                "center": "[1017,618]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,686][1080,833]",
+            "center": "[540,759]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,728][912,785]",
+                "center": "[550,756]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "text": "Value",
+                "bounds": "[912,710][1080,809]",
+                "center": "[996,759]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,876][1080,1002]",
+            "center": "[540,939]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                "text": "Two-line list",
+                "bounds": "[42,876][1038,1002]",
+                "center": "[540,939]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1002][1080,1193]",
+            "center": "[540,1097]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "bounds": "[42,1066][105,1129]",
+                "center": "[73,1097]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,1041][1038,1098]",
+                "center": "[613,1069]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Subtitle, secondary text",
+                "bounds": "[189,1103][573,1154]",
+                "center": "[381,1128]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1195][1080,1386]",
+            "center": "[540,1290]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "bounds": "[42,1259][105,1322]",
+                "center": "[73,1290]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,1234][954,1291]",
+                "center": "[571,1262]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Subtitle, secondary text",
+                "bounds": "[189,1296][573,1347]",
+                "center": "[381,1321]"
+              },
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[954,1238][1080,1343]",
+                "center": "[1017,1290]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1388][1080,1579]",
+            "center": "[540,1483]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,1427][912,1484]",
+                "center": "[550,1455]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Subtitle, secondary text",
+                "bounds": "[189,1489][573,1540]",
+                "center": "[381,1514]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "text": "Value",
+                "bounds": "[912,1434][1080,1533]",
+                "center": "[996,1483]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1622][1080,1748]",
+            "center": "[540,1685]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                "text": "Two-line list with dense spacing",
+                "bounds": "[42,1622][1038,1748]",
+                "center": "[540,1685]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1748][1080,1917]",
+            "center": "[540,1832]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "bounds": "[42,1801][105,1864]",
+                "center": "[73,1832]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,1776][1038,1833]",
+                "center": "[613,1804]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Subtitle, secondary text",
+                "bounds": "[189,1838][573,1889]",
+                "center": "[381,1863]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1919][1080,2088]",
+            "center": "[540,2003]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "bounds": "[42,1972][105,2035]",
+                "center": "[73,2003]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,1947][954,2004]",
+                "center": "[571,1975]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Subtitle, secondary text",
+                "bounds": "[189,2009][573,2060]",
+                "center": "[381,2034]"
+              },
+              {
+                "class": "android.widget.ImageView",
+                "content-desc": "More options",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[954,1951][1080,2056]",
+                "center": "[1017,2003]"
+              }
+            ]
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2090][1080,2259]",
+            "center": "[540,2174]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                "text": "Title, primary text",
+                "bounds": "[189,2118][912,2175]",
+                "center": "[550,2146]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_subtitle",
+                "text": "Subtitle, secondary text",
+                "bounds": "[189,2180][573,2231]",
+                "center": "[381,2205]"
+              },
+              {
+                "class": "android.widget.TextView",
+                "text": "Value",
+                "bounds": "[912,2125][1080,2224]",
+                "center": "[996,2174]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2302][1080,2400]",
+            "center": "[540,2351]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                "text": "Two line list with custom secondary subtitle view",
+                "bounds": "[42,2302][1038,2400]",
+                "center": "[540,2351]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

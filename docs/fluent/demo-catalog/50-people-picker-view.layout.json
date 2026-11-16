@@ -1,0 +1,793 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 2,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:36",
+        "content-desc": "3:36 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: ",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "English (US) (QWERTY)",
+    "type": "INPUT_METHOD",
+    "layer": 1,
+    "bounds": "[0,1643][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_header_access_points_menu",
+        "content-desc": "More features",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[5,1643][115,1759]",
+        "center": "[60,1701]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "content-desc": "USA",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[115,1643][387,1759]",
+        "center": "[251,1701]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "content-desc": "and",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[387,1643][693,1759]",
+        "center": "[540,1701]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "content-desc": "United",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[693,1643][965,1759]",
+        "center": "[829,1701]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_header_power_key",
+        "content-desc": "Voice input",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[965,1643][1075,1759]",
+        "center": "[1020,1701]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_0",
+        "content-desc": "q",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[5,1780][112,1934]",
+        "center": "[58,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "1",
+            "bounds": "[89,1780][105,1822]",
+            "center": "[97,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_1",
+        "content-desc": "w",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[112,1780][219,1934]",
+        "center": "[165,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "2",
+            "bounds": "[192,1780][212,1822]",
+            "center": "[202,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_2",
+        "content-desc": "e",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[219,1780][326,1934]",
+        "center": "[272,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "3",
+            "bounds": "[298,1780][319,1822]",
+            "center": "[308,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_3",
+        "content-desc": "r",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[326,1780][433,1934]",
+        "center": "[379,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "4",
+            "bounds": "[404,1780][426,1822]",
+            "center": "[415,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_4",
+        "content-desc": "t",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[433,1780][540,1934]",
+        "center": "[486,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "5",
+            "bounds": "[512,1780][533,1822]",
+            "center": "[522,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_5",
+        "content-desc": "y",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[540,1780][647,1934]",
+        "center": "[593,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "6",
+            "bounds": "[619,1780][640,1822]",
+            "center": "[629,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_6",
+        "content-desc": "u",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[647,1780][754,1934]",
+        "center": "[700,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "7",
+            "bounds": "[727,1780][747,1822]",
+            "center": "[737,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_7",
+        "content-desc": "i",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[754,1780][861,1934]",
+        "center": "[807,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "8",
+            "bounds": "[833,1780][854,1822]",
+            "center": "[843,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_8",
+        "content-desc": "o",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[861,1780][968,1934]",
+        "center": "[914,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "9",
+            "bounds": "[940,1780][961,1822]",
+            "center": "[950,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_9",
+        "content-desc": "p",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[968,1780][1075,1934]",
+        "center": "[1021,1857]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.google.android.inputmethod.latin:id/0_resource_name_obfuscated",
+            "text": "0",
+            "bounds": "[1044,1780][1068,1822]",
+            "center": "[1056,1801]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_0",
+        "content-desc": "a",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[5,1934][165,2089]",
+        "center": "[85,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_1",
+        "content-desc": "s",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[165,1934][272,2089]",
+        "center": "[218,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_2",
+        "content-desc": "d",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[272,1934][379,2089]",
+        "center": "[325,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_3",
+        "content-desc": "f",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[379,1934][486,2089]",
+        "center": "[432,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_4",
+        "content-desc": "g",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[486,1934][593,2089]",
+        "center": "[539,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_5",
+        "content-desc": "h",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[593,1934][700,2089]",
+        "center": "[646,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_6",
+        "content-desc": "j",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[700,1934][807,2089]",
+        "center": "[753,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_7",
+        "content-desc": "k",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[807,1934][914,2089]",
+        "center": "[860,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_8",
+        "content-desc": "l",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[914,1934][1075,2089]",
+        "center": "[994,2011]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_shift",
+        "content-desc": "Shift",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[5,2089][165,2244]",
+        "center": "[85,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_1",
+        "content-desc": "z",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[165,2089][272,2244]",
+        "center": "[218,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_2",
+        "content-desc": "x",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[272,2089][379,2244]",
+        "center": "[325,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_3",
+        "content-desc": "c",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[379,2089][486,2244]",
+        "center": "[432,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_4",
+        "content-desc": "v",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[486,2089][593,2244]",
+        "center": "[539,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_5",
+        "content-desc": "b",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[593,2089][700,2244]",
+        "center": "[646,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_6",
+        "content-desc": "n",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[700,2089][807,2244]",
+        "center": "[753,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_7",
+        "content-desc": "m",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[807,2089][914,2244]",
+        "center": "[860,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_del",
+        "content-desc": "Delete",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[914,2089][1075,2244]",
+        "center": "[994,2166]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_switch_to_symbol",
+        "content-desc": "Symbol keyboard",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[5,2244][165,2400]",
+        "center": "[85,2322]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_bottom_symbol_1",
+        "content-desc": ",",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[165,2244][272,2400]",
+        "center": "[218,2322]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_switch_to_next_language",
+        "content-desc": "Emoji button",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[272,2244][379,2400]",
+        "center": "[325,2322]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_space",
+        "content-desc": "Space",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[379,2244][807,2400]",
+        "center": "[593,2322]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_bottom_symbol_2",
+        "content-desc": ".",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[807,2244][914,2400]",
+        "center": "[860,2322]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.google.android.inputmethod.latin:id/key_pos_ime_action",
+        "content-desc": "Done",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[914,2244][1075,2400]",
+        "center": "[994,2322]"
+      }
+    ]
+  },
+  {
+    "window-title": "PeoplePickerView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "PeoplePickerView",
+        "bounds": "[210,166][640,237]",
+        "center": "[425,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,1643]",
+        "center": "[540,959]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_label",
+            "text": "Select",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[0,321][157,447]",
+            "center": "[78,384]"
+          },
+          {
+            "class": "android.widget.MultiAutoCompleteTextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_text_view",
+            "text": "4 recipients",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE",
+              "TEXT_SELECTABLE"
+            ],
+            "state": [
+              "FOCUSED"
+            ],
+            "bounds": "[178,275][1080,494]",
+            "center": "[629,384]",
+            "children": [
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[178,291][519,392]",
+                "center": "[348,341]"
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[531,291][822,392]",
+                "center": "[676,341]"
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[178,392][474,478]",
+                "center": "[326,435]"
+              },
+              {
+                "class": "android.view.View",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[486,392][864,478]",
+                "center": "[675,435]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_label",
+            "text": "SelectDeselect",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[0,495][319,621]",
+            "center": "[159,558]"
+          },
+          {
+            "class": "android.widget.MultiAutoCompleteTextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_text_view",
+            "text": "Daisy Phillips",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE",
+              "TEXT_SELECTABLE"
+            ],
+            "bounds": "[340,495][1080,621]",
+            "center": "[710,558]"
+          },
+          {
+            "class": "android.widget.MultiAutoCompleteTextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_text_view",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[0,622][1080,748]",
+            "center": "[540,685]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_label",
+            "text": "Delete",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[0,749][160,875]",
+            "center": "[80,812]"
+          },
+          {
+            "class": "android.widget.MultiAutoCompleteTextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_text_view",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[181,749][1080,875]",
+            "center": "[630,812]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_label",
+            "text": "Personas Listener",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[0,876][379,1002]",
+            "center": "[189,939]"
+          },
+          {
+            "class": "android.widget.MultiAutoCompleteTextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_text_view",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[400,876][1080,1002]",
+            "center": "[740,939]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_label",
+            "text": "Suggestions Listener",
+            "interactions": [
+              "CLICKABLE"
+            ],
+            "bounds": "[0,1003][435,1129]",
+            "center": "[217,1066]"
+          },
+          {
+            "class": "android.widget.MultiAutoCompleteTextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/people_picker_text_view",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE",
+              "EDITABLE"
+            ],
+            "bounds": "[456,1003][1080,1129]",
+            "center": "[768,1066]"
+          }
+        ]
+      }
+    ]
+  }
+]
