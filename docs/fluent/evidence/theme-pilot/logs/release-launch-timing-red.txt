@@ -1,0 +1,35 @@
+/data/local/tmp/fluent-contrast.json: 1 file pulled, 0 skipped. 0.9 MB/s (22291 bytes in 0.023s)
+/data/local/tmp/pilot-button-focus-dark-1.0.png: 1 file pulled, 0 skipped. 40.1 MB/s (142593 bytes in 0.003s)
+/data/local/tmp/pilot-button-focus-dark-2.0.png: 1 file pulled, 0 skipped. 50.2 MB/s (169819 bytes in 0.003s)
+/data/local/tmp/pilot-button-focus-light-1.0.png: 1 file pulled, 0 skipped. 18.0 MB/s (141211 bytes in 0.007s)
+/data/local/tmp/pilot-button-focus-light-2.0.png: 1 file pulled, 0 skipped. 43.7 MB/s (168065 bytes in 0.004s)
+/data/local/tmp/pilot-keyboard-dark-1.0.png: 1 file pulled, 0 skipped. 35.8 MB/s (197051 bytes in 0.005s)
+/data/local/tmp/pilot-keyboard-dark-2.0.png: 1 file pulled, 0 skipped. 101.6 MB/s (232250 bytes in 0.002s)
+/data/local/tmp/pilot-keyboard-light-1.0.png: 1 file pulled, 0 skipped. 97.4 MB/s (195825 bytes in 0.002s)
+/data/local/tmp/pilot-keyboard-light-2.0.png: 1 file pulled, 0 skipped. 86.7 MB/s (229238 bytes in 0.003s)
+/data/local/tmp/pilot-long-selected-dark-2.0.png: 1 file pulled, 0 skipped. 80.4 MB/s (261929 bytes in 0.003s)
+/data/local/tmp/pilot-long-selected-light-2.0.png: 1 file pulled, 0 skipped. 56.0 MB/s (257461 bytes in 0.004s)
+/data/local/tmp/pilot-more-dark-1.0.png: 1 file pulled, 0 skipped. 11.9 MB/s (171585 bytes in 0.014s)
+/data/local/tmp/pilot-more-dark-2.0.png: 1 file pulled, 0 skipped. 15.0 MB/s (193071 bytes in 0.012s)
+/data/local/tmp/pilot-more-light-1.0.png: 1 file pulled, 0 skipped. 12.4 MB/s (172137 bytes in 0.013s)
+/data/local/tmp/pilot-more-light-2.0.png: 1 file pulled, 0 skipped. 6.1 MB/s (192944 bytes in 0.030s)
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::loadLibrary has been called by org.conscrypt.NativeLibraryUtil in an unnamed module (file:/home/nadimakhtar97/Android/Sdk/build-tools/37.0.0/lib/apksigner.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Serving...
+All files should be loaded. Notifying the device.
+Performing Incremental Install
+Success
+Install command complete in 1297 ms
+Starting: Intent { cmp=com.nadim.bikepart/.MainActivity }
+Traceback (most recent call last):
+  File "/tmp/bikepart-pilot-release-smoke.py", line 30, in <module>
+    tap(root,label);root=dump('more-'+label.lower());assert node(root,label) is not None
+    ^^^^^^^^^^^^^^^
+  File "/tmp/bikepart-pilot-release-smoke.py", line 13, in tap
+    n=node(root,label);assert n is not None,label
+                              ^^^^^^^^^^^^^
+AssertionError: Light
+FAIL: AssertionError((('/usr/bin/python3', '/tmp/bikepart-pilot-release-smoke.py'), 1))

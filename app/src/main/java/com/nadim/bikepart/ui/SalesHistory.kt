@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.painterResource
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 

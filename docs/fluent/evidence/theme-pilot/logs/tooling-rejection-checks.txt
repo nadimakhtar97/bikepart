@@ -1,0 +1,3 @@
+PASS: stale source rejected with expected diagnostic.
+PASS: failed contrast rejected with expected diagnostic.
+PASS: retired generator cannot overwrite the active Fluent source.

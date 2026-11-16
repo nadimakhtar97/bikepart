@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.nadim.bikepart.R

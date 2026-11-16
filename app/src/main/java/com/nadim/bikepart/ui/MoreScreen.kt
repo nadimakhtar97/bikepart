@@ -1,6 +1,9 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectable
@@ -15,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -32,10 +35,14 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
     ShopGroup(spacing = ShopSpacing.small) {
         Column(Modifier.selectableGroup()) {
             Appearance.entries.forEach { mode ->
+                val interaction = remember { MutableInteractionSource() }
+                val focused by interaction.collectIsFocusedAsState()
                 Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
-                    .selectable(appearance == mode, enabled = !busy, role = Role.RadioButton, onClick = { onAppearance(mode) })
+                    .selectable(appearance == mode, interactionSource = interaction, indication = null,
+                        enabled = !busy, role = Role.RadioButton, onClick = { onAppearance(mode) })
+                    .then(if (focused) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small) else Modifier)
                     .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = appearance == mode, onClick = null)
+                    ShopAppearanceIndicator(selected = appearance == mode, enabled = !busy, interaction = interaction)
                     Text(mode.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = ShopSpacing.medium))
                 }
             }

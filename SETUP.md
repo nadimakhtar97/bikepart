@@ -10,7 +10,7 @@ Read this before installing build tools or running Gradle or theme commands.
   currently listed as `platforms;android-37.0`; check `sdkmanager --list` if the
   package name changes.
 - Android SDK Platform Tools for `adb` when using a connected device.
-- Node.js and npm for the theme tooling.
+- Node.js for the theme contrast validator (no external dependencies).
 
 Point Gradle at the SDK with `ANDROID_HOME` or a local `local.properties` file
 containing `sdk.dir=<absolute SDK path>`. `local.properties` is ignored by Git
@@ -30,13 +30,18 @@ downloads the wrapper distribution and project dependencies on the first build.
 
 ## Theme tooling
 
-Install the locked Node dependency before running theme commands:
+The historical Figma/Material generator is retired. Export the effective Fluent
+colors on a connected Android runtime, then validate them (Node built-ins only):
 
 ```sh
-npm ci --prefix tools/theme
-node tools/theme/generate.mjs
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.nadim.bikepart.ThemeContrastExportTest
+adb pull /data/local/tmp/fluent-contrast.json docs/fluent/evidence/theme-pilot/fluent-contrast.json
 node tools/theme/validate.mjs
 ```
+
+Set `ANDROID_SERIAL` when more than one device is connected. On a WSL setup
+with only Windows Node installed, use `node.exe` for the validation command.
 
 See `tools/theme/README.md` and `docs/ui-guidelines.md` for the theme source and design constraints.
 

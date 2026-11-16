@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 /**
- * Shared layout primitives for the shop screens. They keep the approved Now in
- * Android colour roles while giving every screen the same page grid, row rhythm
+ * Shared layout primitives for the shop screens. They use scoped Fluent
+ * semantic color roles while giving every screen the same page grid, row rhythm
  * and trailing alignment.
  */
 

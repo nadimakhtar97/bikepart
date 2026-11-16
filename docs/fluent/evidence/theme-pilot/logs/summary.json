@@ -1,0 +1,16 @@
+{
+  "unitTests": 30,
+  "unitFailures": 0,
+  "unitErrors": 0,
+  "lintErrors": 0,
+  "lintWarnings": 207,
+  "api": 37,
+  "emulator": "37.2.13.0",
+  "screen": "1080x2400",
+  "densityDpi": 420,
+  "effectiveGuestMemoryMb": 4096,
+  "initialActualAppTestsPassed": 7,
+  "finalTargetedTestsPassed": 4,
+  "effectiveContrastPairsPassed": 136,
+  "releaseSmoke": "passed; local debug key only; original System restored; debug APK restored"
+}
