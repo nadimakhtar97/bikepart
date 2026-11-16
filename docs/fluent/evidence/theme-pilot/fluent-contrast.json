@@ -1,0 +1,555 @@
+{
+  "sourceSha256": "f1f4bb81fe6d7a19ec4cc0d6e2e0e01aacdb79b7bbdde3afd5c52aa50597d1e3",
+  "themes": [
+    {
+      "appearance": "light",
+      "pairs": [
+        {
+          "name": "bridge.primary",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.secondary",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.tertiary",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.error",
+          "foreground": "FFFFFF",
+          "background": "BC2F32",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.primaryContainer",
+          "foreground": "242424",
+          "background": "CFE4FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.secondaryContainer",
+          "foreground": "242424",
+          "background": "CFE4FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.errorContainer",
+          "foreground": "242424",
+          "background": "FDF6F6",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.background",
+          "foreground": "242424",
+          "background": "F5F5F5",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface",
+          "foreground": "242424",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surfaceVariant",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.inverse",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.text",
+          "foreground": "242424",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.link",
+          "foreground": "0F6CBD",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.error",
+          "foreground": "BC2F32",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.outline",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.low.text",
+          "foreground": "242424",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.low.link",
+          "foreground": "0F6CBD",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.low.error",
+          "foreground": "BC2F32",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.low.outline",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.container.text",
+          "foreground": "242424",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.container.link",
+          "foreground": "0F6CBD",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.container.error",
+          "foreground": "BC2F32",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.container.outline",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.high.text",
+          "foreground": "242424",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.high.link",
+          "foreground": "0F6CBD",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.high.error",
+          "foreground": "BC2F32",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.high.outline",
+          "foreground": "616161",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.highest.text",
+          "foreground": "242424",
+          "background": "FAFAFA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.highest.link",
+          "foreground": "0F6CBD",
+          "background": "FAFAFA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.highest.error",
+          "foreground": "BC2F32",
+          "background": "FAFAFA",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.highest.outline",
+          "foreground": "616161",
+          "background": "FAFAFA",
+          "minimum": 3
+        },
+        {
+          "name": "button.primary.rest",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.pressed",
+          "foreground": "FFFFFF",
+          "background": "0E4775",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.focused",
+          "foreground": "FFFFFF",
+          "background": "0F6CBD",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.selected",
+          "foreground": "FFFFFF",
+          "background": "0F548C",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.disabled.exempt",
+          "foreground": "BDBDBD",
+          "background": "F0F0F0",
+          "minimum": 0
+        },
+        {
+          "name": "button.primary.focus.0",
+          "foreground": "000000",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "button.primary.focus.1",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.rest",
+          "foreground": "0F6CBD",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.pressed",
+          "foreground": "0E4775",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.focused",
+          "foreground": "0F6CBD",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.selected",
+          "foreground": "0F548C",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.disabled.exempt",
+          "foreground": "BDBDBD",
+          "background": "FFFFFF",
+          "minimum": 0
+        },
+        {
+          "name": "button.secondary.focus.0",
+          "foreground": "000000",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.focus.1",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 3
+        }
+      ]
+    },
+    {
+      "appearance": "dark",
+      "pairs": [
+        {
+          "name": "bridge.primary",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.secondary",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.tertiary",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.error",
+          "foreground": "000000",
+          "background": "E37D80",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.primaryContainer",
+          "foreground": "FFFFFF",
+          "background": "0A2E4A",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.secondaryContainer",
+          "foreground": "FFFFFF",
+          "background": "0A2E4A",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.errorContainer",
+          "foreground": "FFFFFF",
+          "background": "3F1011",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.background",
+          "foreground": "FFFFFF",
+          "background": "141414",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surfaceVariant",
+          "foreground": "D6D6D6",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.inverse",
+          "foreground": "242424",
+          "background": "FFFFFF",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.text",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.link",
+          "foreground": "479EF5",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.error",
+          "foreground": "E37D80",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.surface.outline",
+          "foreground": "9E9E9E",
+          "background": "000000",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.low.text",
+          "foreground": "FFFFFF",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.low.link",
+          "foreground": "479EF5",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.low.error",
+          "foreground": "E37D80",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.low.outline",
+          "foreground": "9E9E9E",
+          "background": "1F1F1F",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.container.text",
+          "foreground": "FFFFFF",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.container.link",
+          "foreground": "479EF5",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.container.error",
+          "foreground": "E37D80",
+          "background": "1F1F1F",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.container.outline",
+          "foreground": "9E9E9E",
+          "background": "1F1F1F",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.high.text",
+          "foreground": "FFFFFF",
+          "background": "292929",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.high.link",
+          "foreground": "479EF5",
+          "background": "292929",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.high.error",
+          "foreground": "E37D80",
+          "background": "292929",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.high.outline",
+          "foreground": "9E9E9E",
+          "background": "292929",
+          "minimum": 3
+        },
+        {
+          "name": "bridge.highest.text",
+          "foreground": "FFFFFF",
+          "background": "292929",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.highest.link",
+          "foreground": "479EF5",
+          "background": "292929",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.highest.error",
+          "foreground": "E37D80",
+          "background": "292929",
+          "minimum": 4.5
+        },
+        {
+          "name": "bridge.highest.outline",
+          "foreground": "9E9E9E",
+          "background": "292929",
+          "minimum": 3
+        },
+        {
+          "name": "button.primary.rest",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.pressed",
+          "foreground": "000000",
+          "background": "96C6FA",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.focused",
+          "foreground": "000000",
+          "background": "479EF5",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.selected",
+          "foreground": "000000",
+          "background": "77B7F7",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.primary.disabled.exempt",
+          "foreground": "5C5C5C",
+          "background": "3D3D3D",
+          "minimum": 0
+        },
+        {
+          "name": "button.primary.focus.0",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 3
+        },
+        {
+          "name": "button.primary.focus.1",
+          "foreground": "000000",
+          "background": "FFFFFF",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.rest",
+          "foreground": "479EF5",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.pressed",
+          "foreground": "96C6FA",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.focused",
+          "foreground": "479EF5",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.selected",
+          "foreground": "77B7F7",
+          "background": "000000",
+          "minimum": 4.5
+        },
+        {
+          "name": "button.secondary.disabled.exempt",
+          "foreground": "5C5C5C",
+          "background": "000000",
+          "minimum": 0
+        },
+        {
+          "name": "button.secondary.focus.0",
+          "foreground": "FFFFFF",
+          "background": "000000",
+          "minimum": 3
+        },
+        {
+          "name": "button.secondary.focus.1",
+          "foreground": "000000",
+          "background": "FFFFFF",
+          "minimum": 3
+        }
+      ]
+    }
+  ]
+}

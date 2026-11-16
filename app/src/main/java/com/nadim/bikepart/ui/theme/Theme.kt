@@ -24,6 +24,7 @@ class ShopThemeConfiguration(
     val aliasTokens: IAliasTokens = AliasTokens(),
     val controlTokens: IControlTokens = ControlTokens(),
     val shapes: Shapes = ShopShapes,
+    val icons: Map<Int, Int> = emptyMap(),
 )
 private val defaultConfiguration = ShopThemeConfiguration()
 
@@ -50,8 +51,10 @@ fun BikepartTheme(appearance: Appearance = Appearance.System,
         }
     }
     FluentTheme(aliasTokens = configuration.aliasTokens, controlTokens = configuration.controlTokens, themeMode = mode) {
-        MaterialTheme(colorScheme = fluentMaterialColors(FluentTheme.aliasTokens, dark),
-            typography = fluentTypography(FluentTheme.aliasTokens), shapes = configuration.shapes, content = content)
+        CompositionLocalProvider(LocalShopIcons provides configuration.icons) {
+            MaterialTheme(colorScheme = fluentMaterialColors(FluentTheme.aliasTokens, dark),
+                typography = fluentTypography(FluentTheme.aliasTokens), shapes = configuration.shapes, content = content)
+        }
     }
 }
 
@@ -88,9 +91,18 @@ internal fun fluentMaterialColors(tokens: IAliasTokens, dark: Boolean): ColorSch
         surfaceDim = background(Background3), surfaceBright = surface,
         surfaceContainerLowest = surface, surfaceContainerLow = background(Background2),
         surfaceContainer = background(Background2), surfaceContainerHigh = background(Background3),
-        surfaceContainerHighest = background(Background4),
+        // Background4 gives only 4.4986:1 with the default dark link token.
+        // Keep the next native neutral surface so normal text meets 4.5:1 without rounding.
+        surfaceContainerHighest = background(if (dark) Background3 else Background4),
         primaryFixed = tint, primaryFixedDim = tint, onPrimaryFixed = text, onPrimaryFixedVariant = text,
         secondaryFixed = tint, secondaryFixedDim = tint, onSecondaryFixed = text, onSecondaryFixedVariant = text,
         tertiaryFixed = tint, tertiaryFixedDim = tint, onTertiaryFixed = text, onTertiaryFixedVariant = text,
     )
 }
+
+/** Resource identities remain semantic; replacing a family needs no screen edits. */
+private val LocalShopIcons = staticCompositionLocalOf<Map<Int, Int>> { emptyMap() }
+
+@Composable
+fun shopIconPainter(resource: Int): androidx.compose.ui.graphics.painter.Painter =
+    androidx.compose.ui.res.painterResource(LocalShopIcons.current[resource] ?: resource)

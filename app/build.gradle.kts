@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -93,25 +95,30 @@ dependencies {
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 // Runtime contrast exports carry the exact active source/dependency fingerprint.
-val themeFingerprintAssets = layout.buildDirectory.dir("generated/themeFingerprintAssets")
-val exportThemeFingerprint by tasks.registering {
-    val sourceList = rootProject.file("tools/theme/source-files.json")
-    val sourcePaths = sourceList.readText().let { text -> Regex("\"([^\"]+)\"").findAll(text).map { it.groupValues[1] }.toList() }
-    val sources = sourcePaths.map { rootProject.file(it) }
-    inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(sourceList)
-    outputs.dir(themeFingerprintAssets)
-    doLast {
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
-        sourcePaths.zip(sources).forEach { (path, source) ->
+abstract class ExportThemeFingerprint : DefaultTask() {
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sources: ConfigurableFileCollection
+    @get:Input abstract val sourcePaths: ListProperty<String>
+    @get:OutputDirectory abstract val outputDirectory: DirectoryProperty
+    @TaskAction fun export() {
+        val digest = MessageDigest.getInstance("SHA-256")
+        sourcePaths.get().forEach { path ->
             digest.update((path + "\n").toByteArray())
-            digest.update(source.readBytes())
+            digest.update(sources.files.single { it.path.endsWith(path) }.readBytes())
             digest.update("\n".toByteArray())
         }
-        themeFingerprintAssets.get().file("theme-source-sha256.txt").asFile.apply {
-            parentFile.mkdirs(); writeText(digest.digest().joinToString("") { "%02x".format(it) })
+        outputDirectory.get().file("theme-source-sha256.txt").asFile.apply {
+            parentFile.mkdirs()
+            writeText(digest.digest().joinToString("") { "%02x".format(it) })
         }
     }
 }
-android.sourceSets.getByName("androidTest").assets.srcDir(themeFingerprintAssets)
+val themeFingerprintAssets = layout.buildDirectory.dir("generated/themeFingerprintAssets")
+val exportThemeFingerprint = tasks.register<ExportThemeFingerprint>("exportThemeFingerprint") {
+    val paths = Regex("\"([^\"]+)\"").findAll(rootProject.file("tools/theme/source-files.json").readText()).map { it.groupValues[1] }.toList()
+    sourcePaths.set(paths)
+    sources.from(paths.map { rootProject.file(it) })
+    outputDirectory.set(themeFingerprintAssets)
+}
+android.sourceSets.getByName("androidTest").assets.directories.add(themeFingerprintAssets.get().asFile.path)
 tasks.matching { it.name == "mergeDebugAndroidTestAssets" }.configureEach { dependsOn(exportThemeFingerprint) }
