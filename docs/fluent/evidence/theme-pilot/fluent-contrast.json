@@ -1,5 +1,5 @@
 {
-  "sourceSha256": "20fedfb97af9979f06d38782588cc6e5f3487ea0449d3b25a85b6c438ec2df0f",
+  "sourceSha256": "3f1f33199051fe1f7da64f7cc07f6301398f0c8b1394a1a44ed973210fc3690f",
   "themes": [
     {
       "appearance": "light",
@@ -228,13 +228,13 @@
         },
         {
           "name": "radio.true.stroke",
-          "foreground": "616161",
+          "foreground": "0F6CBD",
           "background": "ECF3FA",
           "minimum": 3
         },
         {
           "name": "radio.selected.dot",
-          "foreground": "ECF3FA",
+          "foreground": "0F6CBD",
           "background": "ECF3FA",
           "minimum": 3
         },
@@ -599,13 +599,13 @@
         },
         {
           "name": "radio.true.stroke",
-          "foreground": "9E9E9E",
+          "foreground": "479EF5",
           "background": "060C13",
           "minimum": 3
         },
         {
           "name": "radio.selected.dot",
-          "foreground": "060C13",
+          "foreground": "479EF5",
           "background": "060C13",
           "minimum": 3
         },

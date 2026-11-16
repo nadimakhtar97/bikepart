@@ -84,7 +84,9 @@ internal fun fluentMaterialColors(tokens: IAliasTokens, dark: Boolean): ColorSch
         error = error, onError = background(Background1), errorContainer = errorContainer, onErrorContainer = text,
         background = canvas, onBackground = text, surface = surface, onSurface = text,
         surfaceVariant = background(Background2), onSurfaceVariant = secondaryText,
-        outline = outline, outlineVariant = tokens.neutralStrokeColor[Stroke1].resolve(),
+        // Material chips use outlineVariant as an essential interactive boundary.
+        // Native Stroke1 is only 1.36:1 light / 2.32:1 dark on ShopGroup.
+        outline = outline, outlineVariant = outline,
         inverseSurface = inverse, inverseOnSurface = inverseText,
         inversePrimary = if (dark) tokens.brandForegroundColor[BrandForeground1].light else tokens.brandForegroundColor[BrandForeground1].dark,
         surfaceTint = fill, scrim = foreground(ForegroundDarkStatic),

@@ -18,9 +18,17 @@ map. A later theme can provide complete alias tokens without mutating the SDK
 singleton or leaving the Material bridge on an unrelated palette.
 
 Unmigrated Material consumers receive roles derived from that same Fluent scope.
-The one color adaptation is dark `surfaceContainerHighest`: native Background4
+The first accessibility adaptation is dark `surfaceContainerHighest`: native Background4
 (`#333333`) with native BrandForeground1 (`#479EF5`) yields 4.498645:1, below
 4.5:1 without rounding. The bridge uses native Background3 for that dark role.
+The second adaptation maps Material `outlineVariant` to the same native
+StrokeAccessible token as `outline`. Unmigrated Material FilterChip boundaries
+otherwise use Stroke1 (`#D1D1D1` light / `#4D4D4D` dark): only 1.36:1 / 2.32:1
+on the actual tinted ShopGroup parents. The exporter checks those parent pairs
+and all bridge surfaces. Native shared-button rest/pressed brand outlines
+already pass; they are preserved, including custom BarcodeLinker colors and
+nested focus rings. Later form/chip owners must retain the verified boundary
+contrast when replacing the Material bridge.
 No custom palette or wallpaper-derived color is introduced.
 
 ## Shared controls and fallback
@@ -86,3 +94,40 @@ Physical-device, TalkBack, Switch Access, Voice Access, Accessibility Scanner,
 peripheral, genuine production-signing upgrade, foldable, and broad adaptive/
 predictive-back checks were not performed in this slice. Automated semantic,
 keyboard and target checks do not replace those checks. No release is published.
+
+## Final result — 2026-11-16
+
+| Check | Result |
+| --- | --- |
+| Debug app and instrumentation APKs | Built |
+| Shrunk release APK / R8 | Built; debug-key-signed copy exercised only on the disposable emulator |
+| Android lint | Passed, zero errors; 207 warnings remain (mostly unused resources and existing dependency/style checks) |
+| Unit tests | 30 passed, zero failures/errors |
+| Actual-app focused instrumentation | 7 passed; corrected measurement-only rerun also passed |
+| Effective Fluent/bridge contrast | 118 pairs passed with current source fingerprint; stale exports and below-threshold colors are rejected |
+| Actual shrunk-release smoke | Launch, More, Light/Dark, original System restoration, navigation, shared action and required-title validation passed |
+
+The release smoke used the local disposable debug signing key, preserved the
+emulator's shop records, restored the original System appearance, and restored
+the debug APK afterwards. It is not a production-signed upgrade or release.
+
+Final logs: [build/lint/unit](evidence/theme-pilot/logs/final-build-lint-unit.txt),
+[actual-app run](evidence/theme-pilot/logs/final-runtime.txt),
+[contrast](evidence/theme-pilot/logs/contrast.txt),
+[rejection checks](evidence/theme-pilot/logs/tooling-rejection-checks.txt), and
+[release smoke](evidence/theme-pilot/logs/release-smoke-ui.txt).
+
+Actual-app renderings were visually inspected for readable wrapping, selected
+state, focus rings, system-bar brightness and focused content above the IME:
+
+| State | Light 100% | Dark 100% | Light 200% | Dark 200% |
+| --- | --- | --- | --- | --- |
+| Appearance | [image](evidence/theme-pilot/screenshots/pilot-more-light-1.0.png) | [image](evidence/theme-pilot/screenshots/pilot-more-dark-1.0.png) | [image](evidence/theme-pilot/screenshots/pilot-more-light-2.0.png) | [image](evidence/theme-pilot/screenshots/pilot-more-dark-2.0.png) |
+| Focused primary action | [image](evidence/theme-pilot/screenshots/pilot-button-focus-light-1.0.png) | [image](evidence/theme-pilot/screenshots/pilot-button-focus-dark-1.0.png) | [image](evidence/theme-pilot/screenshots/pilot-button-focus-light-2.0.png) | [image](evidence/theme-pilot/screenshots/pilot-button-focus-dark-2.0.png) |
+| Focused field with visible IME | [image](evidence/theme-pilot/screenshots/pilot-keyboard-light-1.0.png) | [image](evidence/theme-pilot/screenshots/pilot-keyboard-dark-1.0.png) | [image](evidence/theme-pilot/screenshots/pilot-keyboard-light-2.0.png) | [image](evidence/theme-pilot/screenshots/pilot-keyboard-dark-2.0.png) |
+
+Long selected secondary slot: [light 200%](evidence/theme-pilot/screenshots/pilot-long-selected-light-2.0.png),
+[dark 200%](evidence/theme-pilot/screenshots/pilot-long-selected-dark-2.0.png).
+Independent shrunk release: [light](evidence/theme-pilot/screenshots/release-more-light.png),
+[dark](evidence/theme-pilot/screenshots/release-more-dark.png),
+[required-title validation](evidence/theme-pilot/screenshots/release-validation.png).

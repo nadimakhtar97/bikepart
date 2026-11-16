@@ -49,6 +49,7 @@ class ThemeContrastExportTest {
                     pair("bridge.$name.link", c.primary, surface)
                     pair("bridge.$name.error", c.error, surface)
                     pair("bridge.$name.outline", c.outline, surface, 3.0)
+                    pair("bridge.$name.outlineVariant", c.outlineVariant, surface, 3.0)
                 }
                 val group = c.primary.copy(alpha = .08f).compositeOver(c.surface)
                 pair("bridge.group.text", c.onSurface, group)
@@ -56,6 +57,7 @@ class ThemeContrastExportTest {
                 pair("bridge.group.link", c.primary, group)
                 pair("bridge.group.error", c.error, group)
                 pair("bridge.group.outline", c.outline, group, 3.0)
+                pair("bridge.group.outlineVariant", c.outlineVariant, group, 3.0)
                 val radio = FluentTheme.controlTokens.tokens[ControlType.RadioButtonControlType] as RadioButtonTokens
                 for (selected in listOf(false, true)) {
                     val info = RadioButtonInfo(selected)
@@ -75,6 +77,13 @@ class ThemeContrastExportTest {
                         pair("button.$name.$state", fg, (brush as SolidColor).value)
                         pair("button.$name.$state.group", fg, brush.value.compositeOver(group))
                     }
+                    if (style == ButtonStyle.OutlinedButton) {
+                        for ((state, strokes) in listOf("rest" to borders.rest, "pressed" to borders.pressed)) for ((i, stroke) in strokes.withIndex()) {
+                            pair("button.secondary.$state.outline.$i", (stroke.brush as SolidColor).value, group, 3.0)
+                        }
+                    }
+                    if (style == ButtonStyle.OutlinedButton) for ((i, stroke) in borders.rest.withIndex())
+                        pair("button.secondary.customSelected.outline.$i", (stroke.brush as SolidColor).value, c.secondaryContainer, 3.0)
                     // Disabled controls are exempt from WCAG contrast; export them visibly with an explicit exemption.
                     pair("button.$name.disabled.exempt", text.disabled, (fill.disabled as SolidColor).value, 0.0)
                     for ((i, border) in borders.focused.withIndex()) pair("button.$name.focus.$i",
