@@ -1,0 +1,4 @@
+V3.0 Signer: certificate DN: C=US, O=Android, CN=Android Debug
+V3.0 Signer: certificate SHA-256 digest: 4b01f4cd17b50408dffa24f8062c67010f352cb3d1963af38de09977999ba190
+V3.0 Signer: certificate SHA-1 digest: 05a21ccd50c4d8ce5cec9d98fd1a9aa4e2b03474
+V3.0 Signer: certificate MD5 digest: 17b7036c4e895b6b627d52207b04c192

@@ -600,4 +600,6 @@
     <string name="update_install_invalid">The downloaded update file is missing, invalid or superseded. Please download again.</string>
     <string name="update_install_failed">Could not open the Android installer. Try Install now again.</string>
     <string name="update_install_permission_needed">Install permission needed. Please allow installing unknown apps for Bikepart in Settings, then tap Install now again.</string>
+    <string name="more_accent">Accent</string>
+    <string name="more_choose_brand_theme">Choose brand theme</string>
 </resources>

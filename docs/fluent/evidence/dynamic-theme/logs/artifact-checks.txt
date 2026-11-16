@@ -1,0 +1,4 @@
+app/build/outputs/apk/debug/app-debug.apk: packaged MIT notice equals source: True
+app/build/outputs/apk/release/app-release-unsigned.apk: packaged MIT notice equals source: True
+{'tests': 30, 'failures': 0, 'errors': 0, 'skipped': 0}
+Lint: {'Error': 0, 'Warning': 209}

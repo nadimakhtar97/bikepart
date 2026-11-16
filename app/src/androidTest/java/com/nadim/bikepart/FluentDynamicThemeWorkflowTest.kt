@@ -7,6 +7,8 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.luminance
+import androidx.activity.compose.setContent
 import com.nadim.bikepart.shop.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -217,6 +219,71 @@ class FluentDynamicThemeWorkflowTest {
             shell("cmd uimode night ${when (night) { "2" -> "yes"; "1" -> "no"; else -> "auto" }}")
             preferences.setBrand(original.brand); preferences.setAccent(original.accent)
             runBlocking { Shop.open(context).use { it.setAppearance(originalAppearance) } }
+        }
+    }
+
+    @Test fun selectedWordBarcodeBoundaryRemainsVisibleAndCancelRetainsItsCallbackAtDoubleText() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val preferences = com.nadim.bikepart.ui.theme.ShopThemePreferences(context)
+        val original = preferences.state.value
+        fun shell(command: String): String = instrumentation.uiAutomation.executeShellCommand(command).use {
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(it).bufferedReader().readText().trim()
+        }
+        val scale = shell("settings get system font_scale").ifBlank { "1.0" }
+        val appearance = runBlocking { Shop.open(context).use { it.snapshot().appearance } }
+        val title = "Word selected workshop replacement front and rear brake pad with long fitment descriptions ${System.nanoTime()}"
+        runBlocking { Shop.open(context).use { it.createProduct(title, it.snapshot().categories.first().id, "", "4", "800000") } }
+        var frame: ((String) -> Unit)? = null
+        try {
+            preferences.setBrand(com.nadim.bikepart.ui.theme.ShopBrand.Word)
+            shell("settings put system font_scale 2.0")
+            for (mode in listOf(Appearance.Light, Appearance.Dark)) {
+                runBlocking { Shop.open(context).use { it.setAppearance(mode) } }
+                ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                    // Existing approved camera-transport substitution; the shop, scanner route and Room stay real.
+                    scenario.onActivity { activity -> activity.setContent {
+                        com.nadim.bikepart.ui.ShopApp(camera = { result, _ ->
+                            androidx.compose.runtime.SideEffect { frame = result }
+                            androidx.compose.material3.Text("Dynamic theme camera transport")
+                        })
+                    } }
+                    await("Add product"); compose.onNodeWithText("Add product").performClick()
+                    compose.onNodeWithText("Scan catalog details").performScrollTo().performClick()
+                    await("Dynamic theme camera transport")
+                    compose.runOnIdle { requireNotNull(frame)("dynamic-word-${System.nanoTime()}") }
+                    await("Link barcode"); compose.onNodeWithText("Link barcode").performScrollTo().performClick()
+                    compose.onNodeWithText("Find barcode target").performTextInput(title)
+                    androidx.test.espresso.Espresso.closeSoftKeyboard()
+                    val target = compose.onNodeWithText("Product: $title").performScrollTo()
+                    target.assertHeightIsAtLeast(48.dp).performClick(); target.assertIsSelected().assertIsDisplayed()
+                    val pixels = target.captureToImage().toPixelMap()
+                    // Independent pinned demo Word Color140 / Color30 selected-container values.
+                    val fill = if (mode == Appearance.Light) Color(0xFF82ABF1) else Color(0xFF0E336A)
+                    val boundary = if (mode == Appearance.Light) Color.Black else Color.White
+                    assertTrue("Actual selected Word container is retained", (0 until pixels.height).any { y ->
+                        (0 until pixels.width).any { x -> pixels[x,y] == fill }
+                    })
+                    assertTrue("Actual selected boundary is visible", (0 until minOf(5,pixels.height)).any { y ->
+                        pixels[pixels.width / 2,y] == boundary
+                    })
+                    val high = maxOf(fill.luminance(), boundary.luminance())
+                    val low = minOf(fill.luminance(), boundary.luminance())
+                    assertTrue("Actual adjacent selected boundary meets 3:1", (high + .05f) / (low + .05f) >= 3f)
+                    val file = java.io.File(context.getExternalFilesDir(null), "dynamic-word-selected-${mode.name.lowercase()}-2.0.png")
+                    android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("screencap -p")).use { input ->
+                        file.outputStream().use { input.copyTo(it) }
+                    }
+                    shell("cp ${file.absolutePath} /data/local/tmp/${file.name}")
+                    compose.onNodeWithText("Save barcode link").performScrollTo().assertIsEnabled()
+                    compose.onNodeWithText("Cancel barcode link").performScrollTo().performClick()
+                    await("Unknown barcode. Use manual search or explicitly link it.")
+                }
+            }
+        } finally {
+            shell("settings put system font_scale $scale")
+            preferences.setBrand(original.brand); preferences.setAccent(original.accent)
+            runBlocking { Shop.open(context).use { it.setAppearance(appearance) } }
         }
     }
 

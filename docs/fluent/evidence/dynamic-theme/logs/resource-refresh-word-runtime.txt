@@ -1,0 +1,52 @@
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.ThemeContrastExportTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.nadim.bikepart.ThemeContrastExportTest:
+INSTRUMENTATION_STATUS: test=exportEffectiveThemePairs
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.ThemeContrastExportTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=exportEffectiveThemePairs
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 5.53
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+/data/local/tmp/fluent-contrast.json: 1 file pulled, 0 skipped. 18.4 MB/s (360168 bytes in 0.019s)
+Passed 2212 effective Fluent/bridge contrast pairs; source fingerprint current. Disabled controls explicitly exempt.
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.nadim.bikepart.FluentDynamicThemeWorkflowTest:
+INSTRUMENTATION_STATUS: test=selectedWordBarcodeBoundaryRemainsVisibleAndCancelRetainsItsCallbackAtDoubleText
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.FluentDynamicThemeWorkflowTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=selectedWordBarcodeBoundaryRemainsVisibleAndCancelRetainsItsCallbackAtDoubleText
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 19.413
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1

@@ -42,7 +42,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
             .then(if (accentFocused) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small) else Modifier)
             .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
-            Text("Accent", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.more_accent), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             com.microsoft.fluentui.tokenized.controls.ToggleSwitch(
                 modifier = Modifier.focusProperties { canFocus = false }.clearAndSetSemantics { }, checkedState = customization.accent,
                 enabledSwitch = !busy, onValueChange = onAccent)
@@ -67,7 +67,7 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
         Text(stringResource(R.string.more_appearance_hint), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    ShopSectionHeader("Choose brand theme")
+    ShopSectionHeader(stringResource(R.string.more_choose_brand_theme))
     ShopGroup(spacing = ShopSpacing.small) {
         Column(Modifier.selectableGroup()) {
             com.nadim.bikepart.ui.theme.ShopBrand.entries.forEach { brand ->
