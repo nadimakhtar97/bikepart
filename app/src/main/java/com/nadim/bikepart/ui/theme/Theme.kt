@@ -3,6 +3,7 @@ package com.nadim.bikepart.ui.theme
 import android.app.Activity
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.runtime.*
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
@@ -111,3 +112,8 @@ private val LocalShopIcons = staticCompositionLocalOf<Map<Int, Int>> { emptyMap(
 @Composable
 fun shopIconPainter(resource: Int): androidx.compose.ui.graphics.painter.Painter =
     androidx.compose.ui.res.painterResource(LocalShopIcons.current[resource] ?: resource)
+
+/** Vector form used by Fluent navigation controls, which require ImageVector icons. */
+@Composable
+fun shopIconVector(resource: Int): androidx.compose.ui.graphics.vector.ImageVector =
+    androidx.compose.ui.graphics.vector.ImageVector.vectorResource(id = LocalShopIcons.current[resource] ?: resource)

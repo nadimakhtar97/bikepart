@@ -60,6 +60,8 @@ android {
 dependencies {
     implementation("com.microsoft.fluentui:fluentui_core:0.3.11")
     implementation("com.microsoft.fluentui:fluentui_controls:0.3.3")
+    implementation("com.microsoft.fluentui:fluentui_tablayout:0.3.5")
+    implementation("com.microsoft.fluentui:fluentui_topappbars:0.3.9")
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation(libs.google.play.services.auth)
     implementation(libs.androidx.camera.camera2)

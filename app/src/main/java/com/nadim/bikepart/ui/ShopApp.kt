@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,15 +15,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.res.stringResource
+import com.nadim.bikepart.ui.theme.shopIconVector
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,6 +37,11 @@ import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.*
 import com.nadim.bikepart.ui.theme.BikepartTheme
 import com.nadim.bikepart.ui.theme.ShopSpacing
+import com.microsoft.fluentui.theme.token.FluentStyle
+import com.microsoft.fluentui.tokenized.navigation.TabBar
+import com.microsoft.fluentui.tokenized.navigation.TabData
+import com.microsoft.fluentui.tokenized.navigation.SideRail
+import com.microsoft.fluentui.tokenized.AppBar
 
 private data class MainDestination(val label: String, val outlined: Int, val filled: Int)
 private val destinations = listOf(
@@ -173,24 +176,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val selectedCart = state?.carts?.find { it.id == selectedId }
     BikepartTheme(appearance = state?.appearance ?: Appearance.System, configuration = themeConfiguration) {
         val colors = MaterialTheme.colorScheme
-        val navigationColors = com.nadim.bikepart.ui.theme.shopNavigationColors()
+        val fluentStyle = if (customization.accent) FluentStyle.Brand else FluentStyle.Neutral
         val appBarColors = com.nadim.bikepart.ui.theme.shopAppBarColors()
-        // The transitional header uses the native Fluent Brand/Neutral app-bar roles.
-        val topBarScroll = TopAppBarDefaults.pinnedScrollBehavior()
-        val topBarColor by animateColorAsState(
-            appBarColors.background, label = "topAppBarColor")
         com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
-            statusBackground = if (route == "main") colors.surface else topBarColor,
+            statusBackground = if (route == "main") colors.surface else appBarColors.background,
             navigationBackground = colors.surface)
-        LaunchedEffect(route, destination, selectedId) { topBarScroll.state.contentOffset = 0f }
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val useRail = maxWidth >= 600.dp && route == "main"
             Scaffold(
-                modifier = Modifier.nestedScroll(topBarScroll.nestedScrollConnection),
                 containerColor = colors.surface,
                 topBar = {
-                    if (route != "main") CenterAlignedTopAppBar(
-                        title = { Text(when (route) {
+                    if (route != "main") {
+                        val title = when (route) {
                             "labels" -> "Product labels"; "scan" -> "Scan Barcode"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
                             "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
                             "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
@@ -198,13 +195,17 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"
                             "cart" -> selectedCart?.name ?: "Unfinished bill"; "cart-products" -> "Add to cart"
                             "backups" -> "Shop backups"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
-                        }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                        navigationIcon = {
-                            ShopBackButton(onClick = { back() }, enabled = !busy)
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor, titleContentColor = appBarColors.title,
-                            navigationIconContentColor = appBarColors.navigation),
-                    )
+                        }
+                        Box(Modifier.fillMaxWidth().background(appBarColors.background)) {
+                            AppBar(
+                                title = title,
+                                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
+                                style = fluentStyle,
+                                centerAlignAppBar = true,
+                                logo = { ShopBackButton(onClick = { back() }, enabled = !busy) },
+                            )
+                        }
+                    }
                 },
                 floatingActionButton = {
                     if (route == "main" && state != null && !busy && destination in listOf("Stock", "Carts")) {
@@ -219,39 +220,39 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     }
                 },
                 bottomBar = {
-                    if (route == "main" && !useRail) NavigationBar(containerColor = colors.surface, tonalElevation = 0.dp) {
-                        destinations.forEach { item ->
-                            val selected = destination == item.label
-                            NavigationBarItem(
-                                enabled = !busy,
-                                selected = selected,
-                                onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
-                                icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
-                                label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = navigationColors.indicator, selectedIconColor = navigationColors.icon,
-                                    selectedTextColor = navigationColors.label, unselectedIconColor = colors.onSurface,
-                                    unselectedTextColor = colors.onSurface,
-                                ),
+                    if (route == "main" && !useRail) {
+                        val tabs = destinations.map { item ->
+                            TabData(
+                                title = item.label,
+                                icon = shopIconVector(item.outlined),
+                                selectedIcon = shopIconVector(item.filled),
+                                onClick = { if (!busy) { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } } },
                             )
                         }
+                        TabBar(
+                            tabDataList = tabs,
+                            selectedIndex = destinations.indexOfFirst { it.label == destination }.coerceAtLeast(0),
+                            showIndicator = true,
+                        )
                     }
                 },
             ) { padding ->
                 val scrollState = key(route, destination, selectedId) { rememberScrollState() }
                 Row(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
-                    if (useRail) NavigationRail(containerColor = colors.surface) {
-                        Spacer(Modifier.height(ShopSpacing.section))
-                        destinations.forEach { item ->
-                            val selected = destination == item.label
-                            NavigationRailItem(selected = selected, enabled = !busy,
-                                onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
-                                icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
-                                label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
-                                colors = NavigationRailItemDefaults.colors(indicatorColor = navigationColors.indicator,
-                                    selectedIconColor = navigationColors.icon, selectedTextColor = navigationColors.label,
-                                    unselectedIconColor = colors.onSurface, unselectedTextColor = colors.onSurface))
+                    if (useRail) {
+                        val tabs = destinations.map { item ->
+                            TabData(
+                                title = item.label,
+                                icon = shopIconVector(item.outlined),
+                                selectedIcon = shopIconVector(item.filled),
+                                onClick = { if (!busy) { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } } },
+                            )
                         }
+                        SideRail(
+                            topTabDataList = tabs,
+                            topTabSelectedIndex = destinations.indexOfFirst { it.label == destination }.coerceAtLeast(0),
+                            showIconText = true,
+                        )
                     }
                     Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.TopCenter) {
                         Column(
