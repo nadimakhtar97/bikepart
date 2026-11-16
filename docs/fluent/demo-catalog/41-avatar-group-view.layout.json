@@ -1,0 +1,421 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:32",
+        "content-desc": "3:32 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "AvatarGroupView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "AvatarGroupView",
+        "bounds": "[210,166][623,237]",
+        "center": "[416,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "SCROLLABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Max Displayed Avatar",
+            "bounds": "[42,317][807,417]",
+            "center": "[424,367]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/max_displayed_avatar",
+            "text": "4",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[807,334][1038,417]",
+            "center": "[922,375]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Border Type",
+            "bounds": "[42,417][645,517]",
+            "center": "[343,467]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_border_toggle",
+            "text": "TOGGLE BORDERS",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[645,434][1038,517]",
+            "center": "[841,475]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Face Stack",
+            "bounds": "[42,560][1038,671]",
+            "center": "[540,615]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_stack_example_xxlarge_size",
+            "text": "XXLarge",
+            "bounds": "[42,789][232,846]",
+            "center": "[137,817]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "bounds": "[232,713][442,923]",
+            "center": "[337,818]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Allan Munger (long text example to test truncation)",
+            "bounds": "[379,713][589,923]",
+            "center": "[484,818]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Kat Larsson",
+            "bounds": "[526,713][736,923]",
+            "center": "[631,818]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Ashley McCarthy",
+            "bounds": "[673,713][883,923]",
+            "center": "[778,818]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_stack_example_xlarge_size",
+            "text": "XLarge",
+            "bounds": "[42,1014][232,1071]",
+            "center": "[137,1042]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[232,965][388,1121]",
+            "center": "[310,1043]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Researcher",
+            "bounds": "[346,965][502,1121]",
+            "center": "[424,1043]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "bounds": "[460,965][616,1121]",
+            "center": "[538,1043]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Allan Munger (long text example to test truncation)",
+            "bounds": "[574,965][730,1121]",
+            "center": "[652,1043]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_stack_example_large_size",
+            "text": "Large",
+            "bounds": "[42,1197][232,1254]",
+            "center": "[137,1225]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[232,1163][357,1288]",
+            "center": "[294,1225]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[325,1163][450,1288]",
+            "center": "[387,1225]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Researcher",
+            "bounds": "[418,1163][543,1288]",
+            "center": "[480,1225]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_stack_example_medium_size",
+            "text": "Medium",
+            "bounds": "[42,1353][232,1410]",
+            "center": "[137,1381]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[232,1330][336,1434]",
+            "center": "[284,1382]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "bounds": "[305,1330][409,1434]",
+            "center": "[357,1382]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Elvia Atkins",
+            "bounds": "[378,1330][482,1434]",
+            "center": "[430,1382]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Colin Ballinger",
+            "bounds": "[451,1330][555,1434]",
+            "center": "[503,1382]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_stack_example_small_size",
+            "text": "Small",
+            "bounds": "[42,1489][232,1546]",
+            "center": "[137,1517]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[232,1476][315,1559]",
+            "center": "[273,1517]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Allan Munger (long text example to test truncation)",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[294,1476][377,1559]",
+            "center": "[335,1517]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Kat Larsson",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[356,1476][439,1559]",
+            "center": "[397,1517]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Ashley McCarthy",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[418,1476][501,1559]",
+            "center": "[459,1517]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[480,1476][563,1559]",
+            "center": "[521,1517]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_stack_example_xsmall_size",
+            "text": "XSmall",
+            "bounds": "[42,1608][232,1665]",
+            "center": "[137,1636]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "bounds": "[232,1601][304,1673]",
+            "center": "[268,1637]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Allan Munger (long text example to test truncation)",
+            "bounds": "[283,1601][355,1673]",
+            "center": "[319,1637]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Kat Larsson",
+            "bounds": "[334,1601][406,1673]",
+            "center": "[370,1637]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Ashley McCarthy",
+            "bounds": "[385,1601][457,1673]",
+            "center": "[421,1637]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Face Pile",
+            "bounds": "[42,1715][1038,1826]",
+            "center": "[540,1770]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_pile_example_xxlarge_size",
+            "text": "XXLarge",
+            "bounds": "[42,1944][232,2001]",
+            "center": "[137,1972]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[232,1868][442,2078]",
+            "center": "[337,1973]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Researcher",
+            "bounds": "[468,1868][678,2078]",
+            "center": "[573,1973]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "bounds": "[704,1868][914,2078]",
+            "center": "[809,1973]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Allan Munger (long text example to test truncation)",
+            "bounds": "[940,1868][996,2078]",
+            "center": "[968,1973]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_pile_example_xlarge_size",
+            "text": "XLarge",
+            "bounds": "[42,2159][232,2216]",
+            "center": "[137,2187]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[232,2120][368,2256]",
+            "center": "[300,2188]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[389,2120][525,2256]",
+            "center": "[457,2188]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Researcher",
+            "bounds": "[546,2120][682,2256]",
+            "center": "[614,2188]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/avatar_face_pile_example_large_size",
+            "text": "Large",
+            "bounds": "[42,2322][232,2379]",
+            "center": "[137,2350]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Amanda Brady",
+            "bounds": "[232,2298][337,2400]",
+            "center": "[284,2349]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Daisy Phillips",
+            "bounds": "[358,2298][463,2400]",
+            "center": "[410,2349]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Elvia Atkins",
+            "bounds": "[484,2298][589,2400]",
+            "center": "[536,2349]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Colin Ballinger",
+            "bounds": "[610,2298][715,2400]",
+            "center": "[662,2349]"
+          }
+        ]
+      }
+    ]
+  }
+]

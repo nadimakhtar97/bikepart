@@ -1,0 +1,525 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:34",
+        "content-desc": "3:34 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "CalendarView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "CalendarView",
+        "bounds": "[210,166][539,237]",
+        "center": "[374,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/example_date_title",
+        "text": "Choose a date",
+        "bounds": "[0,275][1080,422]",
+        "center": "[540,348]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "S",
+        "bounds": "[0,422][154,496]",
+        "center": "[77,459]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "M",
+        "bounds": "[154,422][308,496]",
+        "center": "[231,459]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "T",
+        "bounds": "[308,422][462,496]",
+        "center": "[385,459]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "W",
+        "bounds": "[462,422][616,496]",
+        "center": "[539,459]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "T",
+        "bounds": "[616,422][770,496]",
+        "center": "[693,459]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "F",
+        "bounds": "[770,422][924,496]",
+        "center": "[847,459]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "S",
+        "bounds": "[924,422][1078,496]",
+        "center": "[1001,459]"
+      },
+      {
+        "class": "android.widget.GridView",
+        "interactions": [
+          "SCROLLABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,497][1078,1270]",
+        "center": "[539,883]",
+        "children": [
+          {
+            "class": "android.widget.Button",
+            "text": "15",
+            "content-desc": "Sunday, November 15",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,497][154,651]",
+            "center": "[77,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "16",
+            "content-desc": "Monday, November 16, today",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[154,497][308,651]",
+            "center": "[231,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "17",
+            "content-desc": "Tuesday, November 17",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[308,497][462,651]",
+            "center": "[385,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "18",
+            "content-desc": "Wednesday, November 18",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[462,497][616,651]",
+            "center": "[539,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "19",
+            "content-desc": "Thursday, November 19",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[616,497][770,651]",
+            "center": "[693,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "20",
+            "content-desc": "Friday, November 20",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[770,497][924,651]",
+            "center": "[847,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "21",
+            "content-desc": "Saturday, November 21",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[924,497][1078,651]",
+            "center": "[1001,574]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "22",
+            "content-desc": "Sunday, November 22",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,652][154,806]",
+            "center": "[77,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "23",
+            "content-desc": "Monday, November 23",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[154,652][308,806]",
+            "center": "[231,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "24",
+            "content-desc": "Tuesday, November 24",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[308,652][462,806]",
+            "center": "[385,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "25",
+            "content-desc": "Wednesday, November 25",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[462,652][616,806]",
+            "center": "[539,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "26",
+            "content-desc": "Thursday, November 26",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[616,652][770,806]",
+            "center": "[693,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "27",
+            "content-desc": "Friday, November 27",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[770,652][924,806]",
+            "center": "[847,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "28",
+            "content-desc": "Saturday, November 28",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[924,652][1078,806]",
+            "center": "[1001,729]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "29",
+            "content-desc": "Sunday, November 29",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,807][154,961]",
+            "center": "[77,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "30",
+            "content-desc": "Monday, November 30",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[154,807][308,961]",
+            "center": "[231,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "Dec\n1",
+            "content-desc": "Tuesday, December 1",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[308,807][462,961]",
+            "center": "[385,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "2",
+            "content-desc": "Wednesday, December 2",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[462,807][616,961]",
+            "center": "[539,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "3",
+            "content-desc": "Thursday, December 3",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[616,807][770,961]",
+            "center": "[693,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "4",
+            "content-desc": "Friday, December 4",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[770,807][924,961]",
+            "center": "[847,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "5",
+            "content-desc": "Saturday, December 5",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[924,807][1078,961]",
+            "center": "[1001,884]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "6",
+            "content-desc": "Sunday, December 6",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,962][154,1116]",
+            "center": "[77,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "7",
+            "content-desc": "Monday, December 7",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[154,962][308,1116]",
+            "center": "[231,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "8",
+            "content-desc": "Tuesday, December 8",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[308,962][462,1116]",
+            "center": "[385,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "9",
+            "content-desc": "Wednesday, December 9",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[462,962][616,1116]",
+            "center": "[539,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "10",
+            "content-desc": "Thursday, December 10",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[616,962][770,1116]",
+            "center": "[693,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "11",
+            "content-desc": "Friday, December 11",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[770,962][924,1116]",
+            "center": "[847,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "12",
+            "content-desc": "Saturday, December 12",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[924,962][1078,1116]",
+            "center": "[1001,1039]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "13",
+            "content-desc": "Sunday, December 13",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,1117][154,1270]",
+            "center": "[77,1193]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "14",
+            "content-desc": "Monday, December 14",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[154,1117][308,1270]",
+            "center": "[231,1193]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "15",
+            "content-desc": "Tuesday, December 15",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[308,1117][462,1270]",
+            "center": "[385,1193]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "16",
+            "content-desc": "Wednesday, December 16",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[462,1117][616,1270]",
+            "center": "[539,1193]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "17",
+            "content-desc": "Thursday, December 17",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[616,1117][770,1270]",
+            "center": "[693,1193]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "18",
+            "content-desc": "Friday, December 18",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[770,1117][924,1270]",
+            "center": "[847,1193]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "19",
+            "content-desc": "Saturday, December 19",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[924,1117][1078,1270]",
+            "center": "[1001,1193]"
+          }
+        ]
+      }
+    ]
+  }
+]

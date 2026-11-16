@@ -1,0 +1,168 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:33",
+        "content-desc": "3:33 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Basic Inputs",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Basic Inputs",
+        "bounds": "[210,166][503,237]",
+        "center": "[356,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Different views of button",
+            "bounds": "[42,317][1038,428]",
+            "center": "[540,372]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "BUTTON",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,513][273,608]",
+            "center": "[157,560]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "DISABLED BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,629][623,724]",
+            "center": "[332,676]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "BORDERLESS BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,745][636,840]",
+            "center": "[339,792]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "BORDERLESS DISABLED BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,861][814,956]",
+            "center": "[428,908]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "LARGE BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,977][527,1112]",
+            "center": "[284,1044]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "LARGE DISABLED BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1133][705,1268]",
+            "center": "[373,1200]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "OUTLINED BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1289][585,1382]",
+            "center": "[313,1335]"
+          },
+          {
+            "class": "android.widget.Button",
+            "text": "OUTLINED DISABLED BUTTON EXAMPLE",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1403][763,1496]",
+            "center": "[402,1449]"
+          }
+        ]
+      }
+    ]
+  }
+]
