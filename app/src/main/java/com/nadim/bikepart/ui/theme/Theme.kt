@@ -25,6 +25,7 @@ class ShopThemeConfiguration(
     val controlTokens: IControlTokens = ControlTokens(),
     val shapes: Shapes = ShopShapes,
     val icons: Map<Int, Int> = emptyMap(),
+    val style: FluentStyle = FluentStyle.Brand,
 )
 private val defaultConfiguration = ShopThemeConfiguration()
 
@@ -51,7 +52,7 @@ fun BikepartTheme(appearance: Appearance = Appearance.System,
         }
     }
     FluentTheme(aliasTokens = configuration.aliasTokens, controlTokens = configuration.controlTokens, themeMode = mode) {
-        CompositionLocalProvider(LocalShopIcons provides configuration.icons) {
+        CompositionLocalProvider(LocalShopIcons provides configuration.icons, LocalShopFluentStyle provides configuration.style) {
             MaterialTheme(colorScheme = fluentMaterialColors(FluentTheme.aliasTokens, dark),
                 typography = fluentTypography(FluentTheme.aliasTokens), shapes = configuration.shapes, content = content)
         }

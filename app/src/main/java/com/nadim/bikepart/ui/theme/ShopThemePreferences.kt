@@ -33,6 +33,11 @@ class ShopThemePreferences(context: Context) {
     ))
     val state = mutableState.asStateFlow()
 
+    fun setAccent(accent: Boolean) {
+        preferences.edit().putBoolean("accent", accent).apply()
+        mutableState.value = mutableState.value.copy(accent = accent)
+    }
+
     fun setBrand(brand: ShopBrand) {
         preferences.edit().putString("brand", brand.name).apply()
         mutableState.value = mutableState.value.copy(brand = brand)

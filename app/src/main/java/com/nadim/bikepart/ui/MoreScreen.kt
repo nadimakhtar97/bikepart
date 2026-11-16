@@ -29,9 +29,20 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolean, onAppearance: (Appearance) -> Unit,
-    customization: com.nadim.bikepart.ui.theme.ShopThemeCustomization, onBrand: (com.nadim.bikepart.ui.theme.ShopBrand) -> Unit,
+    customization: com.nadim.bikepart.ui.theme.ShopThemeCustomization, onBrand: (com.nadim.bikepart.ui.theme.ShopBrand) -> Unit, onAccent: (Boolean) -> Unit,
     onCategories: () -> Unit, onFindingLookups: () -> Unit, onArchived: () -> Unit, onSales: () -> Unit, onTemplates: () -> Unit, onBackups: () -> Unit, updates: @Composable () -> Unit) {
     ShopPageHeader(stringResource(R.string.more_header), "Catalog, appearance and recovery.")
+    ShopGroup(spacing = ShopSpacing.small) {
+        Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+            .toggleable(value = customization.accent, enabled = !busy, role = Role.Switch, onValueChange = onAccent)
+            .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+            Text("Accent", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            com.microsoft.fluentui.tokenized.controls.ToggleSwitch(
+                modifier = Modifier.clearAndSetSemantics { }, checkedState = customization.accent,
+                enabledSwitch = !busy, onValueChange = onAccent)
+        }
+    }
     ShopSectionHeader(stringResource(R.string.more_appearance))
     ShopGroup(spacing = ShopSpacing.small) {
         Column(Modifier.selectableGroup()) {
