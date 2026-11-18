@@ -60,6 +60,8 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
             selected(option.id)
         }
     }
+
+
     if (templateMode || initialCatalog != null) Text(stringResource(R.string.form_catalog_only_note), style = MaterialTheme.typography.bodyMedium)
     PhotoField(product?.photo ?: initialCatalog?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
         select = { photoUri = it; photoRemoved = false; onChange() },

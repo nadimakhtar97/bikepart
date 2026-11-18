@@ -12,7 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
+import com.microsoft.fluentui.theme.FluentTheme
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentStyle
+import com.nadim.bikepart.ui.theme.LocalShopFluentStyle
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
@@ -116,11 +121,14 @@ internal fun ShopStatCard(label: String, value: String, icon: Int, modifier: Mod
         }
         Text(value, style = MaterialTheme.typography.headlineSmall)
     }
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerLow
+        else FluentTheme.aliasTokens.neutralBackgroundColor[NeutralBackgroundColorTokens.Background5].value(FluentTheme.themeMode)
     if (onClick != null) Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = containerColor,
         modifier = modifier.heightIn(min = 88.dp)) {
         Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
-    } else Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow,
+    } else Surface(shape = MaterialTheme.shapes.medium, color = containerColor,
         modifier = modifier.heightIn(min = 88.dp)) {
         Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
     }
@@ -129,8 +137,15 @@ internal fun ShopStatCard(label: String, value: String, icon: Int, modifier: Mod
 @Composable
 internal fun ShopActionTile(label: String, icon: Int, modifier: Modifier = Modifier, enabled: Boolean = true,
     primary: Boolean = false, onClick: () -> Unit) {
-    val container = if (primary) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.surfaceContainerLow
-    val content = if (primary) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface
+    val branded = LocalShopFluentStyle.current == FluentStyle.Brand
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val (container, content) = when {
+        primary && branded -> MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
+        primary -> MaterialTheme.colorScheme.inverseSurface to MaterialTheme.colorScheme.inverseOnSurface
+        branded -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        isDark -> MaterialTheme.colorScheme.surfaceContainerLow to MaterialTheme.colorScheme.onSurface
+        else -> FluentTheme.aliasTokens.neutralBackgroundColor[NeutralBackgroundColorTokens.Background5].value(FluentTheme.themeMode) to MaterialTheme.colorScheme.onSurface
+    }
     Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.medium, color = container,
         contentColor = content,
         modifier = modifier.heightIn(min = 88.dp)) {

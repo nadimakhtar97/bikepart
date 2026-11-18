@@ -162,6 +162,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val template = state?.templates?.find { it.id == templateId }
     fun beginCatalog(draft: CatalogDraft, target: Screen, id: String? = null) { formSession++; catalogPayload = draft.encode(); templateId = id; navigateTo(target) }
     val product = state?.products?.find { it.id == selectedId }
+    val fluentStyle = if (customization.accent) FluentStyle.Brand else FluentStyle.Neutral
+
     fun back() {
         if (route is Screen.Scan) { navigateTo(scanReturn); return }
         if (route is Screen.Cart) {
@@ -212,6 +214,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                    // show products titles
                 }
             },
+            style = fluentStyle,
             searchHint = "Search products",
             rightAccessoryIcon = FluentIcon(
                 light = qrVector,
@@ -226,7 +229,6 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
 
     BikepartTheme(appearance = state?.appearance ?: Appearance.System, configuration = themeConfiguration) {
         val colors = MaterialTheme.colorScheme
-        val fluentStyle = if (customization.accent) FluentStyle.Brand else FluentStyle.Neutral
         val appBarColors = com.nadim.bikepart.ui.theme.shopAppBarColors()
         com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
             statusBackground = if (route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)) colors.surface else appBarColors.background,
@@ -517,8 +519,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         is Screen.Create, is Screen.Edit, is Screen.TemplateForm -> NavEntry(key) {
                                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
                                                 stockState.SaveableStateProvider("form:$formSession:$route:$selectedId:$catalogPayload") { key(route, selectedId, catalogPayload) {
-                                                    if (route == Screen.Create) ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, Screen.Create) }, enabled = !busy) { Text(stringResource(R.string.manual_scan_catalog)) }
-                                                    if (route == Screen.Create && catalog == null) ShopSecondaryButton(onClick = { navigateTo(Screen.Templates) }, enabled = !busy) { Text(stringResource(R.string.btn_choose_template)) }
+//                                                    if (route == Screen.Create) ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, Screen.Create) }, enabled = !busy) { Text(stringResource(R.string.manual_scan_catalog)) }
+//                                                    if (route == Screen.Create && catalog == null) ShopSecondaryButton(onClick = { navigateTo(Screen.Templates) }, enabled = !busy) { Text(stringResource(R.string.btn_choose_template)) }
                                                     ProductForm(shop, if (route == Screen.Edit) product else null, busy, error,
                                                         onChange = { model.error.value = null },
                                                         lookups = ProductLookups(
