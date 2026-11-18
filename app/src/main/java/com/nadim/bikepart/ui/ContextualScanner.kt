@@ -16,7 +16,7 @@ import androidx.compose.ui.semantics.*
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 
-enum class ScanPurpose(val label: String) { Sale("Sale"), Receiving("Receive stock"), Catalog("Create product") }
+enum class ScanPurpose(val label: String) { Sale("Sale"), Receiving("Receive stock"), Catalog("Create product"), ProductDetail("Product Detail") }
 
 @Composable
 internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: Boolean, error: ShopError?,
@@ -34,8 +34,11 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     DisposableEffect(Unit) { onDispose { running = false; attempt++ } }
     val resolution = raw?.let { runCatching { shop.resolveScan(it) } }
     if (linking && raw != null) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
-            save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } }) }
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val scrollableModifier = if (maxHeight != androidx.compose.ui.unit.Dp.Unspecified) Modifier.verticalScroll(rememberScrollState()) else Modifier
+            Column(Modifier.fillMaxSize().then(scrollableModifier).padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
+                save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } }) }
+        }
         return
     }
     Column(Modifier.fillMaxSize()) {
@@ -54,8 +57,10 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
             ShopPrimaryButton(stringResource(R.string.scanner_manual_search), enabled = !busy) { running = false; attempt++; manual() }
         }
     } else {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val scrollableModifier = if (maxHeight != androidx.compose.ui.unit.Dp.Unspecified) Modifier.verticalScroll(rememberScrollState()) else Modifier
+            Column(Modifier.fillMaxSize().then(scrollableModifier).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)) {
         ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text(stringResource(R.string.scanner_manual_search)) }
         if (started) Text(stringResource(R.string.scanner_recognition_paused), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         transportError?.let { FormError(it) }
@@ -88,6 +93,9 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                         ShopPrimaryButton(stringResource(R.string.scanner_open_existing), enabled = !busy) { attempt++; open(target.product.id) }
                         ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; copy(shop.copyCatalog(target.product.id)) }, enabled = !busy) { Text(stringResource(R.string.scanner_copy_catalog)) }
                     }
+                    ScanPurpose.ProductDetail -> {
+                        //TODO
+                    }
                 }
             }
             is ScanTarget.Template -> if (purpose == ScanPurpose.Catalog) ShopSection(stringResource(R.string.scanner_scanned_template)) {
@@ -98,6 +106,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
         }
         ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {
             Text(if (started) "Resume scanning" else "Start camera")
+        }
         }
         }
     }

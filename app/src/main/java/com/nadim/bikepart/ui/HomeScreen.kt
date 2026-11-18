@@ -1,28 +1,12 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.KeyboardOptions
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.platform.LocalDensity
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
-import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
-import com.nadim.bikepart.ui.theme.ShopSpacing
+
 
 @Composable
 internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHealth?) -> Unit, onNewSale: () -> Unit,
@@ -31,7 +15,7 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
     val lowStock = activeProducts.count { it.stockHealth == StockHealth.LowStock }
     val outOfStock = activeProducts.count { it.stockHealth == StockHealth.OutOfStock }
     val recentSales = shop.sales.sortedByDescending { it.recordedAt }.take(3)
-    ShopPageHeader(stringResource(R.string.home_header), "Work offline. Your stock stays on this phone.")
+//    ShopPageHeader(stringResource(R.string.home_header), "Work offline. Your stock stays on this phone.")
     ShopSectionHeader(stringResource(R.string.home_quick_actions))
     ShopTileGrid { tile ->
         ShopActionTile(stringResource(R.string.home_new_sale), R.drawable.ic_cart, tile, enabled = !busy, primary = true, onClick = onNewSale)
