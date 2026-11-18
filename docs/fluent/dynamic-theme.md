@@ -139,10 +139,39 @@ Actual shrunk app after cold reopening: [M365/Neutral/Light](evidence/dynamic-th
 [M365/Brand/Dark](evidence/dynamic-theme/screenshots/release-m365-dark-brand.png),
 [native dark header](evidence/dynamic-theme/screenshots/release-m365-dark-header.png).
 
+## Physical Samsung spot check — 2026-11-17
+
+The exact workspace debug APK (`f400d4706f86dfc63c3f8b0c0819266b06a7a107755e77b6b2ce0c4176cb864c`)
+was already installed on the Samsung SM-S911B running Android 17 / API 37
+(1080×2340, 480dpi; 360×780dp). At font scale 1.0, I inspected More with its
+recorded M365 / Accent off / Dark settings, then temporarily selected Word,
+turned Accent on, and switched to Light. The More selection and Accent switch
+updated immediately; the Word light screenshot shows the matching blue Accent
+on the switch, selected navigation item and radio indicators, with readable
+text and light system-bar icons. Turning Accent off returned the app chrome to
+neutral. I restored M365 / Accent off / Dark, verified the selected indicators,
+and left the app installed. No shop or backup data was changed.
+
+At the same 360dp width, the empty Home setup prompt starts partly below the
+initial viewport; a slow scroll brings the full prompt and empty Recent sales
+state above the bottom navigation. The prompt remains reachable.
+
+- [Word / Dark / Accent on](evidence/dynamic-theme/physical-samsung/word-dark-accent-on.png)
+- [Word / Light / Accent on](evidence/dynamic-theme/physical-samsung/word-light-accent-on.png)
+- [Word / Dark / Accent off](evidence/dynamic-theme/physical-samsung/word-dark-accent-off.png)
+- [Restored M365 / Dark / Accent off](evidence/dynamic-theme/physical-samsung/restored-m365-dark.png)
+- [Empty Home after scrolling](evidence/dynamic-theme/physical-samsung/empty-home-scrolled.png)
+
+This is a visual spot check of the More settings on one physical device; it does
+not establish full-screen workflow, TalkBack, or other assistive-input coverage.
+Android CLI layout inspection could not install its instrumentation APK, so no
+accessibility-tree result is claimed.
+
 ## Limits and downstream integration
 
-Physical devices, TalkBack, Voice Access, Switch Access, Accessibility Scanner,
-360dp/larger/adaptive windows, predictive-back/foldable cases and a genuine
+Beyond the settings-only Samsung spot check above, physical-device coverage is
+incomplete. TalkBack, Voice Access, Switch Access, Accessibility Scanner, broader
+360dp/larger/adaptive layouts, predictive-back/foldable cases and a genuine
 production-signing upgrade were not exercised in this slice. API33 shrunk-runtime
 compatibility remains the separate original gate; these new settings were
 exercised on API37. Semantic state/focus/target checks and numeric contrast do
