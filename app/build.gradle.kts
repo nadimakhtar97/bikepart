@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.fluentui.android)
     implementation("com.microsoft.fluentui:fluentui_core:0.3.11")
     implementation("com.microsoft.fluentui:fluentui_controls:0.3.3")
     implementation("com.microsoft.fluentui:fluentui_tablayout:0.3.5")

@@ -38,3 +38,19 @@ The full required Microsoft copyright and MIT permission notice is preserved in
 `app/src/main/assets/third_party/fluentui-android-MIT.txt`. No demo logos are copied.
 The matching control behavior and version comparison are recorded in
 [demo source research](../docs/fluent/demo-source.md).
+
+## Fluent Scaffold
+
+The app vendors `fluentui_core/src/main/java/com/microsoft/fluentui/compose/Scaffold.kt`
+from the upstream `master` tree at commit
+`95205e33c8067d922bb45bd07490acc18c50755f`, preserving its Apache-2.0 source
+header. The file is included at
+`app/src/main/java/com/microsoft/fluentui/compose/Scaffold.kt`; the complete
+license text is retained in `third_party/scaffold-android-APACHE-2.0.txt` and
+packaged at `app/src/main/assets/third_party/scaffold-android-APACHE-2.0.txt`.
+
+The pinned published Fluent artifacts do not expose the Scaffold demonstrated
+by `FluentUI.Demo/.../V2ScaffoldActivity.kt`. To use that API without changing
+the published dependency set, each route calls the vendored scaffold directly.
+The app shell remains responsible for primary navigation only. See
+[ADR 0003](../docs/adr/0003-per-route-fluent-scaffolds.md).

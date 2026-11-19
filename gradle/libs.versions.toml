@@ -17,6 +17,7 @@ lifecycleViewmodelNav3 = "2.11.0"
 room = "2.8.5"
 ksp = "2.3.10"
 icu4j = "76.1" # Normalizer v1 pins Unicode 16 data; upgrading requires a normalizer migration.
+fluentui = "0.3.16"
 
 [libraries]
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googleAuth" }
@@ -27,6 +28,7 @@ mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 androidx-espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoCore" }
 icu4j = { group = "com.ibm.icu", name = "icu4j", version.ref = "icu4j" }
+fluentui-android = { group = "com.microsoft.fluentui", name = "FluentUIAndroid", version.ref = "fluentui" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
