@@ -57,4 +57,7 @@ sealed class Screen : NavKey, java.io.Serializable {
     data object FindingLookups : Screen()
     @Serializable
     data object Categories : Screen()
+
+    @Serializable
+    data class CategoryDetail(val categoryId: String) : Screen()
 }

@@ -1,27 +1,44 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
+import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.AttributeType
+import com.nadim.bikepart.shop.AttributeValue
+import com.nadim.bikepart.shop.LookupNames
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.appliesTo
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class AttributeSetup(val categoryId: String, val name: String, val type: AttributeType, val required: Boolean, val unit: String)
 
 internal class ProductLookups(
     val category: (String, (String) -> Unit) -> Unit,
-    val attribute: (AttributeSetup, () -> Unit) -> Unit,
     val option: (String, String, (String) -> Unit) -> Unit,
 )
 
@@ -40,7 +57,9 @@ internal val attributeDraftSaver = listSaver<Map<String, AttributeValue>, String
 
 @Composable
 internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<String, String>>, selected: Set<String>, busy: Boolean,
-    onSelect: (String) -> Unit, onCreate: (String) -> Unit) {
+                            onSelect: (String) -> Unit,
+                            onCreate: ((String) -> Unit)?
+) {
     var query by rememberSaveable { mutableStateOf("") }
     OutlinedTextField(query, { query = it }, enabled = !busy, label = { Text(label) }, modifier = Modifier.fillMaxWidth())
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
@@ -49,7 +68,8 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
                 label = { Text(name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
         }
     }
-    if (query.isNotBlank()) ShopSecondaryButton(onClick = { onCreate(query); query = "" }, enabled = !busy,
+    if (query.isNotBlank() && onCreate != null) ShopSecondaryButton(
+        onClick = { onCreate(query); query = "" }, enabled = !busy,
         modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(addLabel) }
 }
 
@@ -58,7 +78,6 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
     error: ShopError?, lookups: ProductLookups, productId: String? = null, onValue: (String, AttributeValue?) -> Unit) {
     ShopSection(stringResource(R.string.category_fields)) {
         var search by rememberSaveable(categoryId) { mutableStateOf("") }
-        var creating by rememberSaveable(categoryId) { mutableStateOf(false) }
         ShopSearchField(search, { search = it }, "Search fields", enabled = !busy)
         shop.attributes.filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) && (LookupNames.key(it.name).contains(LookupNames.key(search)) || error?.definitionId == it.id) }.forEach { definition ->
             key(definition.id) {
@@ -84,18 +103,31 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                                 else if (id in selected) selected - id else selected + id
                             onValue(definition.id, AttributeValue.Choices(next))
                         }
-                        LookupSelector("Search or add " + definition.name + " option", "Add option", shop.options.filter { it.definitionId == definition.id && (!it.retired || it.id in selected) }.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, selected, busy,
-                            onSelect = { select(it) }, onCreate = { name -> lookups.option(definition.id, name) { id ->
-                                onValue(definition.id, AttributeValue.Choices(if (definition.type == AttributeType.SingleChoice) setOf(id) else selected + id))
-                            } })
+                        val canCreateOption = definition.productId != null
+                        LookupSelector(
+                            if (canCreateOption) "Search or add " + definition.name + " option" else "Search " + definition.name + " options",
+                            "Add option",
+                            shop.options.filter { it.definitionId == definition.id && (!it.retired || it.id in selected) }
+                                .map { it.id to (it.name + if (it.retired) " (retired)" else "") },
+                            selected,
+                            busy,
+                            onSelect = { select(it) },
+                            onCreate = if (canCreateOption) { name ->
+                                lookups.option(definition.id, name) { id ->
+                                    onValue(
+                                        definition.id, AttributeValue.Choices(
+                                            if (definition.type == AttributeType.SingleChoice) setOf(
+                                                id
+                                            ) else selected + id
+                                        )
+                                    )
+                                }
+                            } else null,
+                        )
                     }
                 }
                 if (fieldError != null) FormError(fieldError.message)
             }
-        }
-        ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_add_category_field)) }
-        if (creating) FieldCreator(categoryId, busy, error) { setup ->
-            lookups.attribute(setup) { creating = false; search = "" }
         }
     }
 }
@@ -115,7 +147,14 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
     }
     if (error?.field == ProductField.DefinitionType) FormError(error.message)
     OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text(stringResource(R.string.field_unit_label)) }, modifier = Modifier.fillMaxWidth())
-    Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(required, enabled = !busy, role = Role.Checkbox, onValueChange = { required = it }), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier
+        .fillMaxWidth()
+        .heightIn(min = ShopSpacing.touchTarget)
+        .toggleable(
+            required,
+            enabled = !busy,
+            role = Role.Checkbox,
+            onValueChange = { required = it }), verticalAlignment = Alignment.CenterVertically) {
         Checkbox(required, onCheckedChange = null)
         Text(stringResource(R.string.field_required), modifier = Modifier.padding(ShopSpacing.small))
     }

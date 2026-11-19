@@ -1,10 +1,19 @@
 # Typed category fields
 
 Ticket 02 adds category-owned text, exact decimal, single-choice and multiple-choice
-fields to stocked products. Staff can create categories, field definitions and
-choice options inside the product form. These writes commit independently, so
-cancelling the product draft preserves the lookup setup. Required settings and
-unit labels belong to definitions; edits validate the selected category's fields.
+fields to stocked products. At initial rollout, staff created categories, field
+definitions and choice options inside the product form. Those lookup writes
+committed independently, so cancelling the product draft preserved the setup.
+Required settings and unit labels belong to definitions; edits validate the
+selected category's fields.
+
+## Current workflow
+
+Shared category fields and their choice options are created and managed under
+More → Catalog → Categories → the relevant category. Product forms select
+existing shared fields and options, with a shortcut to that category's settings.
+Product-only custom fields remain with the product, and unsaved draft custom
+fields remain in create and template forms.
 
 New shops receive eight optional fields: brake-pad Position (Front/Rear), nut
 Thread diameter and Thread pitch (mm), bolt Thread diameter, Thread pitch and
@@ -24,7 +33,9 @@ schema. The checks cover all four types, exact close/reopen values, numeric rath
 than lexical ordering, missing measurements, required input, cross-owner option
 rejection, normalized scoped reuse, inline lookup survival after cancellation,
 activity recreation of an unsaved form, integer stock/money constraints, storage
-interruption and revision-overflow rollback. Migration checks retain UUID/SKU,
+interruption and revision-overflow rollback. The inline lookup checks describe
+the initial rollout; the current More-based workflow is described above.
+Migration checks retain UUID/SKU,
 dataset, price, balance, opening history, appearance and revision and run SQLite
 foreign-key and integrity checks.
 

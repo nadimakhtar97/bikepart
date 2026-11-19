@@ -1,27 +1,43 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.semantics.*
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.CatalogDraft
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.appliesTo
+import com.nadim.bikepart.shop.decodeCatalog
+import com.nadim.bikepart.shop.encode
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
@@ -31,7 +47,20 @@ internal data class ProductFormInput(
 )
 
 @Composable
-internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, error: ShopError?, onChange: () -> Unit, lookups: ProductLookups, findingLookups: FindingLookups, loadPhoto: PhotoLoader, initialCatalog: CatalogDraft? = null, templateMode: Boolean = false, save: (ProductFormInput) -> Unit) {
+internal fun ProductForm(
+    shop: ShopSnapshot,
+    product: Product?,
+    busy: Boolean,
+    error: ShopError?,
+    onChange: () -> Unit,
+    lookups: ProductLookups,
+    findingLookups: FindingLookups,
+    loadPhoto: PhotoLoader,
+    onManageCategory: (String) -> Unit,
+    initialCatalog: CatalogDraft? = null,
+    templateMode: Boolean = false,
+    save: (ProductFormInput) -> Unit
+) {
     var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var photoRemoved by rememberSaveable { mutableStateOf(false) }
     var models by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.modelIds ?: initialCatalog?.modelIds ?: emptySet()) }
@@ -48,25 +77,20 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: initialCatalog?.attributes ?: emptyMap()) }
     var customPayload by rememberSaveable { mutableStateOf(CatalogDraft(customFields = initialCatalog?.customFields.orEmpty()).encode()) }
     val customFields = decodeCatalog(customPayload).customFields
-    fun updateCustom(fields: List<DraftField>) { customPayload = CatalogDraft(customFields = fields).encode(); onChange() }
-    val formShop = shop.copy(attributes = shop.attributes + customFields.map { CategoryAttribute(it.id, category, it.name, it.type, it.required, it.unit, "catalog-draft") }, options = shop.options + customFields.flatMap { it.options })
-    val formLookups = ProductLookups(lookups.category, lookups.attribute) { definition, name, selected ->
-        val field = customFields.find { it.id == definition }
-        if (field == null) lookups.option(definition, name, selected)
-        else if (LookupNames.key(name).isNotEmpty()) {
-            val option = field.options.find { LookupNames.key(it.name) == LookupNames.key(name) }
-                ?: AttributeOption(java.util.UUID.randomUUID().toString(), definition, LookupNames.display(name))
-            updateCustom(customFields.map { if (it.id == definition) it.copy(options = (it.options + option).distinctBy { item -> item.id }) else it })
-            selected(option.id)
-        }
-    }
-
-
-    if (templateMode || initialCatalog != null) Text(stringResource(R.string.form_catalog_only_note), style = MaterialTheme.typography.bodyMedium)
-    PhotoField(product?.photo ?: initialCatalog?.photo, photoUri, photoRemoved, busy, loadPhoto, error?.takeIf { it.field == ProductField.Photo }?.message,
-        select = { photoUri = it; photoRemoved = false; onChange() },
-        remove = { photoUri = null; photoRemoved = true; onChange() })
     ShopSection(stringResource(R.string.form_basic_details)) {
+        if (templateMode || initialCatalog != null) Text(
+            stringResource(R.string.form_catalog_only_note),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        PhotoField(
+            product?.photo ?: initialCatalog?.photo,
+            photoUri,
+            photoRemoved,
+            busy,
+            loadPhoto,
+            error?.takeIf { it.field == ProductField.Photo }?.message,
+            select = { photoUri = it; photoRemoved = false; onChange() },
+            remove = { photoUri = null; photoRemoved = true; onChange() })
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text(stringResource(R.string.form_category_required), style = MaterialTheme.typography.labelLarge)
         LookupSelector("Search or add category", "Add category", shop.categories.map { it.id to it.name }, setOf(category), busy,
@@ -75,19 +99,47 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
-    if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {
-        ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
-            error?.takeIf { it.field == ProductField.SellingPrice }, number = true)
-        Text(stringResource(R.string.form_price_update_note), style = MaterialTheme.typography.bodyMedium)
-    }
     if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text(stringResource(R.string.form_prev_category_note), style = MaterialTheme.typography.bodyMedium)
-    if (product != null && category != product.categoryId) CategoryMapping(shop, product, category, mappings, busy) { mappings = it }
-    if (category.isNotEmpty()) CategoryFields(formShop, category, values, busy, error, formLookups, if (product != null) product.id else "catalog-draft",
-        onValue = { id, value -> values = values.toMutableMap().apply { if (value == null) remove(id) else put(id, value) }; onChange() })
-    if (product == null) DraftCustomFields(customFields, category, busy, error, ::updateCustom)
+    if (category.isNotEmpty()) {
+        val categoryName = shop.categories.firstOrNull { it.id == category }?.name ?: "category"
+        ShopSecondaryButton(
+            onClick = { onManageCategory(category) },
+            enabled = !busy,
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+        ) { Text("Manage $categoryName fields in More") }
+        CategoryFields(
+            shop,
+            category,
+            values,
+            busy,
+            error,
+            lookups,
+            if (product != null) product.id else "catalog-draft",
+            onValue = { id, value ->
+                values = values.toMutableMap()
+                    .apply { if (value == null) remove(id) else put(id, value) }; onChange()
+            })
+    }
+    if (product != null && category != product.categoryId) CategoryMapping(
+        shop,
+        product,
+        category,
+        mappings,
+        busy
+    ) { mappings = it }
     FindingFields(shop, product, models, locations, busy, findingError ?: error, findingLookups, assigned,
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
+    if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {
+        ProductTextField(
+            price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
+            error?.takeIf { it.field == ProductField.SellingPrice }, number = true
+        )
+        Text(
+            stringResource(R.string.form_price_update_note),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
     if (product == null && !templateMode) ShopSection(stringResource(R.string.form_opening_stock_price)) {
         val stockField: @Composable (Modifier) -> Unit = { fieldModifier ->
             ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
@@ -113,7 +165,14 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
     if (error != null && error.field == null) FormError(error.message)
     if (error?.field == ProductField.DefinitionName && error.definitionId == null) FormError(error.message)
     if (error?.similar == true) Row(
-        Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(distinct, enabled = !busy, role = Role.Checkbox, onValueChange = { distinct = it }),
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = ShopSpacing.touchTarget)
+            .toggleable(
+                distinct,
+                enabled = !busy,
+                role = Role.Checkbox,
+                onValueChange = { distinct = it }),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = distinct, onCheckedChange = null)
@@ -124,7 +183,15 @@ internal fun ProductForm(shop: ShopSnapshot, product: Product?, busy: Boolean, e
             findingError = ShopError("Choose at least one motorcycle model", ProductField.Fitment)
             return@ShopPrimaryButton
         }
-        val applicable = values.filterKeys { id -> formShop.attributes.any { it.id == id && it.appliesTo(category, product?.id ?: "catalog-draft") } }
+        val applicable = values.filterKeys { id ->
+            customFields.any { it.id == id } ||
+                    shop.attributes.any {
+                        it.id == id && it.appliesTo(
+                            category,
+                            product?.id ?: "catalog-draft"
+                        )
+                    }
+        }
         save(ProductFormInput(CatalogDraft(title, category, description, applicable, customFields, models, initialCatalog?.photo),
             quantity, price, distinct, mappings, locations, photoUri, photoRemoved))
     }

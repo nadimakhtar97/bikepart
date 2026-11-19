@@ -5,18 +5,52 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import com.nadim.bikepart.ui.theme.shopIconVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -24,29 +58,45 @@ import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import com.nadim.bikepart.updates.*
-import com.nadim.bikepart.R
-import com.nadim.bikepart.ShopViewModel
-import com.nadim.bikepart.shop.*
-import com.nadim.bikepart.ui.theme.BikepartTheme
-import com.nadim.bikepart.ui.theme.ShopSpacing
-import com.microsoft.fluentui.theme.token.FluentStyle
-import com.microsoft.fluentui.tokenized.navigation.TabBar
-import com.microsoft.fluentui.tokenized.navigation.TabData
-import com.microsoft.fluentui.tokenized.navigation.SideRail
-import com.microsoft.fluentui.tokenized.AppBar
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.microsoft.fluentui.theme.token.FluentIcon
+import com.microsoft.fluentui.theme.token.FluentStyle
 import com.microsoft.fluentui.theme.token.controlTokens.AppBarSize
+import com.microsoft.fluentui.tokenized.AppBar
 import com.microsoft.fluentui.tokenized.SearchBar
+import com.microsoft.fluentui.tokenized.navigation.SideRail
+import com.microsoft.fluentui.tokenized.navigation.TabBar
+import com.microsoft.fluentui.tokenized.navigation.TabData
+import com.nadim.bikepart.R
+import com.nadim.bikepart.ShopViewModel
+import com.nadim.bikepart.shop.Appearance
+import com.nadim.bikepart.shop.CatalogDraft
+import com.nadim.bikepart.shop.CorrectionKind
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.StockHealth
+import com.nadim.bikepart.shop.copyCatalog
+import com.nadim.bikepart.shop.decodeCatalog
+import com.nadim.bikepart.shop.encode
+import com.nadim.bikepart.shop.prefillTemplate
+import com.nadim.bikepart.ui.theme.BikepartTheme
+import com.nadim.bikepart.ui.theme.ShopSpacing
+import com.nadim.bikepart.ui.theme.shopIconVector
+import com.nadim.bikepart.updates.AppInstaller
+import com.nadim.bikepart.updates.AppUpdater
+import com.nadim.bikepart.updates.DownloadState
+import com.nadim.bikepart.updates.InstallResult
+import com.nadim.bikepart.updates.UpdateReminders
+import com.nadim.bikepart.updates.UpdateState
+import com.nadim.bikepart.updates.UpdateViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 
 private data class MainDestination(val screen: Screen, val label: String, val outlined: Int, val filled: Int)
 private val destinations = listOf(
@@ -158,6 +208,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var catalogPayload by rememberSaveable { mutableStateOf<String?>(null) }
     var formSession by rememberSaveable { mutableIntStateOf(0) }
     var templateId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedCategoryId by rememberSaveable { mutableStateOf("") }
     val catalog = catalogPayload?.let { decodeCatalog(it) }
     val template = state?.templates?.find { it.id == templateId }
     fun beginCatalog(draft: CatalogDraft, target: Screen, id: String? = null) { formSession++; catalogPayload = draft.encode(); templateId = id; navigateTo(target) }
@@ -186,6 +237,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
             Screen.Edit, Screen.Fields, Screen.Correction, Screen.Labels -> Screen.Detail
             Screen.Arrival -> Screen.ReceiveProducts
             Screen.TemplateDetail, Screen.TemplateForm -> Screen.Templates
+            is Screen.CategoryDetail -> Screen.Categories
             else -> destination
         }
         if (backStack.size > 1) {
@@ -245,7 +297,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         Screen.Detail -> "Product details"; Screen.Edit -> "Edit details"
                         Screen.ArchivedProducts -> "Archived products"; Screen.Checkout -> "Cash checkout"; Screen.Receipt -> "Receipt"; Screen.Sales -> "Sales history"
                         Screen.Cart -> selectedCart?.name ?: "Unfinished bill"; Screen.CartProducts -> "Add to cart"
-                        Screen.Backups -> "Shop backups"; Screen.Correction -> CorrectionKind.valueOf(correctionKind).label; Screen.FindingLookups -> "Fitment and locations"; Screen.Categories -> "Categories"; Screen.Fields -> "Catalog fields"; else -> destinations.find { it.screen == destination }?.label ?: "Home"
+                        Screen.Backups -> "Shop backups"; Screen.Correction -> CorrectionKind.valueOf(
+                            correctionKind
+                        ).label; Screen.FindingLookups -> "Fitment and locations"; Screen.Categories -> "Categories"; is Screen.CategoryDetail -> state?.categories?.firstOrNull { it.id == selectedCategoryId }?.name
+                            ?: "Category fields"; Screen.Fields -> "Product fields"; else -> destinations.find { it.screen == destination }?.label
+                            ?: "Home"
                     }
                     val canGoBack = route !in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)
                     val searchMode = route in listOf(Screen.Home)
@@ -521,34 +577,112 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 stockState.SaveableStateProvider("form:$formSession:$route:$selectedId:$catalogPayload") { key(route, selectedId, catalogPayload) {
 //                                                    if (route == Screen.Create) ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, Screen.Create) }, enabled = !busy) { Text(stringResource(R.string.manual_scan_catalog)) }
 //                                                    if (route == Screen.Create && catalog == null) ShopSecondaryButton(onClick = { navigateTo(Screen.Templates) }, enabled = !busy) { Text(stringResource(R.string.btn_choose_template)) }
-                                                    ProductForm(shop, if (route == Screen.Edit) product else null, busy, error,
+                                                    ProductForm(
+                                                        shop,
+                                                        if (route == Screen.Edit) product else null,
+                                                        busy,
+                                                        error,
                                                         onChange = { model.error.value = null },
                                                         lookups = ProductLookups(
-                                                            category = { name, selected -> model.write({ val id = createCategory(name); selected(id) }) },
-                                                            attribute = { input, done -> model.write({ createAttribute(categoryId = input.categoryId, name = input.name, type = input.type, required = input.required, unit = input.unit) }, done) },
-                                                            option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
+                                                            category = { name, selected ->
+                                                                model.write({
+                                                                    val id =
+                                                                        createCategory(name); selected(
+                                                                    id
+                                                                )
+                                                                })
+                                                            },
+                                                            option = { definition, name, selected ->
+                                                                model.write({
+                                                                    val id = createOption(
+                                                                        definition,
+                                                                        name
+                                                                    ); selected(id)
+                                                                })
+                                                            },
                                                         ),
                                                         findingLookups = FindingLookups(
-                                                            make = { name, selected -> model.write({ selected(createMake(name)) }) },
-                                                            model = { make, name, selected -> model.write({ selected(createModel(make, name)) }) },
-                                                            location = { name, selected -> model.write({ selected(createLocation(name)) }) },
+                                                            make = { name, selected ->
+                                                                model.write({
+                                                                    selected(
+                                                                        createMake(name)
+                                                                    )
+                                                                })
+                                                            },
+                                                            model = { make, name, selected ->
+                                                                model.write({
+                                                                    selected(
+                                                                        createModel(
+                                                                            make,
+                                                                            name
+                                                                        )
+                                                                    )
+                                                                })
+                                                            },
+                                                            location = { name, selected ->
+                                                                model.write({
+                                                                    selected(
+                                                                        createLocation(name)
+                                                                    )
+                                                                })
+                                                            },
                                                         ),
                                                         loadPhoto = model::readPhoto,
+                                                        onManageCategory = { id ->
+                                                            selectedCategoryId = id; navigateTo(
+                                                            Screen.CategoryDetail(id)
+                                                        )
+                                                        },
                                                         initialCatalog = if (route == Screen.Edit) null else catalog,
                                                         templateMode = route == Screen.TemplateForm,
                                                         save = { input ->
-                                                            val editing = if (route == Screen.Edit) product else null
-                                                            val photo = input.photoUri?.let { uri -> com.nadim.bikepart.shop.PhotoChange.Import {
-                                                                resolver.openInputStream(uri.toUri()) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
-                                                            } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
-                                                            model.write({
-                                                                if (route == Screen.TemplateForm) templateId = saveTemplate(input.catalog, templateId, photo)
-                                                                else if (editing != null) {
-                                                                    editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
-                                                                    setSellingPrice(editing.id, input.priceRupees)
+                                                            val editing =
+                                                                if (route == Screen.Edit) product else null
+                                                            val photo = input.photoUri?.let { uri ->
+                                                                com.nadim.bikepart.shop.PhotoChange.Import {
+                                                                    resolver.openInputStream(uri.toUri())
+                                                                        ?: throw com.nadim.bikepart.shop.ShopValidation(
+                                                                            com.nadim.bikepart.shop.ProductField.Photo,
+                                                                            "Photo unavailable. Choose it again or remove it."
+                                                                        )
                                                                 }
-                                                                else selectedId = createFromCatalog(input.catalog, input.openingPieces, input.priceRupees, input.allowSimilar, input.locationIds, photo)
-                                                            }, { navigateTo(if (route == Screen.TemplateForm) Screen.TemplateDetail else Screen.Detail) })
+                                                            }
+                                                                ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
+                                                            model.write(
+                                                                {
+                                                                    if (route == Screen.TemplateForm) templateId =
+                                                                        saveTemplate(
+                                                                            input.catalog,
+                                                                            templateId,
+                                                                            photo
+                                                                        )
+                                                                    else if (editing != null) {
+                                                                        editProduct(
+                                                                            editing.id,
+                                                                            input.catalog.title,
+                                                                            input.catalog.categoryId,
+                                                                            input.catalog.description,
+                                                                            input.catalog.attributes,
+                                                                            input.categoryMappings,
+                                                                            input.catalog.modelIds,
+                                                                            input.locationIds,
+                                                                            photo
+                                                                        )
+                                                                        setSellingPrice(
+                                                                            editing.id,
+                                                                            input.priceRupees
+                                                                        )
+                                                                    } else selectedId =
+                                                                        createFromCatalog(
+                                                                            input.catalog,
+                                                                            input.openingPieces,
+                                                                            input.priceRupees,
+                                                                            input.allowSimilar,
+                                                                            input.locationIds,
+                                                                            photo
+                                                                        )
+                                                                },
+                                                                { navigateTo(if (route == Screen.TemplateForm) Screen.TemplateDetail else Screen.Detail) })
                                                         },
                                                     )
                                                 } }
@@ -626,7 +760,85 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         }
                                         is Screen.Categories -> NavEntry(key) {
                                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
-                                                CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
+                                                CategorySettings(
+                                                    shop = shop,
+                                                    busy = busy,
+                                                    onOpen = { id ->
+                                                        selectedCategoryId =
+                                                            id; navigateTo(Screen.CategoryDetail(id))
+                                                    },
+                                                    onRename = { id, name ->
+                                                        model.write({
+                                                            renameCategory(
+                                                                id,
+                                                                name
+                                                            )
+                                                        })
+                                                    },
+                                                )
+                                            }
+                                        }
+
+                                        is Screen.CategoryDetail -> NavEntry(key) {
+                                            Column(
+                                                Modifier.fillMaxWidth(),
+                                                verticalArrangement = Arrangement.spacedBy(
+                                                    ShopSpacing.content
+                                                )
+                                            ) {
+                                                CategoryFieldManagement(
+                                                    shop = shop,
+                                                    categoryId = selectedCategoryId,
+                                                    busy = busy,
+                                                    error = error,
+                                                    onChange = { model.error.value = null },
+                                                    actions = CategoryFieldActions(
+                                                        create = { input, done ->
+                                                            model.write({
+                                                                createAttribute(
+                                                                    categoryId = input.categoryId,
+                                                                    name = input.name,
+                                                                    type = input.type,
+                                                                    required = input.required,
+                                                                    unit = input.unit
+                                                                )
+                                                            }, done)
+                                                        },
+                                                        createOption = { fieldId, name, done ->
+                                                            model.write(
+                                                                { createOption(fieldId, name) },
+                                                                done
+                                                            )
+                                                        },
+                                                        retire = { model.write({ retireAttribute(it) }) },
+                                                        retireOption = {
+                                                            model.write({
+                                                                retireOption(
+                                                                    it
+                                                                )
+                                                            })
+                                                        },
+                                                        required = { id, required ->
+                                                            model.write({
+                                                                setAttributeRequired(
+                                                                    id,
+                                                                    required
+                                                                )
+                                                            })
+                                                        },
+                                                        replace = { id, input, done ->
+                                                            model.write({
+                                                                replaceAttribute(
+                                                                    id,
+                                                                    input.name,
+                                                                    input.type,
+                                                                    input.required,
+                                                                    input.unit
+                                                                )
+                                                            }, done)
+                                                        },
+                                                    ),
+                                                )
                                             }
                                         }
                                     }

@@ -1,16 +1,27 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.R
+import com.nadim.bikepart.shop.LookupNames
+import com.nadim.bikepart.shop.ProductTemplate
+import com.nadim.bikepart.shop.ShopSnapshot
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
@@ -68,25 +79,5 @@ internal fun TemplateDetails(shop: ShopSnapshot, template: ProductTemplate, busy
         ShopPrimaryButton(stringResource(R.string.template_use_primary), enabled = !busy, onClick = onUse)
         ShopSecondaryButton(onEdit, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.template_edit)) }
         ShopSecondaryButton(onRetire, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.template_retire)) }
-    }
-}
-
-@Composable
-internal fun DraftCustomFields(fields: List<DraftField>, category: String, busy: Boolean, error: ShopError?, update: (List<DraftField>) -> Unit) {
-    var creating by rememberSaveable { mutableStateOf(false) }
-    ShopSection(stringResource(R.string.template_custom_fields)) {
-        Text(stringResource(R.string.template_custom_fields_note), style = MaterialTheme.typography.bodyMedium)
-        fields.forEach { field -> key(field.id) {
-            val fieldError = error?.takeIf { it.field == ProductField.DefinitionName && it.definitionId == field.id }
-            OutlinedTextField(field.name, { name -> update(fields.map { if (it.id == field.id) it.copy(name = name) else it }) }, enabled = !busy,
-                label = { Text(stringResource(R.string.template_custom_field_name)) }, isError = fieldError != null,
-                supportingText = fieldError?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
-            ShopSecondaryButton({ update(fields.filter { it.id != field.id }) }, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.remove_custom_field, field.name)) }
-        } }
-        ShopSecondaryButton({ creating = !creating }, enabled = !busy && category.isNotEmpty(), modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.template_add_custom_to_draft)) }
-        if (creating) FieldCreator(category, busy, error) { input ->
-            update(fields + DraftField(java.util.UUID.randomUUID().toString(), input.name, input.type, input.required, input.unit))
-            creating = false
-        }
     }
 }

@@ -1,27 +1,35 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
-import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.CorrectionKind
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.appliesTo
+import com.nadim.bikepart.shop.indianNumber
+import com.nadim.bikepart.shop.missingRequired
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
@@ -44,11 +52,15 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         else StockHealthIndicator(product)
     }
     Surface(shape = MaterialTheme.shapes.medium, color = colors.primary.copy(alpha = .08f).compositeOver(colors.surface)) {
-        if (stackHeader) Column(Modifier.fillMaxWidth().padding(ShopSpacing.content),
+        if (stackHeader) Column(Modifier
+            .fillMaxWidth()
+            .padding(ShopSpacing.content),
             verticalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
             ProductPhoto(product.photo, loadPhoto, Modifier.size(96.dp))
             Column(verticalArrangement = Arrangement.spacedBy(2.dp), content = summary)
-        } else Row(Modifier.fillMaxWidth().padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+        } else Row(Modifier
+            .fillMaxWidth()
+            .padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
             ProductPhoto(product.photo, loadPhoto, Modifier.size(104.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp), content = summary)
         }
@@ -101,13 +113,17 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
                 icon = R.drawable.ic_add, enabled = !busy, onClick = onCopy)
             ShopListRow(stringResource(R.string.product_create_template), supporting = "Reuse these details later",
                 icon = R.drawable.ic_template, enabled = !busy, onClick = onTemplate)
-            ShopListRow(stringResource(R.string.product_manage_fields), supporting = "Custom and category fields",
+            ShopListRow(
+                stringResource(R.string.product_manage_fields),
+                supporting = stringResource(R.string.product_manage_fields_supporting),
                 icon = R.drawable.ic_settings, enabled = !busy, onClick = onManage)
         }
         ShopSection(stringResource(R.string.product_archive_section)) {
             Text(stringResource(R.string.product_archive_desc), style = MaterialTheme.typography.bodyMedium)
             if (archiveError != null) FormError(archiveError)
-            ShopSecondaryButton(onClick = onArchive, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.product_archive_btn)) }
+            ShopSecondaryButton(onClick = onArchive, enabled = !busy, modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.product_archive_btn)) }
         }
     }
 }

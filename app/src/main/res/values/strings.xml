@@ -151,8 +151,8 @@
     <string name="product_copy_catalog_supporting">Start a new product with these details</string>
     <string name="product_create_template">Create template from product</string>
     <string name="product_create_template_supporting">Reuse these details later</string>
-    <string name="product_manage_fields">Manage fields</string>
-    <string name="product_manage_fields_supporting">Custom and category fields</string>
+    <string name="product_manage_fields">Manage product fields</string>
+    <string name="product_manage_fields_supporting">Custom fields for this product</string>
     <string name="product_archive_section">Archive unused product</string>
     <string name="product_archive_desc">Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.</string>
     <string name="product_archive_btn">Archive product</string>
@@ -182,7 +182,7 @@
     <string name="more_shop_backups">Shop backups</string>
     <string name="more_shop_backups_supporting">Drive, local copies and phone recovery</string>
     <string name="more_catalog">Catalog</string>
-    <string name="more_edit_categories">Edit categories</string>
+    <string name="more_edit_categories">Manage categories and fields</string>
     <string name="more_manage_fitment">Manage fitment and locations</string>
 
     <!-- Category settings -->
@@ -191,7 +191,7 @@
 
     <!-- Product form -->
     <string name="form_catalog_only_note">Catalog details only. Enter stock, selling price and locations separately for each new product.</string>
-    <string name="form_basic_details">Basic details</string>
+    <string name="form_basic_details">Product details</string>
     <string name="form_title_required">Title (required)</string>
     <string name="form_category_required">Category (required)</string>
     <string name="form_search_add_category">Search or add category</string>
