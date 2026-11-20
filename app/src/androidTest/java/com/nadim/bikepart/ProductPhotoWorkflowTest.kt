@@ -102,6 +102,7 @@ class ProductPhotoWorkflowTest {
             compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
             compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("80")
             click("Choose photo")
+            click("Choose from gallery")
             awaitDescription("Product photo")
             scenario.recreate()
             click("Save product")
@@ -117,6 +118,7 @@ class ProductPhotoWorkflowTest {
             click("Edit details")
             Intents.intending(hasAction(MediaStore.ACTION_PICK_IMAGES)).respondWith(ActivityResult(Activity.RESULT_OK, Intent().setData(Uri.fromFile(replacement))))
             click("Replace photo")
+            click("Choose from gallery")
             awaitDescription("Product photo")
             click("Save product")
             await("Edit details")
@@ -136,6 +138,35 @@ class ProductPhotoWorkflowTest {
             Intents.release()
             source.delete()
             replacement.delete()
+        }
+    }
+
+    @Test fun staffCanTakePhotoOnTheSpotForProduct() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val title = "Camera captured workshop part ${System.nanoTime()}"
+        Intents.init()
+        var scenario: ActivityScenario<MainActivity>? = null
+        try {
+            Intents.intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE)).respondWith(ActivityResult(Activity.RESULT_OK, Intent()))
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+            await("Add product")
+            click("Add product")
+            compose.onNodeWithText("Title (required)").performTextInput(title)
+            compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
+            compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("120")
+            click("Choose photo")
+            click("Take photo")
+            awaitDescription("Product photo")
+            scenario.recreate()
+            click("Save product")
+            await("Edit details")
+            runBlocking { Shop.open(context).use { shop ->
+                val product = shop.snapshot().products.single { it.title == title }
+                assertNotNull(product.photo)
+            } }
+        } finally {
+            scenario?.close()
+            Intents.release()
         }
     }
 

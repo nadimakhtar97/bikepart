@@ -362,10 +362,12 @@
 
     <!-- Product photos -->
     <string name="photo_section">Product photo (optional)</string>
-    <string name="photo_description">Choose a photo from your phone. Saved photos stay with the product. Maximum 20 MB.</string>
+    <string name="photo_description">Choose a photo from your phone or take a new one on the spot. Saved photos stay with the product. Maximum 20 MB.</string>
     <string name="photo_replace">Replace photo</string>
     <string name="photo_choose">Choose photo</string>
     <string name="photo_remove">Remove photo</string>
+    <string name="photo_take">Take photo</string>
+    <string name="photo_choose_gallery">Choose from gallery</string>
 
     <!-- Label preview / print -->
     <string name="label_identify_note">Labels identify this product, including a shared loose-item bin. They do not identify individual pieces or locations.</string>
