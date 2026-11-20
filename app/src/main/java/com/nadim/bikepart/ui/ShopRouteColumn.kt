@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -60,7 +62,7 @@ internal fun ShopRouteAppBar(
     showBack: Boolean,
     enabled: Boolean = true,
     searchMode: Boolean = false,
-    searchBar: @Composable RowScope.() -> Unit = {},
+    searchBar: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val colors = shopAppBarColors()
     val back = LocalShopRouteBack.current
@@ -78,6 +80,9 @@ internal fun ShopRouteAppBar(
             searchMode = searchMode,
             searchBar = searchBar,
             centerAlignAppBar = true,
+            rightAccessoryView = if (showBack) {
+                { Spacer(Modifier.width(ShopSpacing.touchTarget + ShopSpacing.small)) }
+            } else null,
             logo = if (showBack) {
                 { ShopBackButton(onClick = back, enabled = enabled) }
             } else null,

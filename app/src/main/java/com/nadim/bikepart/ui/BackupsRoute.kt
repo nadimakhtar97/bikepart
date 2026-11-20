@@ -1,24 +1,9 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.LocalCapture
 import com.nadim.bikepart.shop.ShopSnapshot
-import com.microsoft.fluentui.compose.Scaffold
-import com.microsoft.fluentui.theme.FluentTheme
-import com.microsoft.fluentui.theme.token.FluentIcon
-import com.microsoft.fluentui.theme.token.controlTokens.*
-import com.microsoft.fluentui.tokenized.AppBar
-import com.microsoft.fluentui.tokenized.controls.Button
-import com.microsoft.fluentui.tokenized.controls.FloatingActionButton
-import com.microsoft.fluentui.tokenized.drawer.Drawer
-import com.microsoft.fluentui.tokenized.drawer.rememberDrawerState
-import com.microsoft.fluentui.tokenized.listitem.ListItem
-import com.microsoft.fluentui.tokenized.navigation.TabBar
-import com.microsoft.fluentui.tokenized.navigation.TabData
-import com.microsoft.fluentui.tokenized.notification.Badge
-import com.microsoft.fluentui.tokenized.notification.NotificationResult
-import com.microsoft.fluentui.tokenized.notification.Snackbar
-import com.microsoft.fluentui.tokenized.notification.SnackbarState
 
 
 @Composable
