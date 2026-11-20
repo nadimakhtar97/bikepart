@@ -1,36 +1,36 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.R
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.ShopError
+import com.nadim.bikepart.shop.Cart
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.indianNumber
 import com.nadim.bikepart.ui.theme.ShopSpacing
-import java.text.DateFormat
-import java.util.Date
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.pluralStringResource
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 
 
 @Composable
@@ -42,13 +42,21 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
     ShopPageHeader(cart.name, "Review the quoted lines, then record the cash received.")
     ShopGroup(spacing = ShopSpacing.small) {
         if (cart.customer.isNotEmpty()) Text(cart.customer, style = MaterialTheme.typography.titleMedium)
-        cart.lines.forEach { line ->
-            val product = shop.products.single { it.id == line.productId }
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(product.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                Text(stringResource(R.string.pieces_2, indianNumber(line.quantity), indianNumber(line.quotedPriceRupees), indianNumber(line.totalRupees)),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ShopListGroup(showDividers = true) {
+            cart.lines.forEachIndexed { index, line ->
+                val product = shop.products.single { it.id == line.productId }
+                ShopListRow(
+                    product.title,
+                    supporting = stringResource(R.string.pieces, indianNumber(line.quantity)),
+                    meta = stringResource(
+                        R.string.pieces_2,
+                        indianNumber(line.quantity),
+                        indianNumber(line.quotedPriceRupees),
+                        indianNumber(line.totalRupees)
+                    ),
+                    dividerAbove = index > 0,
+                    minHeight = 72.dp
+                )
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

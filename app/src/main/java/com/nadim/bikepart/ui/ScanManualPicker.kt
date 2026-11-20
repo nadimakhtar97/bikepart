@@ -1,16 +1,20 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
-import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import androidx.compose.ui.res.stringResource
+import com.nadim.bikepart.R
+import com.nadim.bikepart.shop.CatalogSearch
+import com.nadim.bikepart.shop.ProductFilter
+import com.nadim.bikepart.shop.ShopSnapshot
 
 @Composable
 internal fun ScanManualPicker(shop: ShopSnapshot, catalog: Boolean, busy: Boolean, loadPhoto: PhotoLoader,
@@ -27,8 +31,19 @@ internal fun ScanManualPicker(shop: ShopSnapshot, catalog: Boolean, busy: Boolea
     else ShopListGroup {
         results.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto, enabled = !busy) { select(product.id) } }
     }
-    templates.take(limit).forEach {
-        ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { template(it.id) }, enabled = !busy) { Text(stringResource(R.string.use_template, it.catalog.title)) }
+    if (templates.take(limit).isNotEmpty()) ShopListGroup(showDividers = true) {
+        templates.take(limit).forEachIndexed { index, item ->
+            ShopListRow(
+                title = item.catalog.title,
+                supporting = shop.categories.single { it.id == item.catalog.categoryId }.name,
+                icon = R.drawable.ic_template,
+                actionLabel = stringResource(R.string.use_template, item.catalog.title),
+                enabled = !busy,
+                onClick = { template(item.id) },
+                showChevron = true,
+                dividerAbove = index > 0,
+            )
+        }
     }
     if (results.size > limit || templates.size > limit) ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { limit += 30 }) { Text(stringResource(R.string.manual_show_more)) }
 }

@@ -62,89 +62,130 @@ internal fun MoreScreen(shop: ShopSnapshot, appearance: Appearance, busy: Boolea
         }
     }
     ShopSectionHeader(stringResource(R.string.more_appearance))
-    ShopGroup(spacing = ShopSpacing.small) {
-        Column(Modifier.selectableGroup()) {
-            Appearance.entries.forEach { mode ->
+    Column(Modifier.selectableGroup()) {
+        ShopListGroup(showDividers = true) {
+            Appearance.entries.forEachIndexed { index, mode ->
                 val interaction = remember { MutableInteractionSource() }
                 val focused by interaction.collectIsFocusedAsState()
-                Row(Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = ShopSpacing.touchTarget)
-                    .selectable(
-                        appearance == mode, interactionSource = interaction, indication = null,
-                        enabled = !busy, role = Role.RadioButton, onClick = { onAppearance(mode) })
-                    .then(
-                        if (focused) Modifier.border(
-                            2.dp,
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.small
-                        ) else Modifier
-                    )
-                    .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically) {
-                    ShopAppearanceIndicator(selected = appearance == mode, enabled = !busy, interaction = interaction)
-                    Text(mode.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = ShopSpacing.medium))
-                }
+                ShopListRow(
+                    title = mode.name,
+                    modifier = Modifier
+                        .selectable(
+                            selected = appearance == mode,
+                            interactionSource = interaction,
+                            indication = null,
+                            enabled = !busy,
+                            role = Role.RadioButton,
+                            onClick = { onAppearance(mode) },
+                        )
+                        .then(
+                            if (focused) Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.outline,
+                                MaterialTheme.shapes.small
+                            ) else Modifier
+                        ),
+                    leading = {
+                        ShopAppearanceIndicator(
+                            selected = appearance == mode,
+                            enabled = !busy,
+                            interaction = interaction
+                        )
+                    },
+                    enabled = !busy,
+                    dividerAbove = index > 0,
+                )
             }
         }
         Text(stringResource(R.string.more_appearance_hint), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     ShopSectionHeader(stringResource(R.string.more_choose_brand_theme))
-    ShopGroup(spacing = ShopSpacing.small) {
-        Column(Modifier.selectableGroup()) {
-            com.nadim.bikepart.ui.theme.ShopBrand.entries.forEach { brand ->
+    Column(Modifier.selectableGroup()) {
+        ShopListGroup(showDividers = true) {
+            com.nadim.bikepart.ui.theme.ShopBrand.entries.forEachIndexed { index, brand ->
                 val interaction = remember { MutableInteractionSource() }
                 val focused by interaction.collectIsFocusedAsState()
-                Row(Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = ShopSpacing.touchTarget)
-                    .selectable(
-                        customization.brand == brand,
-                        enabled = !busy,
-                        role = Role.RadioButton,
-                        interactionSource = interaction,
-                        indication = null,
-                        onClick = { onBrand(brand) })
-                    .then(
-                        if (focused) Modifier.border(
-                            2.dp,
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.small
-                        ) else Modifier
-                    )
-                    .padding(horizontal = ShopSpacing.small),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    ShopAppearanceIndicator(selected = customization.brand == brand, enabled = !busy,
-                        interaction = interaction)
-                    Text(brand.label, style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = ShopSpacing.medium))
-                }
+                ShopListRow(
+                    title = brand.label,
+                    modifier = Modifier
+                        .selectable(
+                            selected = customization.brand == brand,
+                            enabled = !busy,
+                            role = Role.RadioButton,
+                            interactionSource = interaction,
+                            indication = null,
+                            onClick = { onBrand(brand) },
+                        )
+                        .then(
+                            if (focused) Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.outline,
+                                MaterialTheme.shapes.small
+                            ) else Modifier
+                        ),
+                    leading = {
+                        ShopAppearanceIndicator(
+                            selected = customization.brand == brand,
+                            enabled = !busy,
+                            interaction = interaction
+                        )
+                    },
+                    enabled = !busy,
+                    dividerAbove = index > 0,
+                )
             }
         }
     }
     updates()
     ShopSectionHeader(stringResource(R.string.more_shop))
-    ShopListGroup {
-        ShopListRow(stringResource(R.string.more_sales_history), supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,
-            enabled = !busy, onClick = onSales)
-        ShopListRow(stringResource(R.string.more_product_templates), supporting = "Reusable catalog details", icon = R.drawable.ic_template,
-            enabled = !busy, onClick = onTemplates)
-        ShopListRow(stringResource(R.string.more_archived_products), supporting = "Retained details and history", icon = R.drawable.ic_archive,
-            enabled = !busy, onClick = onArchived)
+    ShopListGroup(showDividers = true, shape = MaterialTheme.shapes.large) {
+        ShopListRow(
+            stringResource(R.string.more_sales_history),
+            supporting = "Completed cash sales and receipts",
+            enabled = !busy,
+            onClick = onSales,
+            showChevron = true
+        )
+        ShopListRow(
+            stringResource(R.string.more_product_templates),
+            supporting = "Reusable catalog details",
+            enabled = !busy,
+            onClick = onTemplates,
+            showChevron = true,
+            dividerAbove = true
+        )
+        ShopListRow(
+            stringResource(R.string.more_archived_products),
+            supporting = "Retained details and history",
+            enabled = !busy,
+            onClick = onArchived,
+            showChevron = true,
+            dividerAbove = true
+        )
     }
     ShopSectionHeader(stringResource(R.string.more_backup_recovery))
-    ShopListGroup {
-        ShopListRow(stringResource(R.string.more_shop_backups), supporting = "Drive, local copies and phone recovery", icon = R.drawable.ic_cloud,
-            enabled = !busy, onClick = onBackups)
+    ShopListGroup(showDividers = true, shape = MaterialTheme.shapes.large) {
+        ShopListRow(
+            stringResource(R.string.more_shop_backups),
+            supporting = "Drive, local copies and phone recovery",
+            enabled = !busy,
+            onClick = onBackups,
+            showChevron = true
+        )
     }
     ShopSectionHeader(stringResource(R.string.more_catalog))
-    ShopListGroup {
+    ShopListGroup(showDividers = true, shape = MaterialTheme.shapes.large) {
         ShopListRow(
             stringResource(R.string.more_edit_categories),
             supporting = "${shop.categories.size} categories · shared fields and options",
-            icon = R.drawable.ic_category,
-            enabled = !busy, onClick = onCategories)
+            enabled = !busy, onClick = onCategories, showChevron = true
+        )
         ShopListRow(stringResource(R.string.more_manage_fitment), supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
-            icon = R.drawable.ic_two_wheeler, enabled = !busy, onClick = onFindingLookups)
+            enabled = !busy,
+            onClick = onFindingLookups,
+            showChevron = true,
+            dividerAbove = true
+        )
     }
 }

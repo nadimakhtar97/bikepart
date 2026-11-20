@@ -1,9 +1,7 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -13,6 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.LookupNames
@@ -74,10 +73,22 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                             Text(stringResource(R.string.catalog_promotion_note), style = MaterialTheme.typography.bodyMedium)
                             ShopPrimaryButton(stringResource(R.string.catalog_promote_to_category), enabled = !busy) { actions.promote(field.id, name) }
                         }
-                        shop.options.filter { it.definitionId == field.id }.forEach { option ->
-                            if (option.retired) Text(option.name + " (retired)", style = MaterialTheme.typography.bodyMedium)
-                            else ShopSecondaryButton(onClick = { actions.retireOption(option.id) }, enabled = !busy,
-                                modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire_option, option.name)) }
+                        val options = shop.options.filter { it.definitionId == field.id }
+                        if (options.isNotEmpty()) ShopListGroup(showDividers = true) {
+                            options.forEachIndexed { index, option ->
+                                ShopListRow(
+                                    option.name + if (option.retired) " (retired)" else "",
+                                    supporting = if (option.retired) "Retired option" else "Tap to retire this option",
+                                    enabled = !busy && !option.retired,
+                                    onClick = if (option.retired) null else ({
+                                        actions.retireOption(
+                                            option.id
+                                        )
+                                    }),
+                                    dividerAbove = index > 0,
+                                    minHeight = 56.dp
+                                )
+                            }
                         }
                         ShopSecondaryButton(onClick = { replacing = !replacing; onChange() }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_replace_field_type)) }

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -114,30 +113,48 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
     var showSourceDialog by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            val path = pendingCameraPath
-            val file = path?.let { File(it) }
-            if (file != null && file.exists() && file.length() > 200) {
-                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString().let { select(it) }
-            } else if (data?.data != null) {
-                select(data.data.toString())
-            } else {
-                @Suppress("DEPRECATION")
-                val bitmap = data?.extras?.get("data") as? Bitmap
-                if (bitmap != null && file != null) {
-                    try {
-                        file.outputStream().use { out ->
+        val path = pendingCameraPath
+        pendingCameraPath = null
+        val file = path?.let { File(it) }
+        val data = result.data
+        if (result.resultCode != Activity.RESULT_OK) {
+            file?.delete()
+            return@rememberLauncherForActivityResult
+        }
+
+        val selectedUri = try {
+            when {
+                file != null && file.isFile && file.length() > 200 ->
+                    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+
+                data?.data != null -> data.data
+                else -> {
+                    @Suppress("DEPRECATION")
+                    val bitmap = data?.extras?.get("data") as? Bitmap
+                    if (bitmap != null && file != null) {
+                        val saved = file.outputStream().use { out ->
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
                         }
-                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString().let { select(it) }
-                    } catch (_: Exception) {
-                        path?.let { select(Uri.fromFile(File(it)).toString()) }
-                    }
-                } else {
-                    path?.let { select(Uri.fromFile(File(it)).toString()) }
+                        if (saved && file.isFile && file.length() > 200) {
+                            FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                file
+                            )
+                        } else null
+                    } else null
                 }
             }
+        } catch (_: Exception) {
+            null
+        }
+
+        if (selectedUri != null) {
+            cameraError = null
+            select(selectedUri.toString())
+        } else {
+            file?.delete()
+            cameraError = "The camera didn't return a photo. Try again or choose from gallery."
         }
     }
 

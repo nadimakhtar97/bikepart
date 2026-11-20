@@ -1,12 +1,10 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,7 +30,7 @@ internal fun CategorySettings(
     ShopPageHeader("Categories", "Open a category to manage its shared fields and choice options.")
     ShopSectionHeader(stringResource(R.string.more_catalog))
     ShopListGroup {
-        shop.categories.forEach { category ->
+        shop.categories.forEachIndexed { index, category ->
             key(category.id) {
                 var editing by rememberSaveable(category.id) { mutableStateOf(false) }
                 var name by rememberSaveable(category.name) { mutableStateOf(category.name) }
@@ -57,6 +55,7 @@ internal fun CategorySettings(
                     enabled = !busy,
                     actionLabel = "Manage fields for ${category.name}",
                     onClick = { onOpen(category.id) },
+                    dividerAbove = index > 0,
                 )
                 if (editing) AlertDialog(
                     onDismissRequest = { if (!busy) editing = false },

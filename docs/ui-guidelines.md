@@ -378,6 +378,14 @@ Source: [Images and graphics](https://developer.android.com/design/ui/mobile/gui
   groups use the reference's primary-at-8%-over-surface treatment. Group titles
   use title-medium, supporting text uses body-medium, and important stock/price
   values use title or headline roles.
+- Build lists with Fluent UI V2 `ListItem.Item` rows in the screen's list
+  container, following
+  Microsoft's [V2 List Item demo](https://github.com/microsoft/fluentui-android/blob/master/FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ListItemActivity.kt).
+  Reuse `ShopListRow` from `ui/ShopCollections.kt` for shop list items so
+  supporting text, accessories, metadata, interaction semantics and Fluent
+  tokens stay consistent. Put related rows in `ShopListGroup`; use sparse,
+  inset Fluent-token dividers between rows and keep each row's interactive
+  target at least 48dp.
 - Use the reference's neutral inverse-surface filled button for the main action;
   outlined buttons are secondary. Buttons grow for wrapped text and have at
   least 48dp targets. Reuse `ShopPrimaryButton` in `ui/ShopScreens.kt` and the

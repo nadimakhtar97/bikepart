@@ -1,24 +1,47 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.CartDraft
-import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.R
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.ShopError
+import com.nadim.bikepart.shop.Cart
+import com.nadim.bikepart.shop.CatalogSearch
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ProductFilter
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.indianNumber
+import com.nadim.bikepart.shop.otherCartDemand
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
@@ -30,11 +53,15 @@ internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOp
     }
     ShopSectionHeader("${shop.carts.size} unfinished ${if (shop.carts.size == 1) "cart" else "carts"}")
     ShopListGroup {
-        shop.carts.forEach { cart ->
+        shop.carts.forEachIndexed { index, cart ->
             ShopListRow(cart.name,
                 supporting = listOfNotNull(cart.customer.ifBlank { null }, "${cart.lines.size} ${if (cart.lines.size == 1) "line" else "lines"}").joinToString(" · "),
                 meta = "₹${indianNumber(cart.totalRupees)}", status = { ShopStatusChip(stringResource(R.string.shared_unfinished)) },
-                enabled = !busy, actionLabel = "Open ${cart.name}", onClick = { onOpen(cart.id) })
+                enabled = !busy,
+                actionLabel = "Open ${cart.name}",
+                onClick = { onOpen(cart.id) },
+                dividerAbove = index > 0
+            )
         }
     }
 }
@@ -88,14 +115,12 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
                     Column(Modifier
                         .fillMaxWidth()
                         .padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.Top) {
-                            Column(Modifier.weight(1f)) {
-                                Text(product.title, style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                                Text(product.sku, style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
+                        ShopListRow(
+                            product.title,
+                            supporting = product.sku,
+                            meta = "₹${indianNumber(line.quotedPriceRupees)}",
+                            minHeight = 64.dp
+                        )
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(stringResource(R.string.on_hand_pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)

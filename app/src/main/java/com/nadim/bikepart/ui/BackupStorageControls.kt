@@ -1,18 +1,25 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.ActivePhoneState
 import com.nadim.bikepart.ui.theme.ShopSpacing
@@ -42,8 +49,14 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
             Text(stringResource(R.string.current_folder_file_data_drive_revisions_and, bytes(reviewed.bytes)), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.complete_restore_points_protected_eligible_older_points, reviewed.completePoints, reviewed.retainedPoints, reviewed.eligible.size), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.up_to_can_be_removed_shared_photos, bytes(reviewed.reclaimableBytes)), style = MaterialTheme.typography.bodyMedium)
-            reviewed.eligible.forEach { point ->
-                Text(stringResource(R.string.eligible_revision, DateFormat.getDateTimeInstance().format(Date(point.capturedAt)), point.revision), style = MaterialTheme.typography.bodyMedium)
+            if (reviewed.eligible.isNotEmpty()) ShopListGroup(showDividers = true) {
+                reviewed.eligible.forEachIndexed { index, point ->
+                    ShopListRow(
+                        title = DateFormat.getDateTimeInstance().format(Date(point.capturedAt)),
+                        supporting = "Revision ${point.revision}",
+                        dividerAbove = index > 0,
+                    )
+                }
             }
             if (reviewed.cleanupPending) Text(stringResource(R.string.a_reviewed_cleanup_was_interrupted_continue_to), style = MaterialTheme.typography.bodyMedium)
             if (reviewed.eligible.isNotEmpty() || reviewed.cleanupPending) ShopSecondaryButton(enabled = canInspect, onClick = { confirm = true }) {

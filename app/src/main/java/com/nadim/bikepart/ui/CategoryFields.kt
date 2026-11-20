@@ -6,10 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.AttributeType
@@ -62,13 +64,30 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     ShopTextField(query, { query = it }, label, enabled = !busy)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        options.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) || it.first in selected }.forEach { (id, name) ->
-            ShopChoiceChip(
-                label = name,
-                selected = id in selected,
+    val visibleOptions = options.filter {
+        LookupNames.key(it.second).contains(LookupNames.key(query)) || it.first in selected
+    }
+    if (visibleOptions.isNotEmpty()) ShopListGroup(
+        modifier = Modifier
+            .heightIn(max = 320.dp)
+            .verticalScroll(rememberScrollState()),
+        showDividers = true
+    ) {
+        visibleOptions.forEachIndexed { index, (id, name) ->
+            ShopListRow(
+                name,
+                trailing = {
+                    Checkbox(
+                        checked = id in selected,
+                        onCheckedChange = null,
+                        enabled = !busy
+                    )
+                },
                 onClick = { onSelect(id); query = "" },
-                enabled = !busy
+                enabled = !busy,
+                selected = id in selected,
+                dividerAbove = index > 0,
+                minHeight = ShopSpacing.touchTarget
             )
         }
     }

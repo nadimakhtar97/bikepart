@@ -1,16 +1,24 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.StockArrival
+import com.nadim.bikepart.shop.indianNumber
 
 @Composable
 internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String, String) -> Unit) {
@@ -43,11 +51,30 @@ internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?
 @Composable
 internal fun ArrivalHistory(arrivals: List<StockArrival>) {
     if (arrivals.isEmpty()) return
-    ShopSection(stringResource(R.string.arrival_history)) {
-        arrivals.asReversed().forEach {
-            Text(java.text.DateFormat.getDateTimeInstance().format(java.util.Date(it.recordedAt)), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.arrival_received_summary, indianNumber(it.quantity), indianNumber(it.unitCostRupees)))
-            Text(stringResource(R.string.arrival_stock_change, indianNumber(it.previousBalance), indianNumber(it.resultingBalance)))
+    ShopSectionHeader(stringResource(R.string.arrival_history))
+    ShopListGroup(showDividers = true) {
+        arrivals.asReversed().forEachIndexed { index, arrival ->
+            ShopListRow(
+                title = java.text.DateFormat.getDateTimeInstance()
+                    .format(java.util.Date(arrival.recordedAt)),
+                supporting = stringResource(
+                    R.string.arrival_received_summary,
+                    indianNumber(arrival.quantity),
+                    indianNumber(arrival.unitCostRupees)
+                ),
+                status = {
+                    Text(
+                        stringResource(
+                            R.string.arrival_stock_change,
+                            indianNumber(arrival.previousBalance),
+                            indianNumber(arrival.resultingBalance)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                dividerAbove = index > 0,
+            )
         }
     }
 }

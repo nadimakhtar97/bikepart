@@ -70,32 +70,60 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     if (!product.archived) {
         ShopSectionHeader(stringResource(R.string.product_correct_stock))
         ShopListGroup {
-            CorrectionKind.entries.forEach { kind ->
+            CorrectionKind.entries.forEachIndexed { index, kind ->
                 ShopListRow("Record ${kind.label.lowercase()}",
                     supporting = when (kind) {
                         CorrectionKind.PhysicalCount -> "Enter the total pieces counted"
                         CorrectionKind.Damage -> "Remove damaged pieces from stock"
                         CorrectionKind.Loss -> "Remove lost pieces from stock"
                     },
-                    icon = R.drawable.ic_inventory, enabled = !busy, onClick = { onCorrection(kind) })
+                    icon = R.drawable.ic_inventory,
+                    enabled = !busy,
+                    onClick = { onCorrection(kind) },
+                    dividerAbove = index > 0
+                )
             }
         }
     }
     ShopSection(stringResource(R.string.product_details_section)) {
         Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
-        shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && (!it.retired || it.id in product.attributes) }.forEach { definition ->
-            val value = product.attributes[definition.id]
-            val display = if (value == null && definition.required && !definition.retired) "Required · missing" else attributeDisplay(shop, value)
-            Text(definition.name + (if (definition.retired) " (retired)" else "") + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
+        val attributes = shop.attributes.filter {
+            it.appliesTo(
+                product.categoryId,
+                product.id
+            ) && (!it.retired || it.id in product.attributes)
+        }
+        if (attributes.isNotEmpty()) ShopListGroup(showDividers = true) {
+            attributes.forEachIndexed { index, definition ->
+                val value = product.attributes[definition.id]
+                val display =
+                    if (value == null && definition.required && !definition.retired) "Required · missing" else attributeDisplay(
+                        shop,
+                        value
+                    )
+                ShopListRow(
+                    definition.name + if (definition.retired) " (retired)" else "",
+                    supporting = display + if (value != null && definition.unit.isNotBlank()) " " + definition.unit else "",
+                    dividerAbove = index > 0,
+                    minHeight = 56.dp
+                )
+            }
         }
         HorizontalDivider(color = colors.outlineVariant)
         Text(stringResource(R.string.sku, product.sku), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(R.string.opening_stock_pieces, indianNumber(shop.openings[product.id]?.quantity ?: 0L)), style = MaterialTheme.typography.bodyMedium)
     }
     if (product.historicalAttributes.isNotEmpty()) ShopSection(stringResource(R.string.product_historical_attributes)) {
-        product.historicalAttributes.forEach { (_, definitionId, value) ->
-            val definition = shop.attributes.single { it.id == definitionId }
-            Text(definition.name + ": " + attributeDisplay(shop, value) + " " + definition.unit, style = MaterialTheme.typography.bodyMedium)
+        ShopListGroup(showDividers = true) {
+            product.historicalAttributes.forEachIndexed { index, (_, definitionId, value) ->
+                val definition = shop.attributes.single { it.id == definitionId }
+                ShopListRow(
+                    definition.name,
+                    supporting = (attributeDisplay(shop, value) + " " + definition.unit).trim(),
+                    dividerAbove = index > 0,
+                    minHeight = 56.dp
+                )
+            }
         }
     }
     CorrectionHistory(shop.corrections.filter { it.productId == product.id })

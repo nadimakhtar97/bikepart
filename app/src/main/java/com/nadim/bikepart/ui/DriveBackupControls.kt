@@ -5,22 +5,29 @@ import android.accounts.AccountManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import com.nadim.bikepart.R
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.selected
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
-import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.DriveAction
+import com.nadim.bikepart.R
+import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.ActivePhoneState
 import java.text.DateFormat
 import java.util.Date
@@ -98,7 +105,18 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
         }) { Text(stringResource(R.string.drive_connect_repair)) }
         if (account != null) {
             Text(stringResource(R.string.choose_a_folder_for_only_folders_granted, account.toString()), style = MaterialTheme.typography.bodyMedium)
-            folders.forEach { folder -> ShopSecondaryButton(enabled = !busy, onClick = { model.selectDriveFolder(folder) }) { Text(stringResource(R.string.formatted_text_2, folder.name, folder.id)) } }
+            if (folders.isNotEmpty()) ShopListGroup(showDividers = true) {
+                folders.forEachIndexed { index, folder ->
+                    ShopListRow(
+                        title = folder.name,
+                        supporting = folder.id,
+                        actionLabel = "Select Drive folder ${folder.name}",
+                        enabled = !busy,
+                        onClick = { model.selectDriveFolder(folder) },
+                        dividerAbove = index > 0,
+                    )
+                }
+            }
             ShopTextField(
                 folderName,
                 { folderName = it },
@@ -139,10 +157,22 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
         Text(stringResource(R.string.inspect_a_complete_drive_restore_point_before), style = MaterialTheme.typography.bodyMedium)
         ShopSecondaryButton(onClick = onRefresh, enabled = !busy && status?.target != null) { Text(stringResource(R.string.restore_find_points)) }
         if (points?.isEmpty() == true) Text(stringResource(R.string.no_complete_supported_restore_points_found_incomplete), style = MaterialTheme.typography.bodyMedium)
-        points?.forEach { point ->
-            ShopSecondaryButton(enabled = !busy, onClick = { model.selectRestorePoint(point) }, shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.semantics { this.selected = selected == point }) {
-                Text("${DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))} · revision ${point.point.revision}\n${point.products} products · ${point.sales} sales · ${point.carts} unfinished carts · ${point.photos} photos")
+        points?.takeIf { it.isNotEmpty() }?.let { restorePoints ->
+            ShopListGroup(showDividers = true) {
+                restorePoints.forEachIndexed { index, point ->
+                    val capturedAt =
+                        DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))
+                    ShopListRow(
+                        title = capturedAt,
+                        supporting = "Revision ${point.point.revision} · ${point.products} products · ${point.sales} sales · ${point.carts} unfinished carts · ${point.photos} photos",
+                        actionLabel = "Select restore point captured $capturedAt",
+                        selected = selected == point,
+                        role = androidx.compose.ui.semantics.Role.RadioButton,
+                        enabled = !busy,
+                        onClick = { model.selectRestorePoint(point) },
+                        dividerAbove = index > 0,
+                    )
+                }
             }
         }
         selected?.let { point ->

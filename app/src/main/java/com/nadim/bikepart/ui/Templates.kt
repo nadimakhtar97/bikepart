@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,18 +46,29 @@ internal fun TemplateList(shop: ShopSnapshot, busy: Boolean, onCreate: () -> Uni
     }
     val matches = shop.templates.filter { it.retired == retired && LookupNames.key(it.catalog.title + " " + it.catalog.description).contains(LookupNames.key(search)) }
     if (matches.isEmpty()) ShopEmptyState(stringResource(R.string.template_no_matching_title), "Create a template or try another search.", com.nadim.bikepart.R.drawable.ic_template)
-    matches.forEach { template ->
-        ShopSection(template.catalog.title) {
-            Text(shop.categories.single { it.id == template.catalog.categoryId }.name, style = MaterialTheme.typography.bodyMedium)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                ShopSecondaryButton({ onOpen(template.id) }, enabled = !busy, modifier = Modifier.semantics { contentDescription = "Open template: ${template.catalog.title}" }) { Text(stringResource(R.string.template_open)) }
-                if (!retired) TextButton({ onUse(template.id) }, enabled = !busy,
-                    modifier = Modifier
-                        .heightIn(min = ShopSpacing.touchTarget)
-                        .semantics {
-                            contentDescription = "Use template: ${template.catalog.title}"
-                        }) { Text(stringResource(R.string.template_use_primary)) }
-            }
+    else ShopListGroup(showDividers = true) {
+        matches.forEachIndexed { index, template ->
+            ShopListRow(
+                title = template.catalog.title,
+                supporting = shop.categories.single { it.id == template.catalog.categoryId }.name,
+                icon = R.drawable.ic_template,
+                onClick = { onOpen(template.id) },
+                enabled = !busy,
+                actionLabel = "Open template: ${template.catalog.title}",
+                trailing = if (retired) null else ({
+                    TextButton(
+                        onClick = { onUse(template.id) },
+                        enabled = !busy,
+                        modifier = Modifier
+                            .heightIn(min = ShopSpacing.touchTarget)
+                            .semantics {
+                                contentDescription = "Use template: ${template.catalog.title}"
+                            },
+                    ) { Text(stringResource(R.string.template_use_primary)) }
+                }),
+                showChevron = true,
+                dividerAbove = index > 0,
+            )
         }
     }
 }

@@ -1,31 +1,62 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.semantics.*
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
-import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.AttributeType
+import com.nadim.bikepart.shop.CatalogSearch
+import com.nadim.bikepart.shop.DecimalFilter
+import com.nadim.bikepart.shop.LookupNames
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ProductFilter
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.StockHealth
+import com.nadim.bikepart.shop.exactDecimal
+import com.nadim.bikepart.shop.indianNumber
+import com.nadim.bikepart.shop.missingRequired
+import com.nadim.bikepart.shop.stockHealth
 import com.nadim.bikepart.ui.theme.ShopSpacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 
 private data class PreparedCatalog(val snapshot: ShopSnapshot, val search: CatalogSearch)
 private data class CatalogResult(val snapshot: ShopSnapshot, val filter: ProductFilter, val products: List<Product>)
@@ -59,17 +90,27 @@ private fun SearchFilter(label: String, choices: List<Pair<String, String>>, sel
         Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             ShopTextField(query, { query = it }, stringResource(R.string.find, label))
             val matching = choices.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) }
-            LazyColumn(Modifier.heightIn(max = ShopSpacing.formWidth)) {
-                item { TextButton(onClick = { onSelect(null); open = false; query = "" }, modifier = Modifier
-                    .heightIn(min = ShopSpacing.touchTarget)
-                    .semantics { this.selected = selected == null }) { Text(stringResource(R.string.any, label)) } }
-                items(matching, key = { it.first }) { (id, name) ->
-                    TextButton(onClick = { onSelect(id); open = false; query = "" }, modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ShopSpacing.touchTarget)
-                        .semantics { this.selected = id == selected }) { Text(name) }
+            ShopListGroup(showDividers = true) {
+                LazyColumn(Modifier.heightIn(max = ShopSpacing.formWidth)) {
+                    item {
+                        ShopListRow(
+                            title = stringResource(R.string.any, label),
+                            onClick = { onSelect(null); open = false; query = "" },
+                            selected = selected == null,
+                            role = androidx.compose.ui.semantics.Role.RadioButton,
+                        )
+                    }
+                    items(matching, key = { it.first }) { (id, name) ->
+                        ShopListRow(
+                            title = name,
+                            onClick = { onSelect(id); open = false; query = "" },
+                            selected = id == selected,
+                            role = androidx.compose.ui.semantics.Role.RadioButton,
+                            dividerAbove = true,
+                        )
+                    }
+                    if (matching.isEmpty()) item { Text(stringResource(R.string.no_matching_choices)) }
                 }
-                if (matching.isEmpty()) item { Text(stringResource(R.string.no_matching_choices)) }
             }
         }
     }, confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.shared_close)) } })
@@ -209,53 +250,46 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
 
 @Composable
 internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: PhotoLoader, enabled: Boolean = true, menu: (@Composable () -> Unit)? = null, onOpen: () -> Unit) {
-    Surface(onClick = onOpen, enabled = enabled, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)) {
-        val density = LocalDensity.current
-        val priceStyle = MaterialTheme.typography.titleMedium
-        val measurer = rememberTextMeasurer()
-        val price = "₹${indianNumber(product.priceRupees)}"
-        BoxWithConstraints {
-            val priceMax = (maxWidth - 24.dp) * 0.4f
-            // A price that cannot fit its share of the row moves under the title so
-            // a grouped amount never breaks across lines.
-            val stackPrice = density.fontScale >= 1.5f ||
-                measurer.measure(price, priceStyle, maxLines = 1, softWrap = false).size.width > with(density) { priceMax.toPx() }
-            Row(Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                ProductPhoto(product.photo, loadPhoto, Modifier.size(52.dp))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(product.title, style = MaterialTheme.typography.titleMedium, maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                    Text(shop.categories.single { it.id == product.categoryId }.name + " · " + indianNumber(product.quantity) + " pieces",
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (product.archived) ShopStatusChip(stringResource(R.string.shared_archived))
-                        else if (product.stockHealth != StockHealth.InStock) {
-                            ShopStatusChip(product.stockHealth.label, when (product.stockHealth) {
+    val category = shop.categories.single { it.id == product.categoryId }.name
+    ShopListRow(
+        title = product.title,
+        supporting = "$category · ${indianNumber(product.quantity)} pieces",
+        meta = "₹${indianNumber(product.priceRupees)}",
+        leading = { ProductPhoto(product.photo, loadPhoto, Modifier.size(52.dp)) },
+        status = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    product.sku, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (product.archived) ShopStatusChip(stringResource(R.string.shared_archived))
+                    else if (product.stockHealth != StockHealth.InStock) {
+                        ShopStatusChip(
+                            product.stockHealth.label, when (product.stockHealth) {
                                 StockHealth.LowStock -> ShopStatusTone.Warning
                                 StockHealth.OutOfStock -> ShopStatusTone.Danger
                                 StockHealth.InStock -> ShopStatusTone.Neutral
-                            })
-                        }
-                        if (shop.missingRequired(product.id).isNotEmpty()) ShopStatusChip(stringResource(R.string.shared_catalog_incomplete), ShopStatusTone.Accent)
+                            }
+                        )
                     }
-                    Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                    if (stackPrice) Text(price, style = priceStyle)
-                }
-                Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
-                  if (!stackPrice) Text(price, style = priceStyle, maxLines = 2,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = priceMax))
-                menu?.invoke()
+                    if (shop.missingRequired(product.id).isNotEmpty()) {
+                        ShopStatusChip(
+                            stringResource(R.string.shared_catalog_incomplete),
+                            ShopStatusTone.Accent
+                        )
+                    }
                 }
             }
-        }
-    }
+        },
+        trailing = menu,
+        onClick = onOpen,
+        enabled = enabled,
+        actionLabel = "Open ${product.title}",
+        minHeight = 72.dp,
+    )
 }

@@ -9,33 +9,51 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.withTranslation
-import com.nadim.bikepart.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withTranslation
+import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.ItemQr
+import com.nadim.bikepart.shop.LabelMedia
+import com.nadim.bikepart.shop.LabelQr
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.shop.ShopValidation
+import com.nadim.bikepart.shop.parseLabelCopies
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 /** Label artwork uses printer dots, independent of app brightness and system text scaling. */
@@ -95,20 +113,22 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
     fun changed() { previewMedia = null; validation = null; onChange() }
     Text(stringResource(R.string.label_identify_note))
     ShopSection(stringResource(R.string.label_media_copies)) {
-        Column(Modifier.selectableGroup()) { LabelMedia.entries.forEach { option ->
-            Row(Modifier
-                .fillMaxWidth()
-                .heightIn(min = ShopSpacing.touchTarget)
-                .selectable(
-                    media == option,
-                    enabled = !busy,
-                    role = Role.RadioButton,
-                    onClick = { mediaName = option.name; changed() }),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                RadioButton(selected = media == option, onClick = null)
-                Text(option.label, Modifier.padding(start = ShopSpacing.small))
+        Column(Modifier.selectableGroup()) {
+            ShopListGroup(showDividers = true) {
+                LabelMedia.entries.forEachIndexed { index, option ->
+                    ShopListRow(
+                        option.label,
+                        trailing = { RadioButton(selected = media == option, onClick = null) },
+                        onClick = { mediaName = option.name; changed() },
+                        enabled = !busy,
+                        selected = media == option,
+                        role = Role.RadioButton,
+                        dividerAbove = index > 0,
+                        minHeight = ShopSpacing.touchTarget
+                    )
+                }
             }
-        } }
+        }
         Text(stringResource(R.string.load_the_mm_roll_changing_profile_requires, media.widthMm, media.heightMm))
         ShopTextField(
             copies,
