@@ -1,0 +1,6 @@
+
+com.nadim.bikepart.FluentCompatibilityTest:.
+
+Time: 46.596
+
+OK (1 test)

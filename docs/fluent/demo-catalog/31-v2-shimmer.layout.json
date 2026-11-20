@@ -1,0 +1,262 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:25",
+        "content-desc": "3:25 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Box Shimmer",
+        "bounds": "[32,307][343,369]",
+        "center": "[187,338]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Circle Shimmer",
+        "bounds": "[32,642][387,704]",
+        "center": "[209,673]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Shimmer with Content",
+        "bounds": "[32,1367][549,1429]",
+        "center": "[290,1398]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Badge",
+        "bounds": "[32,1461][151,1510]",
+        "center": "[91,1485]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Badge",
+        "bounds": "[194,1466][289,1506]",
+        "center": "[241,1486]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "PersonaChip",
+        "bounds": "[32,1585][271,1634]",
+        "center": "[151,1609]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "PersonaChip  Selected Enabled",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[292,1546][516,1672]",
+        "center": "[404,1609]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Avatar",
+        "bounds": "[32,1767][152,1816]",
+        "center": "[92,1791]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Allan Munger. Status, Available,  ",
+        "bounds": "[173,1697][362,1886]",
+        "center": "[267,1791]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Change Orientation",
+        "bounds": "[32,1928][480,1990]",
+        "center": "[256,1959]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Left to Right",
+        "bounds": "[32,2026][943,2069]",
+        "center": "[487,2047]"
+      },
+      {
+        "class": "android.widget.RadioButton",
+        "content-desc": "Radio Button",
+        "interactions": [
+          "CHECKABLE",
+          "FOCUSABLE"
+        ],
+        "state": [
+          "CHECKED"
+        ],
+        "bounds": "[954,1985][1080,2048]",
+        "center": "[1017,2016]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Right to Left",
+        "bounds": "[32,2089][943,2132]",
+        "center": "[487,2110]"
+      },
+      {
+        "class": "android.widget.RadioButton",
+        "content-desc": "Radio Button",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,2048][1080,2111]",
+        "center": "[1017,2079]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Top Left to Bottom Right",
+        "bounds": "[32,2152][943,2195]",
+        "center": "[487,2173]"
+      },
+      {
+        "class": "android.widget.RadioButton",
+        "content-desc": "Radio Button",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,2111][1080,2174]",
+        "center": "[1017,2142]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Bottom Right to Top Left",
+        "bounds": "[32,2215][943,2258]",
+        "center": "[487,2236]"
+      },
+      {
+        "class": "android.widget.RadioButton",
+        "content-desc": "Radio Button",
+        "interactions": [
+          "CHECKABLE",
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,2174][1080,2300]",
+        "center": "[1017,2237]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Toggle Animation",
+        "bounds": "[32,2294][441,2299]",
+        "center": "[236,2296]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[32,2299][1048,2400]",
+        "center": "[540,2349]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Toggle Shimmer Animation",
+            "bounds": "[32,2356][869,2368]",
+            "center": "[450,2362]"
+          },
+          {
+            "class": "android.view.View",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "state": [
+              "CHECKED"
+            ],
+            "bounds": "[911,2299][1048,2400]",
+            "center": "[979,2349]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Shimmer",
+        "bounds": "[168,171][454,233]",
+        "center": "[311,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

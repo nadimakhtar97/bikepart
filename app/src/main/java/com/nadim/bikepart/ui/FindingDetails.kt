@@ -26,10 +26,16 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
     var make by rememberSaveable { mutableStateOf("") }
     ShopSection(if (showLocations) "Fitment and locations" else "Fitment") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-            FilterChip(selected = !assigned, enabled = !busy, onClick = { onAssigned(false); onModels(emptySet()) },
-                label = { Text(stringResource(R.string.finding_unknown_fitment)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
-            FilterChip(selected = assigned, enabled = !busy, onClick = { onAssigned(true) },
-                label = { Text(stringResource(R.string.finding_assigned_fitment)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+            ShopChoiceChip(
+                label = stringResource(R.string.finding_unknown_fitment),
+                selected = !assigned,
+                enabled = !busy,
+                onClick = { onAssigned(false); onModels(emptySet()) })
+            ShopChoiceChip(
+                label = stringResource(R.string.finding_assigned_fitment),
+                selected = assigned,
+                enabled = !busy,
+                onClick = { onAssigned(true) })
         }
         if (assigned) {
             Text(stringResource(R.string.finding_select_model_note), style = MaterialTheme.typography.bodyMedium)
@@ -67,7 +73,7 @@ internal fun FindingSummary(shop: ShopSnapshot, product: Product) {
             Text(make.name + " · " + model.name + if (make.retired || model.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
         }
         shop.locations.filter { it.id in product.locationIds }.forEach {
-            Text(stringResource(R.string.location) + it.name + if (it.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(if (it.retired) R.string.location_retired else R.string.location, it.name), style = MaterialTheme.typography.bodyMedium)
         }
         if (product.locationIds.isEmpty()) Text(stringResource(R.string.no_finding_locations_assigned), style = MaterialTheme.typography.bodyMedium)
     }
@@ -104,5 +110,5 @@ internal fun FindingLookupSettings(shop: ShopSnapshot, busy: Boolean, retireMake
 @Composable
 private fun LookupRetirement(name: String, retired: Boolean, busy: Boolean, retire: () -> Unit) {
     if (retired) Text(name + " (retired)", style = MaterialTheme.typography.bodyMedium)
-    else ShopSecondaryButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire) + name) }
+    else ShopSecondaryButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire, name)) }
 }

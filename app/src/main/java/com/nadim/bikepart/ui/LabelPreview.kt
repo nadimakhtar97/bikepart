@@ -96,19 +96,29 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
     Text(stringResource(R.string.label_identify_note))
     ShopSection(stringResource(R.string.label_media_copies)) {
         Column(Modifier.selectableGroup()) { LabelMedia.entries.forEach { option ->
-            Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
-                .selectable(media == option, enabled = !busy, role = Role.RadioButton, onClick = { mediaName = option.name; changed() }),
+            Row(Modifier
+                .fillMaxWidth()
+                .heightIn(min = ShopSpacing.touchTarget)
+                .selectable(
+                    media == option,
+                    enabled = !busy,
+                    role = Role.RadioButton,
+                    onClick = { mediaName = option.name; changed() }),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 RadioButton(selected = media == option, onClick = null)
                 Text(option.label, Modifier.padding(start = ShopSpacing.small))
             }
         } }
         Text(stringResource(R.string.load_the_mm_roll_changing_profile_requires, media.widthMm, media.heightMm))
-        OutlinedTextField(copies, { copies = it; changed() }, label = { Text(stringResource(R.string.label_copies_label)) },
-            enabled = !busy, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = validation != null || error?.field == ProductField.LabelCopies,
-            modifier = Modifier.fillMaxWidth().bringIntoViewRequester(copiesRequester))
-        (validation ?: error?.message)?.let { FormError(it) }
+        ShopTextField(
+            copies,
+            { copies = it; changed() },
+            stringResource(R.string.label_copies_label),
+            enabled = !busy,
+            error = validation ?: error?.takeIf { it.field == ProductField.LabelCopies }?.message,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.bringIntoViewRequester(copiesRequester)
+        )
         ShopPrimaryButton(stringResource(R.string.label_preview_btn), enabled = !busy) {
             try { previewCopies = parseLabelCopies(copies); previewMedia = media.name }
             catch (e: ShopValidation) { validation = e.message }
@@ -127,8 +137,11 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
             Text(stringResource(R.string.copies, selected.label, previewCopies))
             val artworkShape = MaterialTheme.shapes.small
             Image(artwork, contentDescription = "Product label QR: $payload", filterQuality = FilterQuality.None,
-                modifier = Modifier.fillMaxWidth().aspectRatio(selected.widthMm.toFloat() / selected.heightMm)
-                    .clip(artworkShape).border(1.dp, MaterialTheme.colorScheme.outline, artworkShape))
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(selected.widthMm.toFloat() / selected.heightMm)
+                    .clip(artworkShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, artworkShape))
             Text(product.title, style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.sku, product.sku))
             Text(stringResource(R.string.label_artwork_note))

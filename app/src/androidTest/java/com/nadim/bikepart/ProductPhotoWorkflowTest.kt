@@ -4,26 +4,39 @@ import android.app.Activity
 import android.app.Instrumentation.ActivityResult
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import java.io.File
 import android.graphics.Bitmap
+import android.net.Uri
 import android.provider.MediaStore
-import androidx.compose.ui.test.*
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import com.nadim.bikepart.shop.Shop
+import androidx.test.platform.app.InstrumentationRegistry
 import com.nadim.bikepart.shop.Appearance
 import com.nadim.bikepart.shop.PhotoChange
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.unit.dp
-import androidx.test.platform.app.InstrumentationRegistry
+import com.nadim.bikepart.shop.Shop
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class ProductPhotoWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
@@ -62,10 +75,12 @@ class ProductPhotoWorkflowTest {
                 screenshot("photo-fallback-${mode.name}-$scale")
                 runBlocking { Shop.open(context).use { assertEquals(before, it.snapshot()) } }
                 click("Edit details")
-                compose.onNodeWithText("Replace photo").performScrollTo().assertHeightIsAtLeast(48.dp)
-                compose.onNodeWithText("Remove photo").performScrollTo().assertHeightIsAtLeast(48.dp)
+                compose.onNodeWithContentDescription("Photo unavailable").performScrollTo()
+                    .assertHeightIsAtLeast(48.dp)
+                compose.onNodeWithContentDescription("Remove photo").performScrollTo()
+                    .assertHeightIsAtLeast(48.dp)
                 screenshot("photo-controls-${mode.name}-$scale")
-                click("Remove photo")
+                clickDescription("Remove photo")
                 awaitDescription("No product photo")
                 compose.onNodeWithText("Choose photo").performScrollTo().assertHeightIsAtLeast(48.dp)
                 screenshot("photo-empty-${mode.name}-$scale")
@@ -102,6 +117,7 @@ class ProductPhotoWorkflowTest {
             compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
             compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("80")
             click("Choose photo")
+            click("Choose from gallery")
             awaitDescription("Product photo")
             scenario.recreate()
             click("Save product")
@@ -115,15 +131,17 @@ class ProductPhotoWorkflowTest {
             click(title)
             awaitDescription("Product photo")
             click("Edit details")
+            awaitDescription("Product photo")
             Intents.intending(hasAction(MediaStore.ACTION_PICK_IMAGES)).respondWith(ActivityResult(Activity.RESULT_OK, Intent().setData(Uri.fromFile(replacement))))
-            click("Replace photo")
+            clickDescription("Product photo")
+            click("Choose from gallery")
             awaitDescription("Product photo")
             click("Save product")
             await("Edit details")
             runBlocking { Shop.open(context).use { shop -> assertNotEquals(first, shop.snapshot().products.single { it.title == title }.photo) } }
             assertTrue(replacement.delete())
             click("Edit details")
-            click("Remove photo")
+            clickDescription("Remove photo")
             click("Save product")
             await("Edit details")
             awaitDescription("No product photo")
@@ -139,10 +157,42 @@ class ProductPhotoWorkflowTest {
         }
     }
 
+    @Test fun staffCanTakePhotoOnTheSpotForProduct() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val title = "Camera captured workshop part ${System.nanoTime()}"
+        Intents.init()
+        var scenario: ActivityScenario<MainActivity>? = null
+        try {
+            Intents.intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE)).respondWith(ActivityResult(Activity.RESULT_OK, Intent()))
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+            await("Add product")
+            click("Add product")
+            compose.onNodeWithText("Title (required)").performTextInput(title)
+            compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
+            compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("120")
+            click("Choose photo")
+            click("Take photo")
+            awaitDescription("Product photo")
+            scenario.recreate()
+            click("Save product")
+            await("Edit details")
+            runBlocking { Shop.open(context).use { shop ->
+                val product = shop.snapshot().products.single { it.title == title }
+                assertNotNull(product.photo)
+            } }
+        } finally {
+            scenario?.close()
+            Intents.release()
+        }
+    }
+
     private fun click(text: String) {
         val node = compose.onNodeWithText(text)
         if (text !in listOf("Stock", "Home", "More", "Back")) node.performScrollTo()
         node.performClick()
+    }
+    private fun clickDescription(text: String) {
+        compose.onNodeWithContentDescription(text).performScrollTo().performClick()
     }
     private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     private fun awaitDescription(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription(text).fetchSemanticsNodes().isNotEmpty() } }

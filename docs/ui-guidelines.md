@@ -1,74 +1,75 @@
 # Android UI guidelines
 
-Approved 2026-11-11: adapt Now in Android design-system patterns to the existing
-shop screens and adopt the reference's colors and appearance behavior. This
-supersedes the earlier fixed Shop teal visual decision. Shop workflows retain
-their existing behavior.
-
-## Scope of the Android guidance
-
-Reviewed 2026-11-14 against the full [Mobile design guides](https://developer.android.com/design/ui/mobile):
-Foundations, Styles, Layout and content, Components, Patterns, Home screen and
-Widgets, including nested navigation entries and linked Mobile guide pages.
-The sections below paraphrase actionable guidance; linked sources retain the
-full examples, diagrams and implementation references. Follow links for the
-feature being changed rather than treating example apps as shop requirements.
-
-Android accessibility, safe areas and system behavior apply throughout. The
-approved Figma reference supplies the shop's visual tokens and component
-adaptations. Where a generic recommendation differs, the shop decisions here
-are explicit: centered titles, the existing four destinations, reference button
-colors and a static Default color scheme remain intentional adaptations.
-Guidance for authentication, onboarding, notifications, live updates, widgets,
-media and cross-platform migration applies when those features are designed;
-this document does not introduce them into the product.
+Approved 2026-11-15: Microsoft Fluent UI Android is the visual authority under
+[specification #22](https://github.com/nadimakhtar97/bikepart/issues/22). The former
+Now in Android reference is historical. Android accessibility, safe areas and system behavior apply throughout. Fluent
+supplies visual tokens and native control defaults. Document shop adaptations
+when a native control cannot preserve readable labels, accessible semantics or
+existing workflow contracts. Platform-owned surfaces retain Android behavior.
 
 ## Reference and precedence
 
-Use the user's [Now in Android file](https://www.figma.com/design/MapX1cK2WjBKsPS0ZDLIbw/?node-id=544-19305).
-The Community listing alone is not sufficient for inspecting components.
-
-| Reference | Node | Project use |
-| --- | --- | --- |
-| Guide | `544:19305` | Design intent and companion-project links |
-| Light / Dark palettes | `2:10800`, `2:10871` | Semantic Material color roles |
-| Typography | `12:138` | Roboto role sizes, weights, line heights and spacing |
-| Phone onboarding example | `654:31518` | Content hierarchy, rounded surfaces, spacing and current light variables |
-| Light / Dark settings | `654:31767`, `218:318102` | Appearance choices, radio rows, tonal settings surface and dark variables |
-| Bottom navigation | `49:12083` | Label hierarchy, selected indicator and compact navigation |
-
-Use current bound variables first, then applied styles, then specimen captions.
-The file contains older swatches/captions: its light primary-container swatch is
-`#8C4190`, while the phone's bound variable is `#FFA9FE` with `#732A78` content.
-The title-medium caption says 18sp but the applied style is 16sp; label-small's
-caption says 10sp but its applied style is 11sp. Follow the applied values.
-
-For Figma-driven changes, read the Figma design-to-code skill, create a file
-session, and inspect the concrete nodes with design context and screenshots.
-Use the existing native components where they express the reference accurately.
-Record deliberate adaptations rather than claiming the shop is a pixel copy of
-the news app. Recheck source nodes when changing an inherited design decision.
+Prefer published Fluent V2 Compose APIs, starting with pinned
+`fluentui_core:0.3.11` and `fluentui_controls:0.3.3`. The
+`libs.fluentui.android` umbrella also exposes independently versioned component
+modules; audit each published API and resolved version before using it, and keep
+runtime compatibility as a separate gate. If no suitable V2 control preserves the
+workflow, use an isolated Fluent V1 Android View through Compose interop; then use
+a Fluent-token Compose fallback. See the
+[compatibility evidence](fluent/compatibility.md) and Microsoft Fluent UI Android
+sources. Do not copy a second palette or use historical Figma variables to
+override Fluent. BikePart rendering and behavior require separate actual-app
+checks.
 
 ## Theme and tokens
 
-The adopted variant is the reference's Default theme: purple primary, orange
-secondary, blue tertiary, and neutral light/dark surfaces. System / Light / Dark
-controls brightness and remains stored through `Shop.setAppearance`. System
-follows device brightness. This adoption does not add the reference's illustrative
-account controls or its separate Android brand variant to the shop.
+`BikepartTheme` owns the effective Fluent scope, temporary Material bridge and
+system-bar brightness. Existing `Appearance.System`, `Light`, `Dark` persistence
+maps to SDK `Auto`, `Light`, `Dark`. System follows configuration changes;
+explicit choices override device brightness. Stored names/schema are unchanged.
+`ShopThemeConfiguration` accepts complete alias/control tokens, shared shapes,
+icons and a scoped `FluentStyle`. More offers Accent and the demo's seven fixed
+brands under the accepted [scope amendment](fluent-scope-amendment.md). Brand and
+Accent are app-local preferences; Appearance retains its existing Shop/Room and
+backup contract. Turning Accent off changes applicable chrome to Neutral and
+retains the chosen brand. Native controls without a style parameter keep their
+brand tokens. These controls feed the same scope so native controls, bridge roles
+and fallbacks update together. Do not mutate the SDK singleton alongside fixed local
+tokens. Wallpaper-derived color is not enabled.
 
-`tools/theme/figma-tokens.json` records inspected roles and source nodes.
-`tools/theme/generate.mjs` generates `ui/theme/Theme.kt`; edit the snapshot or
-generator and regenerate rather than changing generated Kotlin alone. Newer
-Material roles missing from the reference are derived from its neutral/accent
-palettes. Wallpaper-derived colors are not enabled for the Default reference
-theme. System-bar icon brightness must follow the effective app appearance.
+`ui/theme/ShopTokens.kt` maps Fluent typography and global corner radii into the
+Material compatibility interface. Use `FluentTheme.aliasTokens` directly when a
+surface or control does not require Material roles; use `MaterialTheme.colorScheme`
+for Material components and APIs that require the bridge. Resolve direct Fluent
+tokens from the active scoped aliases and `FluentTheme.themeMode`, rather than
+creating a parallel palette. `ShopSpacing` expresses shop layout and 48dp
+touch constraints. Screens consume semantic roles rather than local color/font
+constants. Amounts retain whole rupees and Indian grouping. Semantic `ic_*`
+resource names and `ShopThemeConfiguration.icons` supply the centralized icon
+substitution boundary during migration;
+remaining Material Symbols consumers retain their provenance and license until
+replaced. Fluent icon adoption requires its own module/API and asset-term check.
 
-`ui/theme/ShopTokens.kt` owns typography, spacing and shapes. Screens consume
-Material roles rather than defining local colors or font sizes. Use system
-sans-serif/Roboto without runtime font downloads. Titles and labels use the
-reference's bold weights; body text remains regular. Amounts retain Indian
-grouping and whole rupees.
+The old Figma generator is retired. Run the runtime theme export and
+`node tools/theme/validate.mjs` as documented in [theme tooling](../tools/theme/README.md).
+The validator checks all 28 brand/style/appearance scopes, including resolved
+bridge/control and actual chrome/system-bar pairs, and
+rejects exports whose source fingerprint is stale. Rendered screenshots and
+behavioral checks remain required; numeric tokens do not prove usable screens.
+
+Shared primary/secondary buttons use a documented wrapping Compose fallback
+styled by the scoped Fluent ButtonTokens. The native string-only button has
+one-line ellipsis and editable-text semantics and cannot retain multiline
+restore summaries. Callbacks, caller modifiers, selected semantics, custom
+shape/colors, busy labels and disabled state remain supported. See
+[the pilot](fluent/theme-pilot.md) for scope and evidence. Appearance uses one
+labelled selectable radio row with a passive Fluent-token indicator, avoiding
+nested independent row/radio actions. Accent is one labelled 48dp switch row;
+the native inner switch has no separate semantics or keyboard focus. New brand
+rows expose selected state and a keyboard focus ring. The measured switch,
+M365 foreground and custom-fill secondary boundary adaptations are documented in
+[dynamic themes](fluent/dynamic-theme.md). Full copied demo licenses are retained
+in `third_party` and packaged in the APK's `assets/third_party` directory.
 
 ## Platform foundations and visual styles
 
@@ -130,7 +131,7 @@ When adapting an external platform design:
   pickers, dialogs and sheets. Keep primary navigation on parent destinations;
   use tabs for sibling content, Up for the parent and close for a modal.
 - Use sparse list dividers and avoid redundant disclosure indicators. Apply
-  Material Symbols, Roboto, touch feedback and Android transition patterns;
+  the shared Fluent icon/type choices, touch feedback and Android transition patterns;
   avoid lateral transitions between primary destinations.
 - Review margins, resizing, modal behavior and the rewired prototype before
   handoff. Keep a shared style guide and document platform adaptations.
@@ -146,13 +147,11 @@ Source: [Android color for mobile design](https://developer.android.com/design/u
   alone to communicate availability, errors or actions. Test foreground and
   background combinations, including opacity and disabled states.
 - HCT separates hue, chroma and tone; accessible contrast depends on tone, not
-  merely different hues. Generate harmonious palettes with Material tooling
-  when deriving roles rather than assuming a source color is the primary role.
+  merely different hues. Use Fluent semantic token mappings rather than deriving a separate Material palette.
 - Limit competing color sources and decorative or custom semantic colors.
   Content-derived color, if introduced, should use a clear dominant source.
 - Maintain light and dark schemes and assess contrast preferences. Dynamic color
-  normally needs a static fallback; this shop intentionally uses its approved
-  static reference scheme. Check real displays because calibration and settings
+  normally needs a static fallback; this shop uses the effective shared Fluent configuration. Check real displays because calibration and settings
   affect perceived colors.
 
 ### Themes
@@ -170,8 +169,7 @@ Source: [Themes](https://developer.android.com/design/ui/mobile/guides/styles/th
   shapes through shared tokens rather than screen-specific overrides.
 - If a WebView is justified, its light/dark behavior must agree with the app.
   Manufacturer themes can affect system UI and should not break legibility.
-- Material Theme Builder can produce paired light/dark schemes, but any change
-  to the adopted reference must go through the existing token-generation path.
+- Theme changes must use the shared Fluent configuration and effective contrast exporter.
 
 ## Layout and content
 
@@ -406,8 +404,9 @@ Source: [Images and graphics](https://developer.android.com/design/ui/mobile/gui
 The shop keeps its domain-specific destinations, inventory controls and bundled
 Material Symbols. Reference news illustrations, avatars, account data, content
 photos and news actions are not shop content. There are no runtime Figma asset
-URLs. For new applicable static assets, download the exact assets supplied by
-Figma and verify their native size, placement and local file before shipping.
+URLs. For new assets, inspect the approved Fluent source and applicable asset terms,
+then verify native size, placement and the bundled local file before shipping.
+See [Fluent provenance](../third_party/fluent-android-sources.md).
 
 ## Components
 
@@ -682,7 +681,7 @@ Source: [Adapt widgets across form factors](https://developer.android.com/design
 ## Screenshot-inspired refinement
 
 Approved 2026-11-14 in the [UI refinement brief](ui-refinement-brief.md): retain
-Now in Android Default tokens while adapting the user's shop-app screenshots
+the shared semantic token interface while adapting the user's shop-app screenshots
 for quieter search surfaces, creation FABs, product overflow actions, filter
 sheets and chronological sales logs. The screenshots supplement the existing
 reference; their payment/order model does not replace the shop's cart/cash-sale
@@ -705,7 +704,8 @@ model.
   Date ranges include both endpoints. Search matches receipt, cart or customer.
   Completed cash receipts remain immutable.
 - Bundle official Material Symbols locally and record provenance under
-  `third_party`; retain a consistent icon family and semantic theme colors.
+  `third_party`; replace families through the shared scoped icon configuration
+  after checking the new assets’ terms, and retain semantic theme colors.
 
 ## Verification
 

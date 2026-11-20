@@ -4,48 +4,98 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import com.nadim.bikepart.updates.*
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.NavEntry
+import com.microsoft.fluentui.compose.Scaffold
+import com.microsoft.fluentui.theme.FluentTheme
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.CanvasBackground
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground2
+import com.microsoft.fluentui.theme.token.FluentIcon
+import com.microsoft.fluentui.theme.token.FluentStyle
+import com.microsoft.fluentui.tokenized.SearchBar
+import com.microsoft.fluentui.tokenized.navigation.SideRail
+import com.microsoft.fluentui.tokenized.navigation.TabBar
+import com.microsoft.fluentui.tokenized.navigation.TabData
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopViewModel
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.Appearance
+import com.nadim.bikepart.shop.CatalogDraft
+import com.nadim.bikepart.shop.CorrectionKind
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.StockHealth
+import com.nadim.bikepart.shop.copyCatalog
+import com.nadim.bikepart.shop.decodeCatalog
+import com.nadim.bikepart.shop.encode
+import com.nadim.bikepart.shop.prefillTemplate
 import com.nadim.bikepart.ui.theme.BikepartTheme
 import com.nadim.bikepart.ui.theme.ShopSpacing
+import com.nadim.bikepart.ui.theme.shopIconVector
+import com.nadim.bikepart.updates.AppInstaller
+import com.nadim.bikepart.updates.AppUpdater
+import com.nadim.bikepart.updates.DownloadState
+import com.nadim.bikepart.updates.InstallResult
+import com.nadim.bikepart.updates.UpdateReminders
+import com.nadim.bikepart.updates.UpdateState
+import com.nadim.bikepart.updates.UpdateViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
-private data class MainDestination(val label: String, val outlined: Int, val filled: Int)
+
+private data class MainDestination(val screen: Screen, val label: String, val outlined: Int, val filled: Int)
 private val destinations = listOf(
-    MainDestination("Home", R.drawable.ic_home, R.drawable.ic_home_filled),
-    MainDestination("Stock", R.drawable.ic_stock, R.drawable.ic_stock_filled),
-    MainDestination("Carts", R.drawable.ic_carts, R.drawable.ic_carts_filled),
-    MainDestination("More", R.drawable.ic_more, R.drawable.ic_more_filled),
+    MainDestination(Screen.Home, "Home", R.drawable.ic_home, R.drawable.ic_home_filled),
+    MainDestination(Screen.Stock, "Stock", R.drawable.ic_stock, R.drawable.ic_stock_filled),
+    MainDestination(Screen.Carts, "Carts", R.drawable.ic_carts, R.drawable.ic_carts_filled),
+    MainDestination(Screen.More, "More", R.drawable.ic_more, R.drawable.ic_more_filled),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,8 +132,6 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                 }
             } else if (event == Lifecycle.Event.ON_STOP) {
                 updateJob?.cancel()
-                // Rotation and in-app navigation keep a transfer; only actual
-                // backgrounding stops it. Process death leaves temporary files.
                 if (context.findActivity()?.isChangingConfigurations != true) updateService.cancelDownload()
             }
         }
@@ -92,6 +140,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
     val stockState = rememberSaveableStateHolder()
     val resolver = androidx.compose.ui.platform.LocalContext.current.contentResolver
+    val customization by model.themePreferences.state.collectAsStateWithLifecycle()
+    val themeConfiguration = remember(customization.brand, customization.accent) {
+        com.nadim.bikepart.ui.theme.ShopThemeConfiguration(aliasTokens = customization.brand.aliasTokens,
+            style = if (customization.accent) com.microsoft.fluentui.theme.token.FluentStyle.Brand else com.microsoft.fluentui.theme.token.FluentStyle.Neutral)
+    }
     val state by model.state.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
@@ -103,10 +156,25 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val backupSaved by model.backupSaved.collectAsStateWithLifecycle()
     val exportedCaptureId by model.exportedCaptureId.collectAsStateWithLifecycle()
     val recoveryExport = exportedCaptureId != null && exportedCaptureId == recoveryCapture?.id
+    val backStack = remember { mutableStateListOf<Screen>(Screen.Home) }
     var stockHealth by rememberSaveable { mutableStateOf<String?>(null) }
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
-    var destination by rememberSaveable { mutableStateOf("Home") }
-    var route by rememberSaveable { mutableStateOf("main") }
+    var destination by rememberSaveable { mutableStateOf<Screen>(Screen.Home) }
+    var route by rememberSaveable { mutableStateOf<Screen>(Screen.Home) }
+    fun selectTab(screen: Screen) {
+        model.error.value = null
+        destination = screen
+        route = screen
+        backStack.clear()
+        backStack.add(screen)
+    }
+    fun navigateTo(targetRoute: Screen) {
+        model.error.value = null
+        route = targetRoute
+        if (backStack.lastOrNull() != targetRoute) {
+            backStack.add(targetRoute)
+        }
+    }
     val currentRoute by rememberUpdatedState(route)
     val currentDestination by rememberUpdatedState(destination)
     val currentBusy by rememberUpdatedState(busy)
@@ -117,344 +185,972 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     var selectedId by rememberSaveable { mutableStateOf("") }
     var newCartId by rememberSaveable { mutableStateOf("") }
     var scanPurpose by rememberSaveable { mutableStateOf(ScanPurpose.Catalog.name) }
-    var scanReturn by rememberSaveable { mutableStateOf("create") }
+    var scanReturn by rememberSaveable { mutableStateOf<Screen>(Screen.Create) }
     var arrivalOperation by rememberSaveable { mutableStateOf("") }
-    fun scan(purpose: ScanPurpose, returnRoute: String) { scanPurpose = purpose.name; scanReturn = returnRoute; model.error.value = null; route = "scan" }
-    fun receive(id: String) { selectedId = id; arrivalOperation = java.util.UUID.randomUUID().toString(); model.error.value = null; route = "arrival" }
+    fun scan(purpose: ScanPurpose, returnRoute: Screen) { scanPurpose = purpose.name; scanReturn = returnRoute; navigateTo(Screen.Scan) }
+    fun receive(id: String) { selectedId = id; arrivalOperation = java.util.UUID.randomUUID().toString(); navigateTo(Screen.Arrival) }
     var checkoutVersion by rememberSaveable { mutableLongStateOf(0L) }
-    // A persisted cart identity also recovers a committed receipt after a lost checkout response.
     val selectedSale = state?.sales?.find { it.cartId == selectedId }
     LaunchedEffect(state?.revision, route, selectedId) {
-        if (route in listOf("cart", "checkout") && selectedSale != null) { route = "receipt"; model.error.value = null }
+        if (route in listOf(Screen.Cart, Screen.Checkout) && selectedSale != null) { navigateTo(Screen.Receipt) }
     }
     LaunchedEffect(state != null, route) {
-        if (state != null && (route in listOf("cart", "cart-products") || route == "scan" && scanPurpose == ScanPurpose.Sale.name) && cartDraft == null) model.openCart(selectedId)
+        if (state != null && (route in listOf(Screen.Cart, Screen.CartProducts) || route is Screen.Scan && scanPurpose == ScanPurpose.Sale.name) && cartDraft == null) model.openCart(selectedId)
     }
     var catalogPayload by rememberSaveable { mutableStateOf<String?>(null) }
     var formSession by rememberSaveable { mutableIntStateOf(0) }
     var templateId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedCategoryId by rememberSaveable { mutableStateOf("") }
     val catalog = catalogPayload?.let { decodeCatalog(it) }
     val template = state?.templates?.find { it.id == templateId }
-    fun beginCatalog(draft: CatalogDraft, target: String, id: String? = null) { model.error.value = null; formSession++; catalogPayload = draft.encode(); templateId = id; route = target }
+    fun beginCatalog(draft: CatalogDraft, target: Screen, id: String? = null) { formSession++; catalogPayload = draft.encode(); templateId = id; navigateTo(target) }
     val product = state?.products?.find { it.id == selectedId }
+    val fluentStyle = if (customization.accent) FluentStyle.Brand else FluentStyle.Neutral
+
     fun back() {
-        if (route == "scan") { route = scanReturn; model.error.value = null; return }
-        if (route == "cart") {
+        if (route is Screen.Scan) { navigateTo(scanReturn); return }
+        if (route is Screen.Cart) {
             val draft = cartDraft
             val isUntouchedNewCart = newCartId == selectedId && draft != null &&
                 draft.customer.isBlank() && draft.quantities.isEmpty()
             if (isUntouchedNewCart) {
                 model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, {
-                    newCartId = ""; route = "main"; destination = "Carts"
+                    newCartId = ""; selectTab(Screen.Carts)
                 })
             } else {
-                model.flushCart { newCartId = ""; route = "main"; destination = "Carts" }
+                model.flushCart { newCartId = ""; selectTab(Screen.Carts) }
             }
             return
         }
-        route = when (route) { "checkout", "cart-products" -> "cart"; "receipt" -> "sales"; "detail" -> if (product?.archived == true) "archived-products" else "main"; "edit", "fields", "correction", "labels" -> "detail"; "arrival" -> "receive-products"; "template-detail", "template-form" -> "templates"; else -> "main" }
-        model.error.value = null
+        val target = when (route) {
+            Screen.Checkout, Screen.CartProducts -> Screen.Cart
+            Screen.Receipt -> Screen.Sales
+            Screen.Detail -> if (product?.archived == true) Screen.ArchivedProducts else destination
+            Screen.Edit, Screen.Fields, Screen.Correction, Screen.Labels -> Screen.Detail
+            Screen.Arrival -> Screen.ReceiveProducts
+            Screen.TemplateDetail, Screen.TemplateForm -> Screen.Templates
+            is Screen.CategoryDetail -> Screen.Categories
+            else -> destination
+        }
+        if (backStack.size > 1) {
+            backStack.removeLastOrNull()
+        }
+        route = backStack.lastOrNull() ?: target
     }
-    fun newCart() { model.write({ selectedId = createCart() }, { newCartId = selectedId; model.openCart(selectedId); destination = "Carts"; route = "cart" }) }
-    fun addProduct() { model.error.value = null; formSession++; catalogPayload = null; route = "create" }
+    fun newCart() { model.write({ selectedId = createCart() }, { newCartId = selectedId; model.openCart(selectedId); destination = Screen.Carts; navigateTo(Screen.Cart) }) }
+    fun addProduct() { catalogPayload = null; formSession++; navigateTo(Screen.Create) }
     fun openStock(health: StockHealth?) {
         stockState.removeState("stock:$stockSession")
         stockSession++
         stockHealth = health?.name
-        destination = "Stock"
-        model.error.value = null
+        selectTab(Screen.Stock)
     }
-    BackHandler(route != "main") { if (!busy) back() }
+    BackHandler(route !in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)) { if (!busy) back() }
     val selectedCart = state?.carts?.find { it.id == selectedId }
-    BikepartTheme(appearance = state?.appearance ?: Appearance.System) {
-        val colors = MaterialTheme.colorScheme
-        // Material 3 scroll behaviour: the bar keeps its height, gains a tonal surface
-        // once content has scrolled under it, and resets when the screen changes.
-        // contentOffset accumulates negative consumed.y as content moves under the bar.
-        val topBarScroll = TopAppBarDefaults.pinnedScrollBehavior()
-        val scrolled by remember { derivedStateOf { topBarScroll.state.contentOffset < 0f } }
-        val topBarColor by animateColorAsState(
-            if (scrolled) colors.surfaceContainer else colors.surface, label = "topAppBarColor")
-        LaunchedEffect(route, destination, selectedId) { topBarScroll.state.contentOffset = 0f }
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val useRail = maxWidth >= 600.dp && route == "main"
+
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val qrVector = shopIconVector(R.drawable.ic_qr_code_scanner)
+    val searchBarContent: @Composable RowScope.() -> Unit = {
+        SearchBar(
+            onValueChange = { query, _ ->
+                searchQuery = query
+                if (query.isNotBlank()) {
+                   // show products titles
+                }
+            },
+            style = fluentStyle,
+            searchHint = "Search products",
+            rightAccessoryIcon = FluentIcon(
+                light = qrVector,
+                dark = qrVector,
+                contentDescription = "Scan product",
+                onClick = { }
+            ),
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    BikepartTheme(appearance = state?.appearance ?: Appearance.System, configuration = themeConfiguration) {
+        val themeMode = FluentTheme.themeMode
+        val surface = FluentTheme.aliasTokens.neutralBackgroundColor[Background1].value(themeMode)
+        val canvas =
+            FluentTheme.aliasTokens.neutralBackgroundColor[CanvasBackground].value(themeMode)
+        val appBarColors = com.nadim.bikepart.ui.theme.shopAppBarColors()
+        com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
+            statusBackground = if (route in listOf(
+                    Screen.Home,
+                    Screen.Stock,
+                    Screen.Carts,
+                    Screen.More
+                )
+            ) surface else appBarColors.background,
+            navigationBackground = surface
+        )
+        BoxWithConstraints(Modifier
+            .fillMaxSize()
+            .background(canvas)) {
+            val useRail = maxWidth >= 600.dp && route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)
             Scaffold(
-                modifier = Modifier.nestedScroll(topBarScroll.nestedScrollConnection),
-                containerColor = colors.surface,
-                topBar = {
-                    if (route != "main") CenterAlignedTopAppBar(
-                        title = { Text(when (route) {
-                            "labels" -> "Product labels"; "scan" -> "Scan Barcode"; "receive-products", "arrival" -> "Receive stock"; "catalog-search" -> "Find catalog details"
-                            "templates" -> "Product templates"; "template-detail" -> template?.catalog?.title ?: "Template"
-                            "template-form" -> if (templateId == null) "New template" else "Edit template"; "create" -> "New product"
-                            "detail" -> "Product details"; "edit" -> "Edit details"
-                            "archived-products" -> "Archived products"; "checkout" -> "Cash checkout"; "receipt" -> "Receipt"; "sales" -> "Sales history"
-                            "cart" -> selectedCart?.name ?: "Unfinished bill"; "cart-products" -> "Add to cart"
-                            "backups" -> "Shop backups"; "correction" -> CorrectionKind.valueOf(correctionKind).label; "finding-lookups" -> "Fitment and locations"; "categories" -> "Categories"; "fields" -> "Catalog fields"; else -> destination
-                        }, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                        navigationIcon = {
-                            ShopBackButton(onClick = { back() }, enabled = !busy)
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor),
-                    )
-                },
-                floatingActionButton = {
-                    if (route == "main" && state != null && !busy && destination in listOf("Stock", "Carts")) {
-                        ExtendedFloatingActionButton(
-                            onClick = { if (destination == "Stock") addProduct() else newCart() },
-                            icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
-                            text = { Text(if (destination == "Stock") "Add product" else "New sale") },
-                            containerColor = colors.primaryContainer, contentColor = colors.onPrimaryContainer,
-                            modifier = Modifier.imePadding().semantics {
-                                text = AnnotatedString(if (destination == "Stock") "Add product" else "New sale")
-                            })
-                    }
-                },
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 bottomBar = {
-                    if (route == "main" && !useRail) NavigationBar(containerColor = colors.surface, tonalElevation = 0.dp) {
-                        destinations.forEach { item ->
-                            val selected = destination == item.label
-                            NavigationBarItem(
-                                enabled = !busy,
-                                selected = selected,
-                                onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
-                                icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
-                                label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = colors.primaryContainer, selectedIconColor = colors.onPrimaryContainer,
-                                    selectedTextColor = colors.primary, unselectedIconColor = colors.onSurface,
-                                    unselectedTextColor = colors.onSurface,
-                                ),
+                    if (route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More) && !useRail) {
+                        val tabs = destinations.map { item ->
+                            TabData(
+                                title = item.label,
+                                icon = shopIconVector(item.outlined),
+                                selectedIcon = shopIconVector(item.filled),
+                                onClick = { if (!busy) { if (item.screen == Screen.Stock) openStock(null) else selectTab(item.screen) } },
                             )
                         }
+                        TabBar(
+                            modifier = Modifier
+                                .background(surface)
+                                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
+                            tabDataList = tabs,
+                            selectedIndex = destinations.indexOfFirst { it.screen == destination }.coerceAtLeast(0),
+                            showIndicator = false,
+                        )
                     }
                 },
             ) { padding ->
-                val scrollState = key(route, destination, selectedId) { rememberScrollState() }
-                Row(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
-                    if (useRail) NavigationRail(containerColor = colors.surface) {
-                        Spacer(Modifier.height(ShopSpacing.section))
-                        destinations.forEach { item ->
-                            val selected = destination == item.label
-                            NavigationRailItem(selected = selected, enabled = !busy,
-                                onClick = { if (item.label == "Stock") openStock(null) else { destination = item.label; model.error.value = null } },
-                                icon = { Icon(painterResource(if (selected) item.filled else item.outlined), contentDescription = null) },
-                                label = { Text(item.label, style = MaterialTheme.typography.labelMedium) },
-                                colors = NavigationRailItemDefaults.colors(indicatorColor = colors.primaryContainer,
-                                    selectedIconColor = colors.onPrimaryContainer, selectedTextColor = colors.primary,
-                                    unselectedIconColor = colors.onSurface, unselectedTextColor = colors.onSurface))
+                Row(Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .consumeWindowInsets(padding)
+                    .imePadding()) {
+                    if (useRail) {
+                        val tabs = destinations.map { item ->
+                            TabData(
+                                title = item.label,
+                                icon = shopIconVector(item.outlined),
+                                selectedIcon = shopIconVector(item.filled),
+                                onClick = { if (!busy) { if (item.screen == Screen.Stock) openStock(null) else selectTab(item.screen) } },
+                            )
                         }
+                        SideRail(
+                            topTabDataList = tabs,
+                            topTabSelectedIndex = destinations.indexOfFirst { it.screen == destination }.coerceAtLeast(0),
+                            showIconText = true,
+                        )
                     }
-                    Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.TopCenter) {
-                        Column(
-                            if (route == "scan") Modifier.fillMaxSize() else
-                                Modifier.widthIn(max = ShopSpacing.formWidth).fillMaxWidth().verticalScroll(scrollState).padding(ShopSpacing.content)
-                                    .padding(bottom = if (route == "main" && destination in listOf("Stock", "Carts")) 88.dp else 0.dp),
-                            verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
-                        ) {
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        Column(Modifier.fillMaxSize()) {
                             val shop = state
                             if (shop == null) {
-                                val openingError = error?.message
-                                if (openingError != null) Text(openingError)
-                                else Column(Modifier.fillMaxWidth().padding(top = ShopSpacing.section),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
-                                    CircularProgressIndicator()
-                                    Text(stringResource(R.string.opening_shop), style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                                Scaffold(
+                                    modifier = Modifier.fillMaxSize(),
+                                    topBar = { ShopRouteAppBar(title = "Home", showBack = false) },
+                                ) { loadingPadding ->
+                                    Box(
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(loadingPadding)
+                                            .consumeWindowInsets(loadingPadding),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        val openingError = error?.message
+                                        if (openingError != null) {
+                                            Text(openingError)
+                                        } else {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.spacedBy(
+                                                    ShopSpacing.content
+                                                ),
+                                            ) {
+                                                CircularProgressIndicator()
+                                                Text(
+                                                    stringResource(R.string.opening_shop),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = FluentTheme.aliasTokens.neutralForegroundColor[Foreground2].value(
+                                                        FluentTheme.themeMode
+                                                    ),
+                                                    modifier = Modifier.semantics {
+                                                        liveRegion = LiveRegionMode.Polite
+                                                    },
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                                 return@Column
                             }
-                            when (route) {
-                                "backups" -> {
-                                    DriveBackupControls(model, shop.revision)
-                                    LocalBackupControls(localCapture, shop.revision, backupBusy, backupError.takeUnless { recoveryExport }, backupSaved && !recoveryExport, model::captureBackup, model::saveBackupCopy)
-                                    if (recoveryCapture != null) LocalBackupControls(recoveryCapture, shop.revision, backupBusy, backupError.takeIf { recoveryExport }, backupSaved && recoveryExport,
-                                        model::captureBackup, model::saveBackupCopy, recovery = true)
-                                }
-                                "scan" -> ContextualScanner(shop, ScanPurpose.valueOf(scanPurpose), busy, error, camera,
-                                    manual = { route = when (ScanPurpose.valueOf(scanPurpose)) { ScanPurpose.Sale -> "cart-products"; ScanPurpose.Receiving -> "receive-products"; ScanPurpose.Catalog -> "catalog-search" } },
-                                    onChange = { model.error.value = null },
-                                    add = { id, pieces -> cartDraft?.let { draft -> model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, id, pieces) }, { model.openCart(draft.cart.id); route = "cart" }) } },
-                                    receive = ::receive, open = { selectedId = it; route = "detail" }, copy = { beginCatalog(it, "create") }, cart = cartDraft?.cart,
-                                    link = { code, target, revision, done -> model.write({ linkBarcode(code, target, expectedAssignmentRevision = revision) }, done) })
-                                "receive-products", "catalog-search" -> {
-                                    val forCatalog = route == "catalog-search"
-                                    ScanManualPicker(shop, forCatalog, busy, model::readPhoto,
-                                        onScan = { scan(if (forCatalog) ScanPurpose.Catalog else ScanPurpose.Receiving, route) },
-                                        select = { if (forCatalog) { selectedId = it; route = "detail" } else receive(it) },
-                                        template = { beginCatalog(shop.prefillTemplate(it), "create") }, create = { route = "create" })
-                                }
-                                "arrival" -> if (product != null && !product.archived) key(arrivalOperation) {
-                                    StockArrivalForm(product, busy, error, onChange = { model.error.value = null },
-                                        save = { pieces, cost -> model.write({ receiveStock(arrivalOperation, product.id, pieces, cost) }, { route = "detail" }) })
-                                }
-                                "cart" -> CartEditor(shop, cartDraft, busy, error,
-                                    edit = model::editCart, pause = ::back, add = { route = "cart-products" },
-                                    retry = { model.flushCart() }, reload = model::reloadCart,
-                                    checkout = { model.flushCart { checkoutVersion = requireNotNull(model.cartDraft.value).cart.editVersion; model.error.value = null; route = "checkout" } },
-                                    remove = { productId -> cartDraft?.let { draft ->
-                                        model.write({ saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities - productId) }, { model.openCart(draft.cart.id) })
-                                    } },
-                                    discard = { cartDraft?.let { draft -> model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, { newCartId = ""; route = "main"; destination = "Carts" }) } })
-                                "checkout" -> {
-                                    val cart = shop.carts.find { it.id == selectedId }
-                                    if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
-                                    else if (cart != null) CashCheckout(shop, cart, busy, error,
-                                        onChange = { model.error.value = null }, edit = { model.openCart(cart.id); route = "cart" },
-                                        complete = { cash ->
-                                            model.write({ checkout(cart.id, checkoutVersion, cash) }, { route = "receipt" })
+                            val formContext = ProductFormRouteContext(
+                                shop = shop,
+                                product = product,
+                                busy = busy,
+                                error = error,
+                                stateHolder = stockState,
+                                stateKey = "form:$formSession:$route:$selectedId:$catalogPayload",
+                                routeKey = "$route:$selectedId:$catalogPayload",
+                                lookups = ProductLookups(
+                                    category = { name, selected ->
+                                        model.write({ selected(createCategory(name)) })
+                                    },
+                                    option = { definition, name, selected ->
+                                        model.write({ selected(createOption(definition, name)) })
+                                    },
+                                ),
+                                findingLookups = FindingLookups(
+                                    make = { name, selected ->
+                                        model.write({
+                                            selected(
+                                                createMake(
+                                                    name
+                                                )
+                                            )
                                         })
-                                    else Text(stringResource(R.string.cart_unavailable))
-                                }
-                                "sales" -> SalesHistory(shop) { selectedId = it; model.error.value = null; route = "receipt" }
-                                "receipt" -> if (selectedSale != null) SaleReceipt(selectedSale) { model.error.value = null; route = "sales" }
-                                    else Text(stringResource(R.string.receipt_unavailable))
-                                "cart-products" -> cartDraft?.let { draft ->
-                                    CartProductPicker(shop, shop.carts.find { it.id == draft.cart.id } ?: draft.cart, busy, error, model::readPhoto,
-                                        onScan = { scan(ScanPurpose.Sale, "cart-products") },
-                                        onChange = { model.error.value = null }, add = { productId, pieces ->
-                                            model.write({ addCartProduct(draft.cart.id, draft.cart.editVersion, productId, pieces) }, { model.openCart(draft.cart.id); route = "cart" })
-                                        })
-                                }
-                                "create", "edit", "template-form" -> stockState.SaveableStateProvider("form:$formSession:$route:$selectedId:$catalogPayload") { key(route, selectedId, catalogPayload) {
-                                    if (route == "create") ShopSecondaryButton(onClick = { scan(ScanPurpose.Catalog, "create") }, enabled = !busy) { Text(stringResource(R.string.manual_scan_catalog)) }
-                                    if (route == "create" && catalog == null) ShopSecondaryButton(onClick = { route = "templates" }, enabled = !busy) { Text(stringResource(R.string.btn_choose_template)) }
-                                    ProductForm(shop, if (route == "edit") product else null, busy, error,
-                                        onChange = { model.error.value = null },
-                                        lookups = ProductLookups(
-                                            category = { name, selected -> model.write({ val id = createCategory(name); selected(id) }) },
-                                            attribute = { input, done -> model.write({ createAttribute(categoryId = input.categoryId, name = input.name, type = input.type, required = input.required, unit = input.unit) }, done) },
-                                            option = { definition, name, selected -> model.write({ val id = createOption(definition, name); selected(id) }) },
-                                        ),
-                                        findingLookups = FindingLookups(
-                                            make = { name, selected -> model.write({ selected(createMake(name)) }) },
-                                            model = { make, name, selected -> model.write({ selected(createModel(make, name)) }) },
-                                            location = { name, selected -> model.write({ selected(createLocation(name)) }) },
-                                        ),
-                                        loadPhoto = model::readPhoto,
-                                        initialCatalog = if (route == "edit") null else catalog,
-                                        templateMode = route == "template-form",
-                                        save = { input ->
-                                            val editing = if (route == "edit") product else null
-                                            val photo = input.photoUri?.let { uri -> com.nadim.bikepart.shop.PhotoChange.Import {
-                                                resolver.openInputStream(uri.toUri()) ?: throw com.nadim.bikepart.shop.ShopValidation(com.nadim.bikepart.shop.ProductField.Photo, "Photo unavailable. Choose it again or remove it.")
-                                            } } ?: if (input.photoRemoved) com.nadim.bikepart.shop.PhotoChange.Remove else com.nadim.bikepart.shop.PhotoChange.Keep
-                                            model.write({
-                                                if (route == "template-form") templateId = saveTemplate(input.catalog, templateId, photo)
-                                                else if (editing != null) {
-                                                    editProduct(editing.id, input.catalog.title, input.catalog.categoryId, input.catalog.description, input.catalog.attributes, input.categoryMappings, input.catalog.modelIds, input.locationIds, photo)
-                                                    setSellingPrice(editing.id, input.priceRupees)
+                                    },
+                                    model = { make, name, selected ->
+                                        model.write({ selected(createModel(make, name)) })
+                                    },
+                                    location = { name, selected ->
+                                        model.write({ selected(createLocation(name)) })
+                                    },
+                                ),
+                                loadPhoto = model::readPhoto,
+                                onManageCategory = { id ->
+                                    selectedCategoryId = id
+                                    navigateTo(Screen.CategoryDetail(id))
+                                },
+                                onChange = { model.error.value = null },
+                                onSave = { mode, input ->
+                                    val editing =
+                                        if (mode == ProductFormMode.Edit) product else null
+                                    val photo = input.photoUri?.let { uri ->
+                                        com.nadim.bikepart.shop.PhotoChange.Import {
+                                            resolver.openInputStream(uri.toUri())
+                                                ?: throw com.nadim.bikepart.shop.ShopValidation(
+                                                    com.nadim.bikepart.shop.ProductField.Photo,
+                                                    "Photo unavailable. Choose it again or remove it.",
+                                                )
+                                        }
+                                    } ?: if (input.photoRemoved) {
+                                        com.nadim.bikepart.shop.PhotoChange.Remove
+                                    } else {
+                                        com.nadim.bikepart.shop.PhotoChange.Keep
+                                    }
+                                    model.write(
+                                        {
+                                            when (mode) {
+                                                ProductFormMode.Template -> {
+                                                    templateId = saveTemplate(
+                                                        input.catalog,
+                                                        templateId,
+                                                        photo
+                                                    )
                                                 }
-                                                else selectedId = createFromCatalog(input.catalog, input.openingPieces, input.priceRupees, input.allowSimilar, input.locationIds, photo)
-                                            }, { route = if (route == "template-form") "template-detail" else "detail" })
+
+                                                ProductFormMode.Edit -> {
+                                                    val existing = requireNotNull(editing)
+                                                    editProduct(
+                                                        existing.id,
+                                                        input.catalog.title,
+                                                        input.catalog.categoryId,
+                                                        input.catalog.description,
+                                                        input.catalog.attributes,
+                                                        input.categoryMappings,
+                                                        input.catalog.modelIds,
+                                                        input.locationIds,
+                                                        photo,
+                                                    )
+                                                    setSellingPrice(existing.id, input.priceRupees)
+                                                }
+
+                                                ProductFormMode.Create -> {
+                                                    selectedId = createFromCatalog(
+                                                        input.catalog,
+                                                        input.openingPieces,
+                                                        input.priceRupees,
+                                                        input.allowSimilar,
+                                                        input.locationIds,
+                                                        photo,
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        {
+                                            navigateTo(
+                                                if (mode == ProductFormMode.Template) {
+                                                    Screen.TemplateDetail
+                                                } else {
+                                                    Screen.Detail
+                                                },
+                                            )
                                         },
                                     )
-                                }
-                                }
-                                "templates" -> TemplateList(shop, busy,
-                                    onCreate = { beginCatalog(CatalogDraft(), "template-form") },
-                                    onOpen = { templateId = it; route = "template-detail" },
-                                    onUse = { beginCatalog(shop.prefillTemplate(it), "create") })
-                                "template-detail" -> if (template != null) TemplateDetails(shop, template, busy, model::readPhoto,
-                                    onEdit = { beginCatalog(template.catalog, "template-form", template.id) },
-                                    onUse = { beginCatalog(shop.prefillTemplate(template.id), "create") },
-                                    onRetire = { model.write({ retireTemplate(template.id) }) })
-                                "correction" -> if (product != null) key(correctionOperation) {
-                                    StockCorrectionForm(product, CorrectionKind.valueOf(correctionKind), busy, error,
-                                        onChange = { model.error.value = null },
-                                        save = { quantity, reason -> model.write({ correctStock(correctionOperation, product.id, CorrectionKind.valueOf(correctionKind), quantity, reason) }, { route = "detail" }) })
-                                }
-                                "archived-products" -> ArchivedProducts(shop, model::readPhoto) { selectedId = it; route = "detail" }
-                                "labels" -> if (product != null) LabelPreview(shop, product, busy, error, usbAccess = labelUsb,
-                                    onChange = { model.error.value = null }, save = { media, copies -> model.write({ setLabelPreferences(media, copies) }) })
-                                "detail" -> if (product != null) {
-                                    ProductDetails(shop, product, onEdit = { route = "edit" }, onManage = { route = "fields" }, loadPhoto = model::readPhoto, busy = busy, onCopy = { beginCatalog(shop.copyCatalog(product.id), "create") }, onTemplate = { beginCatalog(shop.copyCatalog(product.id), "template-form") }, onCorrection = { kind ->
-                                    model.error.value = null; correctionKind = kind.name; correctionOperation = java.util.UUID.randomUUID().toString(); route = "correction"
-                                }, onArchive = { model.write({ archiveProduct(product.id) }) }, archiveError = error?.takeIf { it.field == null }?.message,
-                                    onReceive = { receive(product.id) }, onLabels = { model.error.value = null; route = "labels" })
-                                    if (!product.archived) ThresholdForm(product, busy, error, onChange = { model.error.value = null },
-                                        save = { pieces -> model.write({ setLowStockThreshold(product.id, pieces) }) })
-                                    SaleStockHistory(shop, product.id)
-                                    ArrivalHistory(shop.arrivals.filter { it.productId == product.id })
-                                }
-                                "fields" -> if (product != null) CatalogManagement(shop, product, busy, error, { model.error.value = null }, CatalogActions(
-                                    custom = { input, done -> model.write({ createCustomAttribute(product.id, input.name, input.type, input.required, input.unit) }, done) },
-                                    promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
-                                    retire = { id -> model.write({ retireAttribute(id) }) },
-                                    retireOption = { id -> model.write({ retireOption(id) }) },
-                                    required = { id, required -> model.write({ setAttributeRequired(id, required) }) },
-                                    replace = { id, input, done -> model.write({ replaceAttribute(id, input.name, input.type, input.required, input.unit) }, done) },
-                                ))
-                                "finding-lookups" -> FindingLookupSettings(shop, busy,
-                                    retireMake = { model.write({ retireMake(it) }) },
-                                    retireModel = { model.write({ retireModel(it) }) },
-                                    retireLocation = { model.write({ retireLocation(it) }) })
-                                "categories" -> CategorySettings(shop, busy, onRename = { id, name -> model.write({ renameCategory(id, name) }) })
-                                else -> when (destination) {
-                                    "Home" -> HomeScreen(shop, onAdd = { addProduct() }, onStock = ::openStock, onNewSale = ::newCart,
-                                        onCarts = { destination = "Carts" }, onReceive = { route = "receive-products" },
-                                        onSales = { route = "sales" }, onSale = { selectedId = it; model.error.value = null; route = "receipt" },
-                                        busy = busy)
-                                    "Stock" -> stockState.SaveableStateProvider("stock:$stockSession") {
-                                        StockScreen(shop, onAdd = { addProduct() }, onOpen = { selectedId = it; route = "detail" }, loadPhoto = model::readPhoto, initialHealth = stockHealth, busy = busy,
-                                            onScan = { scan(ScanPurpose.Catalog, "main") },
-                                            onProductAction = { item, action ->
-                                                selectedId = item.id; model.error.value = null
-                                                when (action) {
-                                                    "edit" -> route = "edit"
-                                                    "copy" -> beginCatalog(shop.copyCatalog(item.id), "create")
-                                                    "labels" -> route = "labels"
-                                                    "receive" -> receive(item.id)
-                                                }
-                                            })
-                                    }
-                                    "Carts" -> CartList(shop, busy, ::newCart, onOpen = { newCartId = ""; selectedId = it; model.openCart(it); route = "cart" })
-                                    "More" -> {
-                                        MoreScreen(shop, shop.appearance, busy,
-                                            onAppearance = { model.write({ setAppearance(it) }) },
-                                            onCategories = { route = "categories" },
-                                            onFindingLookups = { route = "finding-lookups" },
-                                            onArchived = { route = "archived-products" },
-                                            onSales = { route = "sales" },
-                                            onTemplates = { route = "templates" }, onBackups = { route = "backups" },
-                                            updates = { UpdateControls(updateService.installed, updateState, downloadState, {
-                                                if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                                                    updateJob = updateScope.launch { updateService.check() }
-                                                }
-                                            }, { installError = null; updateService.startDownload() }, updateService::cancelDownload,
-                                            installError = installError, installing = installing, installNow = {
-                                                val ready = downloadState as? DownloadState.Ready
-                                                if (ready != null && !busy && !installing) {
-                                                    installing = true
-                                                    installError = null
-                                                    updateScope.launch {
-                                                        try {
-                                                            when (installService.install(ready.apk, ready.release) {
-                                                                currentRoute == "main" && currentDestination == "More" && !currentBusy && !currentBackupBusy &&
-                                                                    lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) && currentDownloadState == ready
-                                                            }) {
-                                                                InstallResult.InvalidApk -> {
-                                                                    updateService.discardInvalidDownload()
-                                                                    installError = invalidApkMsg
-                                                                }
-                                                                InstallResult.PermissionRequired -> installError = permissionNeededMsg
-                                                                InstallResult.Failed -> installError = installFailedMsg
-                                                                InstallResult.Success, InstallResult.Cancelled -> Unit
-                                                            }
-                                                        } finally { installing = false }
+                                },
+                            )
+                            androidx.compose.runtime.CompositionLocalProvider(
+                                LocalShopRouteBack provides ::back,
+                            ) {
+                                ShopNavigationDisplay(
+                                    backStack = backStack,
+                                    onBack = { if (backStack.size > 1) back() },
+                                    modifier = Modifier.weight(1f),
+                                    entryProvider = { key ->
+                                    when (key) {
+                                        is Screen.Home -> NavEntry(key) {
+                                            HomeRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                onAdd = ::addProduct,
+                                                onStock = ::openStock,
+                                                onNewSale = ::newCart,
+                                                onCarts = { selectTab(Screen.Carts) },
+                                                onReceive = { navigateTo(Screen.ReceiveProducts) },
+                                                onSales = { navigateTo(Screen.Sales) },
+                                                onSale = {
+                                                    selectedId = it
+                                                    model.error.value = null
+                                                    navigateTo(Screen.Receipt)
+                                                },
+                                                searchBar = searchBarContent,
+                                            )
+                                        }
+                                        is Screen.Stock -> NavEntry(key) {
+                                            StockRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                stateHolder = stockState,
+                                                session = stockSession,
+                                                initialHealth = stockHealth,
+                                                loadPhoto = model::readPhoto,
+                                                onAdd = ::addProduct,
+                                                onOpen = {
+                                                    selectedId = it; navigateTo(Screen.Detail)
+                                                },
+                                                onScan = { scan(ScanPurpose.Catalog, Screen.Home) },
+                                                onProductAction = { item, action ->
+                                                    selectedId = item.id
+                                                    model.error.value = null
+                                                    when (action) {
+                                                        "edit" -> navigateTo(Screen.Edit)
+                                                        "copy" -> beginCatalog(
+                                                            shop.copyCatalog(item.id),
+                                                            Screen.Create
+                                                        )
+
+                                                        "labels" -> navigateTo(Screen.Labels)
+                                                        "receive" -> receive(item.id)
                                                     }
-                                                }
-                                            },
-                                            installLater = {
-                                                // Retain completed file in ready state, keeping it accessible in More
-                                            }) })
+                                                },
+                                            )
+                                        }
+                                        is Screen.Carts -> NavEntry(key) {
+                                            CartsRoute(shop, busy, ::newCart) {
+                                                newCartId = ""
+                                                selectedId = it
+                                                model.openCart(it)
+                                                navigateTo(Screen.Cart)
+                                            }
+                                        }
+                                        is Screen.More -> NavEntry(key) {
+                                            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
+                                                MoreRoute(
+                                                    shop = shop,
+                                                    busy = busy,
+                                                    customization = customization,
+                                                    onAppearance = { model.write({ setAppearance(it) }) },
+                                                    onBrand = model.themePreferences::setBrand,
+                                                    onAccent = model.themePreferences::setAccent,
+                                                    onCategories = { navigateTo(Screen.Categories) },
+                                                    onFindingLookups = { navigateTo(Screen.FindingLookups) },
+                                                    onArchived = { navigateTo(Screen.ArchivedProducts) },
+                                                    onSales = { navigateTo(Screen.Sales) },
+                                                    onTemplates = { navigateTo(Screen.Templates) }, onBackups = { navigateTo(Screen.Backups) },
+                                                    updates = { UpdateControls(updateService.installed, updateState, downloadState, {
+                                                        if (updateJob?.isActive != true && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                                                            updateJob = updateScope.launch { updateService.check() }
+                                                        }
+                                                    }, { installError = null; updateService.startDownload() }, updateService::cancelDownload,
+                                                    installError = installError, installing = installing, installNow = {
+                                                        val ready = downloadState as? DownloadState.Ready
+                                                        if (ready != null && !busy && !installing) {
+                                                            installing = true
+                                                            installError = null
+                                                            updateScope.launch {
+                                                                try {
+                                                                    when (installService.install(ready.apk, ready.release) {
+                                                                        currentRoute in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More) && currentDestination == Screen.More && !currentBusy && !currentBackupBusy &&
+                                                                            lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) && currentDownloadState == ready
+                                                                    }) {
+                                                                        InstallResult.InvalidApk -> {
+                                                                            updateService.discardInvalidDownload()
+                                                                            installError = invalidApkMsg
+                                                                        }
+                                                                        InstallResult.PermissionRequired -> installError = permissionNeededMsg
+                                                                        InstallResult.Failed -> installError = installFailedMsg
+                                                                        InstallResult.Success, InstallResult.Cancelled -> Unit
+                                                                    }
+                                                                } finally { installing = false }
+                                                            }
+                                                        }
+                                                    },
+                                                    installLater = {
+                                                        // Retain completed file in ready state, keeping it accessible in More
+                                                    }) })
+                                            }
+                                        }
+                                        is Screen.Backups -> NavEntry(key) {
+                                            BackupsRoute(
+                                                model = model,
+                                                shop = shop,
+                                                localCapture = localCapture,
+                                                recoveryCapture = recoveryCapture,
+                                                busy = backupBusy,
+                                                error = backupError,
+                                                saved = backupSaved,
+                                                recoveryExport = recoveryExport,
+                                            )
+                                        }
+                                        is Screen.Scan -> NavEntry(key) {
+                                            ScanRoute(
+                                                shop = shop,
+                                                purpose = ScanPurpose.valueOf(scanPurpose),
+                                                busy = busy,
+                                                error = error,
+                                                camera = camera,
+                                                manual = {
+                                                    navigateTo(
+                                                        when (ScanPurpose.valueOf(scanPurpose)) {
+                                                            ScanPurpose.Sale -> Screen.CartProducts
+                                                            ScanPurpose.Receiving -> Screen.ReceiveProducts
+                                                            ScanPurpose.Catalog, ScanPurpose.ProductDetail -> Screen.CatalogSearch
+                                                        },
+                                                    )
+                                                },
+                                                onChange = { model.error.value = null },
+                                                add = { id, pieces ->
+                                                    cartDraft?.let { draft ->
+                                                        model.write(
+                                                            {
+                                                                addCartProduct(
+                                                                    draft.cart.id,
+                                                                    draft.cart.editVersion,
+                                                                    id,
+                                                                    pieces
+                                                                )
+                                                            },
+                                                            {
+                                                                model.openCart(draft.cart.id); navigateTo(
+                                                                Screen.Cart
+                                                            )
+                                                            },
+                                                        )
+                                                    }
+                                                },
+                                                receive = ::receive,
+                                                open = {
+                                                    selectedId = it; navigateTo(Screen.Detail)
+                                                },
+                                                copy = { beginCatalog(it, Screen.Create) },
+                                                cart = cartDraft?.cart,
+                                                link = { code, target, revision, done ->
+                                                    model.write({
+                                                        linkBarcode(
+                                                            code,
+                                                            target,
+                                                            expectedAssignmentRevision = revision
+                                                        )
+                                                    }, done)
+                                                },
+                                            )
+                                        }
+
+                                        is Screen.ReceiveProducts -> NavEntry(key) {
+                                            ReceiveProductsRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                loadPhoto = model::readPhoto,
+                                                onScan = {
+                                                    scan(
+                                                        ScanPurpose.Receiving,
+                                                        Screen.ReceiveProducts
+                                                    )
+                                                },
+                                                onSelect = ::receive,
+                                                onUseTemplate = {
+                                                    beginCatalog(
+                                                        shop.prefillTemplate(
+                                                            it
+                                                        ), Screen.Create
+                                                    )
+                                                },
+                                                onCreate = { navigateTo(Screen.Create) },
+                                            )
+                                        }
+
+                                        is Screen.CatalogSearch -> NavEntry(key) {
+                                            CatalogSearchRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                loadPhoto = model::readPhoto,
+                                                onScan = {
+                                                    scan(
+                                                        ScanPurpose.Catalog,
+                                                        Screen.CatalogSearch
+                                                    )
+                                                },
+                                                onSelect = {
+                                                    selectedId = it
+                                                    navigateTo(Screen.Detail)
+                                                },
+                                                onUseTemplate = {
+                                                    beginCatalog(
+                                                        shop.prefillTemplate(
+                                                            it
+                                                        ), Screen.Create
+                                                    )
+                                                },
+                                                onCreate = { navigateTo(Screen.Create) },
+                                            )
+                                        }
+                                        is Screen.Arrival -> NavEntry(key) {
+                                            ArrivalRoute(
+                                                product = product,
+                                                operationId = arrivalOperation,
+                                                busy = busy,
+                                                error = error,
+                                                onChange = { model.error.value = null },
+                                                save = { pieces, cost ->
+                                                    model.write(
+                                                        {
+                                                            receiveStock(
+                                                                arrivalOperation,
+                                                                requireNotNull(product).id,
+                                                                pieces,
+                                                                cost
+                                                            )
+                                                        },
+                                                        { navigateTo(Screen.Detail) },
+                                                    )
+                                                },
+                                            )
+                                        }
+                                        is Screen.Cart -> NavEntry(key) {
+                                            CartRoute(
+                                                shop = shop,
+                                                draft = cartDraft,
+                                                busy = busy,
+                                                error = error,
+                                                edit = model::editCart,
+                                                pause = ::back,
+                                                addProduct = { navigateTo(Screen.CartProducts) },
+                                                retry = { model.flushCart() },
+                                                reload = model::reloadCart,
+                                                checkout = {
+                                                    model.flushCart {
+                                                        checkoutVersion =
+                                                            requireNotNull(model.cartDraft.value).cart.editVersion
+                                                        model.error.value = null
+                                                        navigateTo(Screen.Checkout)
+                                                    }
+                                                },
+                                                removeProduct = { productId ->
+                                                    cartDraft?.let { draft ->
+                                                        model.write(
+                                                            {
+                                                                saveCart(
+                                                                    draft.cart.id,
+                                                                    draft.cart.editVersion,
+                                                                    draft.customer,
+                                                                    draft.quantities - productId
+                                                                )
+                                                            },
+                                                            { model.openCart(draft.cart.id) },
+                                                        )
+                                                    }
+                                                },
+                                                discard = {
+                                                    cartDraft?.let { draft ->
+                                                        model.write(
+                                                            {
+                                                                discardCart(
+                                                                    draft.cart.id,
+                                                                    draft.cart.editVersion
+                                                                )
+                                                            },
+                                                            {
+                                                                newCartId =
+                                                                    ""; selectTab(Screen.Carts)
+                                                            },
+                                                        )
+                                                    }
+                                                },
+                                            )
+                                        }
+                                        is Screen.Checkout -> NavEntry(key) {
+                                            CheckoutRoute(
+                                                shop = shop,
+                                                cart = shop.carts.find { it.id == selectedId },
+                                                sale = selectedSale,
+                                                busy = busy,
+                                                error = error,
+                                                onChange = { model.error.value = null },
+                                                onEdit = { cart ->
+                                                    model.openCart(cart.id); navigateTo(
+                                                    Screen.Cart
+                                                )
+                                                },
+                                                onComplete = { cart, cash ->
+                                                    model.write({
+                                                        checkout(
+                                                            cart.id,
+                                                            checkoutVersion,
+                                                            cash
+                                                        )
+                                                    }, { navigateTo(Screen.Receipt) })
+                                                },
+                                                onOpenSales = {
+                                                    model.error.value = null
+                                                    navigateTo(Screen.Sales)
+                                                },
+                                            )
+                                        }
+                                        is Screen.Sales -> NavEntry(key) {
+                                            SalesRoute(shop) {
+                                                selectedId = it
+                                                model.error.value = null
+                                                navigateTo(Screen.Receipt)
+                                            }
+                                        }
+                                        is Screen.Receipt -> NavEntry(key) {
+                                            ReceiptRoute(selectedSale) {
+                                                model.error.value = null
+                                                navigateTo(Screen.Sales)
+                                            }
+                                        }
+                                        is Screen.CartProducts -> NavEntry(key) {
+                                            CartProductsRoute(
+                                                shop = shop,
+                                                draft = cartDraft,
+                                                busy = busy,
+                                                error = error,
+                                                loadPhoto = model::readPhoto,
+                                                onScan = {
+                                                    scan(
+                                                        ScanPurpose.Sale,
+                                                        Screen.CartProducts
+                                                    )
+                                                },
+                                                onChange = { model.error.value = null },
+                                                onAdd = { productId, pieces ->
+                                                    val draft =
+                                                        cartDraft ?: return@CartProductsRoute
+                                                    model.write(
+                                                        {
+                                                            addCartProduct(
+                                                                draft.cart.id,
+                                                                draft.cart.editVersion,
+                                                                productId,
+                                                                pieces
+                                                            )
+                                                        },
+                                                        {
+                                                            model.openCart(draft.cart.id); navigateTo(
+                                                            Screen.Cart
+                                                        )
+                                                        },
+                                                    )
+                                                },
+                                            )
+                                        }
+
+                                        is Screen.Create -> NavEntry(key) {
+                                            CreateProductRoute(formContext, catalog)
+                                        }
+
+                                        is Screen.Edit -> NavEntry(key) {
+                                            EditProductRoute(formContext)
+                                        }
+
+                                        is Screen.TemplateForm -> NavEntry(key) {
+                                            TemplateFormRoute(
+                                                formContext,
+                                                catalog,
+                                                editing = templateId != null
+                                            )
+                                        }
+                                        is Screen.Templates -> NavEntry(key) {
+                                            TemplateListRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                onCreate = {
+                                                    beginCatalog(
+                                                        CatalogDraft(),
+                                                        Screen.TemplateForm
+                                                    )
+                                                },
+                                                onOpen = {
+                                                    templateId =
+                                                        it; navigateTo(Screen.TemplateDetail)
+                                                },
+                                                onUse = {
+                                                    beginCatalog(
+                                                        shop.prefillTemplate(it),
+                                                        Screen.Create
+                                                    )
+                                                },
+                                            )
+                                        }
+                                        is Screen.TemplateDetail -> NavEntry(key) {
+                                            TemplateDetailRoute(
+                                                shop = shop,
+                                                template = template,
+                                                busy = busy,
+                                                loadPhoto = model::readPhoto,
+                                                onEdit = {
+                                                    template?.let {
+                                                        beginCatalog(
+                                                            it.catalog,
+                                                            Screen.TemplateForm,
+                                                            it.id
+                                                        )
+                                                    }
+                                                },
+                                                onUse = {
+                                                    template?.let {
+                                                        beginCatalog(
+                                                            shop.prefillTemplate(
+                                                                it.id
+                                                            ), Screen.Create
+                                                        )
+                                                    }
+                                                },
+                                                onRetire = {
+                                                    template?.let { selected ->
+                                                        model.write({
+                                                            retireTemplate(
+                                                                selected.id
+                                                            )
+                                                        })
+                                                    }
+                                                },
+                                            )
+                                        }
+                                        is Screen.Correction -> NavEntry(key) {
+                                            CorrectionRoute(
+                                                product = product,
+                                                operationId = correctionOperation,
+                                                kind = CorrectionKind.valueOf(correctionKind),
+                                                busy = busy,
+                                                error = error,
+                                                onChange = { model.error.value = null },
+                                                save = { quantity, reason ->
+                                                    product?.let { selected ->
+                                                        model.write(
+                                                            {
+                                                                correctStock(
+                                                                    correctionOperation,
+                                                                    selected.id,
+                                                                    CorrectionKind.valueOf(
+                                                                        correctionKind
+                                                                    ),
+                                                                    quantity,
+                                                                    reason
+                                                                )
+                                                            },
+                                                            { navigateTo(Screen.Detail) },
+                                                        )
+                                                    }
+                                                },
+                                            )
+                                        }
+                                        is Screen.ArchivedProducts -> NavEntry(key) {
+                                            ArchivedProductsRoute(shop, model::readPhoto) {
+                                                selectedId = it
+                                                navigateTo(Screen.Detail)
+                                            }
+                                        }
+                                        is Screen.Labels -> NavEntry(key) {
+                                            LabelsRoute(shop, product, busy, error, labelUsb, model)
+                                        }
+                                        is Screen.Detail -> NavEntry(key) {
+                                            ProductDetailRoute(
+                                                shop = shop,
+                                                product = product,
+                                                busy = busy,
+                                                error = error,
+                                                loadPhoto = model::readPhoto,
+                                                onEdit = { navigateTo(Screen.Edit) },
+                                                onManageFields = { navigateTo(Screen.Fields) },
+                                                onCopy = {
+                                                    product?.let {
+                                                        beginCatalog(
+                                                            shop.copyCatalog(
+                                                                it.id
+                                                            ), Screen.Create
+                                                        )
+                                                    }
+                                                },
+                                                onMakeTemplate = {
+                                                    product?.let {
+                                                        beginCatalog(
+                                                            shop.copyCatalog(
+                                                                it.id
+                                                            ), Screen.TemplateForm
+                                                        )
+                                                    }
+                                                },
+                                                onCorrection = { kind ->
+                                                    model.error.value = null
+                                                    correctionKind = kind.name
+                                                    correctionOperation =
+                                                        java.util.UUID.randomUUID().toString()
+                                                    navigateTo(Screen.Correction)
+                                                },
+                                                onArchive = {
+                                                    product?.let {
+                                                        model.write({
+                                                            archiveProduct(
+                                                                it.id
+                                                            )
+                                                        })
+                                                    }
+                                                },
+                                                archiveError = error?.takeIf { it.field == null }?.message,
+                                                onReceive = { product?.let { receive(it.id) } },
+                                                onLabels = { navigateTo(Screen.Labels) },
+                                                onChange = { model.error.value = null },
+                                                onThresholdSave = { pieces ->
+                                                    product?.let {
+                                                        model.write({
+                                                            setLowStockThreshold(
+                                                                it.id,
+                                                                pieces
+                                                            )
+                                                        })
+                                                    }
+                                                },
+                                            )
+                                        }
+                                        is Screen.Fields -> NavEntry(key) {
+                                            CatalogFieldsRoute(
+                                                shop = shop,
+                                                product = product,
+                                                busy = busy,
+                                                error = error,
+                                                onChange = { model.error.value = null },
+                                                actions = CatalogActions(
+                                                    custom = { input, done ->
+                                                        product?.let { selected ->
+                                                            model.write({
+                                                                createCustomAttribute(
+                                                                    selected.id,
+                                                                    input.name,
+                                                                    input.type,
+                                                                    input.required,
+                                                                    input.unit
+                                                                )
+                                                            }, done)
+                                                        }
+                                                    },
+                                                    promote = { id, name -> model.write({ promoteCustomAttribute(id, name) }) },
+                                                    retire = { id -> model.write({ retireAttribute(id) }) },
+                                                    retireOption = { id -> model.write({ retireOption(id) }) },
+                                                    required = { id, required -> model.write({ setAttributeRequired(id, required) }) },
+                                                    replace = { id, input, done ->
+                                                        model.write({
+                                                            replaceAttribute(
+                                                                id,
+                                                                input.name,
+                                                                input.type,
+                                                                input.required,
+                                                                input.unit
+                                                            )
+                                                        }, done)
+                                                    },
+                                                ),
+                                            )
+                                        }
+                                        is Screen.FindingLookups -> NavEntry(key) {
+                                            FindingLookupsRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                onRetireMake = { model.write({ retireMake(it) }) },
+                                                onRetireModel = { model.write({ retireModel(it) }) },
+                                                onRetireLocation = { model.write({ retireLocation(it) }) },
+                                            )
+                                        }
+                                        is Screen.Categories -> NavEntry(key) {
+                                            CategoriesRoute(
+                                                shop = shop,
+                                                busy = busy,
+                                                onOpen = { id ->
+                                                    selectedCategoryId = id
+                                                    navigateTo(Screen.CategoryDetail(id))
+                                                },
+                                                onRename = { id, name ->
+                                                    model.write({ renameCategory(id, name) })
+                                                },
+                                            )
+                                        }
+
+                                        is Screen.CategoryDetail -> NavEntry(key) {
+                                            CategoryDetailRoute(
+                                                shop = shop,
+                                                categoryId = selectedCategoryId,
+                                                busy = busy,
+                                                error = error,
+                                                onChange = { model.error.value = null },
+                                                actions = CategoryFieldActions(
+                                                    create = { input, done ->
+                                                        model.write({
+                                                            createAttribute(
+                                                                categoryId = input.categoryId,
+                                                                name = input.name,
+                                                                type = input.type,
+                                                                required = input.required,
+                                                                unit = input.unit,
+                                                            )
+                                                        }, done)
+                                                    },
+                                                    createOption = { fieldId, name, done ->
+                                                        model.write(
+                                                            { createOption(fieldId, name) },
+                                                            done
+                                                        )
+                                                    },
+                                                    retire = { model.write({ retireAttribute(it) }) },
+                                                    retireOption = { model.write({ retireOption(it) }) },
+                                                    required = { id, required ->
+                                                        model.write({
+                                                            setAttributeRequired(
+                                                                id,
+                                                                required
+                                                            )
+                                                        })
+                                                    },
+                                                    replace = { id, input, done ->
+                                                        model.write({
+                                                            replaceAttribute(
+                                                                id,
+                                                                input.name,
+                                                                input.type,
+                                                                input.required,
+                                                                input.unit,
+                                                            )
+                                                        }, done)
+                                                    },
+                                                ),
+                                            )
+                                        }
+                                        }
                                     }
-                                }
+                                )
                             }
-                            if (error != null && route != "scan" && route != "arrival" && route != "receipt" && route != "checkout" && route != "cart" && route != "cart-products" && !(route == "detail" && (error?.field == ProductField.LowStockThreshold || error?.field == null)) && route != "correction" && route != "create" && route != "edit" && route != "template-form" &&
-                                !(route == "fields" && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) FormError(requireNotNull(error).message)
+                            if (error != null && route !in listOf(Screen.Scan, Screen.Arrival, Screen.Receipt, Screen.Checkout, Screen.Cart, Screen.CartProducts, Screen.Correction, Screen.Create, Screen.Edit, Screen.TemplateForm) &&
+                                !(route == Screen.Detail && (error?.field == ProductField.LowStockThreshold || error?.field == null)) &&
+                                !(route == Screen.Fields && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) {
+                                FormError(requireNotNull(error).message)
+                            }
                         }
                     }
                 }
@@ -462,7 +1158,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
 
             var reminderRevision by remember { mutableIntStateOf(0) }
             val availableUpdate = (updateState as? UpdateState.Available)?.release
-            val isIdle = route == "main" && destination == "Home" && !busy && !backupBusy && error == null
+            val isIdle = route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More) && destination == Screen.Home && !busy && !backupBusy && error == null
             if (isIdle && availableUpdate != null &&
                 reminderRevision >= 0 && reminderService.shouldShowReminder(availableUpdate) && downloadState !is DownloadState.Downloading &&
                 downloadState !is DownloadState.Verifying) {
@@ -471,7 +1167,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     onUpdate = {
                         reminderService.dismissReminder(availableUpdate)
                         reminderRevision++
-                        destination = "More"
+                        selectTab(Screen.More)
                         updateService.startDownload()
                     },
                     onDismiss = {

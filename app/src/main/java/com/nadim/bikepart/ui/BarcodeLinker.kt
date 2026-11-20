@@ -28,8 +28,10 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
         Text(stringResource(R.string.exact_barcode, code))
         Text(stringResource(R.string.barcode_link_note))
         owner?.let { Text(stringResource(R.string.current_target, shop.barcodeTargetLabel(it.target))) }
-        OutlinedTextField(query, { query = it; selectedId = null; onChange() }, label = { Text(stringResource(R.string.barcode_find_target)) },
-            enabled = !busy, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        ShopTextField(
+            query, { query = it; selectedId = null; onChange() },
+            stringResource(R.string.barcode_find_target), enabled = !busy
+        )
         val products = shop.products.filter { !it.archived && (it.title.contains(query, true) || it.sku.contains(query, true)) }
         val templates = shop.templates.filter { !it.retired && it.catalog.title.contains(query, true) }
         val targets = products.map { BarcodeTarget(BarcodeTargetKind.Product, it.id) to "Product: ${it.title}" } +
@@ -40,7 +42,10 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = if (target == selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
                     contentColor = if (target == selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface),
-                modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).semantics { this.selected = target == selected }) {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = ShopSpacing.touchTarget)
+                    .semantics { this.selected = target == selected }) {
                 Column {
                     Text(label)
                     if (target.kind == BarcodeTargetKind.Product) {

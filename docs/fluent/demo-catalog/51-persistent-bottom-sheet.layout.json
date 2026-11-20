@@ -1,0 +1,264 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:36",
+        "content-desc": "3:36 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "PersistentBottomSheet",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "PersistentBottomSheet",
+        "bounds": "[210,166][763,237]",
+        "center": "[486,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/sheet_drawer_handle",
+        "content-desc": "Expand",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[471,2111][608,2164]",
+        "center": "[539,2137]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/scroll_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,2164][1080,2400]",
+        "center": "[540,2282]",
+        "children": [
+          {
+            "class": "android.widget.LinearLayout",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/main_container",
+            "content-desc": "Flag",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,2206][216,2384]",
+            "center": "[108,2295]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/sheet_item_title",
+                "text": "Flag",
+                "bounds": "[73,2306][142,2363]",
+                "center": "[107,2334]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/main_container",
+            "content-desc": "Avatar",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[216,2206][432,2384]",
+            "center": "[324,2295]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/sheet_item_title",
+                "text": "Avatar",
+                "bounds": "[272,2306][376,2363]",
+                "center": "[324,2334]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/main_container",
+            "content-desc": "Add/Remove View",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[432,2206][648,2400]",
+            "center": "[540,2303]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/sheet_item_title",
+                "text": "Add/Remove View",
+                "bounds": "[440,2317][640,2400]",
+                "center": "[540,2358]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/main_container",
+            "content-desc": "Change Collapsed Height",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[648,2206][864,2400]",
+            "center": "[756,2303]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/sheet_item_title",
+                "text": "Change Collapsed Height",
+                "bounds": "[656,2317][856,2400]",
+                "center": "[756,2358]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/main_container",
+            "content-desc": "Reply",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[864,2206][1080,2384]",
+            "center": "[972,2295]",
+            "children": [
+              {
+                "class": "android.widget.TextView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/sheet_item_title",
+                "text": "Reply",
+                "bounds": "[927,2306][1017,2363]",
+                "center": "[972,2334]"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/show_persistent_bottom_sheet_button",
+        "text": "EXPAND PERSISTENT BOTTOM SHEET",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,359][771,454]",
+        "center": "[406,406]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/collapse_persistent_bottom_sheet_button",
+        "text": "HIDE PERSISTENT BOTTOM SHEET",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,496][712,591]",
+        "center": "[377,543]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/toggle_bottom_sheet",
+        "text": "TOGGLE BOTTOMSHEET CONTENT",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,633][713,728]",
+        "center": "[377,680]"
+      },
+      {
+        "class": "android.widget.Button",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/toggle_disable_all_items",
+        "text": "TOGGLE DISABLE ALL ITEMS",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[42,770][609,865]",
+        "center": "[325,817]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/scroll_container",
+        "interactions": [
+          "SCROLLABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,907][1080,2400]",
+        "center": "[540,1653]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n Large demo Text line for showing scroll behaviour of a content. Use inside a Scrollview \n",
+            "bounds": "[0,907][1080,2400]",
+            "center": "[540,1653]"
+          }
+        ]
+      }
+    ]
+  }
+]

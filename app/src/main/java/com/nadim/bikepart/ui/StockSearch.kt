@@ -15,7 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -44,40 +44,30 @@ internal fun StockHealthIndicator(product: Product) {
     }
 }
 
-@Composable
-internal fun ThresholdForm(product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String) -> Unit) {
-    var pieces by rememberSaveable(product.id, product.lowStockThreshold) { mutableStateOf(product.lowStockThreshold?.toString().orEmpty()) }
-    val focusError = remember { BringIntoViewRequester() }
-    LaunchedEffect(error) { if (error?.field == ProductField.LowStockThreshold) focusError.bringIntoView() }
-    ShopSection(stringResource(R.string.threshold_section)) {
-        Text(product.lowStockThreshold?.let { "Threshold: ${indianNumber(it)} pieces" } ?: "Threshold: Not set",
-            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        Text(stringResource(R.string.threshold_note), style = MaterialTheme.typography.bodyMedium)
-        OutlinedTextField(pieces, { pieces = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.threshold_field_label)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true,
-            isError = error?.field == ProductField.LowStockThreshold, modifier = Modifier.fillMaxWidth().bringIntoViewRequester(focusError))
-        if (error?.field == ProductField.LowStockThreshold) FormError(error.message)
-        ShopPrimaryButton(stringResource(R.string.threshold_save), enabled = !busy, onClick = { save(pieces) })
-    }
-}
-
 /** Searchable manual choices remain bounded even with a large lookup catalog. */
 @Composable
 private fun SearchFilter(label: String, choices: List<Pair<String, String>>, selected: String?, onSelect: (String?) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     val selectedLabel = choices.find { it.first == selected }?.second ?: "Any"
-    ShopSecondaryButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
+    ShopSecondaryButton(onClick = { open = true }, modifier = Modifier
+        .fillMaxWidth()
+        .heightIn(min = ShopSpacing.touchTarget)) {
         Text(stringResource(R.string.formatted_text, label, selectedLabel))
     }
     if (open) AlertDialog(onDismissRequest = { open = false }, title = { Text(label) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-            OutlinedTextField(query, { query = it }, label = { Text(stringResource(R.string.find, label)) }, modifier = Modifier.fillMaxWidth())
+            ShopTextField(query, { query = it }, stringResource(R.string.find, label))
             val matching = choices.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) }
             LazyColumn(Modifier.heightIn(max = ShopSpacing.formWidth)) {
-                item { TextButton(onClick = { onSelect(null); open = false; query = "" }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget).semantics { this.selected = selected == null }) { Text(stringResource(R.string.any, label)) } }
+                item { TextButton(onClick = { onSelect(null); open = false; query = "" }, modifier = Modifier
+                    .heightIn(min = ShopSpacing.touchTarget)
+                    .semantics { this.selected = selected == null }) { Text(stringResource(R.string.any, label)) } }
                 items(matching, key = { it.first }) { (id, name) ->
-                    TextButton(onClick = { onSelect(id); open = false; query = "" }, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).semantics { this.selected = id == selected }) { Text(name) }
+                    TextButton(onClick = { onSelect(id); open = false; query = "" }, modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ShopSpacing.touchTarget)
+                        .semantics { this.selected = id == selected }) { Text(name) }
                 }
                 if (matching.isEmpty()) item { Text(stringResource(R.string.no_matching_choices)) }
             }
@@ -115,21 +105,45 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
     ShopSearchField(query, { query = it }, "Search products",
         enabled = !busy, supporting = "Title, SKU, description, fields, fitment or location",
         trailing = { ShopScanButton(stringResource(R.string.search_scan_stock), !busy, onScan) })
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        FilterChip(selected = health == null, onClick = { health = null }, label = { Text(stringResource(R.string.search_all_stock)) },
-            leadingIcon = if (health == null) ({ Icon(painterResource(R.drawable.ic_check), contentDescription = null) }) else null,
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+    Row(Modifier
+        .fillMaxWidth()
+        .horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+        ShopChoiceChip(
+            label = stringResource(R.string.search_all_stock),
+            selected = health == null,
+            onClick = { health = null },
+            leading = if (health == null) ({
+                Icon(
+                    painterResource(R.drawable.ic_check),
+                    contentDescription = null
+                )
+            }) else null
+        )
         StockHealth.entries.forEach { state ->
-            FilterChip(selected = health == state, onClick = { health = if (health == state) null else state },
-                leadingIcon = if (health == state) ({ Icon(painterResource(R.drawable.ic_check), contentDescription = null) }) else null,
-                label = { Text(state.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+            ShopChoiceChip(
+                label = state.label,
+                selected = health == state,
+                onClick = { health = if (health == state) null else state },
+                leading = if (health == state) ({
+                    Icon(
+                        painterResource(R.drawable.ic_check),
+                        contentDescription = null
+                    )
+                }) else null
+            )
         }
     }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        FilterChip(selected = category != null, onClick = { expanded = true },
-            label = { Text(category?.let { id -> shop.categories.find { it.id == id }?.name } ?: "All categories") },
-            trailingIcon = { Icon(painterResource(R.drawable.ic_expand_more), contentDescription = null) },
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+        ShopChoiceChip(
+            selected = category != null, onClick = { expanded = true },
+            label = category?.let { id -> shop.categories.find { it.id == id }?.name }
+                ?: "All categories",
+            trailing = {
+                Icon(
+                    painterResource(R.drawable.ic_expand_more),
+                    contentDescription = null
+                )
+            })
         ShopSecondaryButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) {
             Icon(painterResource(R.drawable.ic_filter), contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(ShopSpacing.small))
@@ -148,7 +162,11 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
     if (decimalError && !expanded) FormError(stringResource(R.string.search_decimal_error))
     if (expanded) ModalBottomSheet(onDismissRequest = { expanded = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-      Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding().padding(ShopSpacing.content),
+      Column(Modifier
+          .fillMaxWidth()
+          .verticalScroll(rememberScrollState())
+          .imePadding()
+          .padding(ShopSpacing.content),
           verticalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
         ShopSectionHeader(stringResource(R.string.search_catalog_filters))
         TextButton(onClick = { category = null; make = null; model = null; location = null; health = null; definition = null; decimal = "" },
@@ -159,9 +177,11 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         SearchFilter("Location", listOf("none" to "No location assigned") + shop.locations.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, location) { location = it }
         SearchFilter("Decimal field", shop.attributes.filter { it.type == AttributeType.Decimal && (category == null || it.categoryId == category) }.map { it.id to (it.name + " · " + it.unit + " · " + (it.productId?.let { id -> shop.products.find { it.id == id }?.title } ?: shop.categories.single { c -> c.id == it.categoryId }.name)) }, definition) { definition = it; decimal = "" }
         if (definition != null) {
-            OutlinedTextField(decimal, { decimal = it }, label = { Text(stringResource(R.string.search_exact_decimal)) }, isError = decimalError,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-            if (decimalError) FormError(stringResource(R.string.search_decimal_error))
+            ShopTextField(
+                decimal, { decimal = it }, stringResource(R.string.search_exact_decimal),
+                error = if (decimalError) stringResource(R.string.search_decimal_error) else null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
         }
         ShopPrimaryButton(stringResource(R.string.search_show_results), onClick = { expanded = false }, enabled = !decimalError)
       }
@@ -181,14 +201,18 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
                 ), enabled = !busy) }) { onOpen(product.id) } }
         }
         if (found.size > limit) ShopSecondaryButton(onClick = { limit += 40 },
-            modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.search_show_more)) }
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.search_show_more)) }
     }
 }
 
 @Composable
 internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: PhotoLoader, enabled: Boolean = true, menu: (@Composable () -> Unit)? = null, onOpen: () -> Unit) {
     Surface(onClick = onOpen, enabled = enabled, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp)) {
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)) {
         val density = LocalDensity.current
         val priceStyle = MaterialTheme.typography.titleMedium
         val measurer = rememberTextMeasurer()
@@ -199,7 +223,9 @@ internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: Ph
             // a grouped amount never breaks across lines.
             val stackPrice = density.fontScale >= 1.5f ||
                 measurer.measure(price, priceStyle, maxLines = 1, softWrap = false).size.width > with(density) { priceMax.toPx() }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            Row(Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 ProductPhoto(product.photo, loadPhoto, Modifier.size(52.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

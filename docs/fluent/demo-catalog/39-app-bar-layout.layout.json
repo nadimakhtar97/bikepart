@@ -1,0 +1,390 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:32",
+        "content-desc": "3:32 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "AppBarLayout",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/root_view",
+        "interactions": [
+          "SCROLLABLE"
+        ],
+        "bounds": "[0,0][1080,2400]",
+        "center": "[540,1200]",
+        "children": [
+          {
+            "class": "android.widget.ImageButton",
+            "content-desc": "Navigate up",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[21,128][168,275]",
+            "center": "[94,201]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "AppBarLayout",
+            "bounds": "[210,166][546,237]",
+            "center": "[378,201]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/action_flag",
+            "content-desc": "Flag",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[848,138][975,264]",
+            "center": "[911,201]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "More options",
+            "interactions": [
+              "CLICKABLE",
+              "LONG_CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[975,138][1080,264]",
+            "center": "[1027,201]"
+          },
+          {
+            "class": "android.view.ViewGroup",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,275][1080,414]",
+            "center": "[540,344]",
+            "children": [
+              {
+                "class": "android.widget.LinearLayout",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/search_view_container",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,296][1038,385]",
+                "center": "[540,340]",
+                "children": [
+                  {
+                    "class": "androidx.appcompat.widget.LinearLayoutCompat",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/search_view",
+                    "interactions": [
+                      "FOCUSABLE"
+                    ],
+                    "bounds": "[168,296][912,385]",
+                    "center": "[540,340]",
+                    "children": [
+                      {
+                        "class": "android.widget.AutoCompleteTextView",
+                        "resource-id": "com.microsoft.fluentuidemo.df:id/search_src_text",
+                        "text": "Search",
+                        "interactions": [
+                          "CLICKABLE",
+                          "LONG_CLICKABLE",
+                          "FOCUSABLE",
+                          "EDITABLE"
+                        ],
+                        "bounds": "[199,296][912,385]",
+                        "center": "[555,340]"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "class": "android.widget.ScrollView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,414][1080,2400]",
+            "center": "[540,1407]"
+          },
+          {
+            "class": "androidx.recyclerview.widget.RecyclerView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/app_bar_layout_list",
+            "interactions": [
+              "SCROLLABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[0,414][1080,2400]",
+            "center": "[540,1407]",
+            "children": [
+              {
+                "class": "android.widget.LinearLayout",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,435][1080,561]",
+                "center": "[540,498]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                    "text": "Scroll behavior: COLLAPSE_TOOLBAR",
+                    "bounds": "[42,435][1038,561]",
+                    "center": "[540,498]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.Button",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/app_bar_layout_toggle_scroll_behavior_button",
+                "text": "TOGGLE SCROLL BEHAVIOR",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,582][593,676]",
+                "center": "[317,629]"
+              },
+              {
+                "class": "android.widget.LinearLayout",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,740][1080,866]",
+                "center": "[540,803]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                    "text": "Toggle navigation icon",
+                    "bounds": "[42,740][1038,866]",
+                    "center": "[540,803]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.Button",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/app_bar_layout_toggle_navigation_icon_button",
+                "text": "HIDE ICON",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,887][301,981]",
+                "center": "[171,934]"
+              },
+              {
+                "class": "android.widget.LinearLayout",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,1045][1080,1171]",
+                "center": "[540,1108]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                    "text": "Toggle searchbar layout style",
+                    "bounds": "[42,1045][1038,1171]",
+                    "center": "[540,1108]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.Button",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/app_bar_layout_toggle_searchbar_type_button",
+                "text": "SHOW AS ACTION VIEW",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,1192][527,1286]",
+                "center": "[284,1239]"
+              },
+              {
+                "class": "android.widget.LinearLayout",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,1350][1080,1476]",
+                "center": "[540,1413]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                    "text": "Toggle between themes (recreates activity)",
+                    "bounds": "[42,1350][1038,1476]",
+                    "center": "[540,1413]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.Button",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/app_bar_layout_toggle_theme_button",
+                "text": "TOGGLE THEME",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,1497][397,1591]",
+                "center": "[219,1544]"
+              },
+              {
+                "class": "android.widget.LinearLayout",
+                "interactions": [
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,1655][1080,1781]",
+                "center": "[540,1718]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_sub_header_title",
+                    "text": "Extra scrollable content",
+                    "bounds": "[42,1655][1038,1781]",
+                    "center": "[540,1718]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.ViewGroup",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,1781][1080,1911]",
+                "center": "[540,1846]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                    "text": "Item 0",
+                    "bounds": "[42,1815][1038,1872]",
+                    "center": "[540,1843]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.ViewGroup",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,1913][1080,2043]",
+                "center": "[540,1978]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                    "text": "Item 1",
+                    "bounds": "[42,1947][1038,2004]",
+                    "center": "[540,1975]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.ViewGroup",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,2045][1080,2175]",
+                "center": "[540,2110]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                    "text": "Item 2",
+                    "bounds": "[42,2079][1038,2136]",
+                    "center": "[540,2107]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.ViewGroup",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,2177][1080,2307]",
+                "center": "[540,2242]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                    "text": "Item 3",
+                    "bounds": "[42,2211][1038,2268]",
+                    "center": "[540,2239]"
+                  }
+                ]
+              },
+              {
+                "class": "android.view.ViewGroup",
+                "interactions": [
+                  "CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[0,2309][1080,2400]",
+                "center": "[540,2354]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+                    "text": "Item 4",
+                    "bounds": "[42,2343][1038,2400]",
+                    "center": "[540,2371]"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

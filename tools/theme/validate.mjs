@@ -1,36 +1,32 @@
 import fs from 'node:fs';
-const source=fs.readFileSync('app/src/main/java/com/nadim/bikepart/ui/theme/Theme.kt','utf8').replace(/\r\n/g,'\n');
-const reference=JSON.parse(fs.readFileSync('tools/theme/figma-tokens.json','utf8'));
+import crypto from 'node:crypto';
+const file = process.argv[2] ?? 'docs/fluent/evidence/dynamic-theme/fluent-contrast.json';
+const exportData = JSON.parse(fs.readFileSync(file, 'utf8'));
+const paths = JSON.parse(fs.readFileSync('tools/theme/source-files.json', 'utf8'));
+const hash = crypto.createHash('sha256');
+for (const path of paths) hash.update(path + '\n').update(fs.readFileSync(path)).update('\n');
+if (hash.digest('hex') !== exportData.sourceSha256) throw Error('Stale runtime export: rebuild and rerun ThemeContrastExportTest.');
 const luminance = hex => {
- const channels=hex.match(/../g).map(c=>parseInt(c,16)/255).map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);
- return .2126*channels[0]+.7152*channels[1]+.0722*channels[2];
+  const c = hex.match(/../g).map(x => parseInt(x, 16) / 255).map(x => x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4);
+  return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
 };
-let count=0,min=Infinity;
-for(const mode of ['light','dark']) {
- const block=source.split(`internal val ${mode}ShopColors`)[1].split(')\n')[0];
- const roles=Object.fromEntries([...block.matchAll(/(\w+) = Color\(0xFF([A-F0-9]{6})\)/g)].map(m=>[m[1],m[2]]));
- for(const [role,color] of Object.entries(reference[mode])) {
-  if(roles[role]!==color)throw Error(`${mode} ${role} differs from the reviewed Figma snapshot`);
- }
- const check=(a,b,threshold)=>{
-  const values=[luminance(roles[a]),luminance(roles[b])].sort((x,y)=>y-x);
-  const ratio=(values[0]+.05)/(values[1]+.05);
-  if(ratio<threshold)throw Error(`${mode} ${a}/${b}: ${ratio}`);
-  count++; if(threshold===4.5)min=Math.min(min,ratio);
- };
- for(const name of ['Primary','Secondary','Tertiary','Error']) {
-  const lower=name[0].toLowerCase()+name.slice(1);
-  check('on'+name,lower,4.5); check('on'+name+'Container',lower+'Container',4.5);
- }
- check('onBackground','background',4.5);
- check('onSurfaceVariant','surfaceVariant',4.5);
- check('inverseOnSurface','inverseSurface',4.5);
- for(const surface of Object.keys(roles).filter(k=>k==='surface'||k.startsWith('surfaceContainer')||k==='surfaceDim'||k==='surfaceBright')) {
-  check('onSurface',surface,4.5); check('primary',surface,4.5); check('error',surface,4.5); check('outline',surface,3);
- }
- // Settings/form groups use the Figma settings surface: primary at 8% over surface.
- const blend=(a,b)=>a.match(/../g).map((c,i)=>Math.round(parseInt(c,16)*.08+parseInt(b.slice(i*2,i*2+2),16)*.92).toString(16).padStart(2,'0')).join('');
- roles.tonalGroup=blend(roles.primary,roles.surface);
- check('onSurface','tonalGroup',4.5); check('primary','tonalGroup',4.5); check('error','tonalGroup',4.5); check('outline','tonalGroup',3);
+let checked = 0;
+const failures = [];
+const brands = ['Fluent', 'OneNote', 'Word', 'Excel', 'PowerPoint', 'M365', 'Teams'];
+if (exportData.themes.length !== 28) throw Error('Expected all 28 brand/style/appearance scopes');
+for (const brand of brands) for (const style of ['Brand', 'Neutral']) for (const appearance of ['light', 'dark']) {
+  const identity = `${brand}/${style}/${appearance}`;
+  const themes = exportData.themes.filter(t => t.appearance === appearance && t.brand === brand && t.style === style);
+  if (themes.length !== 1 || !themes[0].pairs.length) throw Error(`Missing or duplicated ${identity} theme`);
+  for (const pair of themes[0].pairs) {
+    if (!/^[0-9A-F]{6}$/i.test(pair.foreground) || !/^[0-9A-F]{6}$/i.test(pair.background)) throw Error(`Invalid colors: ${pair.name}`);
+    if (pair.minimum === 0 && pair.name.endsWith('.disabled.exempt')) continue;
+    if (![3, 4.5].includes(pair.minimum)) throw Error(`Invalid threshold: ${pair.name}`);
+    const [hi, lo] = [luminance(pair.foreground), luminance(pair.background)].sort((a, b) => b - a);
+    const ratio = (hi + .05) / (lo + .05);
+    if (ratio < pair.minimum) failures.push(`${identity} ${pair.name}: ${ratio.toFixed(2)} < ${pair.minimum}`);
+    checked++;
+  }
 }
-console.log(`Figma roles match. Passed ${count} generated theme contrast checks; minimum normal-text contrast ${min.toFixed(2)}:1.`);
+if (failures.length) throw Error(failures.join('\n'));
+console.log(`Passed ${checked} effective Fluent/bridge contrast pairs; source fingerprint current. Disabled controls explicitly exempt.`);

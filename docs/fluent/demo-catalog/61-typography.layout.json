@@ -1,0 +1,137 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:41",
+        "content-desc": "3:41 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Typography",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Typography",
+        "bounds": "[210,166][489,237]",
+        "center": "[349,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Headline is Light 28sp",
+            "bounds": "[42,317][1038,417]",
+            "center": "[540,367]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Title 1 is Medium 20sp",
+            "bounds": "[42,459][1038,530]",
+            "center": "[540,494]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Title 2 is Regular 20sp",
+            "bounds": "[42,572][1038,643]",
+            "center": "[540,607]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Heading is Regular 18sp",
+            "bounds": "[42,685][1038,748]",
+            "center": "[540,716]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Subheading 1 is Regular 16sp",
+            "bounds": "[42,790][1038,847]",
+            "center": "[540,818]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Subheading 2 is Medium 16sp",
+            "bounds": "[42,889][1038,946]",
+            "center": "[540,917]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Body 1 is Regular 14sp",
+            "bounds": "[42,988][1038,1039]",
+            "center": "[540,1013]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/typography_example_body_2",
+            "text": "Body 2 is Medium 14sp",
+            "bounds": "[42,1081][1038,1132]",
+            "center": "[540,1106]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Caption is Regular 12sp",
+            "bounds": "[42,1174][1038,1217]",
+            "center": "[540,1195]"
+          }
+        ]
+      }
+    ]
+  }
+]

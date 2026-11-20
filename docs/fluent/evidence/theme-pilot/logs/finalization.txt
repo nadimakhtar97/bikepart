@@ -1,0 +1,3 @@
+Performing Streamed Install
+Success
+PASS: final signed shrunk release UI smoke and debug APK restoration.

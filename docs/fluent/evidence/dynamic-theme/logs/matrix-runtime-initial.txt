@@ -1,0 +1,96 @@
+Performing Streamed Install
+Success
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.ThemeContrastExportTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.nadim.bikepart.ThemeContrastExportTest:
+INSTRUMENTATION_STATUS: test=exportEffectiveThemePairs
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.nadim.bikepart.ThemeContrastExportTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=exportEffectiveThemePairs
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 5.617
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+/data/local/tmp/fluent-contrast.json: 1 file pulled, 0 skipped. 4.5 MB/s (360168 bytes in 0.076s)
+file://wsl.localhost/Ubuntu/home/nadimakhtar97/.codex/worktrees/fluent-dynamic-theme/bikepart/tools/theme/validate.mjs:31
+if (failures.length) throw Error(failures.join('\n'));
+                           ^
+
+Error: Fluent/Brand/light switch.false.track: 1.02 < 3
+Fluent/Brand/light switch.false.knob: 1.14 < 3
+Fluent/Brand/dark switch.false.track: 1.81 < 3
+Fluent/Brand/dark switch.true.knob: 2.81 < 3
+Fluent/Neutral/light switch.false.track: 1.02 < 3
+Fluent/Neutral/light switch.false.knob: 1.14 < 3
+Fluent/Neutral/dark switch.false.track: 1.81 < 3
+Fluent/Neutral/dark switch.true.knob: 2.81 < 3
+OneNote/Brand/light switch.false.track: 1.01 < 3
+OneNote/Brand/light switch.false.knob: 1.14 < 3
+OneNote/Brand/dark switch.false.track: 1.78 < 3
+OneNote/Brand/dark switch.true.knob: 2.08 < 3
+OneNote/Neutral/light switch.false.track: 1.01 < 3
+OneNote/Neutral/light switch.false.knob: 1.14 < 3
+OneNote/Neutral/dark switch.false.track: 1.78 < 3
+OneNote/Neutral/dark switch.true.knob: 2.08 < 3
+Word/Brand/light switch.false.track: 1.01 < 3
+Word/Brand/light switch.false.knob: 1.14 < 3
+Word/Brand/light button.secondary.customSelected.outline.0: 2.79 < 3
+Word/Brand/dark switch.false.track: 1.81 < 3
+Word/Neutral/light switch.false.track: 1.01 < 3
+Word/Neutral/light switch.false.knob: 1.14 < 3
+Word/Neutral/light button.secondary.customSelected.outline.0: 2.79 < 3
+Word/Neutral/dark switch.false.track: 1.81 < 3
+Excel/Brand/light switch.false.track: 1.02 < 3
+Excel/Brand/light switch.false.knob: 1.14 < 3
+Excel/Brand/dark switch.false.track: 1.80 < 3
+Excel/Brand/dark switch.true.knob: 2.63 < 3
+Excel/Neutral/light switch.false.track: 1.02 < 3
+Excel/Neutral/light switch.false.knob: 1.14 < 3
+Excel/Neutral/dark switch.false.track: 1.80 < 3
+Excel/Neutral/dark switch.true.knob: 2.63 < 3
+PowerPoint/Brand/light switch.false.track: 1.02 < 3
+PowerPoint/Brand/light switch.false.knob: 1.14 < 3
+PowerPoint/Brand/dark switch.false.track: 1.81 < 3
+PowerPoint/Brand/dark switch.true.knob: 2.84 < 3
+PowerPoint/Neutral/light switch.false.track: 1.02 < 3
+PowerPoint/Neutral/light switch.false.knob: 1.14 < 3
+PowerPoint/Neutral/dark switch.false.track: 1.81 < 3
+PowerPoint/Neutral/dark switch.true.knob: 2.84 < 3
+M365/Brand/light switch.false.track: 1.02 < 3
+M365/Brand/light switch.false.knob: 1.14 < 3
+M365/Brand/dark bridge.low.link: 4.10 < 4.5
+M365/Brand/dark bridge.container.link: 4.10 < 4.5
+M365/Brand/dark bridge.high.link: 3.62 < 4.5
+M365/Brand/dark bridge.highest.link: 3.62 < 4.5
+M365/Brand/dark switch.false.track: 1.83 < 3
+M365/Neutral/light switch.false.track: 1.02 < 3
+M365/Neutral/light switch.false.knob: 1.14 < 3
+M365/Neutral/dark bridge.low.link: 4.10 < 4.5
+M365/Neutral/dark bridge.container.link: 4.10 < 4.5
+M365/Neutral/dark bridge.high.link: 3.62 < 4.5
+M365/Neutral/dark bridge.highest.link: 3.62 < 4.5
+M365/Neutral/dark switch.false.track: 1.83 < 3
+Teams/Brand/light switch.false.track: 1.02 < 3
+Teams/Brand/light switch.false.knob: 1.14 < 3
+Teams/Brand/dark switch.false.track: 1.81 < 3
+Teams/Neutral/light switch.false.track: 1.02 < 3
+Teams/Neutral/light switch.false.knob: 1.14 < 3
+Teams/Neutral/dark switch.false.track: 1.81 < 3
+    at file://wsl.localhost/Ubuntu/home/nadimakhtar97/.codex/worktrees/fluent-dynamic-theme/bikepart/tools/theme/validate.mjs:31:28
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.13.1

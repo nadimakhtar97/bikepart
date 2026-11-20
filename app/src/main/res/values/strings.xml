@@ -151,8 +151,8 @@
     <string name="product_copy_catalog_supporting">Start a new product with these details</string>
     <string name="product_create_template">Create template from product</string>
     <string name="product_create_template_supporting">Reuse these details later</string>
-    <string name="product_manage_fields">Manage fields</string>
-    <string name="product_manage_fields_supporting">Custom and category fields</string>
+    <string name="product_manage_fields">Manage product fields</string>
+    <string name="product_manage_fields_supporting">Custom fields for this product</string>
     <string name="product_archive_section">Archive unused product</string>
     <string name="product_archive_desc">Requires zero stock and no unfinished carts. Identity, details, stock history and receipts remain readable.</string>
     <string name="product_archive_btn">Archive product</string>
@@ -182,7 +182,7 @@
     <string name="more_shop_backups">Shop backups</string>
     <string name="more_shop_backups_supporting">Drive, local copies and phone recovery</string>
     <string name="more_catalog">Catalog</string>
-    <string name="more_edit_categories">Edit categories</string>
+    <string name="more_edit_categories">Manage categories and fields</string>
     <string name="more_manage_fitment">Manage fitment and locations</string>
 
     <!-- Category settings -->
@@ -191,7 +191,7 @@
 
     <!-- Product form -->
     <string name="form_catalog_only_note">Catalog details only. Enter stock, selling price and locations separately for each new product.</string>
-    <string name="form_basic_details">Basic details</string>
+    <string name="form_basic_details">Product details</string>
     <string name="form_title_required">Title (required)</string>
     <string name="form_category_required">Category (required)</string>
     <string name="form_search_add_category">Search or add category</string>
@@ -362,10 +362,12 @@
 
     <!-- Product photos -->
     <string name="photo_section">Product photo (optional)</string>
-    <string name="photo_description">Choose a photo from your phone. Saved photos stay with the product. Maximum 20 MB.</string>
+    <string name="photo_description">Choose a photo from your phone or take a new one on the spot. Saved photos stay with the product. Maximum 20 MB.</string>
     <string name="photo_replace">Replace photo</string>
     <string name="photo_choose">Choose photo</string>
     <string name="photo_remove">Remove photo</string>
+    <string name="photo_take">Take photo</string>
+    <string name="photo_choose_gallery">Choose from gallery</string>
 
     <!-- Label preview / print -->
     <string name="label_identify_note">Labels identify this product, including a shared loose-item bin. They do not identify individual pieces or locations.</string>
@@ -512,9 +514,10 @@
     <string name="sale_saved_on_this_phone">Sale saved on this phone</string>
     <string name="this_receipt_remains_available_offline_in_sales">This receipt remains available offline in Sales history.</string>
     <string name="remove">Remove </string>
-    <string name="location">Location: </string>
+    <string name="location">Location: %1$s</string>
+    <string name="location_retired">Location: %1$s (retired)</string>
     <string name="no_finding_locations_assigned">No finding locations assigned</string>
-    <string name="retire">Retire: </string>
+    <string name="retire">Retire: %1$s</string>
     <string name="shop_changes_are_waiting_for_backup_changes">Shop changes are waiting for backup. Changes held only on a lost phone cannot be recovered.</string>
     <string name="newer_shop_changes_are_waiting_for_another">Newer shop changes are waiting for another backup.</string>
     <string name="shop_restored_a_local_recovery_copy_is">Shop restored. A local recovery copy is saved. A new backup is pending; replacement-phone activation may be required before publication.</string>
@@ -599,4 +602,6 @@
     <string name="update_install_invalid">The downloaded update file is missing, invalid or superseded. Please download again.</string>
     <string name="update_install_failed">Could not open the Android installer. Try Install now again.</string>
     <string name="update_install_permission_needed">Install permission needed. Please allow installing unknown apps for Bikepart in Settings, then tap Install now again.</string>
+    <string name="more_accent">Accent</string>
+    <string name="more_choose_brand_theme">Choose brand theme</string>
 </resources>

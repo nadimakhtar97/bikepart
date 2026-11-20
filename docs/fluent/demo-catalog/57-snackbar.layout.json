@@ -1,0 +1,276 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:39",
+        "content-desc": "3:39 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Snackbar",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Snackbar",
+        "bounds": "[210,166][435,237]",
+        "center": "[322,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "SCROLLABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "Single line",
+            "bounds": "[42,317][1038,428]",
+            "center": "[540,372]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Short duration",
+            "bounds": "[42,471][1038,528]",
+            "center": "[540,499]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_single_line",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,549][433,644]",
+            "center": "[237,596]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Short duration with action",
+            "bounds": "[42,665][1038,722]",
+            "center": "[540,693]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_single_line_action",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,743][552,838]",
+            "center": "[297,790]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Long duration with circular progress as small custom view",
+            "bounds": "[42,859][1038,965]",
+            "center": "[540,912]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_single_line_custom_view",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,986][1038,1124]",
+            "center": "[540,1055]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Short duration with action and medium custom view",
+            "bounds": "[42,1145][1038,1202]",
+            "center": "[540,1173]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_single_line_action_custom_view",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1223][982,1318]",
+            "center": "[512,1270]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Short duration with customized text color",
+            "bounds": "[42,1339][1038,1396]",
+            "center": "[540,1367]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_single_line_custom_text_color",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1417][806,1512]",
+            "center": "[424,1464]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Multiline",
+            "bounds": "[42,1575][1038,1686]",
+            "center": "[540,1630]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Long duration",
+            "bounds": "[42,1729][1038,1786]",
+            "center": "[540,1757]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_multiline",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1807][433,1902]",
+            "center": "[237,1854]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Indefinite duration with action and text updates",
+            "bounds": "[42,1923][1038,1980]",
+            "center": "[540,1951]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_multiline_action",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,2001][904,2096]",
+            "center": "[473,2048]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Long duration with small custom view",
+            "bounds": "[42,2117][1038,2174]",
+            "center": "[540,2145]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_multiline_custom_view",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,2195][747,2290]",
+            "center": "[394,2242]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Short duration with action and medium custom view",
+            "bounds": "[42,2311][1038,2368]",
+            "center": "[540,2339]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/btn_snackbar_multiline_action_custom_view",
+            "text": "SHOW SNACKBAR",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,2389][982,2400]",
+            "center": "[512,2394]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,2201][1080,2400]",
+        "center": "[540,2300]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/snackbar_text",
+            "text": "This is a multiline snackbar. Max lines are set to two, the rest of the text will truncate. Lorem ipsum dolor sit amet consectetur adipiscing elit.",
+            "bounds": "[63,2243][866,2337]",
+            "center": "[464,2290]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/snackbar_action",
+            "text": "ACTION",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[866,2222][1059,2357]",
+            "center": "[962,2289]"
+          }
+        ]
+      }
+    ]
+  }
+]

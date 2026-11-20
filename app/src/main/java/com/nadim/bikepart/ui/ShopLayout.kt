@@ -1,82 +1,85 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.microsoft.fluentui.theme.FluentTheme
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandBackgroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandForegroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens
+import com.microsoft.fluentui.theme.token.FluentStyle
+import com.nadim.bikepart.ui.theme.LocalShopFluentStyle
 import com.nadim.bikepart.ui.theme.ShopSpacing
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 
 /**
- * Shared layout primitives for the shop screens. They keep the approved Now in
- * Android colour roles while giving every screen the same page grid, row rhythm
+ * Shared layout primitives for the shop screens. They use scoped Fluent
+ * semantic color roles while giving every screen the same page grid, row rhythm
  * and trailing alignment.
  */
 
 @Composable
 internal fun ShopPageHeader(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().padding(vertical = ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+    Column(modifier
+        .fillMaxWidth()
+        .padding(vertical = ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
         if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
+            color = FluentTheme.aliasTokens.neutralForegroundColor[NeutralForegroundColorTokens.Foreground2]
+                .value(FluentTheme.themeMode)
+        )
     }
 }
 
 @Composable
 internal fun ShopSectionHeader(title: String, supporting: String? = null, modifier: Modifier = Modifier,
     actionLabel: String? = null, onAction: (() -> Unit)? = null, actionEnabled: Boolean = true) {
-    FlowRow(modifier.fillMaxWidth().padding(top = ShopSpacing.small),
+    FlowRow(modifier
+        .fillMaxWidth()
+        .padding(top = ShopSpacing.small),
         horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small),
         verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Column(Modifier.weight(1f).widthIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier
+            .weight(1f)
+            .widthIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             if (supporting != null) Text(supporting, style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                color = FluentTheme.aliasTokens.neutralForegroundColor[NeutralForegroundColorTokens.Foreground2]
+                    .value(FluentTheme.themeMode)
+            )
         }
         if (actionLabel != null && onAction != null) TextButton(onClick = onAction, enabled = actionEnabled,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(actionLabel) }
-    }
-}
-
-private val LocalShopListGroup = staticCompositionLocalOf { false }
-
-/** Secondary actions share the same touch target and wrapping behavior as the primary action. */
-@Composable
-internal fun ShopSecondaryButton(onClick: () -> Unit, modifier: Modifier = Modifier,
-    enabled: Boolean = true, shape: Shape = ButtonDefaults.outlinedShape,
-    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(), content: @Composable RowScope.() -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier.heightIn(min = ShopSpacing.touchTarget),
-        enabled = enabled, shape = shape, colors = colors, content = content)
-}
-
-/** A single quiet surface for a collection, without a card around every row. */
-@Composable
-internal fun ShopListGroup(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        CompositionLocalProvider(LocalShopListGroup provides true) {
-            Column(Modifier.fillMaxWidth().padding(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp), content = content)
-        }
     }
 }
 
@@ -99,10 +102,20 @@ internal fun ShopTileGrid(content: @Composable (Modifier) -> Unit) {
 @Composable
 internal fun ShopGroup(title: String? = null, modifier: Modifier = Modifier,
     spacing: Dp = ShopSpacing.medium, content: @Composable ColumnScope.() -> Unit) {
-    val colors = MaterialTheme.colorScheme
+    val aliases = FluentTheme.aliasTokens
+    val mode = FluentTheme.themeMode
+    val surface =
+        aliases.neutralBackgroundColor[NeutralBackgroundColorTokens.Background1].value(mode)
+    val foreground =
+        aliases.neutralForegroundColor[NeutralForegroundColorTokens.Foreground1].value(mode)
+    val primary =
+        aliases.brandForegroundColor[BrandForegroundColorTokens.BrandForeground1].value(mode)
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-        color = colors.primary.copy(alpha = .08f).compositeOver(colors.surface)) {
-        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content),
+        color = primary.copy(alpha = .08f).compositeOver(surface), contentColor = foreground
+    ) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(ShopSpacing.content),
             verticalArrangement = Arrangement.spacedBy(spacing)) {
             if (title != null) Text(title, style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.semantics { heading() })
@@ -117,8 +130,11 @@ internal fun ShopSection(title: String, content: @Composable ColumnScope.() -> U
 
 @Composable
 internal fun ShopIconTile(icon: Int, modifier: Modifier = Modifier, size: Dp = 40.dp,
-    container: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer) {
+                          container: Color = FluentTheme.aliasTokens.brandBackgroundColor[BrandBackgroundColorTokens.BrandBackgroundTint]
+                              .value(FluentTheme.themeMode),
+                          contentColor: Color = FluentTheme.aliasTokens.neutralForegroundColor[NeutralForegroundColorTokens.Foreground1]
+                              .value(FluentTheme.themeMode)
+) {
     Surface(modifier.size(size), shape = RoundedCornerShape(12.dp), color = container) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(painterResource(icon), contentDescription = null, tint = contentColor,
@@ -127,186 +143,85 @@ internal fun ShopIconTile(icon: Int, modifier: Modifier = Modifier, size: Dp = 4
     }
 }
 
-/** Keeps one tone-to-role mapping for chips and status tiles. */
-@Composable
-private fun shopStatusColors(tone: ShopStatusTone): Pair<Color, Color> {
-    val colors = MaterialTheme.colorScheme
-    return when (tone) {
-        ShopStatusTone.Neutral -> colors.surfaceContainerHighest to colors.onSurfaceVariant
-        ShopStatusTone.Accent -> colors.secondaryContainer to colors.onSecondaryContainer
-        ShopStatusTone.Warning -> colors.secondaryFixed to colors.onSecondaryFixedVariant
-        ShopStatusTone.Danger -> colors.errorContainer to colors.onErrorContainer
-        ShopStatusTone.Success -> colors.tertiaryContainer to colors.onTertiaryContainer
-    }
-}
-
-@Composable
-internal fun ShopStatusChip(label: String, tone: ShopStatusTone = ShopStatusTone.Neutral, modifier: Modifier = Modifier) {
-    val (container, content) = shopStatusColors(tone)
-    Surface(modifier.heightIn(min = 24.dp), shape = RoundedCornerShape(8.dp), color = container, contentColor = content) {
-        Box(Modifier.padding(horizontal = 8.dp, vertical = 2.dp), contentAlignment = Alignment.Center) {
-            Text(label, style = MaterialTheme.typography.labelSmall)
-        }
-    }
-}
-
-internal enum class ShopStatusTone { Neutral, Accent, Warning, Danger, Success }
-
-/**
- * An icon tile that carries the same status tone as [ShopStatusChip], so attention
- * rows read at a glance without relying on copy alone.
- */
-@Composable
-internal fun ShopStatusIconTile(icon: Int, tone: ShopStatusTone, modifier: Modifier = Modifier) {
-    val (container, content) = shopStatusColors(tone)
-    ShopIconTile(icon, modifier, container = container, contentColor = content)
-}
-
-/**
- * One product, order or settings row: leading icon/photo, title and supporting
- * copy, trailing value or control. [actionLabel] supplies the whole-row action
- * text for screen readers (and the workflow tests click that same label).
- */
-@Composable
-internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supporting: String? = null,
-    meta: String? = null, icon: Int? = null, leading: (@Composable () -> Unit)? = null,
-    status: (@Composable () -> Unit)? = null, trailing: (@Composable () -> Unit)? = null,
-    onClick: (() -> Unit)? = null, enabled: Boolean = true, actionLabel: String? = null,
-    showChevron: Boolean = false, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow) {
-    val metaStyle = MaterialTheme.typography.titleMedium
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    // At large system text, or when a price is too long for its share of the row,
-    // the trailing value moves under the title instead of squeezing it or breaking
-    // a grouped number across lines.
-    val row: @Composable RowScope.(Dp, Boolean) -> Unit = { metaMax, stackedMeta ->
-        if (leading != null) leading()
-        else if (icon != null) ShopIconTile(icon)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (supporting != null) Text(supporting, style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (status != null) FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)) { status() }
-            if (stackedMeta) Text(meta.orEmpty(), style = metaStyle)
-        }
-        if (meta != null && !stackedMeta) Text(meta, style = metaStyle, maxLines = 2,
-            textAlign = TextAlign.End, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = metaMax))
-        trailing?.invoke()
-        if (showChevron) Icon(painterResource(com.nadim.bikepart.R.drawable.ic_chevron_right),
-            contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-    }
-    val shape = MaterialTheme.shapes.small
-    val rowColor = if (LocalShopListGroup.current) Color.Transparent else containerColor
-    val contentModifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)
-    if (onClick != null) {
-        Surface(onClick = onClick, enabled = enabled, shape = shape, color = rowColor,
-            modifier = modifier.then(contentModifier).semantics { if (actionLabel != null) text = AnnotatedString(actionLabel) }) {
-            BoxWithConstraints {
-                val metaMax = (maxWidth - 24.dp) * 0.45f
-                val stacked = meta != null && (density.fontScale >= 1.5f || measurer.measure(meta, metaStyle,
-                    maxLines = 1, softWrap = false).size.width > with(density) { metaMax.toPx() })
-                Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) { row(metaMax, stacked) }
-            }
-        }
-    } else {
-        Surface(shape = shape, color = rowColor, modifier = modifier.then(contentModifier)) {
-            BoxWithConstraints {
-                val metaMax = (maxWidth - 24.dp) * 0.45f
-                val stacked = meta != null && (density.fontScale >= 1.5f || measurer.measure(meta, metaStyle,
-                    maxLines = 1, softWrap = false).size.width > with(density) { metaMax.toPx() })
-                Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) { row(metaMax, stacked) }
-            }
-        }
-    }
-}
-
 @Composable
 internal fun ShopStatCard(label: String, value: String, icon: Int, modifier: Modifier = Modifier,
     enabled: Boolean = true, onClick: (() -> Unit)? = null) {
     val content: @Composable ColumnScope.() -> Unit = {
+        val aliases = FluentTheme.aliasTokens
+        val mode = FluentTheme.themeMode
+        val primary =
+            aliases.brandForegroundColor[BrandForegroundColorTokens.BrandForeground1].value(mode)
+        val supporting =
+            aliases.neutralForegroundColor[NeutralForegroundColorTokens.Foreground2].value(mode)
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-            Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary,
+            Icon(
+                painterResource(icon), contentDescription = null, tint = primary,
                 modifier = Modifier.size(20.dp))
-            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Text(
+                label, style = MaterialTheme.typography.labelMedium, color = supporting,
                 minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         Text(value, style = MaterialTheme.typography.headlineSmall)
     }
+    val aliases = FluentTheme.aliasTokens
+    val mode = FluentTheme.themeMode
+    val surface =
+        aliases.neutralBackgroundColor[NeutralBackgroundColorTokens.Background1].value(mode)
+    val isDark = surface.luminance() < 0.5f
+    val containerColor = aliases.neutralBackgroundColor[
+        if (isDark) NeutralBackgroundColorTokens.Background2 else NeutralBackgroundColorTokens.Background5
+    ].value(mode)
     if (onClick != null) Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = containerColor,
         modifier = modifier.heightIn(min = 88.dp)) {
-        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
-    } else Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow,
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
+    } else Surface(shape = MaterialTheme.shapes.medium, color = containerColor,
         modifier = modifier.heightIn(min = 88.dp)) {
-        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small), content = content)
     }
 }
 
 @Composable
 internal fun ShopActionTile(label: String, icon: Int, modifier: Modifier = Modifier, enabled: Boolean = true,
     primary: Boolean = false, onClick: () -> Unit) {
-    val container = if (primary) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.surfaceContainerLow
-    val content = if (primary) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface
+    val aliases = FluentTheme.aliasTokens
+    val mode = FluentTheme.themeMode
+    val branded = LocalShopFluentStyle.current == FluentStyle.Brand
+    val neutralSurface = aliases.neutralBackgroundColor[NeutralBackgroundColorTokens.Background1]
+    val neutralForeground = aliases.neutralForegroundColor[NeutralForegroundColorTokens.Foreground1]
+    val surface = neutralSurface.value(mode)
+    val foreground = neutralForeground.value(mode)
+    val brand =
+        aliases.brandForegroundColor[BrandForegroundColorTokens.BrandForeground1].value(mode)
+    val brandOn =
+        aliases.neutralForegroundColor[NeutralForegroundColorTokens.ForegroundOnColor].value(mode)
+    val brandContainer =
+        aliases.brandBackgroundColor[BrandBackgroundColorTokens.BrandBackgroundTint].value(mode)
+    val isDark = surface.luminance() < 0.5f
+    val (container, content) = when {
+        primary && branded -> brand to brandOn
+        primary -> (if (isDark) neutralSurface.light else neutralSurface.dark) to
+                (if (isDark) neutralForeground.light else neutralForeground.dark)
+
+        branded -> brandContainer to foreground
+        isDark -> aliases.neutralBackgroundColor[NeutralBackgroundColorTokens.Background2].value(
+            mode
+        ) to foreground
+
+        else -> aliases.neutralBackgroundColor[NeutralBackgroundColorTokens.Background5].value(mode) to foreground
+    }
     Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.medium, color = container,
         contentColor = content,
         modifier = modifier.heightIn(min = 88.dp)) {
-        Column(Modifier.fillMaxWidth().padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(ShopSpacing.content), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
             Text(label, style = MaterialTheme.typography.titleSmall, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-    }
-}
-
-@Composable
-internal fun ShopSearchField(value: String, onValueChange: (String) -> Unit, label: String,
-    modifier: Modifier = Modifier, enabled: Boolean = true, supporting: String? = null,
-    trailing: (@Composable () -> Unit)? = null) {
-    OutlinedTextField(value, onValueChange, enabled = enabled, label = { Text(label) }, singleLine = true,
-        leadingIcon = { Icon(painterResource(com.nadim.bikepart.R.drawable.ic_search), contentDescription = null) },
-        supportingText = if (supporting == null) null else ({ Text(supporting) }),
-        trailingIcon = trailing, shape = MaterialTheme.shapes.large,
-        colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            unfocusedBorderColor = Color.Transparent), modifier = modifier.fillMaxWidth())
-}
-
-@Composable
-internal fun ShopScanButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
-    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
-        .semantics { text = AnnotatedString(label) }) {
-        Icon(painterResource(com.nadim.bikepart.R.drawable.ic_qr_code_scanner), contentDescription = null)
-    }
-}
-
-internal data class ShopMenuAction(val label: String, val icon: Int, val onClick: () -> Unit)
-
-@Composable
-internal fun ShopOverflowMenu(label: String, actions: List<ShopMenuAction>, enabled: Boolean = true) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { expanded = true }, enabled = enabled,
-            modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
-                .semantics { contentDescription = label }) {
-            Icon(painterResource(com.nadim.bikepart.R.drawable.ic_more_vert), contentDescription = null)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            actions.forEach { action -> DropdownMenuItem(text = { Text(action.label) },
-                leadingIcon = { Icon(painterResource(action.icon), contentDescription = null) },
-                enabled = enabled, onClick = { expanded = false; action.onClick() }) }
-        }
-    }
-}
-
-@Composable
-internal fun ShopBackButton(onClick: () -> Unit, enabled: Boolean = true) {
-    IconButton(onClick = onClick, enabled = enabled,
-        modifier = Modifier.semantics { text = AnnotatedString("Back") }) {
-        Icon(painterResource(com.nadim.bikepart.R.drawable.ic_arrow_back), contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface)
     }
 }

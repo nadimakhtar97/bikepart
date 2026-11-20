@@ -1,14 +1,24 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.LookupNames
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ShopSnapshot
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal class CatalogActions(
@@ -22,8 +32,12 @@ internal class CatalogActions(
 
 @Composable
 internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, actions: CatalogActions) {
+    ShopPageHeader(product.title, "Product-only custom fields.")
     ShopSection(stringResource(R.string.catalog_custom_fields)) {
-        Text(stringResource(R.string.custom_fields_belong_only_to_promote_a, product.title), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            "Shared category fields and their options are managed in More. These fields belong only to ${product.title}.",
+            style = MaterialTheme.typography.bodyMedium
+        )
         var creating by rememberSaveable { mutableStateOf(false) }
         ShopSecondaryButton(onClick = { creating = !creating }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_add_custom_field)) }
@@ -31,7 +45,9 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
     }
     var search by rememberSaveable { mutableStateOf("") }
     ShopSearchField(search, { search = it }, "Find definition", enabled = !busy)
-    shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && LookupNames.key(it.name).contains(LookupNames.key(search)) }.forEach { field ->
+    shop.attributes.filter {
+        it.productId == product.id && LookupNames.key(it.name).contains(LookupNames.key(search))
+    }.forEach { field ->
         key(field.id) {
             ShopSection(field.name) {
                 Text((if (field.productId == null) "Category field" else "Product custom field") + " · " + field.type.label + if (field.retired) " · retired" else "", style = MaterialTheme.typography.bodyMedium)
@@ -48,8 +64,13 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                         if (field.productId != null && !replacing) {
                             var name by rememberSaveable { mutableStateOf(field.name) }
                             val nameError = error?.takeIf { it.definitionId == field.id && it.field == ProductField.DefinitionName }
-                            OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.catalog_field_name_label)) },
-                                isError = nameError != null, supportingText = nameError?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
+                            ShopTextField(
+                                name,
+                                { name = it; onChange() },
+                                stringResource(R.string.catalog_field_name_label),
+                                enabled = !busy,
+                                error = nameError?.message
+                            )
                             Text(stringResource(R.string.catalog_promotion_note), style = MaterialTheme.typography.bodyMedium)
                             ShopPrimaryButton(stringResource(R.string.catalog_promote_to_category), enabled = !busy) { actions.promote(field.id, name) }
                         }

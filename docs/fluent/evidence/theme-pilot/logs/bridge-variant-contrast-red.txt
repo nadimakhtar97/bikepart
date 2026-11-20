@@ -1,0 +1,22 @@
+file://wsl.localhost/Ubuntu/home/nadimakhtar97/.codex/worktrees/fluent-theme-pilot/bikepart/tools/theme/validate.mjs:28
+if (failures.length) throw Error(failures.join('\n'));
+                           ^
+
+Error: light bridge.surface.outlineVariant: 1.53 < 3
+light bridge.low.outlineVariant: 1.53 < 3
+light bridge.container.outlineVariant: 1.53 < 3
+light bridge.high.outlineVariant: 1.53 < 3
+light bridge.highest.outlineVariant: 1.46 < 3
+light bridge.group.outlineVariant: 1.36 < 3
+dark bridge.surface.outlineVariant: 2.48 < 3
+dark bridge.low.outlineVariant: 1.95 < 3
+dark bridge.container.outlineVariant: 1.95 < 3
+dark bridge.high.outlineVariant: 1.72 < 3
+dark bridge.highest.outlineVariant: 1.72 < 3
+dark bridge.group.outlineVariant: 2.32 < 3
+    at file://wsl.localhost/Ubuntu/home/nadimakhtar97/.codex/worktrees/fluent-theme-pilot/bikepart/tools/theme/validate.mjs:28:28
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.13.1

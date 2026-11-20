@@ -1,0 +1,369 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:34",
+        "content-desc": "3:34 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "ContextualCommandBar",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "ContextualCommandBar",
+        "bounds": "[210,166][795,237]",
+        "center": "[502,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "androidx.recyclerview.widget.RecyclerView",
+            "interactions": [
+              "SCROLLABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,359][1038,464]",
+            "center": "[540,411]",
+            "children": [
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[42,359][157,464]",
+                "center": "[99,411]",
+                "children": [
+                  {
+                    "class": "android.widget.ImageView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_icon",
+                    "content-desc": "Add",
+                    "bounds": "[68,380][131,443]",
+                    "center": "[99,411]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[162,359][277,464]",
+                "center": "[219,411]",
+                "children": [
+                  {
+                    "class": "android.widget.ImageView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_icon",
+                    "content-desc": "Mention",
+                    "bounds": "[188,380][251,443]",
+                    "center": "[219,411]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "state": [
+                  "SELECTED"
+                ],
+                "bounds": "[319,359][445,464]",
+                "center": "[382,411]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_label",
+                    "text": "Bold",
+                    "content-desc": "Bold",
+                    "state": [
+                      "SELECTED"
+                    ],
+                    "bounds": "[345,380][419,443]",
+                    "center": "[382,411]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[450,359][565,464]",
+                "center": "[507,411]",
+                "children": [
+                  {
+                    "class": "android.widget.ImageView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_icon",
+                    "content-desc": "Italic",
+                    "bounds": "[476,380][539,443]",
+                    "center": "[507,411]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[570,359][778,464]",
+                "center": "[674,411]",
+                "children": [
+                  {
+                    "class": "android.widget.TextView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_label",
+                    "text": "Underline",
+                    "content-desc": "Underline",
+                    "bounds": "[596,380][752,443]",
+                    "center": "[674,411]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "bounds": "[783,359][898,464]",
+                "center": "[840,411]",
+                "children": [
+                  {
+                    "class": "android.widget.ImageView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_icon",
+                    "content-desc": "Strikethrough",
+                    "bounds": "[809,380][872,443]",
+                    "center": "[840,411]"
+                  }
+                ]
+              },
+              {
+                "class": "android.widget.FrameLayout",
+                "interactions": [
+                  "CLICKABLE",
+                  "LONG_CLICKABLE",
+                  "FOCUSABLE"
+                ],
+                "state": [
+                  "SELECTED"
+                ],
+                "bounds": "[940,359][1038,464]",
+                "center": "[989,411]",
+                "children": [
+                  {
+                    "class": "android.widget.ImageView",
+                    "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_item_icon",
+                    "content-desc": "Undo",
+                    "state": [
+                      "SELECTED"
+                    ],
+                    "bounds": "[966,380][1029,443]",
+                    "center": "[997,411]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "class": "android.widget.LinearLayout",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[891,359][1038,464]",
+            "center": "[964,411]",
+            "children": [
+              {
+                "class": "android.widget.ImageView",
+                "resource-id": "com.microsoft.fluentuidemo.df:id/dismiss_command_item_button",
+                "content-desc": "Dismiss",
+                "bounds": "[912,359][1038,464]",
+                "center": "[975,411]"
+              }
+            ]
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Item Updating",
+            "bounds": "[42,506][378,577]",
+            "center": "[210,541]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/insert_item",
+            "text": "INSERT ITEM",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,598][345,693]",
+            "center": "[193,645]"
+          },
+          {
+            "class": "android.widget.Button",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/update_item",
+            "text": "UPDATE ITEM",
+            "interactions": [
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[387,598][704,693]",
+            "center": "[545,645]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Spacing",
+            "bounds": "[42,735][235,806]",
+            "center": "[138,770]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Group space",
+            "bounds": "[42,848][305,899]",
+            "center": "[173,873]"
+          },
+          {
+            "class": "android.widget.SeekBar",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_bar_group_space_seekbar",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[305,850][945,897]",
+            "center": "[625,873]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_bar_group_space_value",
+            "text": "16 dp",
+            "bounds": "[945,848][1038,899]",
+            "center": "[991,873]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Item space",
+            "bounds": "[42,941][305,992]",
+            "center": "[173,966]"
+          },
+          {
+            "class": "android.widget.SeekBar",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_bar_item_space_seekbar",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[305,943][966,990]",
+            "center": "[635,966]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_bar_item_space_value",
+            "text": "2 dp",
+            "bounds": "[966,941][1038,992]",
+            "center": "[1002,966]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Dismiss Position",
+            "bounds": "[42,1034][442,1105]",
+            "center": "[242,1069]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_bar_dismiss_position_start",
+            "text": "START",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1105][321,1240]",
+            "center": "[181,1172]"
+          },
+          {
+            "class": "android.widget.RadioButton",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/contextual_command_bar_dismiss_position_end",
+            "text": "END",
+            "interactions": [
+              "CHECKABLE",
+              "CLICKABLE",
+              "FOCUSABLE"
+            ],
+            "state": [
+              "CHECKED"
+            ],
+            "bounds": "[321,1105][560,1240]",
+            "center": "[440,1172]"
+          }
+        ]
+      }
+    ]
+  }
+]

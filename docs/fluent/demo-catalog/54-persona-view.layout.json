@@ -1,0 +1,138 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:37",
+        "content-desc": "3:37 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone signal full.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "PersonaView",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.ImageButton",
+        "content-desc": "Navigate up",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[21,128][168,275]",
+        "center": "[94,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "PersonaView",
+        "bounds": "[210,166][522,237]",
+        "center": "[366,201]"
+      },
+      {
+        "class": "android.widget.ScrollView",
+        "resource-id": "com.microsoft.fluentuidemo.df:id/demo_detail_scrollable_container",
+        "interactions": [
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,275][1080,2400]",
+        "center": "[540,1337]",
+        "children": [
+          {
+            "class": "android.widget.TextView",
+            "text": "XXLarge avatar with three lines of text",
+            "content-desc": "Double Extra large Avatar with three lines of text",
+            "bounds": "[42,317][668,368]",
+            "center": "[355,342]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+            "text": "Kat Larsson",
+            "bounds": "[252,459][536,530]",
+            "center": "[394,494]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_footer",
+            "text": "Available",
+            "bounds": "[252,540][536,591]",
+            "center": "[394,565]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Large avatar with two lines of text",
+            "bounds": "[42,682][597,733]",
+            "center": "[319,707]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+            "text": "Mauricio August",
+            "bounds": "[189,817][495,874]",
+            "center": "[342,845]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Small avatar with one line of text",
+            "bounds": "[42,964][578,1015]",
+            "center": "[310,989]"
+          },
+          {
+            "class": "android.widget.ImageView",
+            "content-desc": "Mauricio August",
+            "interactions": [
+              "FOCUSABLE"
+            ],
+            "bounds": "[42,1090][105,1153]",
+            "center": "[73,1121]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "resource-id": "com.microsoft.fluentuidemo.df:id/list_item_title",
+            "text": "Mauricio August",
+            "bounds": "[189,1091][495,1148]",
+            "center": "[342,1119]"
+          }
+        ]
+      }
+    ]
+  }
+]

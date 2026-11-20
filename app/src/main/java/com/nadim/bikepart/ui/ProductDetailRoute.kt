@@ -1,0 +1,58 @@
+package com.nadim.bikepart.ui
+
+import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
+import com.nadim.bikepart.ShopError
+import com.nadim.bikepart.shop.CorrectionKind
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ShopSnapshot
+
+@Composable
+internal fun ProductDetailRoute(
+    shop: ShopSnapshot,
+    product: Product?,
+    busy: Boolean,
+    error: ShopError?,
+    loadPhoto: PhotoLoader,
+    onEdit: () -> Unit,
+    onManageFields: () -> Unit,
+    onCopy: () -> Unit,
+    onMakeTemplate: () -> Unit,
+    onCorrection: (CorrectionKind) -> Unit,
+    onArchive: () -> Unit,
+    archiveError: String?,
+    onReceive: () -> Unit,
+    onLabels: () -> Unit,
+    onChange: () -> Unit,
+    onThresholdSave: (String) -> Unit,
+) {
+    Scaffold(
+        modifier = ShopRouteScaffoldModifier,
+        topBar = { ShopRouteAppBar(title = "Product details", showBack = true, enabled = !busy) },
+    ) { padding ->
+        ShopRouteColumn(contentPadding = padding) {
+            if (product != null) {
+                ProductDetails(
+                    shop = shop,
+                    product = product,
+                    onEdit = onEdit,
+                    onManage = onManageFields,
+                    loadPhoto = loadPhoto,
+                    busy = busy,
+                    onCopy = onCopy,
+                    onTemplate = onMakeTemplate,
+                    onCorrection = onCorrection,
+                    onArchive = onArchive,
+                    archiveError = archiveError,
+                    onReceive = onReceive,
+                    onLabels = onLabels,
+                )
+                if (!product.archived) {
+                    ThresholdForm(product, busy, error, onChange = onChange, save = onThresholdSave)
+                }
+                SaleStockHistory(shop, product.id)
+                ArrivalHistory(shop.arrivals.filter { it.productId == product.id })
+            }
+        }
+    }
+}

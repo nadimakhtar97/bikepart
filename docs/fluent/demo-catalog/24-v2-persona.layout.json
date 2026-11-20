@@ -1,0 +1,200 @@
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "resource-id": "com.android.systemui:id/clock",
+        "text": "3:21",
+        "content-desc": "3:21 AM",
+        "bounds": "[50,1][127,128]",
+        "center": "[88,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Android System notification: Serial console enabled",
+        "bounds": "[127,1][185,128]",
+        "center": "[156,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/wifi_combo",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[885,35][931,93]",
+        "center": "[908,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Phone three bars.",
+        "bounds": "[931,35][970,93]",
+        "center": "[950,64]"
+      },
+      {
+        "class": "android.widget.LinearLayout",
+        "resource-id": "com.android.systemui:id/battery",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[986,1][1006,128]",
+        "center": "[996,64]"
+      }
+    ]
+  },
+  {
+    "window-title": "Fluent UI Demo",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "One line Persona view with small Avatar",
+        "bounds": "[21,317][662,354]",
+        "center": "[341,335]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,354][1080,480]",
+        "center": "[540,417]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Allan Munger. Status, Available,  Active",
+            "bounds": "[42,385][105,448]",
+            "center": "[73,416]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Allan Munger",
+            "bounds": "[147,392][393,441]",
+            "center": "[270,416]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Two line Persona view with large Avatar",
+        "bounds": "[21,515][657,558]",
+        "center": "[339,536]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,558][1080,714]",
+        "center": "[540,636]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Charlotte Waltson. Status, Blocked,  ",
+            "bounds": "[42,584][147,689]",
+            "center": "[94,636]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Charlotte Waltson",
+            "bounds": "[189,590][523,639]",
+            "center": "[356,614]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Microsoft",
+            "bounds": "[189,639][346,682]",
+            "center": "[267,660]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Three line Persona View with Xlarge Avatar",
+        "bounds": "[21,756][708,799]",
+        "center": "[364,777]"
+      },
+      {
+        "class": "android.view.View",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,799][1080,995]",
+        "center": "[540,897]",
+        "children": [
+          {
+            "class": "android.view.View",
+            "content-desc": "Carole Poland. Status, Away, Out Of Office, ",
+            "bounds": "[42,824][189,971]",
+            "center": "[115,897]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Carole Poland",
+            "bounds": "[231,831][492,880]",
+            "center": "[361,855]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Microsoft",
+            "bounds": "[231,880][388,923]",
+            "center": "[309,901]"
+          },
+          {
+            "class": "android.widget.TextView",
+            "text": "Away",
+            "bounds": "[231,923][314,963]",
+            "center": "[272,943]"
+          }
+        ]
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Navigation icon clicked.",
+        "interactions": [
+          "CLICKABLE",
+          "LONG_CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[0,128][147,275]",
+        "center": "[73,201]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "V2 Persona",
+        "bounds": "[168,171][438,233]",
+        "center": "[303,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "Demo Activity GitHub Link",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[833,139][954,265]",
+        "center": "[893,202]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "content-desc": "More",
+        "interactions": [
+          "CLICKABLE",
+          "FOCUSABLE"
+        ],
+        "bounds": "[954,139][1080,265]",
+        "center": "[1017,202]"
+      }
+    ]
+  }
+]

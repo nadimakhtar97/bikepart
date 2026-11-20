@@ -1,0 +1,1067 @@
+[
+  {
+    "version": 2,
+    "title": "V2 Acrylic Pane",
+    "activity": "V2AcrylicPaneActivity",
+    "slug": "v2-acrylic-pane",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2AcrylicActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.acrylicpane.AcrylicPane",
+      "com.microsoft.fluentui.icons.SearchBarIcons",
+      "com.microsoft.fluentui.icons.searchbaricons.Office",
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground2",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.AcrylicPaneInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.AcrylicPaneOrientation",
+      "com.microsoft.fluentui.theme.token.controlTokens.AcrylicPaneTokens",
+      "com.microsoft.fluentui.tokenized.SearchBar",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.drawer.DrawerValue",
+      "com.microsoft.fluentui.tokenized.drawer.rememberBottomDrawerState",
+      "com.microsoft.fluentui.tokenized.persona.Person"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 ActionBar",
+    "activity": "V2ActionBarActivity",
+    "slug": "v2-action-bar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ActionBarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 AppBarLayout",
+    "activity": "V2AppBarActivity",
+    "slug": "v2-app-bar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2AppBarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.icons.ListItemIcons",
+      "com.microsoft.fluentui.icons.SearchBarIcons",
+      "com.microsoft.fluentui.icons.listitemicons.Chevron",
+      "com.microsoft.fluentui.icons.searchbaricons.Arrowback",
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentColor",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.Icon",
+      "com.microsoft.fluentui.theme.token.controlTokens.AppBarInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.AppBarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AppBarTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.TooltipControls",
+      "com.microsoft.fluentui.tokenized.AppBar",
+      "com.microsoft.fluentui.tokenized.SearchBar",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.persona.Avatar",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillBar",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillMetaData"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Avatar",
+    "activity": "V2AvatarActivity",
+    "slug": "v2-avatar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2AvatarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.CutoutStyle",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.persona.Avatar",
+      "com.microsoft.fluentui.tokenized.persona.Group",
+      "com.microsoft.fluentui.tokenized.persona.Person"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Avatar Carousel",
+    "activity": "V2AvatarCarouselActivity",
+    "slug": "v2-avatar-carousel",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2AvatarCarouselActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarCarouselSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.tokenized.persona.AvatarCarousel",
+      "com.microsoft.fluentui.tokenized.persona.AvatarCarouselItem",
+      "com.microsoft.fluentui.tokenized.persona.Person"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Avatar Group",
+    "activity": "V2AvatarGroupActivity",
+    "slug": "v2-avatar-group",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2AvatarGroupActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme.aliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarGroupStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.persona.AvatarGroup",
+      "com.microsoft.fluentui.tokenized.persona.Group",
+      "com.microsoft.fluentui.tokenized.persona.Person"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Badge",
+    "activity": "V2BadgeActivity",
+    "slug": "v2-badge",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2BadgeActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.AppBarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.BadgeType",
+      "com.microsoft.fluentui.tokenized.notification.Badge"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Banner",
+    "activity": "V2BannerActivity",
+    "slug": "v2-banner",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2BannerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.notification.Banner"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Basic Chip",
+    "activity": "V2BasicChipActivity",
+    "slug": "v2-basic-chip",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2BasicChipActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.Icon",
+      "com.microsoft.fluentui.theme.token.StateBrush",
+      "com.microsoft.fluentui.theme.token.StateColor",
+      "com.microsoft.fluentui.theme.token.controlTokens.BasicChipInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.BasicChipTokens",
+      "com.microsoft.fluentui.tokenized.controls.BasicChip",
+      "com.microsoft.fluentui.tokenized.controls.Label"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Basic Controls",
+    "activity": "V2BasicControlsActivity",
+    "slug": "v2-basic-controls",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2BasicControlsActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.AliasTokens",
+      "com.microsoft.fluentui.theme.token.ControlTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.tokenized.controls.CheckBox",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Bottom Drawer",
+    "activity": "V2BottomDrawerActivity",
+    "slug": "v2-bottom-drawer",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2BottomDrawerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1Pressed",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1Selected",
+      "com.microsoft.fluentui.theme.token.StateBrush",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderType",
+      "com.microsoft.fluentui.theme.token.controlTokens.ListItemInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.ListItemTokens",
+      "com.microsoft.fluentui.tokenized.SearchBar",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.drawer.BottomDrawer",
+      "com.microsoft.fluentui.tokenized.drawer.DrawerValue",
+      "com.microsoft.fluentui.tokenized.drawer.rememberBottomDrawerState",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.util.KeyboardVisibilityObserver",
+      "com.microsoft.fluentui.util.getStringResource"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 BottomSheet",
+    "activity": "V2BottomSheetActivity",
+    "slug": "v2-bottom-sheet",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2BottomSheetActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.PersonaListView",
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.BottomSheetInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.BottomSheetTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.tokenized.bottomsheet.BottomSheet",
+      "com.microsoft.fluentui.tokenized.bottomsheet.BottomSheetState",
+      "com.microsoft.fluentui.tokenized.bottomsheet.BottomSheetValue",
+      "com.microsoft.fluentui.tokenized.bottomsheet.rememberBottomSheetState",
+      "com.microsoft.fluentui.tokenized.contentBuilder.ItemData",
+      "com.microsoft.fluentui.tokenized.contentBuilder.ListContentBuilder",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Buttons",
+    "activity": "V2ButtonsActivity",
+    "slug": "v2-buttons",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ButtonsActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.FluentTheme.themeMode",
+      "com.microsoft.fluentui.theme.token.AliasTokens",
+      "com.microsoft.fluentui.theme.token.ControlTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.FABSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.FABState",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.FloatingActionButton",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Card",
+    "activity": "V2CardActivity",
+    "slug": "v2-card",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2CardActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme.aliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderType",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.tokenized.controls.AnnouncementCard",
+      "com.microsoft.fluentui.tokenized.controls.BasicCard",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.FileCard",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Card Nudge",
+    "activity": "V2CardNudgeActivity",
+    "slug": "v2-card-nudge",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2CardNudgeActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentGlobalTokens",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.notification.CardNudge",
+      "com.microsoft.fluentui.tokenized.notification.CardNudgeMetaData",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillMetaData"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Citation",
+    "activity": "V2CitationActivity",
+    "slug": "v2-citation",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2CitationActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderType",
+      "com.microsoft.fluentui.tokenized.bottomsheet.BottomSheet",
+      "com.microsoft.fluentui.tokenized.bottomsheet.BottomSheetValue",
+      "com.microsoft.fluentui.tokenized.bottomsheet.rememberBottomSheetState",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.notification.Citation"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 ContextualCommandBar",
+    "activity": "V2ContextualCommandBarActivity",
+    "slug": "v2-contextual-command-bar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ContextualCommandBarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground2",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.tokenized.contextualcommandbar.ActionButtonPosition",
+      "com.microsoft.fluentui.tokenized.contextualcommandbar.CommandGroup",
+      "com.microsoft.fluentui.tokenized.contextualcommandbar.CommandItem",
+      "com.microsoft.fluentui.tokenized.contextualcommandbar.ContextualCommandBar",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.drawer.BottomDrawer",
+      "com.microsoft.fluentui.tokenized.drawer.rememberBottomDrawerState"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Dialog",
+    "activity": "V2DialogActivity",
+    "slug": "v2-dialog",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2DialogActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.menu.Dialog"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Drawer",
+    "activity": "V2DrawerActivity",
+    "slug": "v2-drawer",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2DrawerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.BehaviorType",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.drawer.Drawer",
+      "com.microsoft.fluentui.tokenized.drawer.rememberDrawerState",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Label",
+    "activity": "V2LabelActivity",
+    "slug": "v2-label",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2LabelActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens.TypographyTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.ColorStyle",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillMetaData",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillTabs"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 ListItem",
+    "activity": "V2ListItemActivity",
+    "slug": "v2-list-item",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ListItemActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme.aliasTokens",
+      "com.microsoft.fluentui.theme.FluentTheme.themeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentGlobalTokens",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.Icon",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize.Size24",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize.Size40",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize.Size56",
+      "com.microsoft.fluentui.theme.token.controlTokens.BasicCardInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.BasicCardTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderInset.XXLarge",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderType",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.ListItemTextAlignment",
+      "com.microsoft.fluentui.theme.token.controlTokens.SectionHeaderStyle.Subtle",
+      "com.microsoft.fluentui.theme.token.controlTokens.TextPlacement.Bottom",
+      "com.microsoft.fluentui.tokenized.controls.BasicCard",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.CheckBox",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.notification.Badge",
+      "com.microsoft.fluentui.tokenized.notification.ToolTipBox",
+      "com.microsoft.fluentui.tokenized.notification.rememberTooltipState",
+      "com.microsoft.fluentui.tokenized.persona.Avatar",
+      "com.microsoft.fluentui.tokenized.persona.AvatarGroup",
+      "com.microsoft.fluentui.tokenized.persona.Group",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.progress.LinearProgressIndicator"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Menu",
+    "activity": "V2MenuActivity",
+    "slug": "v2-menu",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2MenuActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.menu.Menu"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 People Picker",
+    "activity": "V2PeoplePickerActivity",
+    "slug": "v2-people-picker",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2PeoplePickerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.PersonaChipStyle",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.peoplepicker.PeoplePicker",
+      "com.microsoft.fluentui.tokenized.peoplepicker.PeoplePickerItemData",
+      "com.microsoft.fluentui.tokenized.peoplepicker.rememberPeoplePickerItemDataList",
+      "com.microsoft.fluentui.tokenized.persona.AvatarGroup",
+      "com.microsoft.fluentui.tokenized.persona.Group",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.persona.Persona",
+      "com.microsoft.fluentui.tokenized.persona.PersonaList"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Persona",
+    "activity": "V2PersonaActivity",
+    "slug": "v2-persona",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2PersonaActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.persona.Persona"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 PersonaChip",
+    "activity": "V2PersonaChipActivity",
+    "slug": "v2-persona-chip",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2PersonaChipActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus.Available",
+      "com.microsoft.fluentui.theme.token.controlTokens.PersonaChipSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.PersonaChipStyle.*",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.persona.PersonaChip",
+      "com.microsoft.fluentui.tokenized.persona.SearchBarPersonaChip"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 PersonaList",
+    "activity": "V2PersonaListActivity",
+    "slug": "v2-persona-list",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2PersonaListActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.Icon",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus.Available",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderInset",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderType",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.persona.Persona",
+      "com.microsoft.fluentui.tokenized.persona.PersonaList"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Progress",
+    "activity": "V2ProgressActivity",
+    "slug": "v2-progress",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ProgressActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.CircularProgressIndicatorSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ColorStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.ProgressTextInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.ProgressTextTokens",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.progress.CircularProgressIndicator",
+      "com.microsoft.fluentui.tokenized.progress.LinearProgressIndicator",
+      "com.microsoft.fluentui.tokenized.progress.ProgressText"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Scaffold",
+    "activity": "V2ScaffoldActivity",
+    "slug": "v2-scaffold",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ScaffoldActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.compose.Scaffold",
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.controlTokens.*",
+      "com.microsoft.fluentui.tokenized.AppBar",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.FloatingActionButton",
+      "com.microsoft.fluentui.tokenized.drawer.Drawer",
+      "com.microsoft.fluentui.tokenized.drawer.rememberDrawerState",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.navigation.TabBar",
+      "com.microsoft.fluentui.tokenized.navigation.TabData",
+      "com.microsoft.fluentui.tokenized.notification.Badge",
+      "com.microsoft.fluentui.tokenized.notification.NotificationResult",
+      "com.microsoft.fluentui.tokenized.notification.Snackbar",
+      "com.microsoft.fluentui.tokenized.notification.SnackbarState"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 SearchBar",
+    "activity": "V2SearchBarActivity",
+    "slug": "v2-search-bar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2SearchBarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.icons.SearchBarIcons",
+      "com.microsoft.fluentui.icons.searchbaricons.Office",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.BorderType",
+      "com.microsoft.fluentui.tokenized.SearchBar",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.persona.Persona",
+      "com.microsoft.fluentui.tokenized.persona.PersonaList"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 SegmentedControl",
+    "activity": "V2SegmentedControlActivity",
+    "slug": "v2-segmented-control",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2SegmentedControlActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.icons.AvatarIcons",
+      "com.microsoft.fluentui.icons.avataricons.Icon",
+      "com.microsoft.fluentui.icons.avataricons.icon.Anonymous",
+      "com.microsoft.fluentui.icons.avataricons.icon.anonymous.Xxlarge",
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentColor",
+      "com.microsoft.fluentui.theme.token.FluentGlobalTokens",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.*",
+      "com.microsoft.fluentui.tokenized.navigation.ViewPager"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Shimmer",
+    "activity": "V2ShimmerActivity",
+    "slug": "v2-shimmer",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ShimmerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.BadgeInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.BadgeTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.ColorStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.PersonaChipSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.PersonaChipStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.ShimmerInfo",
+      "com.microsoft.fluentui.theme.token.controlTokens.ShimmerOrientation",
+      "com.microsoft.fluentui.theme.token.controlTokens.ShimmerTokens",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.Label",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.notification.Badge",
+      "com.microsoft.fluentui.tokenized.persona.Avatar",
+      "com.microsoft.fluentui.tokenized.persona.Person",
+      "com.microsoft.fluentui.tokenized.persona.PersonaChip",
+      "com.microsoft.fluentui.tokenized.shimmer.Shimmer"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 SideRail",
+    "activity": "V2SideRailActivity",
+    "slug": "v2-side-rail",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2SideRailActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.AvatarStatus",
+      "com.microsoft.fluentui.theme.token.controlTokens.BadgeType",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.FloatingActionButton",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.navigation.SideRail",
+      "com.microsoft.fluentui.tokenized.navigation.TabData",
+      "com.microsoft.fluentui.tokenized.notification.Badge",
+      "com.microsoft.fluentui.tokenized.persona.Avatar",
+      "com.microsoft.fluentui.tokenized.persona.Person"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 Snackbar",
+    "activity": "V2SnackbarActivity",
+    "slug": "v2-snackbar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2SnackbarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme.aliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.theme.token.FluentStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.SnackbarStyle",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.notification.AnimationBehavior",
+      "com.microsoft.fluentui.tokenized.notification.AnimationVariables",
+      "com.microsoft.fluentui.tokenized.notification.NotificationDuration",
+      "com.microsoft.fluentui.tokenized.notification.NotificationResult",
+      "com.microsoft.fluentui.tokenized.notification.Snackbar",
+      "com.microsoft.fluentui.tokenized.notification.SnackbarState",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillBar",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillMetaData"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 StackableSnackbar",
+    "activity": "V2StackableSnackbarActivity",
+    "slug": "v2-stackable-snackbar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/V2StackableSnackbarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.notification.Scrim",
+      "com.microsoft.fluentui.tokenized.notification.SnackBarItemModel",
+      "com.microsoft.fluentui.tokenized.notification.SnackBarStack",
+      "com.microsoft.fluentui.tokenized.notification.SnackBarStackConfig",
+      "com.microsoft.fluentui.tokenized.notification.rememberSnackBarStackState"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 TabBar",
+    "activity": "V2TabBarActivity",
+    "slug": "v2-tab-bar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2TabBarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.ThemeMode",
+      "com.microsoft.fluentui.theme.token.FluentAliasTokens",
+      "com.microsoft.fluentui.theme.token.controlTokens.BadgeType",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonSize",
+      "com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle",
+      "com.microsoft.fluentui.theme.token.controlTokens.TabTextAlignment",
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.RadioButton",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.navigation.TabBar",
+      "com.microsoft.fluentui.tokenized.navigation.TabData",
+      "com.microsoft.fluentui.tokenized.notification.Badge"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 TextField",
+    "activity": "V2TextFieldActivity",
+    "slug": "v2-text-field",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2TextFieldActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.icons.SearchBarIcons",
+      "com.microsoft.fluentui.icons.searchbaricons.Dismisscircle",
+      "com.microsoft.fluentui.theme.FluentTheme",
+      "com.microsoft.fluentui.theme.token.FluentIcon",
+      "com.microsoft.fluentui.tokenized.controls.TextField",
+      "com.microsoft.fluentui.tokenized.controls.ToggleSwitch",
+      "com.microsoft.fluentui.tokenized.listitem.ChevronOrientation",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillBar",
+      "com.microsoft.fluentui.tokenized.segmentedcontrols.PillMetaData"
+    ]
+  },
+  {
+    "version": 2,
+    "title": "V2 ToolTip",
+    "activity": "V2ToolTipActivity",
+    "slug": "v2-tool-tip",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/V2ToolTipActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.tokenized.controls.Button",
+      "com.microsoft.fluentui.tokenized.controls.TextField",
+      "com.microsoft.fluentui.tokenized.divider.Divider",
+      "com.microsoft.fluentui.tokenized.listitem.ListItem",
+      "com.microsoft.fluentui.tokenized.notification.ToolTipBox",
+      "com.microsoft.fluentui.tokenized.notification.TooltipState",
+      "com.microsoft.fluentui.tokenized.notification.rememberTooltipState",
+      "com.microsoft.fluentui.util.isAccessibilityEnabled"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "ActionBarLayout",
+    "activity": "ActionBarLayoutActivity",
+    "slug": "action-bar-layout",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/ActionBarLayoutActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.actionbar.ActionBarLayout",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "AppBarLayout",
+    "activity": "AppBarLayoutActivity",
+    "slug": "app-bar-layout",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/AppBarLayoutActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.appbarlayout.AppBarLayout",
+      "com.microsoft.fluentui.listitem.ListItemDivider",
+      "com.microsoft.fluentui.listitem.ListSubHeaderView",
+      "com.microsoft.fluentui.search.Searchbar",
+      "com.microsoft.fluentui.snackbar.Snackbar",
+      "com.microsoft.fluentui.theming.FluentUIContextThemeWrapper",
+      "com.microsoft.fluentui.util.ThemeUtil",
+      "com.microsoft.fluentui.util.getTintedDrawable"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "AvatarView",
+    "activity": "AvatarViewActivity",
+    "slug": "avatar-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/AvatarViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.AvatarSize",
+      "com.microsoft.fluentui.persona.AvatarStyle",
+      "com.microsoft.fluentui.persona.AvatarView"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "AvatarGroupView",
+    "activity": "AvatarGroupViewActivity",
+    "slug": "avatar-group-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/AvatarGroupViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.AvatarBorderStyle",
+      "com.microsoft.fluentui.persona.AvatarGroupStyle",
+      "com.microsoft.fluentui.persona.AvatarGroupView",
+      "com.microsoft.fluentui.persona.AvatarSize",
+      "com.microsoft.fluentui.popupmenu.PopupMenu",
+      "com.microsoft.fluentui.popupmenu.PopupMenuItem",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "Basic Inputs",
+    "activity": "BasicInputsActivity",
+    "slug": "basic-inputs",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/BasicInputsActivity.kt",
+    "fluent_imports": []
+  },
+  {
+    "version": 1,
+    "title": "BottomNavigation",
+    "activity": "BottomNavigationActivity",
+    "slug": "bottom-navigation",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/BottomNavigationActivity.kt",
+    "fluent_imports": []
+  },
+  {
+    "version": 1,
+    "title": "BottomSheet",
+    "activity": "BottomSheetActivity",
+    "slug": "bottom-sheet",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/BottomSheetActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.bottomsheet.BottomSheet",
+      "com.microsoft.fluentui.bottomsheet.BottomSheetDialog",
+      "com.microsoft.fluentui.bottomsheet.BottomSheetItem",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "CalendarView",
+    "activity": "CalendarViewActivity",
+    "slug": "calendar-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/CalendarViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.calendar.OnDateSelectedListener",
+      "com.microsoft.fluentui.util.DateStringUtils"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "ContextualCommandBar",
+    "activity": "ContextualCommandBarActivity",
+    "slug": "contextual-command-bar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/ContextualCommandBarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.contextualcommandbar.CommandItem",
+      "com.microsoft.fluentui.contextualcommandbar.CommandItemGroup",
+      "com.microsoft.fluentui.contextualcommandbar.ContextualCommandBar",
+      "com.microsoft.fluentui.contextualcommandbar.DefaultCommandItem"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "DateTimePicker",
+    "activity": "DateTimePickerActivity",
+    "slug": "date-time-picker",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/DateTimePickerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.datetimepicker.DateTimePicker",
+      "com.microsoft.fluentui.datetimepicker.DateTimePickerDialog",
+      "com.microsoft.fluentui.datetimepicker.DateTimePickerDialog.DateRangeMode",
+      "com.microsoft.fluentui.datetimepicker.DateTimePickerDialog.Mode",
+      "com.microsoft.fluentui.util.DateStringUtils",
+      "com.microsoft.fluentui.util.accessibilityManager",
+      "com.microsoft.fluentui.util.isAccessibilityEnabled"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "Drawer",
+    "activity": "DrawerActivity",
+    "slug": "drawer",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/DrawerActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.drawer.Drawer",
+      "com.microsoft.fluentui.drawer.DrawerDialog",
+      "com.microsoft.fluentui.drawer.OnDrawerContentCreatedListener",
+      "com.microsoft.fluentui.persona.PersonaListView"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "ListItemView",
+    "activity": "ListItemViewActivity",
+    "slug": "list-item-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/ListItemViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.listitem.ListItemDivider",
+      "com.microsoft.fluentui.listitem.ListItemView",
+      "com.microsoft.fluentui.listitem.ListItemView.Companion.DEFAULT_CUSTOM_VIEW_SIZE",
+      "com.microsoft.fluentui.listitem.ListItemView.Companion.DEFAULT_LAYOUT_DENSITY",
+      "com.microsoft.fluentui.listitem.ListSubHeaderView",
+      "com.microsoft.fluentui.persona.AvatarSize",
+      "com.microsoft.fluentui.persona.AvatarView",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "PeoplePickerView",
+    "activity": "PeoplePickerViewActivity",
+    "slug": "people-picker-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/PeoplePickerViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.peoplepicker.PeoplePickerAccessibilityTextProvider",
+      "com.microsoft.fluentui.peoplepicker.PeoplePickerPersonaChipClickStyle",
+      "com.microsoft.fluentui.peoplepicker.PeoplePickerView",
+      "com.microsoft.fluentui.persona.IPersona",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "PersistentBottomSheet",
+    "activity": "PersistentBottomSheetActivity",
+    "slug": "persistent-bottom-sheet",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/PersistentBottomSheetActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.bottomsheet.BottomSheetAdapter",
+      "com.microsoft.fluentui.bottomsheet.BottomSheetItem",
+      "com.microsoft.fluentui.persistentbottomsheet.PersistentBottomSheet",
+      "com.microsoft.fluentui.persistentbottomsheet.SheetHorizontalItemAdapter",
+      "com.microsoft.fluentui.persistentbottomsheet.SheetItem",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "PersonaChipView",
+    "activity": "PersonaChipViewActivity",
+    "slug": "persona-chip-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/PersonaChipViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.PersonaChipView",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "PersonaListView",
+    "activity": "PersonaListViewActivity",
+    "slug": "persona-list-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/PersonaListViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.IPersona",
+      "com.microsoft.fluentui.persona.PersonaListView",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "PersonaView",
+    "activity": "PersonaViewActivity",
+    "slug": "persona-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/PersonaViewActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.AvatarSize",
+      "com.microsoft.fluentui.persona.PersonaView"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "PopupMenu",
+    "activity": "PopupMenuActivity",
+    "slug": "popup-menu",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/PopupMenuActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.popupmenu.PopupMenu",
+      "com.microsoft.fluentui.popupmenu.PopupMenuItem",
+      "com.microsoft.fluentui.snackbar.Snackbar"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "Progress",
+    "activity": "ProgressActivity",
+    "slug": "progress",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/ProgressActivity.kt",
+    "fluent_imports": []
+  },
+  {
+    "version": 1,
+    "title": "Snackbar",
+    "activity": "SnackbarActivity",
+    "slug": "snackbar",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/SnackbarActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.persona.AvatarSize",
+      "com.microsoft.fluentui.persona.AvatarView",
+      "com.microsoft.fluentui.progress.ProgressBar",
+      "com.microsoft.fluentui.snackbar.Snackbar",
+      "com.microsoft.fluentui.util.createImageView"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "TabLayout",
+    "activity": "TabLayoutActivity",
+    "slug": "tab-layout",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/TabLayoutActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.tablayout.TabLayout",
+      "com.microsoft.fluentui.tablayout.TabLayout.TabType.*"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "TemplateView",
+    "activity": "TemplateViewActivity",
+    "slug": "template-view",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/TemplateViewActivity.kt",
+    "fluent_imports": []
+  },
+  {
+    "version": 1,
+    "title": "Tooltip",
+    "activity": "TooltipActivity",
+    "slug": "tooltip",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/TooltipActivity.kt",
+    "fluent_imports": [
+      "com.microsoft.fluentui.calendar.CalendarView",
+      "com.microsoft.fluentui.snackbar.Snackbar",
+      "com.microsoft.fluentui.tooltip.Tooltip",
+      "com.microsoft.fluentui.util.ThemeUtil",
+      "com.microsoft.fluentui.widget.Button"
+    ]
+  },
+  {
+    "version": 1,
+    "title": "Typography",
+    "activity": "TypographyActivity",
+    "slug": "typography",
+    "source_path": "FluentUI.Demo/src/main/java/com/microsoft/fluentuidemo/demos/TypographyActivity.kt",
+    "fluent_imports": []
+  }
+]
