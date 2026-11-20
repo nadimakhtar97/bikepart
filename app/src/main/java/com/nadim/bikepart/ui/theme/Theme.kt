@@ -1,21 +1,42 @@
 package com.nadim.bikepart.ui.theme
 
 import android.app.Activity
-import androidx.core.view.WindowCompat
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.runtime.*
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.core.view.WindowCompat
 import com.microsoft.fluentui.theme.FluentTheme
 import com.microsoft.fluentui.theme.ThemeMode
-import com.microsoft.fluentui.theme.token.*
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.*
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.*
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralStrokeColorTokens.*
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandBackgroundColorTokens.*
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandForegroundColorTokens.*
-import com.microsoft.fluentui.theme.token.FluentAliasTokens.ErrorAndStatusColorTokens.*
+import com.microsoft.fluentui.theme.token.AliasTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandBackgroundColorTokens.BrandBackground1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandBackgroundColorTokens.BrandBackgroundTint
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.BrandForegroundColorTokens.BrandForeground1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.ErrorAndStatusColorTokens.DangerBackground1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.ErrorAndStatusColorTokens.DangerForeground1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background2
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background3
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background4
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.CanvasBackground
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground2
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.ForegroundDarkStatic
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.ForegroundOnColor
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralStrokeColorTokens.StrokeAccessible
+import com.microsoft.fluentui.theme.token.FluentColor
+import com.microsoft.fluentui.theme.token.FluentStyle
+import com.microsoft.fluentui.theme.token.IAliasTokens
+import com.microsoft.fluentui.theme.token.IControlTokens
 import com.nadim.bikepart.shop.Appearance
 
 /** One scoped configuration, shared by native controls and the transitional Material bridge.
@@ -57,7 +78,15 @@ fun BikepartTheme(appearance: Appearance = Appearance.System,
     FluentTheme(aliasTokens = configuration.aliasTokens, controlTokens = configuration.controlTokens, themeMode = mode) {
         CompositionLocalProvider(LocalShopIcons provides configuration.icons, LocalShopFluentStyle provides configuration.style) {
             MaterialTheme(colorScheme = fluentMaterialColors(FluentTheme.aliasTokens, dark),
-                typography = fluentTypography(FluentTheme.aliasTokens), shapes = configuration.shapes, content = content)
+                typography = fluentTypography(FluentTheme.aliasTokens),
+                shapes = configuration.shapes
+            ) {
+                val onBackground = FluentTheme.aliasTokens.neutralForegroundColor[Foreground1]
+                    .value(FluentTheme.themeMode)
+                CompositionLocalProvider(LocalContentColor provides onBackground) {
+                    content()
+                }
+            }
         }
     }
 }

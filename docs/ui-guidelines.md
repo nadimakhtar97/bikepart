@@ -38,7 +38,11 @@ and fallbacks update together. Do not mutate the SDK singleton alongside fixed l
 tokens. Wallpaper-derived color is not enabled.
 
 `ui/theme/ShopTokens.kt` maps Fluent typography and global corner radii into the
-Material compatibility interface. `ShopSpacing` expresses shop layout and 48dp
+Material compatibility interface. Use `FluentTheme.aliasTokens` directly when a
+surface or control does not require Material roles; use `MaterialTheme.colorScheme`
+for Material components and APIs that require the bridge. Resolve direct Fluent
+tokens from the active scoped aliases and `FluentTheme.themeMode`, rather than
+creating a parallel palette. `ShopSpacing` expresses shop layout and 48dp
 touch constraints. Screens consume semantic roles rather than local color/font
 constants. Amounts retain whole rupees and Indian grouping. Semantic `ic_*`
 resource names and `ShopThemeConfiguration.icons` supply the centralized icon

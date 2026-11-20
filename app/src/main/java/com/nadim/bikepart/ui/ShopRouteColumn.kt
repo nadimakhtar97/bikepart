@@ -16,10 +16,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.microsoft.fluentui.theme.FluentTheme
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.CanvasBackground
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground1
 import com.microsoft.fluentui.theme.token.FluentStyle
 import com.microsoft.fluentui.theme.token.controlTokens.AppBarSize
 import com.microsoft.fluentui.tokenized.AppBar
@@ -37,22 +42,29 @@ internal fun ShopRouteColumn(
     contentPadding: PaddingValues = PaddingValues(),
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
+    val themeMode = FluentTheme.themeMode
+    val canvas = FluentTheme.aliasTokens.neutralBackgroundColor[CanvasBackground].value(themeMode)
+    val onBackground = FluentTheme.aliasTokens.neutralForegroundColor[Foreground1].value(themeMode)
+
     Box(
         Modifier
             .fillMaxSize()
+            .background(canvas)
             .padding(contentPadding)
             .consumeWindowInsets(contentPadding),
         contentAlignment = Alignment.TopCenter,
     ) {
-        Column(
-            modifier
-                .fillMaxWidth()
-                .widthIn(max = ShopSpacing.formWidth)
-                .verticalScroll(rememberScrollState())
-                .padding(ShopSpacing.content),
-            verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
-            content = content,
-        )
+        CompositionLocalProvider(LocalContentColor provides onBackground) {
+            Column(
+                modifier
+                    .fillMaxWidth()
+                    .widthIn(max = ShopSpacing.formWidth)
+                    .verticalScroll(rememberScrollState())
+                    .padding(ShopSpacing.content),
+                verticalArrangement = Arrangement.spacedBy(ShopSpacing.content),
+                content = content,
+            )
+        }
     }
 }
 

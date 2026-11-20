@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -53,14 +54,17 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
+import com.microsoft.fluentui.compose.Scaffold
+import com.microsoft.fluentui.theme.FluentTheme
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.CanvasBackground
+import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground2
 import com.microsoft.fluentui.theme.token.FluentIcon
 import com.microsoft.fluentui.theme.token.FluentStyle
-import com.microsoft.fluentui.compose.Scaffold
-import com.microsoft.fluentui.theme.token.controlTokens.*
 import com.microsoft.fluentui.tokenized.SearchBar
+import com.microsoft.fluentui.tokenized.navigation.SideRail
 import com.microsoft.fluentui.tokenized.navigation.TabBar
 import com.microsoft.fluentui.tokenized.navigation.TabData
-import com.microsoft.fluentui.tokenized.navigation.SideRail
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.Appearance
@@ -268,12 +272,24 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
 
     BikepartTheme(appearance = state?.appearance ?: Appearance.System, configuration = themeConfiguration) {
-        val colors = MaterialTheme.colorScheme
+        val themeMode = FluentTheme.themeMode
+        val surface = FluentTheme.aliasTokens.neutralBackgroundColor[Background1].value(themeMode)
+        val canvas =
+            FluentTheme.aliasTokens.neutralBackgroundColor[CanvasBackground].value(themeMode)
         val appBarColors = com.nadim.bikepart.ui.theme.shopAppBarColors()
         com.nadim.bikepart.ui.theme.ShopSystemBarAppearance(
-            statusBackground = if (route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)) colors.surface else appBarColors.background,
-            navigationBackground = colors.surface)
-        BoxWithConstraints(Modifier.fillMaxSize()) {
+            statusBackground = if (route in listOf(
+                    Screen.Home,
+                    Screen.Stock,
+                    Screen.Carts,
+                    Screen.More
+                )
+            ) surface else appBarColors.background,
+            navigationBackground = surface
+        )
+        BoxWithConstraints(Modifier
+            .fillMaxSize()
+            .background(canvas)) {
             val useRail = maxWidth >= 600.dp && route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)
             Scaffold(
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -288,7 +304,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             )
                         }
                         TabBar(
-                            modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
+                            modifier = Modifier
+                                .background(surface)
+                                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
                             tabDataList = tabs,
                             selectedIndex = destinations.indexOfFirst { it.screen == destination }.coerceAtLeast(0),
                             showIndicator = false,
@@ -350,7 +368,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 Text(
                                                     stringResource(R.string.opening_shop),
                                                     style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    color = FluentTheme.aliasTokens.neutralForegroundColor[Foreground2].value(
+                                                        FluentTheme.themeMode
+                                                    ),
                                                     modifier = Modifier.semantics {
                                                         liveRegion = LiveRegionMode.Polite
                                                     },
