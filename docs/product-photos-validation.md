@@ -1,10 +1,10 @@
 # Product photos
 
-Ticket 05 adds optional staff-selected photos to product creation and editing,
-with previews on forms, details and compact stock rows. Choose/replace uses the
-Android image-only photo picker, without broad media permissions. Remove clears
-the product association on save; cancelling a form leaves its saved photo alone.
-The selected URI is a draft, while committed photos are private app-owned copies.
+Ticket 05 adds optional staff-selected photos to product creation and editing, with previews on
+forms, details and compact stock rows. The photo field opens the Android image-only photo picker,
+without broad media permissions. Tapping an added photo replaces it; its close control removes it.
+Removal clears the product association on save, while cancelling a form leaves its saved photo
+alone. The selected URI is a draft, while committed photos are private app-owned copies.
 
 The [schema history](../app/schemas/README.md) records version 5, file publication,
 hash/size identities and retention. Import finishes before the product transaction;
@@ -15,9 +15,11 @@ dependency-aware blob collection are later slices.
 
 The existing Now in Android theme and grouped form/button patterns are retained.
 The deliberate shop adaptation uses the bundled stock vector on a neutral Material
-surface for absent, corrupt and undecodable photos. Photo colors come from staff
-content. Decoding is sampled off the main thread and respects encoded orientation.
-No decorative catalog photos or runtime asset URLs are shipped.
+surface for absent, corrupt and undecodable photos. Photo colors come from staff content. The form
+preview shrinks its frame to the photo's aspect ratio, within the available width and 160dp height,
+so no background bar frames the photo and the overlaid close control sits on its corner; detail and
+row previews fit the whole photo. Decoding is sampled off the main thread and respects encoded
+orientation. No decorative catalog photos or runtime asset URLs are shipped.
 
 Focused real-persistence checks cover known SHA-256/size metadata, source deletion,
 replacement/removal, retained old bytes, close/reopen, revision changes, interrupted
@@ -31,10 +33,10 @@ catalog identity, values, balances, history, settings, dataset and revision, wit
 SQLite integrity and foreign-key checks.
 
 Inspected all twelve API 37 emulator captures in `.scratch/product-photos-visual/`:
-detail fallback, replace/remove controls and the empty photo field in light/dark
-at normal and 200% font size. Long titles and the maximum whole-rupee price wrap;
-controls remain labelled, scrollable and at least 48dp. Existing theme validation
-passes 94 contrast checks with minimum normal-text contrast 4.55:1.
+detail fallback, the tappable photo with its remove control and the empty photo field in light/dark
+at normal and 200% font size. Long titles and the maximum whole-rupee price wrap; controls remain
+labelled, scrollable and at least 48dp. Existing theme validation passes 94 contrast checks with
+minimum normal-text contrast 4.55:1.
 
 Manual TalkBack traversal and physical-device checks have not been performed.
 

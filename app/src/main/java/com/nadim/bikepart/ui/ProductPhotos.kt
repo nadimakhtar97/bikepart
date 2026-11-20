@@ -14,36 +14,65 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.nadim.bikepart.R
-import com.nadim.bikepart.shop.PhotoReference
 import com.nadim.bikepart.shop.MAX_PHOTO_BYTES
+import com.nadim.bikepart.shop.PhotoReference
 import com.nadim.bikepart.ui.theme.ShopSpacing
-import java.io.File
-import java.nio.ByteBuffer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.nio.ByteBuffer
+import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 
 internal typealias PhotoLoader = suspend (PhotoReference) -> ByteArray?
 
 @Composable
-internal fun ProductPhoto(reference: PhotoReference?, load: PhotoLoader, modifier: Modifier = Modifier, selectedUri: String? = null, decodeSize: Int = 512) {
+internal fun ProductPhoto(
+    reference: PhotoReference?, load: PhotoLoader, modifier: Modifier = Modifier,
+    selectedUri: String? = null, decodeSize: Int = 512, onImageSize: ((Int, Int) -> Unit)? = null
+) {
     val resolver = LocalContext.current.contentResolver
     val bitmap by produceState<ImageBitmap?>(null, reference, selectedUri, decodeSize) {
         value = null
@@ -62,6 +91,8 @@ internal fun ProductPhoto(reference: PhotoReference?, load: PhotoLoader, modifie
         } catch (error: CancellationException) { throw error }
         catch (_: Exception) { value = null }
     }
+    val reportSize by rememberUpdatedState(onImageSize)
+    LaunchedEffect(bitmap) { bitmap?.let { reportSize?.invoke(it.width, it.height) } }
     Surface(modifier = modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
         val image = bitmap
         if (image != null) Image(image, "Product photo", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
@@ -145,19 +176,69 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
         val hasPhoto = uri != null || (!removed && reference != null)
         val description = stringResource(R.string.photo_description)
         if (hasPhoto) {
-            ProductPhoto(if (removed) null else reference, load, Modifier.fillMaxWidth().height(160.dp), uri)
+            val replaceLabel = stringResource(R.string.photo_replace)
+            val photoShape = MaterialTheme.shapes.small
+            // Shrink the frame to the photo's aspect ratio so the surface never shows beside it.
+            var photoAspect by remember(uri, reference, removed) { mutableStateOf<Float?>(null) }
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val ratio = photoAspect
+                val previewHeight = if (ratio == null) 160.dp else minOf(160.dp, maxWidth / ratio)
+                val previewWidth =
+                    if (ratio == null) maxWidth else minOf(maxWidth, previewHeight * ratio)
+                Box(Modifier
+                    .size(previewWidth, previewHeight)
+                    .align(Alignment.Center)) {
+                    ProductPhoto(
+                        if (removed) null else reference, load,
+                        Modifier
+                            .fillMaxSize()
+                            .clip(photoShape)
+                            .clickable(
+                                enabled = !busy,
+                                onClickLabel = replaceLabel
+                            ) { showSourceDialog = true },
+                        uri, onImageSize = { width, height ->
+                            if (width > 0 && height > 0) photoAspect = width.toFloat() / height
+                        })
+                    IconButton(
+                        onClick = remove, enabled = !busy,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(ShopSpacing.small)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = .6f), CircleShape)
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.ic_close),
+                            contentDescription = stringResource(R.string.photo_remove),
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
             Text(description, style = MaterialTheme.typography.bodyMedium)
-        } else Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium), verticalAlignment = Alignment.CenterVertically) {
-            ProductPhoto(null, load, Modifier.size(48.dp))
-            Text(description, style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ProductPhoto(null, load, Modifier.size(48.dp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            ShopSecondaryButton(
+                enabled = !busy, onClick = { showSourceDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = ShopSpacing.touchTarget)
+            ) {
+                Text(stringResource(R.string.photo_choose))
+            }
         }
-        ShopSecondaryButton(enabled = !busy, onClick = { showSourceDialog = true },
-            modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) {
-            Text(if (hasPhoto) stringResource(R.string.photo_replace) else stringResource(R.string.photo_choose))
-        }
-        if (hasPhoto) ShopSecondaryButton(enabled = !busy, onClick = remove,
-            modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.photo_remove)) }
         val displayError = error ?: cameraError
         if (displayError != null) FormError(displayError)
     }
@@ -179,7 +260,9 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
                                 permissionLauncher.launch(Manifest.permission.CAMERA)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = ShopSpacing.touchTarget)
                     ) {
                         Text(stringResource(R.string.photo_take))
                     }
@@ -189,7 +272,9 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
                             showSourceDialog = false
                             picker.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = ShopSpacing.touchTarget)
                     ) {
                         Text(stringResource(R.string.photo_choose_gallery))
                     }
