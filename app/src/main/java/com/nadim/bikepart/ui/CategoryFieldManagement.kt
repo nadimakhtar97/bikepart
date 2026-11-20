@@ -161,15 +161,12 @@ internal fun CategoryFieldManagement(
                         var optionName by rememberSaveable(field.id) { mutableStateOf("") }
                         val optionError =
                             error?.takeIf { it.definitionId == field.id && it.field == ProductField.DefinitionName }
-                        OutlinedTextField(
+                        ShopTextField(
                             value = optionName,
                             onValueChange = { optionName = it; onChange() },
+                            label = "New option for ${field.name}",
                             enabled = !busy,
-                            singleLine = true,
-                            label = { Text("New option for ${field.name}") },
-                            isError = optionError != null,
-                            supportingText = optionError?.let { ({ FormError(it.message) }) },
-                            modifier = Modifier.fillMaxWidth(),
+                            error = optionError?.message,
                         )
                         ShopSecondaryButton(
                             onClick = {

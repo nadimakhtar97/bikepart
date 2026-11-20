@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.Product
@@ -16,7 +17,7 @@ internal fun LabelsRoute(
     labelUsb: (android.content.Context, () -> Boolean) -> LabelUsbAccess,
     model: ShopViewModel,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Product labels", showBack = true, enabled = !busy) },
     ) { padding ->

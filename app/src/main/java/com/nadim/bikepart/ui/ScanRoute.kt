@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.BarcodeTarget
 import com.nadim.bikepart.shop.Cart
@@ -33,7 +34,7 @@ internal fun ScanRoute(
     cart: Cart?,
     link: (String, BarcodeTarget, Long?, () -> Unit) -> Unit,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Scan Barcode", showBack = true, enabled = !busy) },
     ) { padding ->

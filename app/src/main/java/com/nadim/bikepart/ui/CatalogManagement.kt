@@ -64,8 +64,13 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                         if (field.productId != null && !replacing) {
                             var name by rememberSaveable { mutableStateOf(field.name) }
                             val nameError = error?.takeIf { it.definitionId == field.id && it.field == ProductField.DefinitionName }
-                            OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.catalog_field_name_label)) },
-                                isError = nameError != null, supportingText = nameError?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
+                            ShopTextField(
+                                name,
+                                { name = it; onChange() },
+                                stringResource(R.string.catalog_field_name_label),
+                                enabled = !busy,
+                                error = nameError?.message
+                            )
                             Text(stringResource(R.string.catalog_promotion_note), style = MaterialTheme.typography.bodyMedium)
                             ShopPrimaryButton(stringResource(R.string.catalog_promote_to_category), enabled = !busy) { actions.promote(field.id, name) }
                         }

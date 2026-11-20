@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
 
 @Composable
@@ -10,7 +11,7 @@ internal fun CategoriesRoute(
     onOpen: (String) -> Unit,
     onRename: (String, String) -> Unit,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Categories", showBack = true, enabled = !busy) },
     ) { padding ->

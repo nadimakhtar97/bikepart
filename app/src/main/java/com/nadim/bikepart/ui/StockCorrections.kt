@@ -23,13 +23,17 @@ internal fun StockCorrectionForm(product: Product, kind: CorrectionKind, busy: B
         Text(product.title, style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.current_stock_pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.bodyMedium)
         Text(if (kind == CorrectionKind.PhysicalCount) "Enter the total pieces counted. The difference is calculated against stock when saved." else "Enter the pieces to remove for ${kind.label.lowercase()}.", style = MaterialTheme.typography.bodyMedium)
-        OutlinedTextField(quantity, { quantity = it; onChange() }, enabled = !busy,
-            label = { Text(if (kind == CorrectionKind.PhysicalCount) "Counted pieces" else "Pieces to remove") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true,
-            isError = error?.field == ProductField.CorrectionQuantity, modifier = Modifier.fillMaxWidth())
+        ShopTextField(
+            quantity,
+            { quantity = it; onChange() },
+            label = if (kind == CorrectionKind.PhysicalCount) "Counted pieces" else "Pieces to remove",
+            enabled = !busy,
+            error = error?.takeIf { it.field == ProductField.CorrectionQuantity }?.message,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
         OutlinedTextField(reason, { reason = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.correction_reason)) },
             isError = error?.field == ProductField.CorrectionReason, modifier = Modifier.fillMaxWidth())
-        if (error != null) FormError(error.message)
+        if (error != null && error.field != ProductField.CorrectionQuantity) FormError(error.message)
         ShopPrimaryButton(stringResource(R.string.correction_save), enabled = !busy, onClick = { save(quantity, reason) })
     }
 }

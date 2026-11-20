@@ -32,8 +32,18 @@ internal fun TemplateList(shop: ShopSnapshot, busy: Boolean, onCreate: () -> Uni
     ShopPrimaryButton(stringResource(R.string.template_create), enabled = !busy, onClick = onCreate)
     ShopSearchField(search, { search = it }, "Search templates", enabled = !busy)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        FilterChip(!retired, { retired = false }, enabled = !busy, label = { Text(stringResource(R.string.template_active)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
-        FilterChip(retired, { retired = true }, enabled = !busy, label = { Text(stringResource(R.string.template_retired)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+        ShopChoiceChip(
+            label = stringResource(R.string.template_active),
+            selected = !retired,
+            onClick = { retired = false },
+            enabled = !busy
+        )
+        ShopChoiceChip(
+            label = stringResource(R.string.template_retired),
+            selected = retired,
+            onClick = { retired = true },
+            enabled = !busy
+        )
     }
     val matches = shop.templates.filter { it.retired == retired && LookupNames.key(it.catalog.title + " " + it.catalog.description).contains(LookupNames.key(search)) }
     if (matches.isEmpty()) ShopEmptyState(stringResource(R.string.template_no_matching_title), "Create a template or try another search.", com.nadim.bikepart.R.drawable.ic_template)
@@ -43,7 +53,11 @@ internal fun TemplateList(shop: ShopSnapshot, busy: Boolean, onCreate: () -> Uni
             FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                 ShopSecondaryButton({ onOpen(template.id) }, enabled = !busy, modifier = Modifier.semantics { contentDescription = "Open template: ${template.catalog.title}" }) { Text(stringResource(R.string.template_open)) }
                 if (!retired) TextButton({ onUse(template.id) }, enabled = !busy,
-                    modifier = Modifier.heightIn(min = ShopSpacing.touchTarget).semantics { contentDescription = "Use template: ${template.catalog.title}" }) { Text(stringResource(R.string.template_use_primary)) }
+                    modifier = Modifier
+                        .heightIn(min = ShopSpacing.touchTarget)
+                        .semantics {
+                            contentDescription = "Use template: ${template.catalog.title}"
+                        }) { Text(stringResource(R.string.template_use_primary)) }
             }
         }
     }
@@ -54,7 +68,9 @@ internal fun TemplateDetails(shop: ShopSnapshot, template: ProductTemplate, busy
     val draft = template.catalog
     ShopPageHeader(draft.title, if (template.retired) "Retired template · retained for reference" else "Product template")
     if (draft.photo != null) ProductPhoto(draft.photo, loadPhoto,
-        Modifier.fillMaxWidth().height(ShopSpacing.touchTarget * 3))
+        Modifier
+            .fillMaxWidth()
+            .height(ShopSpacing.touchTarget * 3))
     ShopSection(stringResource(R.string.template_catalog_details)) {
         Text(shop.categories.single { it.id == draft.categoryId }.name, style = MaterialTheme.typography.titleMedium)
         Text(draft.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyMedium)

@@ -2,14 +2,14 @@ package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import com.microsoft.fluentui.compose.Scaffold
+import com.microsoft.fluentui.theme.token.controlTokens.FABSize
+import com.microsoft.fluentui.theme.token.controlTokens.FABState
+import com.microsoft.fluentui.tokenized.controls.FloatingActionButton as FluentFloatingActionButton
 import com.nadim.bikepart.R
 import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.ui.theme.shopIconVector
 
 @Composable
 internal fun CartsRoute(
@@ -18,17 +18,17 @@ internal fun CartsRoute(
     onNewCart: () -> Unit,
     onOpenCart: (String) -> Unit,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Carts", showBack = false, enabled = !busy) },
         floatingActionButton = {
             if (!busy) {
-                ExtendedFloatingActionButton(
+                FluentFloatingActionButton(
                     onClick = onNewCart,
-                    icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
-                    text = { Text("New sale") },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    state = FABState.Expanded,
+                    size = FABSize.Large,
+                    icon = shopIconVector(R.drawable.ic_add),
+                    text = "New sale",
                     modifier = Modifier.imePadding(),
                 )
             }

@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.Product
 import com.nadim.bikepart.shop.ShopSnapshot
@@ -14,7 +15,7 @@ internal fun CatalogFieldsRoute(
     onChange: () -> Unit,
     actions: CatalogActions,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Product fields", showBack = true, enabled = !busy) },
     ) { padding ->

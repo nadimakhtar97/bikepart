@@ -61,8 +61,14 @@ internal fun CategorySettings(
                 if (editing) AlertDialog(
                     onDismissRequest = { if (!busy) editing = false },
                     title = { Text(stringResource(R.string.rename, category.name)) },
-                    text = { OutlinedTextField(name, { name = it }, enabled = !busy,
-                        label = { Text(stringResource(R.string.category_name_label)) }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
+                    text = {
+                        ShopTextField(
+                            name,
+                            { name = it },
+                            stringResource(R.string.category_name_label),
+                            enabled = !busy
+                        )
+                    },
                     confirmButton = {
                         TextButton(enabled = !busy && name != category.name, onClick = {
                             editing = false

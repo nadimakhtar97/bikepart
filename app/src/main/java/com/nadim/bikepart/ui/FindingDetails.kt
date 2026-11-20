@@ -26,10 +26,16 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
     var make by rememberSaveable { mutableStateOf("") }
     ShopSection(if (showLocations) "Fitment and locations" else "Fitment") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-            FilterChip(selected = !assigned, enabled = !busy, onClick = { onAssigned(false); onModels(emptySet()) },
-                label = { Text(stringResource(R.string.finding_unknown_fitment)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
-            FilterChip(selected = assigned, enabled = !busy, onClick = { onAssigned(true) },
-                label = { Text(stringResource(R.string.finding_assigned_fitment)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+            ShopChoiceChip(
+                label = stringResource(R.string.finding_unknown_fitment),
+                selected = !assigned,
+                enabled = !busy,
+                onClick = { onAssigned(false); onModels(emptySet()) })
+            ShopChoiceChip(
+                label = stringResource(R.string.finding_assigned_fitment),
+                selected = assigned,
+                enabled = !busy,
+                onClick = { onAssigned(true) })
         }
         if (assigned) {
             Text(stringResource(R.string.finding_select_model_note), style = MaterialTheme.typography.bodyMedium)

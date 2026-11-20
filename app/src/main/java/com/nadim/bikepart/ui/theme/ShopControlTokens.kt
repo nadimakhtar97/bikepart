@@ -3,12 +3,32 @@ package com.nadim.bikepart.ui.theme
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.theme.FluentTheme
 import com.microsoft.fluentui.theme.token.*
+import androidx.compose.ui.graphics.SolidColor
+import com.microsoft.fluentui.theme.token.FluentAliasTokens
+import com.microsoft.fluentui.theme.token.StateBrush
+import com.microsoft.fluentui.theme.token.controlTokens.TextFieldInfo
+import com.microsoft.fluentui.theme.token.controlTokens.TextFieldTokens
 import com.microsoft.fluentui.theme.token.controlTokens.ToggleSwitchInfo
 import com.microsoft.fluentui.theme.token.controlTokens.ToggleSwitchTokens
 
 /** Native geometry/interactions with measured accessibility adaptations, scoped with the theme. */
 internal class ShopControlTokens : ControlTokens() {
-    init { updateToken(ControlType.ToggleSwitchControlType, AccessibleToggleSwitchTokens()) }
+    init {
+        updateToken(ControlType.ToggleSwitchControlType, AccessibleToggleSwitchTokens())
+        updateToken(ControlType.TextFieldControlType, AccessibleTextFieldTokens())
+    }
+}
+
+private class AccessibleTextFieldTokens : TextFieldTokens() {
+    @Composable
+    override fun dividerColor(textFieldInfo: TextFieldInfo): androidx.compose.ui.graphics.Brush {
+        if (textFieldInfo.isStatusError || textFieldInfo.isFocused) return super.dividerColor(
+            textFieldInfo
+        )
+        val accessible = FluentTheme.aliasTokens.neutralStrokeColor[
+            FluentAliasTokens.NeutralStrokeColorTokens.StrokeAccessible].value(FluentTheme.themeMode)
+        return SolidColor(accessible)
+    }
 }
 
 private class AccessibleToggleSwitchTokens : ToggleSwitchTokens() {

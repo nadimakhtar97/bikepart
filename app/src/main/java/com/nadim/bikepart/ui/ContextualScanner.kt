@@ -36,14 +36,19 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
     if (linking && raw != null) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val scrollableModifier = if (maxHeight != androidx.compose.ui.unit.Dp.Unspecified) Modifier.verticalScroll(rememberScrollState()) else Modifier
-            Column(Modifier.fillMaxSize().then(scrollableModifier).padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
+            Column(Modifier
+                .fillMaxSize()
+                .then(scrollableModifier)
+                .padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
                 save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } }) }
         }
         return
     }
     Column(Modifier.fillMaxSize()) {
     if (running) {
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Box(Modifier
+            .weight(1f)
+            .fillMaxWidth()) {
             key(attempt) {
                 val currentAttempt = attempt
                 camera({ value ->
@@ -53,13 +58,18 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                 })
             }
         }
-        Box(Modifier.fillMaxWidth().padding(16.dp)) {
+        Box(Modifier
+            .fillMaxWidth()
+            .padding(16.dp)) {
             ShopPrimaryButton(stringResource(R.string.scanner_manual_search), enabled = !busy) { running = false; attempt++; manual() }
         }
     } else {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val scrollableModifier = if (maxHeight != androidx.compose.ui.unit.Dp.Unspecified) Modifier.verticalScroll(rememberScrollState()) else Modifier
-            Column(Modifier.fillMaxSize().then(scrollableModifier).padding(16.dp),
+            Column(Modifier
+                .fillMaxSize()
+                .then(scrollableModifier)
+                .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {
         ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text(stringResource(R.string.scanner_manual_search)) }
         if (started) Text(stringResource(R.string.scanner_recognition_paused), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
@@ -82,10 +92,17 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                     ScanPurpose.Sale -> {
                         val line = cart?.lines?.find { it.productId == target.product.id }
                         Text(stringResource(R.string.unit_price, indianNumber(line?.quotedPriceRupees ?: target.product.priceRupees)))
-                        OutlinedTextField(quantity, { quantity = it; onChange() }, label = { Text(stringResource(R.string.scanner_pieces_to_add)) },
-                            enabled = !busy, isError = error?.field == ProductField.CartQuantity,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), singleLine = true)
-                        if (error != null) FormError(error.message)
+                        ShopTextField(
+                            quantity,
+                            { quantity = it; onChange() },
+                            stringResource(R.string.scanner_pieces_to_add),
+                            enabled = !busy,
+                            error = error?.takeIf { it.field == ProductField.CartQuantity }?.message,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        if (error != null && error.field != ProductField.CartQuantity) FormError(
+                            error.message
+                        )
                         ShopPrimaryButton(stringResource(R.string.scanner_add_to_cart), enabled = !busy) { add(target.product.id, quantity) }
                     }
                     ScanPurpose.Receiving -> ShopPrimaryButton(stringResource(R.string.scanner_enter_qty_cost), enabled = !busy) { attempt++; receive(target.product.id) }

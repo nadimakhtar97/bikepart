@@ -56,13 +56,28 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         listOf("all" to R.string.all_time, "today" to R.string.today,
             "week" to R.string.this_week, "month" to R.string.this_month).forEach { (id, label) ->
-            FilterChip(selected = period == id, onClick = { period = id },
-                leadingIcon = if (period == id) ({ Icon(painterResource(R.drawable.ic_check), contentDescription = null) }) else null,
-                label = { Text(stringResource(label)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+            ShopChoiceChip(
+                label = stringResource(label),
+                selected = period == id,
+                onClick = { period = id },
+                leading = if (period == id) ({
+                    Icon(
+                        painterResource(R.drawable.ic_check),
+                        contentDescription = null
+                    )
+                }) else null
+            )
         }
-        FilterChip(selected = period == "custom", onClick = { choosingDates = true },
-            leadingIcon = { Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null) },
-            label = { Text(stringResource(R.string.date_range)) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+        ShopChoiceChip(
+            label = stringResource(R.string.date_range),
+            selected = period == "custom",
+            onClick = { choosingDates = true },
+            leading = {
+                Icon(
+                    painterResource(R.drawable.ic_calendar_month),
+                    contentDescription = null
+                )
+            })
     }
     val dayFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
     if (period == "custom" && from != null && until != null) Text(
@@ -105,9 +120,16 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
             initialSelectedEndDateMillis = endDay?.let { LocalDate.parse(it).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() },
             initialDisplayMode = DisplayMode.Input)
         Dialog(onDismissRequest = { choosingDates = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-            Surface(Modifier.fillMaxSize().safeDrawingPadding().imePadding(), color = MaterialTheme.colorScheme.surface) {
-                Column(Modifier.fillMaxSize().padding(ShopSpacing.content)) {
-                    DateRangePicker(picker, modifier = Modifier.weight(1f).fillMaxWidth(), showModeToggle = true)
+            Surface(Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .imePadding(), color = MaterialTheme.colorScheme.surface) {
+                Column(Modifier
+                    .fillMaxSize()
+                    .padding(ShopSpacing.content)) {
+                    DateRangePicker(picker, modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(), showModeToggle = true)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                         TextButton(onClick = { choosingDates = false }) { Text(stringResource(R.string.cancel)) }
                         TextButton(enabled = picker.selectedStartDateMillis != null && picker.selectedEndDateMillis != null,

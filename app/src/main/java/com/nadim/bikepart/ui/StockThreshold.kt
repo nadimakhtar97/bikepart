@@ -36,10 +36,16 @@ internal fun ThresholdForm(product: Product, busy: Boolean, error: ShopError?, o
         Text(product.lowStockThreshold?.let { "Threshold: ${indianNumber(it)} pieces" } ?: "Threshold: Not set",
             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         Text(stringResource(R.string.threshold_note), style = MaterialTheme.typography.bodyMedium)
-        OutlinedTextField(pieces, { pieces = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.threshold_field_label)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true,
-            isError = error?.field == ProductField.LowStockThreshold, modifier = Modifier.fillMaxWidth().bringIntoViewRequester(focusError))
-        if (error?.field == ProductField.LowStockThreshold) FormError(error.message)
+        ShopTextField(
+            pieces,
+            { pieces = it; onChange() },
+            stringResource(R.string.threshold_field_label),
+            enabled = !busy,
+            error = error?.takeIf { it.field == ProductField.LowStockThreshold }?.message,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.bringIntoViewRequester(focusError)
+        )
+
         ShopPrimaryButton(stringResource(R.string.threshold_save), enabled = !busy, onClick = { save(pieces) })
     }
 }

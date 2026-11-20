@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,23 +20,15 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -54,8 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
@@ -66,12 +55,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import com.microsoft.fluentui.theme.token.FluentIcon
 import com.microsoft.fluentui.theme.token.FluentStyle
-import com.microsoft.fluentui.theme.token.controlTokens.AppBarSize
-import com.microsoft.fluentui.tokenized.AppBar
+import com.microsoft.fluentui.compose.Scaffold
+import com.microsoft.fluentui.theme.token.controlTokens.*
 import com.microsoft.fluentui.tokenized.SearchBar
-import com.microsoft.fluentui.tokenized.navigation.SideRail
 import com.microsoft.fluentui.tokenized.navigation.TabBar
 import com.microsoft.fluentui.tokenized.navigation.TabData
+import com.microsoft.fluentui.tokenized.navigation.SideRail
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopViewModel
 import com.nadim.bikepart.shop.Appearance
@@ -95,7 +84,7 @@ import com.nadim.bikepart.updates.UpdateState
 import com.nadim.bikepart.updates.UpdateViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
+
 
 private data class MainDestination(val screen: Screen, val label: String, val outlined: Int, val filled: Int)
 private val destinations = listOf(
@@ -287,7 +276,6 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val useRail = maxWidth >= 600.dp && route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)
             Scaffold(
-                containerColor = colors.surface,
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 bottomBar = {
                     if (route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More) && !useRail) {
@@ -337,7 +325,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                         Column(Modifier.fillMaxSize()) {
                             val shop = state
                             if (shop == null) {
-                                com.microsoft.fluentui.compose.Scaffold(
+                                Scaffold(
                                     modifier = Modifier.fillMaxSize(),
                                     topBar = { ShopRouteAppBar(title = "Home", showBack = false) },
                                 ) { loadingPadding ->

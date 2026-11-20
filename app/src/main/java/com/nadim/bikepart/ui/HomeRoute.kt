@@ -2,6 +2,7 @@ package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
 import com.nadim.bikepart.shop.StockHealth
 
@@ -18,7 +19,7 @@ internal fun HomeRoute(
     onSale: (String) -> Unit,
     searchBar: @Composable RowScope.() -> Unit = {},
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(

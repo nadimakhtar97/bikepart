@@ -1,29 +1,16 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.ButtonColors
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.platform.LocalDensity
-import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.microsoft.fluentui.tokenized.controls.BasicChip as FluentBasicChip
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 /** Secondary actions share the same touch target and wrapping behavior as the primary action. */
@@ -36,18 +23,57 @@ internal fun ShopSecondaryButton(onClick: () -> Unit, modifier: Modifier = Modif
 }
 
 @Composable
-internal fun ShopScanButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
-    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
-        .semantics { text = AnnotatedString(label) }) {
-        Icon(painterResource(com.nadim.bikepart.R.drawable.ic_qr_code_scanner), contentDescription = null)
-    }
+internal fun ShopIconActionButton(
+    label: String,
+    icon: Int,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    com.microsoft.fluentui.tokenized.controls.Button(
+        onClick = onClick,
+        modifier = Modifier.sizeIn(
+            minWidth = ShopSpacing.touchTarget,
+            minHeight = ShopSpacing.touchTarget
+        ),
+        style = com.microsoft.fluentui.theme.token.controlTokens.ButtonStyle.TextButton,
+        size = com.microsoft.fluentui.theme.token.controlTokens.ButtonSize.Large,
+        enabled = enabled,
+        icon = com.nadim.bikepart.ui.theme.shopIconVector(icon),
+        contentDescription = label,
+    )
 }
 
 @Composable
-internal fun ShopBackButton(onClick: () -> Unit, enabled: Boolean = true) {
-    IconButton(onClick = onClick, enabled = enabled,
-        modifier = Modifier.semantics { text = AnnotatedString("Back") }) {
-        Icon(painterResource(com.nadim.bikepart.R.drawable.ic_arrow_back), contentDescription = null,
-            tint = LocalContentColor.current)
-    }
+internal fun ShopScanButton(label: String, enabled: Boolean = true, onClick: () -> Unit) =
+    ShopIconActionButton(label, com.nadim.bikepart.R.drawable.ic_qr_code_scanner, enabled, onClick)
+
+@Composable
+internal fun ShopBackButton(onClick: () -> Unit, enabled: Boolean = true) =
+    ShopIconActionButton("Back", com.nadim.bikepart.R.drawable.ic_arrow_back, enabled, onClick)
+
+/** Fluent V2 chip with an explicit toggle action and an accessible 48dp target. */
+@Composable
+internal fun ShopChoiceChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    FluentBasicChip(
+        label = label,
+        modifier = modifier
+            .heightIn(min = ShopSpacing.touchTarget)
+            .toggleable(
+                value = selected,
+                enabled = enabled,
+                role = Role.Checkbox,
+                onValueChange = { onClick() }),
+        enabled = enabled,
+        selected = selected,
+        leadingAccessory = leading,
+        trailingAccessory = trailing,
+    )
 }

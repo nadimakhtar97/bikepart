@@ -1,10 +1,11 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 
 @Composable
 internal fun EditProductRoute(context: ProductFormRouteContext) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(

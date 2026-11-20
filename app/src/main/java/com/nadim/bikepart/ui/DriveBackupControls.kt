@@ -99,7 +99,12 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
         if (account != null) {
             Text(stringResource(R.string.choose_a_folder_for_only_folders_granted, account.toString()), style = MaterialTheme.typography.bodyMedium)
             folders.forEach { folder -> ShopSecondaryButton(enabled = !busy, onClick = { model.selectDriveFolder(folder) }) { Text(stringResource(R.string.formatted_text_2, folder.name, folder.id)) } }
-            OutlinedTextField(value = folderName, onValueChange = { folderName = it }, enabled = !busy, label = { Text(stringResource(R.string.drive_new_folder_label)) })
+            ShopTextField(
+                folderName,
+                { folderName = it },
+                stringResource(R.string.drive_new_folder_label),
+                enabled = !busy
+            )
             ShopSecondaryButton(enabled = !busy && folderName.isNotBlank(), onClick = { model.createDriveFolder(folderName) }) { Text(stringResource(R.string.drive_create_folder)) }
         }
         ShopPrimaryButton(stringResource(R.string.drive_back_up_now), enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired && status?.phoneState != ActivePhoneState.Mismatch && status?.takeoverPending != true,

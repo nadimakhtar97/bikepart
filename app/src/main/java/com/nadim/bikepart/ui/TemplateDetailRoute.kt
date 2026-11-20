@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ProductTemplate
 import com.nadim.bikepart.shop.ShopSnapshot
 
@@ -14,7 +15,7 @@ internal fun TemplateDetailRoute(
     onUse: () -> Unit,
     onRetire: () -> Unit,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(

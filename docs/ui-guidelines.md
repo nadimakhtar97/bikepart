@@ -9,12 +9,17 @@ existing workflow contracts. Platform-owned surfaces retain Android behavior.
 
 ## Reference and precedence
 
-Use pinned published `fluentui_core:0.3.11` and `fluentui_controls:0.3.3` APIs,
-with the [compatibility evidence](fluent/compatibility.md), and the Microsoft
-Fluent UI Android demo/source as the component reference. Do not copy a second
-palette or use historical Figma variables to override Fluent. Inspect the actual
-published API before declaring a gap. The supplied demo APK is research evidence;
-BikePart rendering and behavior require separate actual-app checks.
+Prefer published Fluent V2 Compose APIs, starting with pinned
+`fluentui_core:0.3.11` and `fluentui_controls:0.3.3`. The
+`libs.fluentui.android` umbrella also exposes independently versioned component
+modules; audit each published API and resolved version before using it, and keep
+runtime compatibility as a separate gate. If no suitable V2 control preserves the
+workflow, use an isolated Fluent V1 Android View through Compose interop; then use
+a Fluent-token Compose fallback. See the
+[compatibility evidence](fluent/compatibility.md) and Microsoft Fluent UI Android
+sources. Do not copy a second palette or use historical Figma variables to
+override Fluent. BikePart rendering and behavior require separate actual-app
+checks.
 
 ## Theme and tokens
 

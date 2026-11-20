@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -77,6 +76,7 @@ internal fun ProductForm(
     var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: initialCatalog?.attributes ?: emptyMap()) }
     var customPayload by rememberSaveable { mutableStateOf(CatalogDraft(customFields = initialCatalog?.customFields.orEmpty()).encode()) }
     val customFields = decodeCatalog(customPayload).customFields
+
     ShopSection(stringResource(R.string.form_basic_details)) {
         if (templateMode || initialCatalog != null) Text(
             stringResource(R.string.form_catalog_only_note),
@@ -199,9 +199,18 @@ internal fun ProductForm(
 
 @Composable
 private fun ProductTextField(value: String, onChange: (String) -> Unit, label: String, enabled: Boolean, error: ShopError? = null, number: Boolean = false, modifier: Modifier = Modifier.fillMaxWidth()) {
-    OutlinedTextField(value, onChange, enabled = enabled, label = { Text(label) }, isError = error != null,
+    if (number) ShopTextField(
+        value, onChange, label, enabled = enabled, error = error?.message,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = modifier
+    )
+    else OutlinedTextField(
+        value,
+        onChange,
+        enabled = enabled,
+        label = { Text(label) },
+        isError = error != null,
         supportingText = if (error == null) null else ({ FormError(error.message) }),
-        keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Number else KeyboardType.Text),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         modifier = modifier)
 }
 
@@ -215,9 +224,11 @@ private fun CategoryMapping(shop: ShopSnapshot, product: Product, categoryId: St
                 Text(stringResource(R.string.copy) + source.name, style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                     targets.forEach { target ->
-                        FilterChip(selected = mappings[source.id] == target.id, enabled = !busy,
-                            onClick = { onChange(if (mappings[source.id] == target.id) mappings - source.id else mappings + (source.id to target.id)) },
-                            label = { Text(target.name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+                        ShopChoiceChip(
+                            label = target.name,
+                            selected = mappings[source.id] == target.id,
+                            enabled = !busy,
+                            onClick = { onChange(if (mappings[source.id] == target.id) mappings - source.id else mappings + (source.id to target.id)) })
                     }
                 }
             }

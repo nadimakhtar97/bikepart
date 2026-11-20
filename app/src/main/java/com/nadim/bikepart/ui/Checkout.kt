@@ -56,19 +56,29 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     }
     ShopGroup("Cash payment") {
-        OutlinedTextField(cash, { cash = it; onChange() }, enabled = !busy,
-            label = { Text(stringResource(R.string.cash_received)) }, singleLine = true,
-            isError = error?.field == ProductField.CashReceived, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth())
+        ShopTextField(
+            value = cash,
+            onValueChange = { cash = it; onChange() },
+            label = stringResource(R.string.cash_received),
+            enabled = !busy,
+            error = error?.takeIf { it.field == ProductField.CashReceived }?.message,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        )
         ShopSecondaryButton(onClick = { cash = cart.totalRupees.toString(); onChange() }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.exact_amount)) }
         val tender = cash.trim().takeIf { it.matches(Regex("[0-9]+")) }?.toLongOrNull()
         Text(if (tender != null && tender >= cart.totalRupees) "Change: ₹${indianNumber(Math.subtractExact(tender, cart.totalRupees))}" else "Enter enough cash to calculate change.",
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.titleMedium)
-        if (error != null) Column(Modifier.bringIntoViewRequester(errorView)) { FormError(error.message) }
+        if (error != null && error.field != ProductField.CashReceived) Column(
+            Modifier.bringIntoViewRequester(
+                errorView
+            )
+        ) { FormError(error.message) }
     }
     ShopPrimaryButton(if (busy) "Saving sale…" else "Complete cash sale", enabled = !busy, onClick = { complete(cash) })
-    TextButton(onClick = edit, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.edit_cart)) }
+    TextButton(onClick = edit, enabled = !busy, modifier = Modifier
+        .fillMaxWidth()
+        .heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.edit_cart)) }
     Text(stringResource(R.string.the_whole_sale_is_saved_on_this), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

@@ -61,11 +61,15 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
                             onCreate: ((String) -> Unit)?
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    OutlinedTextField(query, { query = it }, enabled = !busy, label = { Text(label) }, modifier = Modifier.fillMaxWidth())
+    ShopTextField(query, { query = it }, label, enabled = !busy)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         options.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) || it.first in selected }.forEach { (id, name) ->
-            FilterChip(selected = id in selected, onClick = { onSelect(id); query = "" }, enabled = !busy,
-                label = { Text(name) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget))
+            ShopChoiceChip(
+                label = name,
+                selected = id in selected,
+                onClick = { onSelect(id); query = "" },
+                enabled = !busy
+            )
         }
     }
     if (query.isNotBlank() && onCreate != null) ShopSecondaryButton(
@@ -138,15 +142,23 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
     var type by rememberSaveable { mutableStateOf(AttributeType.Text) }
     var unit by rememberSaveable { mutableStateOf("") }
     var required by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(name, { name = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.field_name_label)) },
-        isError = error?.field == ProductField.DefinitionName,
-        supportingText = error?.takeIf { it.field == ProductField.DefinitionName }?.let { ({ FormError(it.message) }) }, modifier = Modifier.fillMaxWidth())
+    ShopTextField(
+        name,
+        { name = it; onChange() },
+        stringResource(R.string.field_name_label),
+        enabled = !busy,
+        error = error?.takeIf { it.field == ProductField.DefinitionName }?.message
+    )
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        AttributeType.entries.forEach { item -> FilterChip(selected = type == item, onClick = { type = item; onChange() }, enabled = !busy,
-            label = { Text(item.label) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) }
+        AttributeType.entries.forEach { item ->
+            ShopChoiceChip(
+                label = item.label, selected = type == item,
+                onClick = { type = item; onChange() }, enabled = !busy
+            )
+        }
     }
     if (error?.field == ProductField.DefinitionType) FormError(error.message)
-    OutlinedTextField(unit, { unit = it }, enabled = !busy, label = { Text(stringResource(R.string.field_unit_label)) }, modifier = Modifier.fillMaxWidth())
+    ShopTextField(unit, { unit = it }, stringResource(R.string.field_unit_label), enabled = !busy)
     Row(Modifier
         .fillMaxWidth()
         .heightIn(min = ShopSpacing.touchTarget)

@@ -1,6 +1,7 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
 import com.nadim.bikepart.ui.theme.ShopBrand
 import com.nadim.bikepart.ui.theme.ShopThemeCustomization
@@ -21,7 +22,7 @@ internal fun MoreRoute(
     onBackups: () -> Unit,
     updates: @Composable () -> Unit,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "More", showBack = false, enabled = !busy) },
     ) { padding ->

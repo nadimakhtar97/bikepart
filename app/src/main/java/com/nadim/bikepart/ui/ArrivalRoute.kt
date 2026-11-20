@@ -2,6 +2,7 @@ package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.Product
 
@@ -14,7 +15,7 @@ internal fun ArrivalRoute(
     onChange: () -> Unit,
     save: (String, String) -> Unit,
 ) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Receive stock", showBack = true, enabled = !busy) },
     ) { padding ->

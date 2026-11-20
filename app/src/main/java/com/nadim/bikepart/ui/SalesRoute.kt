@@ -1,11 +1,12 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.runtime.Composable
+import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
 
 @Composable
 internal fun SalesRoute(shop: ShopSnapshot, onOpenReceipt: (String) -> Unit) {
-    com.microsoft.fluentui.compose.Scaffold(
+    Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Sales history", showBack = true) },
     ) { padding ->
