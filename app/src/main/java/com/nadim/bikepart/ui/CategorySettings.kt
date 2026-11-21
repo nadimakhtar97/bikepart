@@ -1,12 +1,11 @@
 package com.nadim.bikepart.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.R
 import com.nadim.bikepart.shop.ShopSnapshot
+import com.nadim.bikepart.ui.theme.ShopSpacing
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
 
 @Composable
@@ -28,8 +28,23 @@ internal fun CategorySettings(
     busy: Boolean,
     onOpen: (String) -> Unit,
     onRename: (String, String) -> Unit,
+    onCreate: (String) -> Unit,
 ) {
+    var creating by rememberSaveable { mutableStateOf(false) }
     ShopPageHeader("Categories", "Open a category to manage its shared fields and choice options.")
+    ShopSecondaryButton(
+        onClick = { creating = true },
+        enabled = !busy,
+        modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+    ) { Text(stringResource(R.string.category_add)) }
+    if (creating) LookupNameDialog(
+        title = stringResource(R.string.category_create_title),
+        fieldLabel = stringResource(R.string.category_name_label),
+        createLabel = stringResource(R.string.category_add),
+        busy = busy,
+        onDismiss = { creating = false },
+        onCreate = { onCreate(it); creating = false },
+    )
     ShopSectionHeader(stringResource(R.string.more_catalog))
     ShopListGroup {
         shop.categories.forEach { category ->

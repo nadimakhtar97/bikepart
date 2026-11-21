@@ -10,13 +10,20 @@ internal fun CategoriesRoute(
     busy: Boolean,
     onOpen: (String) -> Unit,
     onRename: (String, String) -> Unit,
+    onCreate: (String) -> Unit,
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = "Categories", showBack = true, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
-            CategorySettings(shop = shop, busy = busy, onOpen = onOpen, onRename = onRename)
+            CategorySettings(
+                shop = shop,
+                busy = busy,
+                onOpen = onOpen,
+                onRename = onRename,
+                onCreate = onCreate
+            )
         }
     }
 }

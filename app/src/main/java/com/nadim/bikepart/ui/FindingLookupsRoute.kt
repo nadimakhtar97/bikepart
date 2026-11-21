@@ -11,6 +11,9 @@ internal fun FindingLookupsRoute(
     onRetireMake: (String) -> Unit,
     onRetireModel: (String) -> Unit,
     onRetireLocation: (String) -> Unit,
+    onCreateMake: (String) -> Unit,
+    onCreateModel: (String, String) -> Unit,
+    onCreateLocation: (String) -> Unit,
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
@@ -29,6 +32,9 @@ internal fun FindingLookupsRoute(
                 retireMake = onRetireMake,
                 retireModel = onRetireModel,
                 retireLocation = onRetireLocation,
+                createMake = onCreateMake,
+                createModel = onCreateModel,
+                createLocation = onCreateLocation,
             )
         }
     }

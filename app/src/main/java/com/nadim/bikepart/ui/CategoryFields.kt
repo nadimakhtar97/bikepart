@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -38,7 +37,6 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 internal data class AttributeSetup(val categoryId: String, val name: String, val type: AttributeType, val required: Boolean, val unit: String)
 
 internal class ProductLookups(
-    val category: (String, (String) -> Unit) -> Unit,
     val option: (String, String, (String) -> Unit) -> Unit,
 )
 
@@ -56,14 +54,25 @@ internal val attributeDraftSaver = listSaver<Map<String, AttributeValue>, String
 )
 
 @Composable
-internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<String, String>>, selected: Set<String>, busy: Boolean,
-                            onSelect: (String) -> Unit,
-                            onCreate: ((String) -> Unit)?
+internal fun LookupSelector(
+    label: String,
+    addLabel: String,
+    options: List<Pair<String, String>>,
+    selected: Set<String>,
+    busy: Boolean,
+    onSelect: (String) -> Unit,
+    onCreate: ((String) -> Unit)?,
+    emptyMessage: String? = null,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     ShopTextField(query, { query = it }, label, enabled = !busy)
+    val matchingOptions =
+        options.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) }
+    val visibleOptions = options.filter {
+        LookupNames.key(it.second).contains(LookupNames.key(query)) || it.first in selected
+    }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-        options.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) || it.first in selected }.forEach { (id, name) ->
+        visibleOptions.forEach { (id, name) ->
             ShopChoiceChip(
                 label = name,
                 selected = id in selected,
@@ -71,6 +80,9 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
                 enabled = !busy
             )
         }
+    }
+    if (query.isNotBlank() && matchingOptions.isEmpty() && onCreate == null && emptyMessage != null) {
+        Text(emptyMessage, style = MaterialTheme.typography.bodyMedium)
     }
     if (query.isNotBlank() && onCreate != null) ShopSecondaryButton(
         onClick = { onCreate(query); query = "" }, enabled = !busy,
@@ -81,9 +93,9 @@ internal fun LookupSelector(label: String, addLabel: String, options: List<Pair<
 internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<String, AttributeValue>, busy: Boolean,
     error: ShopError?, lookups: ProductLookups, productId: String? = null, onValue: (String, AttributeValue?) -> Unit) {
     ShopSection(stringResource(R.string.category_fields)) {
-        var search by rememberSaveable(categoryId) { mutableStateOf("") }
-        ShopSearchField(search, { search = it }, "Search fields", enabled = !busy)
-        shop.attributes.filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) && (LookupNames.key(it.name).contains(LookupNames.key(search)) || error?.definitionId == it.id) }.forEach { definition ->
+        shop.attributes
+            .filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) }
+            .forEach { definition ->
             key(definition.id) {
                 val value = values[definition.id]
                 val label = definition.name + (if (definition.unit.isBlank()) "" else " (" + definition.unit + ")") + (if (definition.required) " (required)" else " (optional)") + if (definition.productId == "catalog-draft") " · copy only" else if (definition.productId != null) " · product only" else ""

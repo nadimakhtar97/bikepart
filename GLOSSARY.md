@@ -44,6 +44,15 @@ A completed cash sale retained in the shop's history. An unfinished customer bil
 **Product template**:
 A reusable set of catalog details copied into a new stocked product for editing. Later template changes do not change products already created from it.
 
+**Product category**:
+A classification for stocked products that can define shared descriptive fields.
+
+**Motorcycle make**:
+The manufacturer that identifies a group of motorcycle models, such as Honda.
+
+**Motorcycle model**:
+A motorcycle model belonging to one make and used to describe product compatibility.
+
 **Fitment**:
 The motorcycle compatibility assigned to a product by the shopkeeper or staff, potentially covering several makes and models. Fitment starts as unknown until staff identify it.
 

@@ -390,28 +390,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 stateKey = "form:$formSession:$route:$selectedId:$catalogPayload",
                                 routeKey = "$route:$selectedId:$catalogPayload",
                                 lookups = ProductLookups(
-                                    category = { name, selected ->
-                                        model.write({ selected(createCategory(name)) })
-                                    },
                                     option = { definition, name, selected ->
                                         model.write({ selected(createOption(definition, name)) })
-                                    },
-                                ),
-                                findingLookups = FindingLookups(
-                                    make = { name, selected ->
-                                        model.write({
-                                            selected(
-                                                createMake(
-                                                    name
-                                                )
-                                            )
-                                        })
-                                    },
-                                    model = { make, name, selected ->
-                                        model.write({ selected(createModel(make, name)) })
-                                    },
-                                    location = { name, selected ->
-                                        model.write({ selected(createLocation(name)) })
                                     },
                                 ),
                                 loadPhoto = model::readPhoto,
@@ -1077,6 +1057,16 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 onRetireMake = { model.write({ retireMake(it) }) },
                                                 onRetireModel = { model.write({ retireModel(it) }) },
                                                 onRetireLocation = { model.write({ retireLocation(it) }) },
+                                                onCreateMake = { model.write({ createMake(it) }) },
+                                                onCreateModel = { make, name ->
+                                                    model.write({
+                                                        createModel(
+                                                            make,
+                                                            name
+                                                        )
+                                                    })
+                                                },
+                                                onCreateLocation = { model.write({ createLocation(it) }) },
                                             )
                                         }
                                         is Screen.Categories -> NavEntry(key) {
@@ -1089,6 +1079,13 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                                 onRename = { id, name ->
                                                     model.write({ renameCategory(id, name) })
+                                                },
+                                                onCreate = { name ->
+                                                    model.write({
+                                                        createCategory(
+                                                            name
+                                                        )
+                                                    })
                                                 },
                                             )
                                         }
