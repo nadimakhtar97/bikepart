@@ -1,28 +1,38 @@
 package com.nadim.bikepart.ui
 
-import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
-import com.nadim.bikepart.shop.*
+import com.nadim.bikepart.shop.LookupNames
+import com.nadim.bikepart.shop.Product
+import com.nadim.bikepart.shop.ProductField
+import com.nadim.bikepart.shop.ShopSnapshot
 import com.nadim.bikepart.ui.theme.ShopSpacing
-
-internal class FindingLookups(
-    val make: (String, (String) -> Unit) -> Unit,
-    val model: (String, String, (String) -> Unit) -> Unit,
-    val location: (String, (String) -> Unit) -> Unit,
-)
 
 internal val idSetSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() })
 
 @Composable
 internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<String>, locations: Set<String>, busy: Boolean,
-    error: ShopError?, lookups: FindingLookups, assigned: Boolean, onAssigned: (Boolean) -> Unit, onModels: (Set<String>) -> Unit, onLocations: (Set<String>) -> Unit, showLocations: Boolean = true) {
+                           error: ShopError?,
+                           assigned: Boolean,
+                           onAssigned: (Boolean) -> Unit,
+                           onModels: (Set<String>) -> Unit,
+                           onLocations: (Set<String>) -> Unit,
+                           showLocations: Boolean = true
+) {
     var make by rememberSaveable { mutableStateOf("") }
     ShopSection(if (showLocations) "Fitment and locations" else "Fitment") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
@@ -39,12 +49,28 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
         }
         if (assigned) {
             Text(stringResource(R.string.finding_select_model_note), style = MaterialTheme.typography.bodyMedium)
-            LookupSelector("Search or add make", "Add make", shop.makes.filter { !it.retired }.map { it.id to it.name }, setOf(make), busy,
-                onSelect = { make = it }, onCreate = { name -> lookups.make(name) { make = it } })
+            LookupSelector(
+                label = stringResource(R.string.finding_search_make),
+                addLabel = "",
+                options = shop.makes.filter { !it.retired }.map { it.id to it.name },
+                selected = setOf(make),
+                busy = busy,
+                onSelect = { make = it },
+                onCreate = null,
+                emptyMessage = stringResource(R.string.finding_no_matching_make),
+            )
             if (make.isNotEmpty()) key(make) {
-                LookupSelector("Search or add model", "Add model", shop.models.filter { it.makeId == make && !it.retired && shop.makes.any { parent -> parent.id == make && !parent.retired } }.map { it.id to it.name }, models, busy,
+                LookupSelector(
+                    label = stringResource(R.string.finding_search_model),
+                    addLabel = "",
+                    options = shop.models.filter { it.makeId == make && !it.retired && shop.makes.any { parent -> parent.id == make && !parent.retired } }
+                        .map { it.id to it.name },
+                    selected = models,
+                    busy = busy,
                     onSelect = { onModels(if (it in models) models - it else models + it) },
-                    onCreate = { name -> lookups.model(make, name) { onModels(models + it) } })
+                    onCreate = null,
+                    emptyMessage = stringResource(R.string.finding_no_matching_model),
+                )
             }
             shop.models.filter { it.id in models }.forEach { model ->
                 val parent = shop.makes.single { it.id == model.makeId }
@@ -56,9 +82,17 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
         }
         if (showLocations) {
         Text(stringResource(R.string.finding_locations_note), style = MaterialTheme.typography.bodyMedium)
-        LookupSelector("Search or add location", "Add location", shop.locations.filter { !it.retired || it.id in locations && it.id in product?.locationIds.orEmpty() }.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, locations, busy,
+            LookupSelector(
+                label = stringResource(R.string.finding_search_location),
+                addLabel = "",
+                options = shop.locations.filter { !it.retired || it.id in locations && it.id in product?.locationIds.orEmpty() }
+                    .map { it.id to (it.name + if (it.retired) " (retired)" else "") },
+                selected = locations,
+                busy = busy,
             onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
-            onCreate = { name -> lookups.location(name) { onLocations(locations + it) } })
+                onCreate = null,
+                emptyMessage = stringResource(R.string.finding_no_matching_location),
+            )
         if (error?.field == ProductField.Location) FormError(error.message)
         }
     }
@@ -80,30 +114,85 @@ internal fun FindingSummary(shop: ShopSnapshot, product: Product) {
 }
 
 @Composable
-internal fun FindingLookupSettings(shop: ShopSnapshot, busy: Boolean, retireMake: (String) -> Unit,
-    retireModel: (String) -> Unit, retireLocation: (String) -> Unit) {
+internal fun FindingLookupSettings(
+    shop: ShopSnapshot,
+    busy: Boolean,
+    retireMake: (String) -> Unit,
+    retireModel: (String) -> Unit,
+    retireLocation: (String) -> Unit,
+    createMake: (String) -> Unit,
+    createModel: (String, String) -> Unit,
+    createLocation: (String) -> Unit,
+) {
     var search by rememberSaveable { mutableStateOf("") }
+    var addingMake by rememberSaveable { mutableStateOf(false) }
+    var addingModel by rememberSaveable { mutableStateOf(false) }
+    var addingLocation by rememberSaveable { mutableStateOf(false) }
     Text(stringResource(R.string.finding_retired_names_note), style = MaterialTheme.typography.bodyMedium)
     ShopSearchField(search, { search = it }, "Find make, model or location", enabled = !busy)
     fun matches(name: String) = LookupNames.key(name).contains(LookupNames.key(search))
     ShopSection(stringResource(R.string.finding_motorcycle_makes)) {
+        ShopSecondaryButton(
+            onClick = { addingMake = true },
+            enabled = !busy,
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+        ) { Text(stringResource(R.string.finding_create_make)) }
         shop.makes.filter { matches(it.name) }.forEach {
             LookupRetirement(it.name, it.retired, busy) { retireMake(it.id) }
         }
         if (shop.makes.isEmpty()) Text(stringResource(R.string.finding_no_makes), style = MaterialTheme.typography.bodyMedium)
+        if (addingMake) LookupNameDialog(
+            title = stringResource(R.string.finding_create_make),
+            fieldLabel = stringResource(R.string.finding_motorcycle_make_name),
+            createLabel = stringResource(R.string.finding_create_make),
+            busy = busy,
+            onDismiss = { addingMake = false },
+            onCreate = { createMake(it); search = ""; addingMake = false },
+        )
     }
     ShopSection(stringResource(R.string.finding_motorcycle_models)) {
+        val activeMakes = shop.makes.filter { !it.retired }
+        ShopSecondaryButton(
+            onClick = { addingModel = true },
+            enabled = !busy && activeMakes.isNotEmpty(),
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+        ) { Text(stringResource(R.string.finding_create_model)) }
+        if (activeMakes.isEmpty()) Text(
+            stringResource(R.string.finding_create_model_make_required),
+            style = MaterialTheme.typography.bodyMedium
+        )
         shop.models.forEach { model ->
             val label = shop.makes.single { it.id == model.makeId }.name + " · " + model.name
             if (matches(label)) LookupRetirement(label, model.retired, busy) { retireModel(model.id) }
         }
         if (shop.models.isEmpty()) Text(stringResource(R.string.finding_no_models), style = MaterialTheme.typography.bodyMedium)
+        if (addingModel) CreateModelDialog(
+            makes = activeMakes,
+            busy = busy,
+            onDismiss = { addingModel = false },
+            onCreate = { makeId, name ->
+                createModel(makeId, name); search = ""; addingModel = false
+            },
+        )
     }
     ShopSection(stringResource(R.string.finding_storage_locations)) {
+        ShopSecondaryButton(
+            onClick = { addingLocation = true },
+            enabled = !busy,
+            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+        ) { Text(stringResource(R.string.finding_create_location)) }
         shop.locations.filter { matches(it.name) }.forEach {
             LookupRetirement(it.name, it.retired, busy) { retireLocation(it.id) }
         }
         if (shop.locations.isEmpty()) Text(stringResource(R.string.finding_no_locations), style = MaterialTheme.typography.bodyMedium)
+        if (addingLocation) LookupNameDialog(
+            title = stringResource(R.string.finding_create_location),
+            fieldLabel = stringResource(R.string.finding_location_name),
+            createLabel = stringResource(R.string.finding_create_location),
+            busy = busy,
+            onDismiss = { addingLocation = false },
+            onCreate = { createLocation(it); search = ""; addingLocation = false },
+        )
     }
 }
 

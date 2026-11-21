@@ -53,7 +53,6 @@ internal fun ProductForm(
     error: ShopError?,
     onChange: () -> Unit,
     lookups: ProductLookups,
-    findingLookups: FindingLookups,
     loadPhoto: PhotoLoader,
     onManageCategory: (String) -> Unit,
     initialCatalog: CatalogDraft? = null,
@@ -93,9 +92,16 @@ internal fun ProductForm(
             remove = { photoUri = null; photoRemoved = true; onChange() })
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text(stringResource(R.string.form_category_required), style = MaterialTheme.typography.labelLarge)
-        LookupSelector("Search or add category", "Add category", shop.categories.map { it.id to it.name }, setOf(category), busy,
+        LookupSelector(
+            label = stringResource(R.string.form_search_category),
+            addLabel = "",
+            options = shop.categories.map { it.id to it.name },
+            selected = setOf(category),
+            busy = busy,
             onSelect = { category = it; mappings = emptyMap(); distinct = false; onChange() },
-            onCreate = { name -> lookups.category(name) { category = it; mappings = emptyMap(); distinct = false; onChange() } })
+            onCreate = null,
+            emptyMessage = stringResource(R.string.form_no_matching_category),
+        )
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
@@ -127,7 +133,14 @@ internal fun ProductForm(
         mappings,
         busy
     ) { mappings = it }
-    FindingFields(shop, product, models, locations, busy, findingError ?: error, findingLookups, assigned,
+    FindingFields(
+        shop,
+        product,
+        models,
+        locations,
+        busy,
+        findingError ?: error,
+        assigned,
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
     if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {

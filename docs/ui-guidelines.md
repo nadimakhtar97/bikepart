@@ -387,10 +387,17 @@ Source: [Images and graphics](https://developer.android.com/design/ui/mobile/gui
   detail screen may repeat the item name it was opened for, because the app bar
   truncates long names. Stat and action tiles reserve two label lines so
   neighbours keep equal heights.
-- Category chips wrap and retain the required single-category selection. Use
-  labelled fields, useful keyboards, typed errors, announced feedback and
-  automatic scrolling to validation errors. Disable edits during a pending save.
-  Autosaved cart text uses the [buffered draft pattern](quoted-carts.md#persistence-and-save-behavior)
+- Category chips wrap and retain the required single-category selection. Once a
+  category is selected, show every applicable category field directly without a
+  secondary field-search control. Keep retired fields visible only when the
+  product already has a value for them. Product and template forms search and
+  select existing categories, motorcycle makes and models, and storage locations.
+  Create those lookups from More > Manage categories and fields or More > Manage
+  fitment and locations. Keep Unknown / Assigned fitment available in the form,
+  and explain the manager path when a lookup search has no match. Use labelled
+  fields, useful keyboards, typed errors, announced feedback and automatic
+  scrolling to validation errors. Disable edits during a pending save. Autosaved cart text uses
+  the [buffered draft pattern](quoted-carts.md#persistence-and-save-behavior)
   to preserve typing and the keyboard session; structural actions and leaving the
   cart wait for all pending drafts to commit.
 - Product rows show title, category, combined quantity/price, stock status and
