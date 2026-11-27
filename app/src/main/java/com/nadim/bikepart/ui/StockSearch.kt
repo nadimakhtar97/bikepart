@@ -159,32 +159,37 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         definition?.let { id -> (shop.attributes.find { it.id == id }?.name ?: "Decimal field") + ": " + decimal })
     if (active.isNotEmpty()) Text(active.joinToString(" · "), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
-    if (decimalError && !expanded) FormError(stringResource(R.string.search_decimal_error))
+    if (decimalError && !expanded) ErrorSnackbar(stringResource(R.string.search_decimal_error))
     if (expanded) ModalBottomSheet(onDismissRequest = { expanded = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-      Column(Modifier
-          .fillMaxWidth()
-          .verticalScroll(rememberScrollState())
-          .imePadding()
-          .padding(ShopSpacing.content),
-          verticalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
-        ShopSectionHeader(stringResource(R.string.search_catalog_filters))
-        TextButton(onClick = { category = null; make = null; model = null; location = null; health = null; definition = null; decimal = "" },
-            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.search_clear_filters)) }
-        SearchFilter("Category", shop.categories.map { it.id to it.name }, category) { category = it; definition = null; decimal = "" }
-        SearchFilter("Make", listOf("unknown" to "Unknown fitment") + shop.makes.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, make) { make = it; model = null }
-        if (make != "unknown") SearchFilter("Model", shop.models.filter { make == null || it.makeId == make }.map { item -> item.id to (shop.makes.single { it.id == item.makeId }.name + " · " + item.name + if (item.retired) " (retired)" else "") }, model) { model = it }
-        SearchFilter("Location", listOf("none" to "No location assigned") + shop.locations.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, location) { location = it }
-        SearchFilter("Decimal field", shop.attributes.filter { it.type == AttributeType.Decimal && (category == null || it.categoryId == category) }.map { it.id to (it.name + " · " + it.unit + " · " + (it.productId?.let { id -> shop.products.find { it.id == id }?.title } ?: shop.categories.single { c -> c.id == it.categoryId }.name)) }, definition) { definition = it; decimal = "" }
-        if (definition != null) {
-            ShopTextField(
-                decimal, { decimal = it }, stringResource(R.string.search_exact_decimal),
-                error = if (decimalError) stringResource(R.string.search_decimal_error) else null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
+        Box(Modifier.fillMaxWidth()) {
+            ErrorSnackbarHost {
+                Column(Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(ShopSpacing.content),
+                    verticalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
+                  ShopSectionHeader(stringResource(R.string.search_catalog_filters))
+                  TextButton(onClick = { category = null; make = null; model = null; location = null; health = null; definition = null; decimal = "" },
+                      modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.search_clear_filters)) }
+                  SearchFilter("Category", shop.categories.map { it.id to it.name }, category) { category = it; definition = null; decimal = "" }
+                  SearchFilter("Make", listOf("unknown" to "Unknown fitment") + shop.makes.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, make) { make = it; model = null }
+                  if (make != "unknown") SearchFilter("Model", shop.models.filter { make == null || it.makeId == make }.map { item -> item.id to (shop.makes.single { it.id == item.makeId }.name + " · " + item.name + if (item.retired) " (retired)" else "") }, model) { model = it }
+                  SearchFilter("Location", listOf("none" to "No location assigned") + shop.locations.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, location) { location = it }
+                  SearchFilter("Decimal field", shop.attributes.filter { it.type == AttributeType.Decimal && (category == null || it.categoryId == category) }.map { it.id to (it.name + " · " + it.unit + " · " + (it.productId?.let { id -> shop.products.find { it.id == id }?.title } ?: shop.categories.single { c -> c.id == it.categoryId }.name)) }, definition) { definition = it; decimal = "" }
+                  if (definition != null) {
+                      ErrorSnackbar(if (decimalError) stringResource(R.string.search_decimal_error) else null)
+                      ShopTextField(
+                          decimal, { decimal = it }, stringResource(R.string.search_exact_decimal),
+                          error = if (decimalError) stringResource(R.string.search_decimal_error) else null,
+                          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                      )
+                  }
+                  ShopPrimaryButton(stringResource(R.string.search_show_results), onClick = { expanded = false }, enabled = !decimalError)
+                }
+            }
         }
-        ShopPrimaryButton(stringResource(R.string.search_show_results), onClick = { expanded = false }, enabled = !decimalError)
-      }
     }
     val found = results?.takeIf { it.snapshot === shop && it.filter == filter }?.products
     if (found == null) Text(stringResource(R.string.search_searching), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })

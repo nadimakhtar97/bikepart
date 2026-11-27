@@ -88,7 +88,7 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             Text("${if (busy || uploading) "Uploading capture" else "Pending backup"} · revision $capturedRevision · captured ${DateFormat.getDateTimeInstance().format(Date(time))}.", style = MaterialTheme.typography.bodyMedium)
             if (revision > capturedRevision) Text(stringResource(R.string.newer_shop_changes_are_waiting_for_another), style = MaterialTheme.typography.bodyMedium)
         }
-        (error ?: status?.failure)?.let { FormError(it) }
+        (error ?: status?.failure)?.let { ErrorSnackbar(it) }
         Text(stringResource(R.string.drive_auto_backup_note), style = MaterialTheme.typography.bodyMedium)
         ShopSecondaryButton(enabled = !busy && !uploading, onClick = { model.setBackupMobileData(status?.allowMobileData != true) }) {
             Text(if (status?.allowMobileData == true) "Use Wi-Fi only" else "Allow mobile data for automatic backups")
@@ -132,7 +132,6 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
     val shopBusy by model.busy.collectAsState()
     val backupBusy by model.backupBusy.collectAsState()
     var confirm by rememberSaveable { mutableStateOf(false) }
-    val error by model.driveError.collectAsState()
     ShopSection(stringResource(R.string.restore_section)) {
         if (complete) Text(stringResource(R.string.shop_restored_a_local_recovery_copy_is),
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
@@ -149,7 +148,6 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
             Text(stringResource(R.string.selected_capture, DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.local_changes_absent_from_this_restore_point), style = MaterialTheme.typography.bodyMedium)
             ShopPrimaryButton(stringResource(R.string.restore_validate), enabled = !busy, onClick = onValidate)
-            error?.let { FormError(it) }
             if (validated) Text(stringResource(R.string.validation_passed_this_copy_is_complete_and),
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
             if (validated) ShopPrimaryButton(stringResource(R.string.restore_replace), enabled = !busy && !shopBusy && !backupBusy,

@@ -21,6 +21,7 @@ import com.microsoft.fluentui.tokenized.menu.Menu
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -169,11 +170,12 @@ internal fun ShopTextField(
     FluentTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().semantics {
+            if (error != null) error(error)
+        },
         enabled = enabled,
         label = label,
         assistiveText = supporting,
-        errorString = error,
         keyboardOptions = keyboardOptions,
         textFieldContentDescription = contentDescription,
         trailingAccessoryIcon = null,

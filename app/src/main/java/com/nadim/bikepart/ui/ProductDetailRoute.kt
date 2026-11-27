@@ -20,7 +20,6 @@ internal fun ProductDetailRoute(
     onMakeTemplate: () -> Unit,
     onCorrection: (CorrectionKind) -> Unit,
     onArchive: () -> Unit,
-    archiveError: String?,
     onReceive: () -> Unit,
     onLabels: () -> Unit,
     onChange: () -> Unit,
@@ -43,7 +42,6 @@ internal fun ProductDetailRoute(
                     onTemplate = onMakeTemplate,
                     onCorrection = onCorrection,
                     onArchive = onArchive,
-                    archiveError = archiveError,
                     onReceive = onReceive,
                     onLabels = onLabels,
                 )

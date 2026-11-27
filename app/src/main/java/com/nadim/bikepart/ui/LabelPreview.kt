@@ -110,12 +110,13 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
             }
         } }
         Text(stringResource(R.string.load_the_mm_roll_changing_profile_requires, media.widthMm, media.heightMm))
+        ErrorSnackbar(validation)
         ShopTextField(
             copies,
             { copies = it; changed() },
             stringResource(R.string.label_copies_label),
             enabled = !busy,
-            error = validation ?: error?.takeIf { it.field == ProductField.LabelCopies }?.message,
+            error = error?.takeIf { it.field == ProductField.LabelCopies }?.message,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.bringIntoViewRequester(copiesRequester)
         )

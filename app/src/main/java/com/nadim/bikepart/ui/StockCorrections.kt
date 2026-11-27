@@ -33,7 +33,6 @@ internal fun StockCorrectionForm(product: Product, kind: CorrectionKind, busy: B
         )
         OutlinedTextField(reason, { reason = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.correction_reason)) },
             isError = error?.field == ProductField.CorrectionReason, modifier = Modifier.fillMaxWidth())
-        if (error != null && error.field != ProductField.CorrectionQuantity) FormError(error.message)
         ShopPrimaryButton(stringResource(R.string.correction_save), enabled = !busy, onClick = { save(quantity, reason) })
     }
 }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.first
 data class CartDraft(val cart: Cart, val customer: String = cart.customer,
     val quantities: Map<String, String> = cart.lines.associate { it.productId to it.quantity.toString() }, val dirty: Boolean = false)
 
-data class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
+class ShopError(val message: String, val field: ProductField? = null, val similar: Boolean = false, val definitionId: String? = null)
 enum class DriveAction { Connect, Publish, ListRestorePoints, ValidateRestore, ReviewPhone, ActivatePhone, CheckPhone, InspectStorage, CleanupStorage }
 class ShopViewModel(application: android.app.Application) : AndroidViewModel(application) {
     val themePreferences = com.nadim.bikepart.ui.theme.ShopThemePreferences(application)

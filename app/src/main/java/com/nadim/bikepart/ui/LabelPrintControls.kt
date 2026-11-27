@@ -95,6 +95,6 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
         }
         if (sending) ShopSecondaryButton(onClick = { cancelled.set(true); feedback = "Cancelling unsent copies. Output already sent cannot be retracted." },
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_cancel_unsent)) }
-        feedback?.let { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
+        ErrorSnackbar(feedback)
     }
 }

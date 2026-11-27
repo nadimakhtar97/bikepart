@@ -1,7 +1,6 @@
 package com.nadim.bikepart.ui
 
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.microsoft.fluentui.compose.Scaffold
@@ -18,7 +17,7 @@ internal fun ReceiptRoute(sale: Sale?, onOpenSales: () -> Unit) {
             if (sale != null) {
                 SaleReceipt(sale, onOpenSales)
             } else {
-                Text(stringResource(R.string.receipt_unavailable))
+                ErrorSnackbar(stringResource(R.string.receipt_unavailable), blocking = true)
             }
         }
     }

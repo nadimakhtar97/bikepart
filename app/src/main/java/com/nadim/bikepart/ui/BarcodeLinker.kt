@@ -9,12 +9,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
-import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
-internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, error: ShopError?,
+internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean,
     cancel: () -> Unit, onChange: () -> Unit, save: (BarcodeTarget, Long?) -> Unit) {
     var query by rememberSaveable(code) { mutableStateOf("") }
     var selectedId by rememberSaveable(code) { mutableStateOf<String?>(null) }
@@ -65,8 +64,7 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
         if (targets.isEmpty()) Text(stringResource(R.string.barcode_no_targets))
         selected?.let { target ->
             Text(stringResource(R.string.selected_target, shop.barcodeTargetLabel(target)))
-            if (conflict) FormError("Conflict: this barcode already belongs to ${shop.barcodeTargetLabel(requireNotNull(owner).target)}. Confirm moving it to ${shop.barcodeTargetLabel(target)}.")
-            if (error != null) FormError(error.message)
+            if (conflict) Text("Conflict: this barcode already belongs to ${shop.barcodeTargetLabel(requireNotNull(owner).target)}. Confirm moving it to ${shop.barcodeTargetLabel(target)}.")
             ShopPrimaryButton(if (conflict) "Confirm reassignment" else "Save barcode link", enabled = !busy) {
                 save(target, confirmedRevision)
             }

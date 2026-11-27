@@ -1,8 +1,6 @@
 package com.nadim.bikepart.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,8 +35,6 @@ import androidx.compose.ui.window.DialogProperties
 internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: ShopError?,
     onChange: () -> Unit, edit: () -> Unit, complete: (String) -> Unit) {
     var cash by rememberSaveable(cart.id) { mutableStateOf("") }
-    val errorView = remember { BringIntoViewRequester() }
-    LaunchedEffect(error) { if (error != null) errorView.bringIntoView() }
     ShopPageHeader(cart.name, "Review the quoted lines, then record the cash received.")
     ShopGroup(spacing = ShopSpacing.small) {
         if (cart.customer.isNotEmpty()) Text(cart.customer, style = MaterialTheme.typography.titleMedium)
@@ -69,11 +65,7 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
         val tender = cash.trim().takeIf { it.matches(Regex("[0-9]+")) }?.toLongOrNull()
         Text(if (tender != null && tender >= cart.totalRupees) "Change: ₹${indianNumber(Math.subtractExact(tender, cart.totalRupees))}" else "Enter enough cash to calculate change.",
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.titleMedium)
-        if (error != null && error.field != ProductField.CashReceived) Column(
-            Modifier.bringIntoViewRequester(
-                errorView
-            )
-        ) { FormError(error.message) }
+
     }
     ShopPrimaryButton(if (busy) "Saving sale…" else "Complete cash sale", enabled = !busy, onClick = { complete(cash) })
     TextButton(onClick = edit, enabled = !busy, modifier = Modifier

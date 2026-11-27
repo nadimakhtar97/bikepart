@@ -31,11 +31,7 @@ internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?
         )
         OutlinedTextField(cost, { cost = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.arrival_purchase_cost)) },
             isError = error?.field == ProductField.PurchaseCost, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), singleLine = true)
-        if (error != null && error.field !in setOf(
-                ProductField.ArrivalQuantity,
-                ProductField.PurchaseCost
-            )
-        ) FormError(error.message)
+
         ShopPrimaryButton(stringResource(R.string.arrival_save), enabled = !busy) { save(pieces, cost) }
     }
 }

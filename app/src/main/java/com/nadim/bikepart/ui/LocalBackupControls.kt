@@ -36,7 +36,7 @@ internal fun LocalBackupControls(capture: LocalCapture?, currentRevision: Long, 
         } ?: "No complete local capture yet.", style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (!recovery && capture != null && currentRevision > capture.revision) Text(stringResource(R.string.local_backup_newer_changes), style = MaterialTheme.typography.bodyMedium)
-        if (error != null) FormError(error)
+        if (error != null) ErrorSnackbar(error)
         if (saved) Text(if (recovery) "Recovery copy saved." else "Backup copy saved.", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (!recovery) ShopPrimaryButton(stringResource(R.string.local_backup_capture_btn), enabled = !busy, onClick = onCapture)
         if (capture != null) ShopSecondaryButton(enabled = !busy && selectedPath == null, onClick = {

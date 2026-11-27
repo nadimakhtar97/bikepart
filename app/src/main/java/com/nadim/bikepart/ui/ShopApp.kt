@@ -247,6 +247,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         if (backStack.size > 1) {
             backStack.removeLastOrNull()
         }
+        model.error.value = null
         route = backStack.lastOrNull() ?: target
     }
     fun newCart() { model.write({ selectedId = createCart() }, { newCartId = selectedId; model.openCart(selectedId); destination = Screen.Carts; navigateTo(Screen.Cart) }) }
@@ -346,7 +347,8 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             .fillMaxHeight(),
                         contentAlignment = Alignment.TopCenter,
                     ) {
-                        Column(Modifier.fillMaxSize()) {
+                        ErrorSnackbarHost(route) {
+                            ErrorSnackbar(error?.message, blocking = state == null, attempt = error)
                             val shop = state
                             if (shop == null) {
                                 Scaffold(
@@ -360,10 +362,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             .consumeWindowInsets(loadingPadding),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        val openingError = error?.message
-                                        if (openingError != null) {
-                                            Text(openingError)
-                                        } else {
+                                        if (error == null) {
                                             Column(
                                                 horizontalAlignment = Alignment.CenterHorizontally,
                                                 verticalArrangement = Arrangement.spacedBy(
@@ -385,7 +384,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         }
                                     }
                                 }
-                                return@Column
+                                return@ErrorSnackbarHost
                             }
                             val formContext = ProductFormRouteContext(
                                 shop = shop,
@@ -484,7 +483,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 ShopNavigationDisplay(
                                     backStack = backStack,
                                     onBack = { if (backStack.size > 1) back() },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.fillMaxSize(),
                                     entryProvider = { key ->
                                     when (key) {
                                         is Screen.Home -> NavEntry(key) {
@@ -1020,7 +1019,6 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                         })
                                                     }
                                                 },
-                                                archiveError = error?.takeIf { it.field == null }?.message,
                                                 onReceive = { product?.let { receive(it.id) } },
                                                 onLabels = { navigateTo(Screen.Labels) },
                                                 onChange = { model.error.value = null },
@@ -1167,11 +1165,6 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                         }
                                     }
                                 )
-                            }
-                            if (error != null && route !in listOf(Screen.Scan, Screen.Arrival, Screen.Receipt, Screen.Checkout, Screen.Cart, Screen.CartProducts, Screen.Correction, Screen.Create, Screen.Edit, Screen.TemplateForm) &&
-                                !(route == Screen.Detail && (error?.field == ProductField.LowStockThreshold || error?.field == null)) &&
-                                !(route == Screen.Fields && error?.field in listOf(com.nadim.bikepart.shop.ProductField.DefinitionName, com.nadim.bikepart.shop.ProductField.DefinitionType))) {
-                                FormError(requireNotNull(error).message)
                             }
                         }
                     }
