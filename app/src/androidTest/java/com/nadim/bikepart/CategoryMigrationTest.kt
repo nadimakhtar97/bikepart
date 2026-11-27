@@ -35,6 +35,8 @@ class CategoryMigrationTest {
 
     @Test fun versionThirteenUpgradePreservesShopAndSupportsLabelPreferences() = runBlocking { verifyTypedUpgrade(13) }
 
+    @Test fun versionFourteenUpgradePreservesExistingProductPhoto() = runBlocking { verifyTypedUpgrade(14) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -58,7 +60,7 @@ class CategoryMigrationTest {
                 if (version >= 8) db.execSQL("UPDATE products SET lowStockThreshold = 7 WHERE id = 'p'")
                 db.execSQL("INSERT INTO balances VALUES ('p', 12)")
                 db.execSQL("INSERT INTO opening_stock VALUES ('p', 12, 123456)")
-                db.execSQL("INSERT INTO shop_state VALUES (1, 'stable-dataset', 7, 'Dark', 1)")
+                db.execSQL("INSERT INTO shop_state (id, datasetId, revision, appearance, normalizerVersion) VALUES (1, 'stable-dataset', 7, 'Dark', 1)")
                 db.execSQL("INSERT INTO category_attributes (id, categoryId, name, normalizedName, type, required, unit${if (version >= 3) ", ownerKey" else ""}) VALUES ('d', 'c', 'Diameter', 'diameter', 'Decimal', 0, 'mm'${if (version >= 3) ", 'category:c'" else ""})")
                 db.execSQL("INSERT INTO category_attributes (id, categoryId, name, normalizedName, type, required, unit${if (version >= 3) ", ownerKey" else ""}) VALUES ('f', 'c', 'Finish', 'finish', 'MultipleChoice', 0, ''${if (version >= 3) ", 'category:c'" else ""})")
                 db.execSQL("INSERT INTO attribute_options (id, definitionId, name, normalizedName${if (version >= 3) ", retired" else ""}) VALUES ('o', 'f', 'Zinc', 'zinc'${if (version >= 3) ", 0" else ""})")

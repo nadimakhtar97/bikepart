@@ -86,12 +86,10 @@ class RestoreActivationTest {
             shop.createProduct("Old schema", shop.snapshot().categories.first().id, "", "4", "50")
             val expected = shop.snapshot()
             val capture = shop.captureLocalBackup()
-            val table = LocalBackup.read(capture.file).tables.getValue("shop_state")
-            val columns = table.columns - setOf("labelMedia", "labelCopies")
+            val tables = LocalBackup.read(capture.file).tables
             val historical = rewriteCapture(capture.file, File(context.cacheDir, "$name.zip")) { entries, manifest, schema ->
-                entries["tables/shop_state.csv"] = LocalBackup.csv(listOf(columns) + table.records.map { row -> columns.map { row[it] } })
-                val metadata = schema.getJSONArray("tables").let { array -> (0 until array.length()).map { array.getJSONObject(it) }.single { it.getString("name") == "shop_state" } }
-                metadata.put("columns", org.json.JSONArray().apply { val old = metadata.getJSONArray("columns"); for (i in 0 until old.length()) if (old.getJSONObject(i).getString("name") in columns) put(old.getJSONObject(i)) })
+                removeBackupColumns(entries, schema, "shop_state", tables.getValue("shop_state"), setOf("labelMedia", "labelCopies"))
+                removeBackupColumns(entries, schema, "product_photos", tables.getValue("product_photos"), setOf("position"))
                 val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/13.json").bufferedReader().use { org.json.JSONObject(it.readText()).getJSONObject("database") }
                 schema.put("roomVersion", 13).put("roomIdentity", trusted.getString("identityHash"))
                 manifest.put("roomVersion", 13)

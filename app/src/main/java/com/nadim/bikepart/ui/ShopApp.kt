@@ -409,7 +409,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 onSave = { mode, input ->
                                     val editing =
                                         if (mode == ProductFormMode.Edit) product else null
-                                    val photo = input.photoUri?.let { uri ->
+                                    val selectedPhotos = input.photoUris.map { uri ->
                                         com.nadim.bikepart.shop.PhotoChange.Import {
                                             resolver.openInputStream(uri.toUri())
                                                 ?: throw com.nadim.bikepart.shop.ShopValidation(
@@ -417,7 +417,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                     "Photo unavailable. Choose it again or remove it.",
                                                 )
                                         }
-                                    } ?: if (input.photoRemoved) {
+                                    }
+                                    val keepCatalogPhoto = input.catalog.photo != null && !input.photoRemoved
+                                    val photo = if (mode == ProductFormMode.Create && keepCatalogPhoto) {
+                                        com.nadim.bikepart.shop.PhotoChange.Keep
+                                    } else selectedPhotos.firstOrNull() ?: if (input.photoRemoved) {
                                         com.nadim.bikepart.shop.PhotoChange.Remove
                                     } else {
                                         com.nadim.bikepart.shop.PhotoChange.Keep
@@ -457,6 +461,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                         input.allowSimilar,
                                                         input.locationIds,
                                                         photo,
+                                                        additionalPhotos = if (keepCatalogPhoto) selectedPhotos else selectedPhotos.drop(1),
                                                     )
                                                 }
                                             }
