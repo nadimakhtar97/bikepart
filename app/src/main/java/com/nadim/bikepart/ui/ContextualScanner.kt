@@ -39,7 +39,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
             Column(Modifier
                 .fillMaxSize()
                 .then(scrollableModifier)
-                .padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, error, cancel = { linking = false; onChange() }, onChange = onChange,
+                .padding(16.dp)) { BarcodeLinker(shop, requireNotNull(raw), busy, cancel = { linking = false; onChange() }, onChange = onChange,
                 save = { target, revision -> link(requireNotNull(raw), target, revision) { linking = false } }) }
         }
         return
@@ -73,8 +73,8 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {
         ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text(stringResource(R.string.scanner_manual_search)) }
         if (started) Text(stringResource(R.string.scanner_recognition_paused), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        transportError?.let { FormError(it) }
-        resolution?.exceptionOrNull()?.message?.let { FormError(it) }
+        transportError?.let { ErrorSnackbar(it) }
+        resolution?.exceptionOrNull()?.message?.let { ErrorSnackbar(it) }
         raw?.takeIf { it.isNotEmpty() && !it.startsWith("bikepart:", ignoreCase = true) }?.let { code ->
             ShopSecondaryButton(onClick = { linking = true; onChange() }, enabled = !busy,
                 modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget)) { Text(stringResource(R.string.scanner_link_barcode)) }
@@ -100,9 +100,6 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
                             error = error?.takeIf { it.field == ProductField.CartQuantity }?.message,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
-                        if (error != null && error.field != ProductField.CartQuantity) FormError(
-                            error.message
-                        )
                         ShopPrimaryButton(stringResource(R.string.scanner_add_to_cart), enabled = !busy) { add(target.product.id, quantity) }
                     }
                     ScanPurpose.Receiving -> ShopPrimaryButton(stringResource(R.string.scanner_enter_qty_cost), enabled = !busy) { attempt++; receive(target.product.id) }
@@ -118,7 +115,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
             is ScanTarget.Template -> if (purpose == ScanPurpose.Catalog) ShopSection(stringResource(R.string.scanner_scanned_template)) {
                 Text(target.template.catalog.title)
                 ShopPrimaryButton(stringResource(R.string.scanner_use_template), enabled = !busy) { attempt++; copy(shop.prefillTemplate(target.template.id)) }
-            } else FormError(stringResource(R.string.scanner_template_only_note))
+            } else ErrorSnackbar(stringResource(R.string.scanner_template_only_note))
             null -> Unit
         }
         ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {

@@ -20,7 +20,7 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
     installError: String? = null, installing: Boolean = false,
     installNow: () -> Unit = {}, installLater: () -> Unit = {}) {
     ShopSectionHeader(stringResource(R.string.application_updates))
-    if (installError != null) FormError(installError)
+    ErrorSnackbar(installError)
     ShopGroup {
         Text(stringResource(R.string.installed_version, installed.versionName, installed.versionCode),
             style = MaterialTheme.typography.bodyMedium)
@@ -46,7 +46,7 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
                 }
                 is DownloadState.Failed -> {
                     ReleaseSummary(download.release)
-                    Text(downloadFailure(download.reason))
+                    ErrorSnackbar(downloadFailure(download.reason))
                 }
                 DownloadState.None -> when (state) {
                     UpdateState.Idle -> Text(stringResource(R.string.update_idle))
@@ -55,7 +55,7 @@ internal fun UpdateControls(installed: InstalledApp, state: UpdateState, downloa
                         LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
                     UpdateState.NoUpdate -> Text(stringResource(R.string.update_none))
-                    is UpdateState.Failed -> Text(discoveryFailure(state.reason))
+                    is UpdateState.Failed -> ErrorSnackbar(discoveryFailure(state.reason))
                     is UpdateState.Available -> ReleaseSummary(state.release)
                 }
             }

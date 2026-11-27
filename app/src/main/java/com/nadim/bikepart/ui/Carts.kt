@@ -43,7 +43,10 @@ internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOp
 internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, error: ShopError?,
     edit: (String?, String?, String?) -> Unit, pause: () -> Unit, add: () -> Unit,
     remove: (String) -> Unit, discard: () -> Unit, retry: () -> Unit, reload: () -> Unit, checkout: () -> Unit) {
-    if (draft == null) { Text(stringResource(R.string.cart_unavailable)); return }
+    if (draft == null) {
+        ErrorSnackbar(stringResource(R.string.cart_unavailable), blocking = true)
+        return
+    }
     val cart = shop.carts.find { it.id == draft.cart.id } ?: draft.cart
     var confirmDiscard by rememberSaveable(cart.id) { mutableStateOf(false) }
     val errorView = remember { BringIntoViewRequester() }
@@ -68,7 +71,6 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
     }
     if (error != null) ShopGroup {
         Column(Modifier.bringIntoViewRequester(errorView)) {
-            FormError(error.message)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                 TextButton(onClick = retry, enabled = !busy) { Text(stringResource(R.string.cart_retry_saving)) }
                 TextButton(onClick = reload, enabled = !busy) { Text(stringResource(R.string.cart_reload_saved)) }
@@ -107,7 +109,6 @@ internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, er
                             value = draft.quantities[product.id].orEmpty(),
                             onValueChange = { edit(null, product.id, it) },
                             label = stringResource(R.string.cart_pieces_label),
-                            supporting = if (quantityError) stringResource(R.string.cart_invalid_quantity) else null,
                             error = if (quantityError) stringResource(R.string.cart_invalid_quantity) else null,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             contentDescription = "Pieces · ${product.title}",
@@ -179,7 +180,6 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
             error = error?.takeIf { it.field == ProductField.CartQuantity }?.message,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
-        if (error != null && error.field != ProductField.CartQuantity) FormError(error.message)
         ShopPrimaryButton(stringResource(R.string.scanner_add_to_cart), enabled = !busy, onClick = { add(product.id, quantity) })
     } }
     ShopSearchField(query, { query = it; selected = null; onChange() }, "Search products for cart", enabled = !busy,

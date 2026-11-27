@@ -109,7 +109,7 @@ internal fun ProductPhoto(
 
 @Composable
 internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boolean, busy: Boolean,
-    load: PhotoLoader, error: String?, select: (List<String>) -> Unit, remove: () -> Unit,
+    load: PhotoLoader, select: (List<String>) -> Unit, remove: () -> Unit,
     multipleUris: List<String>?, removeSelected: (String) -> Unit) {
     val context = LocalContext.current
     val picker = rememberLauncherForActivityResult(PickVisualMedia()) { selected -> selected?.let { select(listOf(it.toString())) } }
@@ -269,8 +269,7 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
                 Text(stringResource(R.string.photo_choose))
             }
         }
-        val displayError = error ?: cameraError
-        if (displayError != null) FormError(displayError)
+        ErrorSnackbar(cameraError)
     }
 
     if (showSourceDialog) {

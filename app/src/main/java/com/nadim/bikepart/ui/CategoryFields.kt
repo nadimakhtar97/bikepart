@@ -153,7 +153,6 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                         )
                     }
                 }
-                if (fieldError != null) FormError(fieldError.message)
             }
         }
     }
@@ -180,7 +179,6 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
             )
         }
     }
-    if (error?.field == ProductField.DefinitionType) FormError(error.message)
     ShopTextField(unit, { unit = it }, stringResource(R.string.field_unit_label), enabled = !busy)
     Row(Modifier
         .fillMaxWidth()

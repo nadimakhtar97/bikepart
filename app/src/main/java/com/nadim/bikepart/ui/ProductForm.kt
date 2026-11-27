@@ -88,7 +88,6 @@ internal fun ProductForm(
             photoRemoved,
             busy,
             loadPhoto,
-            error?.takeIf { it.field == ProductField.Photo }?.message,
             select = { selected ->
                 photoUris = ArrayList(if (multiplePhotos) (photoUris + selected).distinct() else selected)
                 if (!multiplePhotos) photoRemoved = false
@@ -136,7 +135,6 @@ internal fun ProductForm(
                 emptyMessage = stringResource(R.string.form_no_matching_category),
             )
         }
-        if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
     if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text(stringResource(R.string.form_prev_category_note), style = MaterialTheme.typography.bodyMedium)
@@ -211,8 +209,6 @@ internal fun ProductForm(
         }
         Text(stringResource(R.string.form_stock_price_note), style = MaterialTheme.typography.bodyMedium)
     }
-    if (error != null && error.field == null) FormError(error.message)
-    if (error?.field == ProductField.DefinitionName && error.definitionId == null) FormError(error.message)
     if (error?.similar == true) Row(
         Modifier
             .fillMaxWidth()
@@ -258,7 +254,6 @@ private fun ProductTextField(value: String, onChange: (String) -> Unit, label: S
         enabled = enabled,
         label = { Text(label) },
         isError = error != null,
-        supportingText = if (error == null) null else ({ FormError(error.message) }),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         modifier = modifier)
 }

@@ -26,7 +26,6 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
     val status by model.driveStatus.collectAsState()
     val busy by model.driveBusy.collectAsState()
     val complete by model.cleanupComplete.collectAsState()
-    val error by model.driveError.collectAsState()
     val progress by model.storageProgress.collectAsState()
     var confirm by rememberSaveable(storage?.fingerprint) { mutableStateOf(false) }
     val canInspect = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired
@@ -50,7 +49,6 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
                 Text(if (reviewed.cleanupPending) "Continue reviewed cleanup" else "Remove eligible older backups")
             } else Text(stringResource(R.string.no_older_backup_history_is_eligible_for), style = MaterialTheme.typography.bodyMedium)
         }
-        error?.let { FormError(it) }
     }
     if (confirm && storage != null) AlertDialog(onDismissRequest = { confirm = false },
         title = { Text(stringResource(R.string.storage_dialog_title)) },

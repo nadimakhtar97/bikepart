@@ -37,7 +37,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 @Composable
 internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> Unit, onManage: () -> Unit, loadPhoto: PhotoLoader,
     busy: Boolean, onCopy: () -> Unit, onTemplate: () -> Unit, onCorrection: (CorrectionKind) -> Unit, onArchive: () -> Unit,
-    archiveError: String?, onReceive: () -> Unit, onLabels: () -> Unit) {
+    onReceive: () -> Unit, onLabels: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     // At large system text the photo would squeeze the title into a narrow column.
     val stackHeader = LocalDensity.current.fontScale >= 1.5f
@@ -131,7 +131,6 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         }
         ShopSection(stringResource(R.string.product_archive_section)) {
             Text(stringResource(R.string.product_archive_desc), style = MaterialTheme.typography.bodyMedium)
-            if (archiveError != null) FormError(archiveError)
             ShopSecondaryButton(onClick = onArchive, enabled = !busy, modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.product_archive_btn)) }

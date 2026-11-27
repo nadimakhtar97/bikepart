@@ -100,7 +100,6 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                     ) { Text(stringResource(R.string.remove) + modelName) }
                 }
             }
-            if (error?.field == ProductField.Fitment) FormError(error.message)
             if (models.isEmpty()) Text(stringResource(R.string.finding_choose_model_note), style = MaterialTheme.typography.bodyMedium)
         }
         if (showLocations) {
@@ -117,7 +116,6 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                 emptyMessage = stringResource(R.string.finding_no_matching_location),
                 useDropdown = useDropdown,
             )
-            if (error?.field == ProductField.Location) FormError(error.message)
         }
     }
 }
