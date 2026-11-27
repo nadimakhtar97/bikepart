@@ -20,6 +20,26 @@ class ShopWorkflowTest {
     @Before fun launchApp() { scenario = ActivityScenario.launch(MainActivity::class.java) }
     @After fun closeApp() { scenario.close() }
 
+    @Test fun addingAndRetiringLocationUpdatesTheOpenScreen() {
+        val name = "Test shelf ${System.nanoTime()}"
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("More") and hasClickAction()).performClick()
+        compose.onNodeWithText("Manage fitment and locations").performScrollTo().performClick()
+        val add = compose.onNode(hasText("Add location") and hasClickAction())
+        add.performScrollTo().performClick()
+        compose.onNode(hasSetTextAction() and hasAnyAncestor(isDialog())).performTextInput(name)
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNode(hasText("Add location") and hasClickAction() and hasAnyAncestor(isDialog())).performClick()
+
+        val retire = "Retire: $name"
+        compose.waitUntil(5_000) { compose.onAllNodesWithText(retire).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(retire).performScrollTo().performClick()
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("$name (retired)").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText(retire).assertDoesNotExist()
+    }
+
     @Test fun stockCorrectionsValidatePersistAndRemainUsableAcrossAppearances() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
@@ -519,9 +539,10 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Add product").performClick()
         compose.onNodeWithText("Title (required)").performTextInput(title)
         compose.onNodeWithContentDescription("Search categories").performScrollTo().performTextInput("Bolts")
-        compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
-        compose.onNodeWithText("Opening stock (pieces)").performScrollTo().performTextReplacement("12")
-        compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("9223372036854775807")
+        compose.onNode(hasText("Bolts") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Opening stock (pieces)").performScrollTo().performTextReplacement("12")
+        compose.onNodeWithContentDescription("Selling price (whole rupees)").performScrollTo().performTextInput("9223372036854775807")
         compose.onNodeWithText("Save product").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("12 pieces").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Selling price: ₹92,23,37,20,36,85,47,75,807").performScrollTo().assertIsDisplayed()
