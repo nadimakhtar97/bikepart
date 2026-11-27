@@ -396,6 +396,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                 stateKey = "form:$formSession:$route:$selectedId:$catalogPayload",
                                 routeKey = "$route:$selectedId:$catalogPayload",
                                 lookups = ProductLookups(
+                                    category = { name, selected ->
+                                        model.write({ selected(createCategory(name)) })
+                                    },
+                                    make = { name, selected ->
+                                        model.write({ selected(createMake(name)) })
+                                    },
+                                    model = { make, name, selected ->
+                                        model.write({ selected(createModel(make, name)) })
+                                    },
+                                    location = { name, selected ->
+                                        model.write({ selected(createLocation(name)) })
+                                    },
                                     option = { definition, name, selected ->
                                         model.write({ selected(createOption(definition, name)) })
                                     },

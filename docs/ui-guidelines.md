@@ -388,7 +388,9 @@ Source: [Images and graphics](https://developer.android.com/design/ui/mobile/gui
   detail screen may repeat the item name it was opened for, because the app bar
   truncates long names. Stat and action tiles reserve two label lines so
   neighbours keep equal heights.
-- Category chips wrap and retain the required single-category selection. Once a
+- Removable lookup chips on New product use the Fluent-derived accent container
+  and its matching foreground when Accent is enabled. Category chips wrap and
+  retain the required single-category selection. Once a
   category is selected, show every applicable category field directly without a
   secondary field-search control. Keep retired fields visible only when the
   product already has a value for them. Product and template forms search and

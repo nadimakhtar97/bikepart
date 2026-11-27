@@ -75,6 +75,7 @@ internal fun ShopSearchField(
     onSubmit: (() -> Unit)? = null,
     scanLabel: String? = null,
     onScan: () -> Unit = {},
+    onSearchFocusChanged: (Boolean) -> Unit = {},
 ) {
     val tokens = FluentTheme.controlTokens.tokens[ControlTokens.ControlType.SearchBarControlType]
         as SearchBarTokens
@@ -142,7 +143,10 @@ internal fun ShopSearchField(
                 }),
                 modifier = Modifier.weight(1f)
                     .focusRequester(focusRequester)
-                    .onFocusChanged { focused = it.isFocused }
+                    .onFocusChanged {
+                        focused = it.isFocused
+                        onSearchFocusChanged(focused)
+                    }
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                     .semantics { contentDescription = label },
                 textStyle = textStyle,

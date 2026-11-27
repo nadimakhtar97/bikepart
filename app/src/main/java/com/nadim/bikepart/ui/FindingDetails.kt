@@ -28,6 +28,7 @@ internal val idSetSaver = listSaver<Set<String>, String>(save = { it.toList() },
 internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<String>, locations: Set<String>, busy: Boolean,
                            error: ShopError?,
                            assigned: Boolean,
+                           dropdownLookups: ProductLookups?,
                            onAssigned: (Boolean) -> Unit,
                            onModels: (Set<String>) -> Unit,
                            onLocations: (Set<String>) -> Unit,
@@ -40,7 +41,11 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                 label = stringResource(R.string.finding_unknown_fitment),
                 selected = !assigned,
                 enabled = !busy,
-                onClick = { onAssigned(false); onModels(emptySet()) })
+                onClick = {
+                    if (dropdownLookups != null) make = ""
+                    onAssigned(false)
+                    onModels(emptySet())
+                })
             ShopChoiceChip(
                 label = stringResource(R.string.finding_assigned_fitment),
                 selected = assigned,
@@ -51,18 +56,27 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
             Text(stringResource(R.string.finding_select_model_note), style = MaterialTheme.typography.bodyMedium)
             LookupSelector(
                 label = stringResource(R.string.finding_search_make),
-                addLabel = "",
+                addLabel = stringResource(R.string.finding_add_make),
                 options = shop.makes.filter { !it.retired }.map { it.id to it.name },
                 selected = setOf(make),
                 busy = busy,
                 onSelect = { make = it },
                 onCreate = null,
                 emptyMessage = stringResource(R.string.finding_no_matching_make),
+                dropdownCreate = dropdownLookups?.make,
+                onDropdownRemove = { make = "" },
+                dropdownSingleChoice = true,
+                dropdownError = error?.message,
             )
+            val selectedModels = shop.models.filter { it.id in models }.map { model ->
+                val parent = shop.makes.single { it.id == model.makeId }
+                val retired = if (parent.retired || model.retired) " (retired)" else ""
+                model.id to (parent.name + " · " + model.name + retired)
+            }
             if (make.isNotEmpty()) key(make) {
                 LookupSelector(
                     label = stringResource(R.string.finding_search_model),
-                    addLabel = "",
+                    addLabel = stringResource(R.string.finding_add_model),
                     options = shop.models.filter { it.makeId == make && !it.retired && shop.makes.any { parent -> parent.id == make && !parent.retired } }
                         .map { it.id to it.name },
                     selected = models,
@@ -70,30 +84,43 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                     onSelect = { onModels(if (it in models) models - it else models + it) },
                     onCreate = null,
                     emptyMessage = stringResource(R.string.finding_no_matching_model),
+                    dropdownCreate = dropdownLookups?.let { lookups -> { name, select -> lookups.model(make, name, select) } },
+                    dropdownError = error?.message,
+                    dropdownSelectedOptions = selectedModels,
                 )
             }
-            shop.models.filter { it.id in models }.forEach { model ->
-                val parent = shop.makes.single { it.id == model.makeId }
-                Text(parent.name + " · " + model.name + if (parent.retired || model.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
-                ShopSecondaryButton(enabled = !busy, onClick = { onModels(models - model.id) }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.remove) + model.name) }
+            if (dropdownLookups != null) {
+                if (make.isEmpty()) SelectedLookupChips(selectedModels, busy) { onModels(models - it) }
+            } else {
+                selectedModels.forEach { (id, label) ->
+                    Text(label, style = MaterialTheme.typography.bodyMedium)
+                    val modelName = shop.models.single { it.id == id }.name
+                    ShopSecondaryButton(
+                        enabled = !busy,
+                        onClick = { onModels(models - id) },
+                        modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
+                    ) { Text(stringResource(R.string.remove) + modelName) }
+                }
             }
             if (error?.field == ProductField.Fitment) FormError(error.message)
             if (models.isEmpty()) Text(stringResource(R.string.finding_choose_model_note), style = MaterialTheme.typography.bodyMedium)
         }
         if (showLocations) {
-        Text(stringResource(R.string.finding_locations_note), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.finding_locations_note), style = MaterialTheme.typography.bodyMedium)
             LookupSelector(
                 label = stringResource(R.string.finding_search_location),
-                addLabel = "",
+                addLabel = stringResource(R.string.finding_add_location),
                 options = shop.locations.filter { !it.retired || it.id in locations && it.id in product?.locationIds.orEmpty() }
                     .map { it.id to (it.name + if (it.retired) " (retired)" else "") },
                 selected = locations,
                 busy = busy,
-            onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
+                onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
                 onCreate = null,
                 emptyMessage = stringResource(R.string.finding_no_matching_location),
+                dropdownCreate = dropdownLookups?.location,
+                dropdownError = error?.message,
             )
-        if (error?.field == ProductField.Location) FormError(error.message)
+            if (error?.field == ProductField.Location) FormError(error.message)
         }
     }
 }
