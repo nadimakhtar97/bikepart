@@ -35,7 +35,7 @@ internal object RestoreValidation {
             val contents = LocalBackup.readForRestore(copy)
             val schema = ZipFile(copy).use { zip -> JSONObject(zip.getInputStream(zip.getEntry("schema.json")).bufferedReader(Charsets.UTF_8).readText()) }
             val version = schema.getInt("roomVersion")
-            require(version in 1..14) { "Unsupported shop schema version $version. Update the app before restoring." }
+            require(version in 1..15) { "Unsupported shop schema version $version. Update the app before restoring." }
             val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/$version.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
             require(schema.getString("roomIdentity") == trusted.getString("identityHash")) { "Shop schema identity does not match version $version." }
             val entities = trusted.getJSONArray("entities")

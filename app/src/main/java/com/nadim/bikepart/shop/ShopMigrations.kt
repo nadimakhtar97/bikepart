@@ -3,6 +3,15 @@ package com.nadim.bikepart.shop
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+internal val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE product_photos_new (productId TEXT NOT NULL, sha256 TEXT NOT NULL, sizeBytes INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(productId, position), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("INSERT INTO product_photos_new (productId, sha256, sizeBytes, position) SELECT productId, sha256, sizeBytes, 0 FROM product_photos")
+        db.execSQL("DROP TABLE product_photos")
+        db.execSQL("ALTER TABLE product_photos_new RENAME TO product_photos")
+    }
+}
+
 internal val MIGRATION_13_14 = object : Migration(13, 14) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE shop_state ADD COLUMN labelMedia TEXT NOT NULL DEFAULT 'Package'")

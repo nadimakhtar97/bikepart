@@ -58,10 +58,13 @@ class LocalBackupTest {
                 val make = shop.createMake("मोटर")
                 val model = shop.createModel(make, "Model, \"A\"")
                 val location = shop.createLocation("Shelf १")
-                val id = shop.createProduct("पुर्जा", category, "", "12", "80", attributes = mapOf(
+                val id = shop.createFromCatalog(CatalogDraft("पुर्जा", category, "", attributes = mapOf(
                     decimal to AttributeValue.Decimal("123456789012345678.123456789012"), text to AttributeValue.Text("\\N\n\"quoted\", text"),
                     choice.id to AttributeValue.Choices(setOf(option.id))),
-                    modelIds = setOf(model), locationIds = setOf(location), photo = PhotoChange.Import { "shared photo".byteInputStream() })
+                    modelIds = setOf(model)), "12", "80", locationIds = setOf(location),
+                    photo = PhotoChange.Import { "shared photo".byteInputStream() },
+                    additionalPhotos = listOf(PhotoChange.Import { "second photo".byteInputStream() }),
+                )
                 val template = shop.saveTemplate(shop.snapshot().copyCatalog(id))
                 shop.retireTemplate(template)
                 shop.retireAttribute(text)
@@ -80,7 +83,7 @@ class LocalBackupTest {
                 val portable = LocalBackup.read(capture.file)
                 assertEquals("123456789012345678.123456789012", portable.tables.getValue("attribute_values").records.single { it["definitionId"] == decimal }["decimalValue"])
                 assertEquals("", portable.tables.getValue("products").records.single()["description"])
-                assertEquals(1, portable.blobs.size) // Shared product/template dependency is exported once.
+                assertEquals(2, portable.blobs.size) // The cover is shared with the template.
                 // Independent fixture importer: reconstruct the exported schema and values, then use Shop.
                 val schema = java.util.zip.ZipFile(capture.file).use { zip -> org.json.JSONObject(zip.getInputStream(zip.getEntry("schema.json")).bufferedReader(Charsets.UTF_8).readText()) }
                 android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(restoredName), null).use { db ->
@@ -99,6 +102,8 @@ class LocalBackupTest {
                 Shop.open(context, restoredName).use { restored ->
                     assertEquals(expected, restored.snapshot())
                     assertArrayEquals("shared photo".toByteArray(), restored.readPhoto(expected.products.single().photo!!))
+                    val second = restored.snapshot().products.single().additionalPhotos.single()
+                    assertArrayEquals("second photo".toByteArray(), restored.readPhoto(second))
                     assertEquals(expected.sales.single(), restored.receipt(expected.sales.single().cartId))
                 }
             }

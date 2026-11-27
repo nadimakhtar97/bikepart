@@ -10,6 +10,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -26,6 +27,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -106,9 +109,13 @@ internal fun ProductPhoto(
 
 @Composable
 internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boolean, busy: Boolean,
-    load: PhotoLoader, error: String?, select: (String) -> Unit, remove: () -> Unit) {
+    load: PhotoLoader, error: String?, select: (List<String>) -> Unit, remove: () -> Unit,
+    multipleUris: List<String>?, removeSelected: (String) -> Unit) {
     val context = LocalContext.current
-    val picker = rememberLauncherForActivityResult(PickVisualMedia()) { selected -> selected?.let { select(it.toString()) } }
+    val picker = rememberLauncherForActivityResult(PickVisualMedia()) { selected -> selected?.let { select(listOf(it.toString())) } }
+    val multiplePicker = rememberLauncherForActivityResult(PickMultipleVisualMedia()) { selected ->
+        if (selected.isNotEmpty()) select(selected.map(Uri::toString))
+    }
     var pendingCameraPath by rememberSaveable { mutableStateOf<String?>(null) }
     var cameraError by remember { mutableStateOf<String?>(null) }
     var showSourceDialog by remember { mutableStateOf(false) }
@@ -119,9 +126,9 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
             val path = pendingCameraPath
             val file = path?.let { File(it) }
             if (file != null && file.exists() && file.length() > 200) {
-                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString().let { select(it) }
+                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString().let { select(listOf(it)) }
             } else if (data?.data != null) {
-                select(data.data.toString())
+                select(listOf(data.data.toString()))
             } else {
                 @Suppress("DEPRECATION")
                 val bitmap = data?.extras?.get("data") as? Bitmap
@@ -130,12 +137,12 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
                         file.outputStream().use { out ->
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
                         }
-                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString().let { select(it) }
+                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString().let { select(listOf(it)) }
                     } catch (_: Exception) {
-                        path?.let { select(Uri.fromFile(File(it)).toString()) }
+                        path?.let { select(listOf(Uri.fromFile(File(it)).toString())) }
                     }
                 } else {
-                    path?.let { select(Uri.fromFile(File(it)).toString()) }
+                    path?.let { select(listOf(Uri.fromFile(File(it)).toString())) }
                 }
             }
         }
@@ -172,10 +179,33 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
         }
     }
 
-    ShopSection(stringResource(R.string.photo_section)) {
+    val multiple = multipleUris != null
+    val addLabel = stringResource(R.string.photos_add)
+    ShopSection(stringResource(if (multiple) R.string.photos_section else R.string.photo_section)) {
         val hasPhoto = uri != null || (!removed && reference != null)
         val description = stringResource(R.string.photo_description)
-        if (hasPhoto) {
+        if (multipleUris != null) {
+            val inheritedPhoto = reference.takeUnless { removed }
+            if (inheritedPhoto != null || multipleUris.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                    if (inheritedPhoto != null) {
+                        item { DraftPhotoPreview(inheritedPhoto, null, 1, load, busy, remove) }
+                    }
+                    itemsIndexed(multipleUris, key = { _, selected -> selected }) { index, selected ->
+                        val number = index + if (inheritedPhoto == null) 1 else 2
+                        DraftPhotoPreview(null, selected, number, load, busy) { removeSelected(selected) }
+                    }
+                }
+            }
+            Text(stringResource(R.string.photos_description), style = MaterialTheme.typography.bodyMedium)
+            ShopSecondaryButton(
+                enabled = !busy,
+                onClick = { showSourceDialog = true },
+                modifier = Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget),
+            ) {
+                Text(addLabel)
+            }
+        } else if (hasPhoto) {
             val replaceLabel = stringResource(R.string.photo_replace)
             val photoShape = MaterialTheme.shapes.small
             // Shrink the frame to the photo's aspect ratio so the surface never shows beside it.
@@ -246,7 +276,7 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
     if (showSourceDialog) {
         AlertDialog(
             onDismissRequest = { showSourceDialog = false },
-            title = { Text(if (uri != null || (!removed && reference != null)) stringResource(R.string.photo_replace) else stringResource(R.string.photo_choose)) },
+            title = { Text(if (multiple) addLabel else stringResource(if (uri != null || (!removed && reference != null)) R.string.photo_replace else R.string.photo_choose)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                     ShopSecondaryButton(
@@ -270,7 +300,8 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
                         enabled = !busy,
                         onClick = {
                             showSourceDialog = false
-                            picker.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                            val request = PickVisualMediaRequest(PickVisualMedia.ImageOnly)
+                            if (multiple) multiplePicker.launch(request) else picker.launch(request)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -290,5 +321,32 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun DraftPhotoPreview(
+    reference: PhotoReference?,
+    uri: String?,
+    number: Int,
+    load: PhotoLoader,
+    busy: Boolean,
+    remove: () -> Unit,
+) {
+    Box(Modifier.size(104.dp)) {
+        ProductPhoto(reference, load, Modifier.fillMaxSize(), selectedUri = uri)
+        IconButton(
+            onClick = remove,
+            enabled = !busy,
+            modifier = Modifier.align(Alignment.TopEnd)
+                .clip(CircleShape)
+                .background(Color.Black.copy(alpha = .6f), CircleShape),
+        ) {
+            Icon(
+                painterResource(R.drawable.ic_close),
+                contentDescription = stringResource(R.string.photos_remove, number),
+                tint = Color.White,
+            )
+        }
     }
 }

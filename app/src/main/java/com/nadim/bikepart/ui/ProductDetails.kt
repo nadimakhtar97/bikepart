@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -63,6 +65,15 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             .padding(ShopSpacing.content), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
             ProductPhoto(product.photo, loadPhoto, Modifier.size(104.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp), content = summary)
+        }
+    }
+    if (product.additionalPhotos.isNotEmpty()) {
+        ShopSection(stringResource(R.string.photos_gallery)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                items(listOfNotNull(product.photo) + product.additionalPhotos) { reference ->
+                    ProductPhoto(reference, loadPhoto, Modifier.size(160.dp))
+                }
+            }
         }
     }
     if (!product.archived) ShopPrimaryButton(stringResource(R.string.product_edit_details), enabled = !busy, onClick = onEdit)

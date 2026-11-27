@@ -1,5 +1,12 @@
 # Shop schema history
 
+## Version 15 — multiple product photos
+
+The 14 → 15 migration keeps existing photos at position zero and adds an ordered
+position to each product photo reference. New Product saves all selected photo
+references in the same transaction as the product. The first photo supplies the
+stock thumbnail. Portable format 1 exports all references and their blobs.
+
 ## Backup retention — operational journal only
 
 Room remains at version 14 and portable exports at format 1. Optional last

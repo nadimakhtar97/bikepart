@@ -143,15 +143,16 @@ class RestoreValidationTest {
         val fixture = File(context.cacheDir, "$name.zip")
         try {
             Shop.open(context, name).use { shop ->
-                shop.createProduct("Preserved", shop.snapshot().categories.first().id, "", "4", "50")
+                shop.createProduct(
+                    "Preserved", shop.snapshot().categories.first().id, "", "4", "50",
+                    photo = PhotoChange.Import { "legacy photo".byteInputStream() },
+                )
                 val before = shop.snapshot()
                 val capture = shop.captureLocalBackup()
-                val table = LocalBackup.read(capture.file).tables.getValue("shop_state")
-                val columns = table.columns - setOf("labelMedia", "labelCopies")
+                val tables = LocalBackup.read(capture.file).tables
                 rewriteCapture(capture.file, fixture) { entries, manifest, schema ->
-                    entries["tables/shop_state.csv"] = LocalBackup.csv(listOf(columns) + table.records.map { row -> columns.map { row[it] } })
-                    val metadata = schema.getJSONArray("tables").let { array -> (0 until array.length()).map { array.getJSONObject(it) }.single { it.getString("name") == "shop_state" } }
-                    metadata.put("columns", JSONArray().apply { val old = metadata.getJSONArray("columns"); for (i in 0 until old.length()) if (old.getJSONObject(i).getString("name") in columns) put(old.getJSONObject(i)) })
+                    removeBackupColumns(entries, schema, "shop_state", tables.getValue("shop_state"), setOf("labelMedia", "labelCopies"))
+                    removeBackupColumns(entries, schema, "product_photos", tables.getValue("product_photos"), setOf("position"))
                     val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/13.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
                     schema.put("roomVersion", 13).put("roomIdentity", trusted.getString("identityHash"))
                     manifest.put("roomVersion", 13)
@@ -202,6 +203,26 @@ class RestoreValidationTest {
 }
 
 /** Build deliberately hostile, internally checksummed archives rather than merely breaking a hash. */
+internal fun removeBackupColumns(
+    entries: MutableMap<String, ByteArray>,
+    schema: JSONObject,
+    name: String,
+    table: BackupTable,
+    removed: Set<String>,
+) {
+    val columns = table.columns - removed
+    entries["tables/$name.csv"] = LocalBackup.csv(listOf(columns) + table.records.map { row -> columns.map { row[it] } })
+    val tables = schema.getJSONArray("tables")
+    val metadata = (0 until tables.length()).map(tables::getJSONObject).single { it.getString("name") == name }
+    val previous = metadata.getJSONArray("columns")
+    metadata.put("columns", JSONArray().apply {
+        for (i in 0 until previous.length()) {
+            val column = previous.getJSONObject(i)
+            if (column.getString("name") in columns) put(column)
+        }
+    })
+}
+
 internal fun rewriteCapture(source: File, target: File, edit: (MutableMap<String, ByteArray>, JSONObject, JSONObject) -> Unit): File {
     val entries = ZipFile(source).use { zip -> zip.entries().asSequence().associate { it.name to zip.getInputStream(it).readBytes() }.toMutableMap() }
     val manifest = JSONObject(entries.getValue("manifest.json").toString(Charsets.UTF_8))

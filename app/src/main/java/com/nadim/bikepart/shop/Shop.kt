@@ -8,7 +8,7 @@ import java.util.UUID
 import kotlinx.coroutines.flow.map
 
 data class Category(val id: String, val name: String)
-data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet(), val photo: PhotoReference? = null, val lowStockThreshold: Long? = null, val archived: Boolean = false)
+data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet(), val photo: PhotoReference? = null, val lowStockThreshold: Long? = null, val archived: Boolean = false, val additionalPhotos: List<PhotoReference> = emptyList())
 data class HistoricalAttribute(val id: String, val definitionId: String, val value: AttributeValue)
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long)
@@ -89,7 +89,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     suspend fun snapshot(): ShopSnapshot = activeTransaction {
         val state = requireNotNull(dao.state())
-        val photoRows = dao.productPhotos().associateBy { it.productId }
+        val photoRows = dao.productPhotos().groupBy { it.productId }
         val balances = dao.balances().associateBy { it.productId }
         val values = dao.values().groupBy { it.productId }
         val fitments = dao.fitments().groupBy { it.productId }
@@ -97,7 +97,8 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val cartLines = dao.cartLines().groupBy { it.cartId }
         val saleLines = dao.saleLines().groupBy { it.saleId }
         ShopSnapshot(dao.categories().map { Category(it.id, it.name) }, dao.products().map {
-            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet(), photoRows[it.id]?.let { row -> PhotoReference(row.sha256, row.sizeBytes) }, it.lowStockThreshold, it.archived)
+            val productPhotos = photoRows[it.id].orEmpty().map { row -> PhotoReference(row.sha256, row.sizeBytes) }
+            Product(it.id, it.sku, it.title, it.categoryId, it.description, it.priceRupees, requireNotNull(balances[it.id]).quantity, values[it.id].orEmpty().filter { it.historyId.isEmpty() }.associate { value -> value.definitionId to decodeValue(value) }, values[it.id].orEmpty().filter { it.historyId.isNotEmpty() }.map { value -> HistoricalAttribute(value.historyId, value.definitionId, decodeValue(value)) }, fitments[it.id].orEmpty().map { row -> row.modelId }.toSet(), locations[it.id].orEmpty().map { row -> row.locationId }.toSet(), productPhotos.firstOrNull(), it.lowStockThreshold, it.archived, productPhotos.drop(1))
         }, state.revision, Appearance.valueOf(state.appearance),
             dao.attributes().map { CategoryAttribute(it.id, it.categoryId, it.name, AttributeType.valueOf(it.type), it.required, it.unit, it.productId, it.retired) },
             dao.options().map { AttributeOption(it.id, it.definitionId, it.name, it.retired) }, state.datasetId,
@@ -190,7 +191,10 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             when (photo) {
                 PhotoChange.Keep -> Unit
                 PhotoChange.Remove -> dao.deletePhoto(id)
-                is PhotoChange.Import -> dao.putPhoto(ProductPhotoRow(id, requireNotNull(imported).sha256, imported.sizeBytes))
+                is PhotoChange.Import -> {
+                    dao.deletePhoto(id)
+                    dao.putPhoto(ProductPhotoRow(id, requireNotNull(imported).sha256, imported.sizeBytes))
+                }
             }
             dao.updateProduct(product.copy(title = title.trim(), categoryId = categoryId, description = description.trim()))
             advanceRevision()
@@ -250,8 +254,10 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     suspend fun createFromCatalog(catalog: CatalogDraft, openingPieces: String, priceRupees: String,
-        allowSimilar: Boolean = false, locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
+        allowSimilar: Boolean = false, locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep,
+        additionalPhotos: List<PhotoChange.Import> = emptyList()): String {
         val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
+        val importedAdditional = additionalPhotos.map { photos.import(it) }
         return activeTransaction {
             val entered = catalog.copy(photo = when (photo) {
                 PhotoChange.Keep -> catalog.photo
@@ -270,7 +276,9 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             val values = validateAttributes(draft.categoryId, draft.attributes, id)
             dao.deleteValues(id)
             dao.insertValues(values.map { it.copy(productId = id) })
-            draft.photo?.let { dao.putPhoto(ProductPhotoRow(id, it.sha256, it.sizeBytes)) }
+            (listOfNotNull(draft.photo) + importedAdditional).distinct().forEachIndexed { position, reference ->
+                dao.putPhoto(ProductPhotoRow(id, reference.sha256, reference.sizeBytes, position))
+            }
             // createProduct advanced the revision inside this same enclosing transaction.
             id
         }
@@ -740,7 +748,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             }
         }
         internal fun openDatabase(context: Context, name: String): ShopDatabase =
-            Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14).build()
+            Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15).build()
 
         internal fun staged(context: Context, database: ShopDatabase, directory: java.io.File) =
             Shop(database, ProductPhotos(java.io.File(directory, "blobs")), directory, directory, context)

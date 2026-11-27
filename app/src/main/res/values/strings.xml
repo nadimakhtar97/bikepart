@@ -381,6 +381,11 @@
     <string name="finding_retired_names_note">Retired names stay readable on existing products and cannot be newly selected.</string>
 
     <!-- Product photos -->
+    <string name="photos_section">Product photos (optional)</string>
+    <string name="photos_remove">Remove photo %1$d</string>
+    <string name="photos_add">Add photos</string>
+    <string name="photos_description">Choose photos from your phone or take a new one. The first photo appears in stock search. Maximum 20 MB per photo.</string>
+    <string name="photos_gallery">Product photos</string>
     <string name="photo_section">Product photo (optional)</string>
     <string name="photo_description">Choose a photo from your phone or take a new one on the spot. Saved photos stay with the product. Maximum 20 MB.</string>
     <string name="photo_replace">Replace photo</string>

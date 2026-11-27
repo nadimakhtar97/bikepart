@@ -21,6 +21,10 @@ Use Git Flow for all project work:
 For build setup or Gradle/theme commands, read [SETUP.md](SETUP.md) first. It
 records the required toolchain and build entry points.
 
+For Android testing and visual validation, check connected devices with
+`adb devices` and use a connected physical device first. Use an emulator when
+no physical device is available for the check.
+
 For Android UI, themes, navigation, shared components or visual validation, read
 [UI guidelines](docs/ui-guidelines.md) before editing. They identify the approved
 Figma reference, token precedence, shop adaptations and verification requirements.

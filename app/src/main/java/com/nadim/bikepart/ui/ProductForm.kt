@@ -42,7 +42,7 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 internal data class ProductFormInput(
     val catalog: CatalogDraft, val openingPieces: String, val priceRupees: String,
     val allowSimilar: Boolean, val categoryMappings: Map<String, String>, val locationIds: Set<String>,
-    val photoUri: String?, val photoRemoved: Boolean,
+    val photoUris: List<String>, val photoRemoved: Boolean,
 )
 
 @Composable
@@ -59,7 +59,8 @@ internal fun ProductForm(
     templateMode: Boolean = false,
     save: (ProductFormInput) -> Unit
 ) {
-    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var photoUris by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
+    val multiplePhotos = product == null && !templateMode
     var photoRemoved by rememberSaveable { mutableStateOf(false) }
     var models by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.modelIds ?: initialCatalog?.modelIds ?: emptySet()) }
     var locations by rememberSaveable(stateSaver = idSetSaver) { mutableStateOf(product?.locationIds ?: emptySet()) }
@@ -83,13 +84,27 @@ internal fun ProductForm(
         )
         PhotoField(
             product?.photo ?: initialCatalog?.photo,
-            photoUri,
+            photoUris.firstOrNull(),
             photoRemoved,
             busy,
             loadPhoto,
             error?.takeIf { it.field == ProductField.Photo }?.message,
-            select = { photoUri = it; photoRemoved = false; onChange() },
-            remove = { photoUri = null; photoRemoved = true; onChange() })
+            select = { selected ->
+                photoUris = ArrayList(if (multiplePhotos) (photoUris + selected).distinct() else selected)
+                if (!multiplePhotos) photoRemoved = false
+                onChange()
+            },
+            remove = {
+                if (!multiplePhotos) photoUris = arrayListOf()
+                photoRemoved = true
+                onChange()
+            },
+            multipleUris = photoUris.takeIf { multiplePhotos },
+            removeSelected = { uri ->
+                photoUris = ArrayList(photoUris - uri)
+                onChange()
+            },
+        )
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
         Text(stringResource(R.string.form_category_required), style = MaterialTheme.typography.labelLarge)
         LookupSelector(
@@ -206,7 +221,7 @@ internal fun ProductForm(
                     }
         }
         save(ProductFormInput(CatalogDraft(title, category, description, applicable, customFields, models, initialCatalog?.photo),
-            quantity, price, distinct, mappings, locations, photoUri, photoRemoved))
+            quantity, price, distinct, mappings, locations, photoUris, photoRemoved))
     }
 }
 
