@@ -28,6 +28,7 @@ class FluentDynamicThemeWorkflowTest {
         var scenario = ActivityScenario.launch(MainActivity::class.java)
         try {
             await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("Excel").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
             compose.onNodeWithText("Excel").assertIsSelected()
             scenario.recreate()
@@ -35,6 +36,7 @@ class FluentDynamicThemeWorkflowTest {
             scenario.close()
             scenario = ActivityScenario.launch(MainActivity::class.java)
             await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("Excel").performScrollTo().assertIsSelected()
             compose.onNodeWithText("Fluent Brand").performScrollTo().performClick()
         } finally { scenario.close(); preferences.setBrand(original.brand); preferences.setAccent(original.accent) }
@@ -54,6 +56,7 @@ class FluentDynamicThemeWorkflowTest {
         }
         try {
             await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("Excel").performScrollTo().performClick()
             val accent = compose.onNodeWithText("Accent").performScrollTo()
             accent.assertIsOn().assertHeightIsAtLeast(48.dp)
@@ -66,16 +69,23 @@ class FluentDynamicThemeWorkflowTest {
             accent.assertIsFocused().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Spacebar) }
             accent.assertIsOff().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Spacebar) }
             accent.assertIsOn()
-            val branded = compose.onNodeWithText("More").captureToImage()
+            compose.onNodeWithContentDescription("Back").performClick()
+            val branded = compose.onNode(hasText("More") and hasClickAction()).captureToImage()
+            compose.onNodeWithText("Appearance").performClick()
+            accent.performScrollTo()
             // Hit the native switch itself; its callback must toggle once without a nested accessible action.
             accent.performTouchInput { click(androidx.compose.ui.geometry.Offset(width - 30f, center.y)) }
             accent.assertIsOff()
-            val neutral = compose.onNodeWithText("More").captureToImage()
+            compose.onNodeWithContentDescription("Back").performClick()
+            val neutral = compose.onNode(hasText("More") and hasClickAction()).captureToImage()
+            compose.onNodeWithText("Appearance").performClick()
+            accent.performScrollTo()
             val brandedPixels = branded.toPixelMap(); val neutralPixels = neutral.toPixelMap()
             assertFalse("Accent visibly changes selected navigation chrome", (0 until branded.height).all { y -> (0 until branded.width).all { x -> brandedPixels[x,y] == neutralPixels[x,y] } })
             compose.onNodeWithText("Excel").performScrollTo().assertIsSelected()
             scenario.close(); scenario = ActivityScenario.launch(MainActivity::class.java)
             await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("Excel").performScrollTo().assertIsSelected()
             compose.onNodeWithText("Accent").performScrollTo().assertIsOff().performClick()
             compose.onNodeWithText("OneNote").performScrollTo().performClick()
@@ -135,11 +145,13 @@ class FluentDynamicThemeWorkflowTest {
         var scenario = ActivityScenario.launch(MainActivity::class.java)
         try {
             await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("PowerPoint").performScrollTo().performClick()
             val accent = compose.onNodeWithText("Accent").performScrollTo()
             if (compose.onAllNodes(hasText("Accent") and isOn()).fetchSemanticsNodes().isNotEmpty()) accent.performClick()
             scenario.close(); scenario = ActivityScenario.launch(MainActivity::class.java)
             await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("PowerPoint").performScrollTo().assertIsSelected()
             compose.onNodeWithText("Accent").performScrollTo().assertIsOff()
             compose.onNodeWithText("Dark").performScrollTo().assertIsSelected()
@@ -187,6 +199,7 @@ class FluentDynamicThemeWorkflowTest {
                 runBlocking { Shop.open(context).use { it.setAppearance(mode) } }
                 ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                     await("More"); compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Appearance").performClick()
                     for (brand in com.nadim.bikepart.ui.theme.ShopBrand.entries) {
                         compose.onNodeWithText(brand.label).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
                         compose.onNodeWithText(brand.label).assertIsSelected().assertIsDisplayed()
@@ -208,7 +221,7 @@ class FluentDynamicThemeWorkflowTest {
                             assertEquals(mode == Appearance.Light, bars.isAppearanceLightNavigationBars)
                         }
                         capture("dynamic-header-${if (accent) "brand" else "neutral"}-${mode.name.lowercase()}-$font")
-                        compose.onNodeWithText("Back").performClick(); await("More")
+                        compose.onNodeWithContentDescription("Back").performClick(); await("More")
                         compose.onNodeWithText("More").performClick()
                     }
                 }
