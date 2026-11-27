@@ -13,7 +13,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -244,18 +243,16 @@ internal fun ProductForm(
 
 @Composable
 private fun ProductTextField(value: String, onChange: (String) -> Unit, label: String, enabled: Boolean, error: ShopError? = null, number: Boolean = false, modifier: Modifier = Modifier.fillMaxWidth()) {
-    if (number) ShopTextField(
-        value, onChange, label, enabled = enabled, error = error?.message,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = modifier
-    )
-    else OutlinedTextField(
+    ShopTextField(
         value,
         onChange,
+        label,
+        modifier = modifier,
         enabled = enabled,
-        label = { Text(label) },
-        isError = error != null,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        modifier = modifier)
+        error = error?.message,
+        keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Number else KeyboardType.Text),
+        singleLine = number,
+    )
 }
 
 @Composable

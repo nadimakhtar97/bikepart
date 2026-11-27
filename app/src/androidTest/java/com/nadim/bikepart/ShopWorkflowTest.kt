@@ -52,7 +52,7 @@ class ShopWorkflowTest {
             try { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
             catch (failure: AssertionError) { throw AssertionError("Waiting for $text\n" + compose.onRoot().printToString(), failure) }
         }
-        fun click(text: String) {
+        fun scrollToDisplayed(text: String): SemanticsNodeInteraction {
             val node = compose.onNodeWithText(text)
             // Keyboard insets can still be animating after text input. Scroll against
             // the settled viewport before asserting that the actual target is visible.
@@ -60,7 +60,10 @@ class ShopWorkflowTest {
                 node.performScrollTo()
                 node.isDisplayed()
             }
-            node.assertIsDisplayed().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+            return node
+        }
+        fun click(text: String) {
+            scrollToDisplayed(text).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
         }
         fun capture(name: String) {
             val file = java.io.File(context.getExternalFilesDir(null), "$name.png")
@@ -88,8 +91,8 @@ class ShopWorkflowTest {
                 click("Save correction")
                 await("Explain why this stock correction is needed")
                 compose.onNodeWithText("Reason").performScrollTo().performTextInput("All shelves counted and unchanged")
-                compose.onNodeWithText("Save correction").performScrollTo().assertHeightIsAtLeast(48.dp).assertIsDisplayed()
                 capture("correction-keyboard-${mode.name.lowercase()}-$scale")
+                scrollToDisplayed("Save correction").assertHeightIsAtLeast(48.dp)
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
                 scenario.recreate()
                 compose.onNodeWithText("Reason").performScrollTo().assertTextContains("All shelves counted and unchanged")

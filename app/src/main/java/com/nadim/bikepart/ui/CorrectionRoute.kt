@@ -1,7 +1,9 @@
 package com.nadim.bikepart.ui
 
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.ui.Modifier
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.CorrectionKind
@@ -21,7 +23,7 @@ internal fun CorrectionRoute(
         modifier = ShopRouteScaffoldModifier,
         topBar = { ShopRouteAppBar(title = kind.label, showBack = true, enabled = !busy) },
     ) { padding ->
-        ShopRouteColumn(contentPadding = padding) {
+        ShopRouteColumn(modifier = Modifier.imePadding(), contentPadding = padding) {
             if (product != null) key(operationId) {
                 StockCorrectionForm(product, kind, busy, error, onChange = onChange, save = save)
             }

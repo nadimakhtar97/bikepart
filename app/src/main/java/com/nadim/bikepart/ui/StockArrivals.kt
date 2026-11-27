@@ -1,13 +1,11 @@
 package com.nadim.bikepart.ui
 
 import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
@@ -29,8 +27,14 @@ internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?
             error = error?.takeIf { it.field == ProductField.ArrivalQuantity }?.message,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
-        OutlinedTextField(cost, { cost = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.arrival_purchase_cost)) },
-            isError = error?.field == ProductField.PurchaseCost, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), singleLine = true)
+        ShopTextField(
+            cost,
+            { cost = it; onChange() },
+            stringResource(R.string.arrival_purchase_cost),
+            enabled = !busy,
+            error = error?.takeIf { it.field == ProductField.PurchaseCost }?.message,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        )
 
         ShopPrimaryButton(stringResource(R.string.arrival_save), enabled = !busy) { save(pieces, cost) }
     }

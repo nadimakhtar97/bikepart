@@ -74,6 +74,10 @@ in `third_party` and packaged in the APK's `assets/third_party` directory.
 
 ## Platform foundations and visual styles
 
+Use `ShopTextField` for form inputs. It wraps Compose Material 3's
+`OutlinedTextField` with the Fluent-derived theme and supports each field's
+keyboard, line mode and validation. Search bars use `ShopSearchField`.
+
 ### Accessibility
 
 Source: [Accessibility](https://developer.android.com/design/ui/mobile/guides/foundations/accessibility).

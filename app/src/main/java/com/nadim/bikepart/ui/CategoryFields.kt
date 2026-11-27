@@ -10,7 +10,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -118,10 +117,10 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                 } else when (definition.type) {
                     AttributeType.Text, AttributeType.Decimal -> {
                         val text = when (value) { is AttributeValue.Text -> value.text; is AttributeValue.Decimal -> value.exact; else -> "" }
-                        OutlinedTextField(text, { input -> onValue(definition.id, if (definition.type == AttributeType.Text) AttributeValue.Text(input) else if (input.isBlank()) null else AttributeValue.Decimal(input)) },
-                            enabled = !busy, label = { Text(label) }, isError = fieldError != null,
+                        ShopTextField(text, { input -> onValue(definition.id, if (definition.type == AttributeType.Text) AttributeValue.Text(input) else if (input.isBlank()) null else AttributeValue.Decimal(input)) },
+                            label = label, enabled = !busy, error = fieldError?.message,
                             keyboardOptions = KeyboardOptions(keyboardType = if (definition.type == AttributeType.Decimal) KeyboardType.Decimal else KeyboardType.Text),
-                            modifier = Modifier.fillMaxWidth())
+                            singleLine = false)
                         if (definition.type == AttributeType.Decimal) Text(stringResource(R.string.up_to_18_whole_and_12_decimal), style = MaterialTheme.typography.bodySmall)
                     }
                     AttributeType.SingleChoice, AttributeType.MultipleChoice -> {
