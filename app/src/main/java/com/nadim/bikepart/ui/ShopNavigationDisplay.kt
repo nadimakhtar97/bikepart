@@ -4,6 +4,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
@@ -22,13 +23,15 @@ internal fun <T : Any> ShopNavigationDisplay(
     backStack: List<T>,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    entryProvider: (T) -> NavEntry<T>,
+    content: @Composable (T) -> Unit,
 ) {
+    // Navigation 3 caches entries by back stack. Read the latest content when an entry renders.
+    val currentContent = rememberUpdatedState(content)
     NavDisplay(
         backStack = backStack,
         onBack = onBack,
         modifier = modifier,
-        entryProvider = entryProvider,
+        entryProvider = { key -> NavEntry(key) { currentContent.value(it) } },
         transitionSpec = { shopNavigationTransition },
         popTransitionSpec = { shopNavigationTransition },
         predictivePopTransitionSpec = { _ -> shopNavigationTransition },

@@ -54,7 +54,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.NavEntry
 import com.microsoft.fluentui.compose.Scaffold
 import com.microsoft.fluentui.theme.FluentTheme
 import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1
@@ -484,9 +483,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                     backStack = backStack,
                                     onBack = { if (backStack.size > 1) back() },
                                     modifier = Modifier.fillMaxSize(),
-                                    entryProvider = { key ->
+                                    content = { key ->
                                     when (key) {
-                                        is Screen.Home -> NavEntry(key) {
+                                        is Screen.Home -> {
                                             HomeRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -504,7 +503,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 searchBar = searchBarContent,
                                             )
                                         }
-                                        is Screen.Stock -> NavEntry(key) {
+                                        is Screen.Stock -> {
                                             StockRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -534,7 +533,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.Carts -> NavEntry(key) {
+                                        is Screen.Carts -> {
                                             CartsRoute(shop, busy, ::newCart) {
                                                 newCartId = ""
                                                 selectedId = it
@@ -542,7 +541,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 navigateTo(Screen.Cart)
                                             }
                                         }
-                                        is Screen.More -> NavEntry(key) {
+                                        is Screen.More -> {
                                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
                                                 MoreRoute(
                                                     shop = shop,
@@ -587,7 +586,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                     }) })
                                             }
                                         }
-                                        is Screen.AppearanceSettings -> NavEntry(key) {
+                                        is Screen.AppearanceSettings -> {
                                             AppearanceRoute(
                                                 appearance = shop.appearance,
                                                 busy = busy,
@@ -597,12 +596,12 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 onAccent = model.themePreferences::setAccent,
                                             )
                                         }
-                                        is Screen.DeveloperOption -> NavEntry(key) {
+                                        is Screen.DeveloperOption -> {
                                             DeveloperOptionRoute(busy = busy) { onAdded ->
                                                 model.write(action = { addDummyData() }, done = onAdded)
                                             }
                                         }
-                                        is Screen.Backups -> NavEntry(key) {
+                                        is Screen.Backups -> {
                                             BackupsRoute(
                                                 model = model,
                                                 shop = shop,
@@ -614,7 +613,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 recoveryExport = recoveryExport,
                                             )
                                         }
-                                        is Screen.Scan -> NavEntry(key) {
+                                        is Screen.Scan -> {
                                             ScanRoute(
                                                 shop = shop,
                                                 purpose = ScanPurpose.valueOf(scanPurpose),
@@ -668,7 +667,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             )
                                         }
 
-                                        is Screen.ReceiveProducts -> NavEntry(key) {
+                                        is Screen.ReceiveProducts -> {
                                             ReceiveProductsRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -691,7 +690,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             )
                                         }
 
-                                        is Screen.CatalogSearch -> NavEntry(key) {
+                                        is Screen.CatalogSearch -> {
                                             CatalogSearchRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -716,7 +715,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 onCreate = { navigateTo(Screen.Create) },
                                             )
                                         }
-                                        is Screen.Arrival -> NavEntry(key) {
+                                        is Screen.Arrival -> {
                                             ArrivalRoute(
                                                 product = product,
                                                 operationId = arrivalOperation,
@@ -738,7 +737,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.Cart -> NavEntry(key) {
+                                        is Screen.Cart -> {
                                             CartRoute(
                                                 shop = shop,
                                                 draft = cartDraft,
@@ -790,7 +789,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.Checkout -> NavEntry(key) {
+                                        is Screen.Checkout -> {
                                             CheckoutRoute(
                                                 shop = shop,
                                                 cart = shop.carts.find { it.id == selectedId },
@@ -818,20 +817,20 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.Sales -> NavEntry(key) {
+                                        is Screen.Sales -> {
                                             SalesRoute(shop) {
                                                 selectedId = it
                                                 model.error.value = null
                                                 navigateTo(Screen.Receipt)
                                             }
                                         }
-                                        is Screen.Receipt -> NavEntry(key) {
+                                        is Screen.Receipt -> {
                                             ReceiptRoute(selectedSale) {
                                                 model.error.value = null
                                                 navigateTo(Screen.Sales)
                                             }
                                         }
-                                        is Screen.CartProducts -> NavEntry(key) {
+                                        is Screen.CartProducts -> {
                                             CartProductsRoute(
                                                 shop = shop,
                                                 draft = cartDraft,
@@ -867,22 +866,22 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             )
                                         }
 
-                                        is Screen.Create -> NavEntry(key) {
+                                        is Screen.Create -> {
                                             CreateProductRoute(formContext, catalog)
                                         }
 
-                                        is Screen.Edit -> NavEntry(key) {
+                                        is Screen.Edit -> {
                                             EditProductRoute(formContext)
                                         }
 
-                                        is Screen.TemplateForm -> NavEntry(key) {
+                                        is Screen.TemplateForm -> {
                                             TemplateFormRoute(
                                                 formContext,
                                                 catalog,
                                                 editing = templateId != null
                                             )
                                         }
-                                        is Screen.Templates -> NavEntry(key) {
+                                        is Screen.Templates -> {
                                             TemplateListRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -904,7 +903,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.TemplateDetail -> NavEntry(key) {
+                                        is Screen.TemplateDetail -> {
                                             TemplateDetailRoute(
                                                 shop = shop,
                                                 template = template,
@@ -939,7 +938,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.Correction -> NavEntry(key) {
+                                        is Screen.Correction -> {
                                             CorrectionRoute(
                                                 product = product,
                                                 operationId = correctionOperation,
@@ -967,16 +966,16 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.ArchivedProducts -> NavEntry(key) {
+                                        is Screen.ArchivedProducts -> {
                                             ArchivedProductsRoute(shop, model::readPhoto) {
                                                 selectedId = it
                                                 navigateTo(Screen.Detail)
                                             }
                                         }
-                                        is Screen.Labels -> NavEntry(key) {
+                                        is Screen.Labels -> {
                                             LabelsRoute(shop, product, busy, error, labelUsb, model)
                                         }
-                                        is Screen.Detail -> NavEntry(key) {
+                                        is Screen.Detail -> {
                                             ProductDetailRoute(
                                                 shop = shop,
                                                 product = product,
@@ -1034,7 +1033,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 },
                                             )
                                         }
-                                        is Screen.Fields -> NavEntry(key) {
+                                        is Screen.Fields -> {
                                             CatalogFieldsRoute(
                                                 shop = shop,
                                                 product = product,
@@ -1073,7 +1072,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 ),
                                             )
                                         }
-                                        is Screen.FindingLookups -> NavEntry(key) {
+                                        is Screen.FindingLookups -> {
                                             FindingLookupsRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -1092,7 +1091,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 onCreateLocation = { model.write({ createLocation(it) }) },
                                             )
                                         }
-                                        is Screen.Categories -> NavEntry(key) {
+                                        is Screen.Categories -> {
                                             CategoriesRoute(
                                                 shop = shop,
                                                 busy = busy,
@@ -1113,7 +1112,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             )
                                         }
 
-                                        is Screen.CategoryDetail -> NavEntry(key) {
+                                        is Screen.CategoryDetail -> {
                                             CategoryDetailRoute(
                                                 shop = shop,
                                                 categoryId = selectedCategoryId,
