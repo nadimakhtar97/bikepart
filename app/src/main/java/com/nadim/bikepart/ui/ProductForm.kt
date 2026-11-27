@@ -106,17 +106,38 @@ internal fun ProductForm(
             },
         )
         ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
+        val selectCategory: (String) -> Unit = {
+            category = it
+            mappings = emptyMap()
+            distinct = false
+            onChange()
+        }
         Text(stringResource(R.string.form_category_required), style = MaterialTheme.typography.labelLarge)
-        LookupSelector(
-            label = stringResource(R.string.form_search_category),
-            addLabel = "",
-            options = shop.categories.map { it.id to it.name },
-            selected = setOf(category),
-            busy = busy,
-            onSelect = { category = it; mappings = emptyMap(); distinct = false; onChange() },
-            onCreate = null,
-            emptyMessage = stringResource(R.string.form_no_matching_category),
-        )
+        if (product == null && !templateMode) {
+            SearchLookupDropdown(
+                label = stringResource(R.string.form_search_category),
+                addLabel = stringResource(R.string.category_add),
+                options = shop.categories.map { it.id to it.name },
+                selected = setOf(category),
+                busy = busy,
+                onSelect = selectCategory,
+                onCreate = lookups.category,
+                onRemove = { selectCategory("") },
+                singleChoice = true,
+                error = error?.message,
+            )
+        } else {
+            LookupSelector(
+                label = stringResource(R.string.form_search_category),
+                addLabel = "",
+                options = shop.categories.map { it.id to it.name },
+                selected = setOf(category),
+                busy = busy,
+                onSelect = selectCategory,
+                onCreate = null,
+                emptyMessage = stringResource(R.string.form_no_matching_category),
+            )
+        }
         if (error?.field == ProductField.Category) FormError(error.message)
         ProductTextField(description, { description = it; onChange() }, "Description", !busy)
     }
@@ -136,6 +157,7 @@ internal fun ProductForm(
             error,
             lookups,
             if (product != null) product.id else "catalog-draft",
+            useDropdown = product == null && !templateMode,
             onValue = { id, value ->
                 values = values.toMutableMap()
                     .apply { if (value == null) remove(id) else put(id, value) }; onChange()
@@ -156,6 +178,7 @@ internal fun ProductForm(
         busy,
         findingError ?: error,
         assigned,
+        dropdownLookups = lookups.takeIf { product == null && !templateMode },
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
     if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {

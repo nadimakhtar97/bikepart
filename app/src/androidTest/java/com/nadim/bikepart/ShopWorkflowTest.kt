@@ -373,6 +373,7 @@ class ShopWorkflowTest {
                 compose.onNodeWithText("Save product").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
                 compose.waitUntil(10_000) { compose.onAllNodesWithText("Enter a product title").fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText("Title (required)").performScrollTo().performTextInput("Validation $mode")
+                compose.onNodeWithContentDescription("Search categories").performScrollTo().performTextInput("Bolts")
                 compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
                 compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("1.5")
                 compose.onNodeWithText("Save product").performScrollTo().performClick()
@@ -418,6 +419,8 @@ class ShopWorkflowTest {
                 compose.onNodeWithText("Viscosity grade (optional)").performScrollTo().assertIsDisplayed()
                 val file = java.io.File(context.getExternalFilesDir(null), "typed-fields-" + mode.name.lowercase() + "-" + scale + ".png")
                 instrumentation.uiAutomation.takeScreenshot().let { bitmap -> file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle() }
+                compose.onNodeWithText("Front and rear replacement assemblies with extended workshop description").assertDoesNotExist()
+                compose.onNodeWithContentDescription("Search Compatible positions options").performScrollTo().performTextInput("workshop")
                 compose.onNodeWithText("Front and rear replacement assemblies with extended workshop description").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
                 compose.onNodeWithText("Save product").performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
                 compose.waitUntil(10_000) { compose.onAllNodesWithText("Enter a product title").fetchSemanticsNodes().isNotEmpty() }
@@ -437,13 +440,15 @@ class ShopWorkflowTest {
         }
         fun option(field: String, name: String) {
             compose.onNodeWithContentDescription("Search or add " + field + " option").performScrollTo().performTextInput(name)
-            compose.onNodeWithText("Add option").performScrollTo().performClick()
-            compose.waitUntil(10_000) { compose.onAllNodes(hasText(name) and isSelected()).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Add option “$name”").performScrollTo().performClick()
+            compose.waitUntil(10_000) {
+                compose.onAllNodes(hasText(name) and hasClickAction()).fetchSemanticsNodes().isNotEmpty()
+            }
         }
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
         compose.onNodeWithContentDescription("Search categories").performTextInput(category)
-        compose.onNodeWithText("Add category").performScrollTo().performClick()
+        compose.onNodeWithText("Add category “$category”").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Add category field").fetchSemanticsNodes().isNotEmpty() }
         field("Grade", "Text")
         field("Size", "Decimal number")
@@ -462,7 +467,10 @@ class ShopWorkflowTest {
         compose.onNodeWithText(category, useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText("Grade (optional)").performScrollTo().performTextInput("SAE 10W-40")
         compose.onNodeWithText("Size (optional)").performScrollTo().performTextInput("10.2500")
-        for (choice in listOf("Black", "Zinc", "Oil")) compose.onNodeWithText(choice, useUnmergedTree = true).performScrollTo().performClick()
+        for ((field, choice) in listOf("Shade" to "Black", "Treatments" to "Zinc", "Treatments" to "Oil")) {
+            compose.onNodeWithContentDescription("Search $field options").performScrollTo().performTextReplacement(choice)
+            compose.onNodeWithText(choice, useUnmergedTree = true).performScrollTo().performClick()
+        }
         compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("80")
         scenario.recreate()
         compose.onNodeWithText("Save product").performScrollTo().performClick()
@@ -483,7 +491,7 @@ class ShopWorkflowTest {
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
         compose.onNodeWithContentDescription("Search categories").performTextInput(category)
-        compose.onNodeWithText("Add category").performScrollTo().performClick()
+        compose.onNodeWithText("Add category “$category”").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText(category).fetchSemanticsNodes().isNotEmpty() }
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("Add category field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add category field").performScrollTo().performClick()
@@ -515,6 +523,7 @@ class ShopWorkflowTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
         compose.onNodeWithText("Title (required)").performTextInput(title)
+        compose.onNodeWithContentDescription("Search categories").performScrollTo().performTextInput("Bolts")
         compose.onNodeWithText("Bolts", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText("Opening stock (pieces)").performScrollTo().performTextReplacement("12")
         compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("9223372036854775807")

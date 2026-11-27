@@ -37,6 +37,10 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 internal data class AttributeSetup(val categoryId: String, val name: String, val type: AttributeType, val required: Boolean, val unit: String)
 
 internal class ProductLookups(
+    val category: (String, (String) -> Unit) -> Unit,
+    val make: (String, (String) -> Unit) -> Unit,
+    val model: (String, String, (String) -> Unit) -> Unit,
+    val location: (String, (String) -> Unit) -> Unit,
     val option: (String, String, (String) -> Unit) -> Unit,
 )
 
@@ -63,7 +67,22 @@ internal fun LookupSelector(
     onSelect: (String) -> Unit,
     onCreate: ((String) -> Unit)?,
     emptyMessage: String? = null,
+    dropdownCreate: ((String, (String) -> Unit) -> Unit)? = null,
+    dropdownError: String? = null,
+    useDropdown: Boolean = dropdownCreate != null,
+    dropdownSingleChoice: Boolean = false,
+    onDropdownRemove: (String) -> Unit = onSelect,
+    dropdownSelectedOptions: List<Pair<String, String>> = options.filter { it.first in selected },
 ) {
+    if (useDropdown) {
+        SearchLookupDropdown(
+            label, addLabel, options, selected, busy, onSelect, dropdownCreate, dropdownError,
+            onRemove = onDropdownRemove,
+            singleChoice = dropdownSingleChoice,
+            selectedOptions = dropdownSelectedOptions,
+        )
+        return
+    }
     var query by rememberSaveable { mutableStateOf("") }
     ShopSearchField(query, { query = it }, label, enabled = !busy)
     val matchingOptions =
@@ -91,7 +110,7 @@ internal fun LookupSelector(
 
 @Composable
 internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<String, AttributeValue>, busy: Boolean,
-    error: ShopError?, lookups: ProductLookups, productId: String? = null, onValue: (String, AttributeValue?) -> Unit) {
+    error: ShopError?, lookups: ProductLookups, productId: String? = null, useDropdown: Boolean, onValue: (String, AttributeValue?) -> Unit) {
     ShopSection(stringResource(R.string.category_fields)) {
         shop.attributes
             .filter { it.appliesTo(categoryId, productId) && (!it.retired || it.id in values) }
@@ -130,15 +149,16 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                             onSelect = { select(it) },
                             onCreate = if (canCreateOption) { name ->
                                 lookups.option(definition.id, name) { id ->
-                                    onValue(
-                                        definition.id, AttributeValue.Choices(
-                                            if (definition.type == AttributeType.SingleChoice) setOf(
-                                                id
-                                            ) else selected + id
-                                        )
-                                    )
+                                    val next = if (definition.type == AttributeType.SingleChoice) setOf(id) else selected + id
+                                    onValue(definition.id, AttributeValue.Choices(next))
                                 }
                             } else null,
+                            dropdownCreate = if (canCreateOption) { name, done ->
+                                lookups.option(definition.id, name, done)
+                            } else null,
+                            dropdownError = error?.message,
+                            useDropdown = useDropdown,
+                            dropdownSingleChoice = definition.type == AttributeType.SingleChoice,
                         )
                     }
                 }
