@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -156,7 +157,12 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val backupSaved by model.backupSaved.collectAsStateWithLifecycle()
     val exportedCaptureId by model.exportedCaptureId.collectAsStateWithLifecycle()
     val recoveryExport = exportedCaptureId != null && exportedCaptureId == recoveryCapture?.id
-    val backStack = remember { mutableStateListOf<Screen>(Screen.Home) }
+    val backStack = rememberSaveable(
+        saver = listSaver(
+            save = { stack -> stack.toList() },
+            restore = { screens -> mutableStateListOf<Screen>().apply { addAll(screens) } },
+        ),
+    ) { mutableStateListOf<Screen>(Screen.Home) }
     var stockHealth by rememberSaveable { mutableStateOf<String?>(null) }
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf<Screen>(Screen.Home) }
@@ -536,10 +542,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 MoreRoute(
                                                     shop = shop,
                                                     busy = busy,
-                                                    customization = customization,
-                                                    onAppearance = { model.write({ setAppearance(it) }) },
-                                                    onBrand = model.themePreferences::setBrand,
-                                                    onAccent = model.themePreferences::setAccent,
+                                                    onOpenAppearance = { navigateTo(Screen.AppearanceSettings) },
                                                     onCategories = { navigateTo(Screen.Categories) },
                                                     onFindingLookups = { navigateTo(Screen.FindingLookups) },
                                                     onArchived = { navigateTo(Screen.ArchivedProducts) },
@@ -577,6 +580,16 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                         // Retain completed file in ready state, keeping it accessible in More
                                                     }) })
                                             }
+                                        }
+                                        is Screen.AppearanceSettings -> NavEntry(key) {
+                                            AppearanceRoute(
+                                                appearance = shop.appearance,
+                                                busy = busy,
+                                                customization = customization,
+                                                onAppearance = { model.write({ setAppearance(it) }) },
+                                                onBrand = model.themePreferences::setBrand,
+                                                onAccent = model.themePreferences::setAccent,
+                                            )
                                         }
                                         is Screen.Backups -> NavEntry(key) {
                                             BackupsRoute(

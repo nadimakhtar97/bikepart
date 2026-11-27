@@ -359,10 +359,13 @@ class ShopWorkflowTest {
             compose.waitUntil(15_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             for (mode in listOf("Light", "Dark")) {
                 compose.onNodeWithText("More").performClick()
+                compose.onNodeWithText("Appearance").performClick()
                 compose.onNodeWithText(mode).performScrollTo().assertIsDisplayed().performClick()
                 compose.waitUntil(10_000) { compose.onAllNodes(hasText(mode) and isSelected()).fetchSemanticsNodes().isNotEmpty() }
                 compose.onNodeWithText(mode).assertIsSelected()
-                screenshot("more-${mode.lowercase()}-200")
+                screenshot("appearance-${mode.lowercase()}-200")
+                androidx.test.espresso.Espresso.pressBack()
+                compose.onNodeWithText("Appearance").assertIsDisplayed()
                 compose.onNodeWithText("Home", useUnmergedTree = true).performClick()
                 compose.onNodeWithText("Add product").assertHeightIsAtLeast(48.dp).performClick()
                 compose.onNodeWithText("Title (required)").assertExists()
@@ -374,11 +377,12 @@ class ShopWorkflowTest {
                 compose.onNodeWithText("Selling price (whole rupees)").performScrollTo().performTextInput("1.5")
                 compose.onNodeWithText("Save product").performScrollTo().performClick()
                 try { compose.waitUntil(10_000) { compose.onAllNodesWithText("Selling price must be a nonnegative whole number").fetchSemanticsNodes().isNotEmpty() } } catch (failure: Exception) { compose.onRoot().printToLog("ValidationFailure"); throw failure }
-                compose.onNodeWithText("Back").performClick()
+                compose.onNodeWithContentDescription("Back").performClick()
                 compose.onNodeWithText("Carts").performClick()
                 compose.onNodeWithText("No unfinished carts").assertExists()
             }
             compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             compose.onNodeWithText("System").performScrollTo().performClick()
         } finally { shell("settings put system font_scale $original") }
     }

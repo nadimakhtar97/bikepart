@@ -86,8 +86,8 @@ class LayoutWorkflowTest {
                     compose.onNodeWithText("Connect or repair Drive").performScrollTo()
                         .assertHeightIsAtLeast(48.dp).assertIsDisplayed()
                     capture("backups-${mode.name}-$scale")
-                    compose.onNodeWithText("Back").performClick()
-                    compose.onNodeWithText("Your shop").assertIsDisplayed()
+                    compose.onNodeWithContentDescription("Back").performClick()
+                    compose.onNodeWithText("Appearance").performScrollTo().assertIsDisplayed()
                 }
             }
         } finally {

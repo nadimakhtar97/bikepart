@@ -27,8 +27,9 @@ class FluentAppearanceWorkflowTest {
             compose.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
         }
         try {
+            await("More"); compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("Appearance").performClick()
             for (mode in listOf(Appearance.Light, Appearance.Dark, Appearance.System)) {
-                await("More"); compose.onNodeWithText("More").performClick()
                 compose.onNodeWithText(mode.name).performScrollTo().performClick()
                 compose.waitUntil(15_000) {
                     compose.onAllNodes(hasText(mode.name) and isSelected()).fetchSemanticsNodes().size == 1
@@ -39,6 +40,7 @@ class FluentAppearanceWorkflowTest {
                 scenario.close()
                 scenario = ActivityScenario.launch(MainActivity::class.java)
                 await("More"); compose.onNodeWithText("More").performClick()
+                compose.onNodeWithText("Appearance").performClick()
                 compose.onNodeWithText(mode.name).performScrollTo().assertIsSelected()
             }
             compose.onNodeWithText("Light").performScrollTo().performClick()
@@ -112,11 +114,19 @@ class FluentAppearanceWorkflowTest {
                 runBlocking { Shop.open(context).use { it.setAppearance(mode) } }
                 ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                     await("More"); compose.onNodeWithText("More").performClick()
+                    compose.onNodeWithText("Appearance").performClick()
                     compose.onNodeWithText(mode.name).performScrollTo().assertIsSelected().assertHeightIsAtLeast(48.dp)
-                    scenario.onActivity { activity ->
-                        val bars = androidx.core.view.WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-                        assertEquals(mode == Appearance.Light, bars.isAppearanceLightStatusBars)
-                        assertEquals(mode == Appearance.Light, bars.isAppearanceLightNavigationBars)
+                    compose.waitForIdle()
+                    capture("pilot-appearance-${mode.name.lowercase()}-$font")
+                    compose.onNodeWithContentDescription("Back").performClick()
+                    compose.waitUntil(15_000) {
+                        var matches = false
+                        scenario.onActivity { activity ->
+                            val bars = androidx.core.view.WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+                            matches = bars.isAppearanceLightStatusBars == (mode == Appearance.Light) &&
+                                bars.isAppearanceLightNavigationBars == (mode == Appearance.Light)
+                        }
+                        matches
                     }
                     capture("pilot-more-${mode.name.lowercase()}-$font")
                     compose.onNodeWithText("Stock").performClick(); await("Add product")
@@ -145,6 +155,7 @@ class FluentAppearanceWorkflowTest {
             runBlocking { Shop.open(context).use { it.setAppearance(Appearance.System) } }
             ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                 await("More"); compose.onNodeWithText("More").performClick()
+                compose.onNodeWithText("Appearance").performClick()
                 compose.onNodeWithText("System").performScrollTo().assertIsSelected()
                 for (dark in listOf(false, true, false)) {
                     shell("cmd uimode night ${if (dark) "yes" else "no"}")
@@ -162,6 +173,7 @@ class FluentAppearanceWorkflowTest {
                     assertTrue("Auto must follow actual rendered device brightness", (0 until pixels.height).any { y ->
                         (0 until pixels.width).any { x -> pixels[x, y] == expected }
                     })
+                    compose.onNodeWithText("Appearance").performScrollTo().performClick()
                 }
             }
         } finally {

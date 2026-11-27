@@ -28,9 +28,10 @@ system-bar brightness. Existing `Appearance.System`, `Light`, `Dark` persistence
 maps to SDK `Auto`, `Light`, `Dark`. System follows configuration changes;
 explicit choices override device brightness. Stored names/schema are unchanged.
 `ShopThemeConfiguration` accepts complete alias/control tokens, shared shapes,
-icons and a scoped `FluentStyle`. More offers Accent and the demo's seven fixed
-brands under the accepted [scope amendment](fluent-scope-amendment.md). Brand and
-Accent are app-local preferences; Appearance retains its existing Shop/Room and
+icons and a scoped `FluentStyle`. More opens a dedicated Appearance screen with
+System, Light and Dark modes, Accent, and the demo's seven fixed brands under
+the accepted [scope amendment](fluent-scope-amendment.md). Brand and Accent
+are app-local preferences; Appearance retains its existing Shop/Room and
 backup contract. Turning Accent off changes applicable chrome to Neutral and
 retains the chosen brand. Native controls without a style parameter keep their
 brand tokens. These controls feed the same scope so native controls, bridge roles
