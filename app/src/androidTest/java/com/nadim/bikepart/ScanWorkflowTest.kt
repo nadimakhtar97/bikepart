@@ -18,6 +18,10 @@ import org.junit.Test
 
 class ScanWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
+
+    private fun awaitSearch(label: String) = compose.waitUntil(20_000) {
+        compose.onAllNodesWithContentDescription(label).fetchSemanticsNodes().isNotEmpty()
+    }
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
     private var frame: ((String) -> Unit)? = null
     private var failure: ((String) -> Unit)? = null
@@ -60,16 +64,16 @@ class ScanWorkflowTest {
             await("Substituted camera transport"); emit(code)
             val before = snapshot()
             await("Unknown barcode. Use manual search or explicitly link it.")
-            click("Link barcode"); compose.onNodeWithText("Find barcode target").performTextInput(title)
+            click("Link barcode"); compose.onNodeWithContentDescription("Find barcode target").performTextInput(title)
             click("Product: $title"); click("Save barcode link")
             await("Scanned product")
             val linked = snapshot()
             assertEquals(before.revision + 1, linked.revision)
             assertEquals(id, linked.barcodeAliases.single { it.code == code }.target.id)
-            click("Link barcode"); compose.onNodeWithText("Find barcode target").performTextReplacement(templateTitle)
+            click("Link barcode"); compose.onNodeWithContentDescription("Find barcode target").performTextReplacement(templateTitle)
             click("Template: $templateTitle"); click("Cancel barcode link")
             assertEquals(linked, snapshot())
-            click("Link barcode"); compose.onNodeWithText("Find barcode target").performTextReplacement(templateTitle)
+            click("Link barcode"); compose.onNodeWithContentDescription("Find barcode target").performTextReplacement(templateTitle)
             click("Template: $templateTitle"); click("Confirm reassignment")
             await("Use template details")
             val reassigned = snapshot()
@@ -109,7 +113,7 @@ class ScanWorkflowTest {
             compose.onAllNodesWithText("Enter quantity and cost").assertCountEquals(0)
             click("Resume scanning"); await("Substituted camera transport"); emit(codes.last())
             await("Template is unknown or retired. Use manual search.")
-            click("Manual search"); await("Search products manually")
+            click("Manual search"); awaitSearch("Search products manually")
             assertEquals(before, snapshot())
         }
     }
@@ -129,7 +133,7 @@ class ScanWorkflowTest {
                 compose.waitUntil(15_000) { automation.rootInActiveWindow?.findAccessibilityNodeInfosByViewId("com.android.permissioncontroller:id/permission_deny_button")?.isNotEmpty() == true }
                 automation.rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.android.permissioncontroller:id/permission_deny_button").first().performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
                 await("Camera permission denied. Use manual search or resume to try again.")
-                click("Manual search"); await("Search products manually")
+                click("Manual search"); awaitSearch("Search products manually")
                 assertEquals(before, snapshot())
             }
         } finally {
@@ -147,7 +151,7 @@ class ScanWorkflowTest {
         val last = before.templates.filter { it.catalog.title.startsWith(prefix) }.last()
         launch().use {
             await("Add product"); click("Add product"); click("Scan catalog details"); click("Manual search")
-            compose.onNodeWithText("Search products manually").performTextInput(prefix)
+            compose.onNodeWithContentDescription("Search products manually").performTextInput(prefix)
             compose.onAllNodesWithText("Use template: ${last.catalog.title}").assertCountEquals(0)
             click("Show more results")
             click("Use template: ${last.catalog.title}")
@@ -199,7 +203,7 @@ class ScanWorkflowTest {
             compose.onAllNodesWithText("Add to cart").assertCountEquals(0)
             click("Resume scanning"); await("Substituted camera transport"); emit(payload)
             await("Pieces to add")
-            click("Manual search"); await("Search products for cart")
+            click("Manual search"); awaitSearch("Search products for cart")
         } finally {
             scenario.close()
             runBlocking { Shop.open(context).use { shop -> shop.snapshot().carts.filter { it.id == cartId }.forEach { shop.discardCart(it.id, it.editVersion) } } }
@@ -233,7 +237,7 @@ class ScanWorkflowTest {
             ActivityScenario.launch(MainActivity::class.java).use { reopened ->
                 await("Stock")
                 compose.onNode(hasText("Stock") and hasClickAction()).performClick()
-                compose.onNodeWithText("Search products").performScrollTo().performTextInput(title)
+                compose.onNodeWithContentDescription("Search products").performScrollTo().performTextInput(title)
                 compose.onNode(hasText(title) and hasClickAction() and !hasSetTextAction()).performScrollTo().performClick()
                 await("Stock arrival history")
                 reopened.recreate(); await("Stock arrival history")
@@ -263,7 +267,7 @@ class ScanWorkflowTest {
             compose.onNodeWithText("Title (required)").performScrollTo().performTextReplacement("Unsaved draft $token")
             click("Scan catalog details"); await("Substituted camera transport")
             compose.runOnIdle { failure!!("Camera permission denied. Use manual search or resume to try again.") }
-            await("Recognition paused"); click("Manual search"); await("Search products manually")
+            await("Recognition paused"); click("Manual search"); awaitSearch("Search products manually")
             click("Continue new product")
             compose.onNodeWithText("Title (required)").assertTextContains("Unsaved draft $token")
             assertEquals(before, snapshot())
@@ -286,8 +290,8 @@ class ScanWorkflowTest {
             click("Resume scanning"); await("Substituted camera transport"); click("Cancel camera"); await("Recognition paused")
             click("Resume scanning"); await("Substituted camera transport")
             compose.runOnIdle { failure!!("Recognition failed. Use manual search or resume to try again.") }
-            click("Manual search"); await("Search products manually")
-            compose.onNodeWithText("Search products manually").performTextInput(title)
+            click("Manual search"); awaitSearch("Search products manually")
+            compose.onNodeWithContentDescription("Search products manually").performTextInput(title)
             compose.onNode(hasText(title) and hasClickAction() and !hasSetTextAction()).performScrollTo().performClick()
             await("Received pieces"); assertEquals(before, snapshot())
         } finally { scenario.close() }
@@ -323,28 +327,28 @@ class ScanWorkflowTest {
                     capture("scan-catalog-${appearance.name}-$scale")
                     compose.onNodeWithText("Copy catalog details").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                     click("Link barcode")
-                    compose.onNodeWithText("Find barcode target").performScrollTo().performTextInput("No barcode target $token")
-                    compose.onNodeWithText("Find barcode target").performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithContentDescription("Find barcode target").performScrollTo().performTextInput("No barcode target $token")
+                    compose.onNodeWithContentDescription("Find barcode target").performScrollTo().assertIsDisplayed()
                     capture("barcode-keyboard-${appearance.name}-$scale")
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     compose.onNodeWithText("No active targets found. Use manual search to create a product or template first.").performScrollTo().assertIsDisplayed()
                     capture("barcode-empty-${appearance.name}-$scale")
-                    compose.onNodeWithText("Find barcode target").performScrollTo().performTextReplacement("Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token")
+                    compose.onNodeWithContentDescription("Find barcode target").performScrollTo().performTextReplacement("Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token")
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     compose.onNodeWithText("Product: Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token").performScrollTo().performClick()
                     compose.onNodeWithText("Product: Stainless motorcycle flanged bolt with an exceptionally long shared bin label $token").assertIsSelected()
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     compose.onNodeWithText("Save barcode link").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                     capture("barcode-link-${appearance.name}-$scale")
-                    compose.onNodeWithText("Find barcode target").performScrollTo().performTextReplacement(templateTitle)
+                    compose.onNodeWithContentDescription("Find barcode target").performScrollTo().performTextReplacement(templateTitle)
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     compose.onNodeWithText("Template: $templateTitle").performScrollTo().performClick()
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     compose.onNodeWithText("Confirm reassignment").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                     capture("barcode-conflict-${appearance.name}-$scale")
                     click("Cancel barcode link")
-                    click("Manual search"); await("Search products manually")
-                    compose.onNodeWithText("Search products manually").performTextInput("No matching scan $token")
+                    click("Manual search"); awaitSearch("Search products manually")
+                    compose.onNodeWithContentDescription("Search products manually").performTextInput("No matching scan $token")
                     compose.onNodeWithText("No matching products").assertExists()
                     click("Back"); await("Receive stock"); click("Receive stock"); click("Scan for receiving")
                     await("Substituted camera transport"); emit(payload); click("Enter quantity and cost")

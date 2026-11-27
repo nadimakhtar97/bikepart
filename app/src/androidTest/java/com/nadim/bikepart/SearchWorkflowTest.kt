@@ -17,6 +17,48 @@ import org.junit.Test
 class SearchWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
 
+    @Test fun homeSearchAndScanKeepTheSubmittedQuery() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val token = System.nanoTime().toString()
+        val title = "Home search product $token"
+        runBlocking {
+            Shop.open(context).use { shop ->
+                val category = shop.createCategory("Home search category $token")
+                shop.createProduct(title, category, "", "1", "100")
+            }
+        }
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            val search = compose.onNodeWithContentDescription("Search products")
+            compose.waitUntil(15_000) {
+                compose.onAllNodesWithContentDescription("Search products").fetchSemanticsNodes().size == 1
+            }
+            search.performTextInput(token)
+            compose.onNodeWithContentDescription("Scan stock")
+                .assertWidthIsAtLeast(48.dp)
+                .assertHeightIsAtLeast(48.dp)
+                .performClick()
+            compose.onNodeWithText("Scan Barcode").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Back").performClick()
+            search.assertTextContains(token).performClick()
+            search.performImeAction()
+            compose.waitUntil(15_000) {
+                compose.onAllNodesWithText("1 matching products").fetchSemanticsNodes().isNotEmpty()
+            }
+            search.assertTextContains(token)
+            compose.onNodeWithText(title).performScrollTo().assertIsDisplayed()
+
+            scenario.recreate()
+            search.assertTextContains(token)
+            compose.onNodeWithText("Clear search and filters").performScrollTo().performClick()
+            search.assert(
+                SemanticsMatcher.expectValue(
+                    androidx.compose.ui.semantics.SemanticsProperties.EditableText,
+                    androidx.compose.ui.text.AnnotatedString(""),
+                )
+            )
+        }
+    }
+
     @Test fun staffSearchFilterSetAndClearThresholdsAcrossThemesAndLargeText() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -44,6 +86,11 @@ class SearchWorkflowTest {
             try { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
             catch (failure: Throwable) { throw AssertionError("Waiting for $text\n" + compose.onAllNodes(isRoot()).onFirst().printToString(), failure) }
         }
+        fun awaitSearch(label: String) {
+            compose.waitUntil(15_000) {
+                compose.onAllNodesWithContentDescription(label).fetchSemanticsNodes().isNotEmpty()
+            }
+        }
         fun click(text: String) {
             // Tap the visible product title, rather than the centre of its tall
             // merged row, which can sit beneath the FAB at 200% text size.
@@ -52,8 +99,8 @@ class SearchWorkflowTest {
         fun choose(label: String, choice: String) {
             androidx.test.espresso.Espresso.closeSoftKeyboard()
             click("$label: Any")
-            await("Find $label")
-            compose.onNodeWithText("Find $label").performTextInput(choice)
+            awaitSearch("Find $label")
+            compose.onNodeWithContentDescription("Find $label").performTextInput(choice)
             compose.onNode(hasText(choice) and hasAnyAncestor(isDialog()) and hasClickAction() and !hasSetTextAction()).performClick()
         }
         fun capture(name: String) {
@@ -69,8 +116,8 @@ class SearchWorkflowTest {
                 runBlocking { Shop.open(context).use { it.setAppearance(appearance); it.setLowStockThreshold(id, "") } }
                 scenario = ActivityScenario.launch(MainActivity::class.java)
                 await("Stock"); compose.onNodeWithText("Stock").performClick()
-                await("Search products")
-                compose.onNodeWithText("Search products").performTextInput("$token 8.000")
+                awaitSearch("Search products")
+                compose.onNodeWithContentDescription("Search products").performTextInput("$token 8.000")
                 await("1 matching products")
                 compose.onNodeWithText(title).performScrollTo().assertIsDisplayed()
                 capture("search-row-${appearance.name.lowercase()}-$scale")
@@ -80,22 +127,22 @@ class SearchWorkflowTest {
                 choose("Model", "$makeName · Touring")
                 choose("Location", locationName)
                 choose("Decimal field", "Diameter · mm · $categoryName")
-                compose.onNodeWithText("Exact decimal value").performTextInput("1e3")
+                compose.onNodeWithContentDescription("Exact decimal value").performTextInput("1e3")
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
                 androidx.test.espresso.Espresso.pressBack()
                 compose.waitUntil(15_000) { compose.onAllNodesWithText("Catalog filters").fetchSemanticsNodes().isEmpty() }
                 await("Enter a plain exact decimal, without grouping or exponent")
                 click("More filters")
-                compose.onNodeWithText("Exact decimal value").performScrollTo().performTextReplacement("8.000")
+                compose.onNodeWithContentDescription("Exact decimal value").performScrollTo().performTextReplacement("8.000")
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
                 click("Show results")
                 compose.waitUntil(15_000) { compose.onAllNodesWithText("Catalog filters").fetchSemanticsNodes().isEmpty() }
                 compose.onNodeWithText(title).performScrollTo().assertIsDisplayed()
                 click(title)
                 await("Low-stock threshold")
-                compose.onNodeWithText("Low-stock threshold").performScrollTo().performTextInput("-1")
+                compose.onNodeWithContentDescription("Low-stock threshold").performScrollTo().performTextInput("-1")
                 click("Save threshold"); await("Low-stock threshold must be a nonnegative whole number")
-                compose.onNodeWithText("Low-stock threshold").performScrollTo().performTextReplacement("5")
+                compose.onNodeWithContentDescription("Low-stock threshold").performScrollTo().performTextReplacement("5")
                 compose.onNodeWithText("Save threshold").performScrollTo().assertHeightIsAtLeast(48.dp)
                 capture("threshold-keyboard-${appearance.name.lowercase()}-$scale")
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
@@ -107,28 +154,28 @@ class SearchWorkflowTest {
                 scenario = ActivityScenario.launch(MainActivity::class.java)
                 await("Stock attention")
                 compose.onNodeWithText("Low stock: ", substring = true).performScrollTo().performClick()
-                await("Search products")
-                compose.onNodeWithText("Search products").performScrollTo().performTextInput(token)
+                awaitSearch("Search products")
+                compose.onNodeWithContentDescription("Search products").performScrollTo().performTextInput(token)
                 await("1 matching products")
                 compose.onAllNodesWithText("Out of stock").onFirst().performScrollTo().performClick()
                 await("Empty companion $token")
                 compose.onNodeWithText("Home").performClick()
                 compose.onNodeWithText("Low stock: ", substring = true).performScrollTo().performClick()
-                await("Search products")
+                awaitSearch("Search products")
                 compose.onAllNodesWithText("Low stock").onFirst().assertIsSelected()
-                compose.onNodeWithText("Search products").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.EditableText, androidx.compose.ui.text.AnnotatedString("")))
-                compose.onNodeWithText("Search products").performScrollTo().performTextInput(token)
+                compose.onNodeWithContentDescription("Search products").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.EditableText, androidx.compose.ui.text.AnnotatedString("")))
+                compose.onNodeWithContentDescription("Search products").performScrollTo().performTextInput(token)
                 await("1 matching products"); click(title)
-                compose.onNodeWithText("Low-stock threshold").performScrollTo().performTextClearance()
+                compose.onNodeWithContentDescription("Low-stock threshold").performScrollTo().performTextClearance()
                 click("Save threshold"); await("Threshold: Not set")
                 compose.waitUntil(15_000) { compose.onAllNodes(hasText("Back") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
-                compose.onNodeWithText("Back").performClick(); await("Search products")
+                compose.onNodeWithText("Back").performClick(); awaitSearch("Search products")
                 click("Clear search and filters")
-                compose.onNodeWithText("Search products").performScrollTo().performTextInput(token)
+                compose.onNodeWithContentDescription("Search products").performScrollTo().performTextInput(token)
                 compose.onAllNodesWithText("Out of stock").onFirst().performScrollTo().performClick()
                 await("1 matching products")
                 compose.onNodeWithText("Empty companion $token").performScrollTo().assertIsDisplayed()
-                compose.onNodeWithText("Search products").performScrollTo().performTextReplacement("no-such-part-$token")
+                compose.onNodeWithContentDescription("Search products").performScrollTo().performTextReplacement("no-such-part-$token")
                 await("No matching products")
                 compose.onNodeWithText("No matching products").performScrollTo().assertIsDisplayed()
                 capture("search-empty-${appearance.name.lowercase()}-$scale")

@@ -10,6 +10,7 @@ internal fun MoreScreen(
     shop: ShopSnapshot,
     busy: Boolean,
     onOpenAppearance: () -> Unit,
+    onDeveloperOption: () -> Unit,
     onCategories: () -> Unit,
     onFindingLookups: () -> Unit,
     onArchived: () -> Unit,
@@ -51,5 +52,14 @@ internal fun MoreScreen(
             enabled = !busy, onClick = onCategories)
         ShopListRow(stringResource(R.string.more_manage_fitment), supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
             icon = R.drawable.ic_two_wheeler, enabled = !busy, onClick = onFindingLookups)
+    }
+    ShopListGroup {
+        ShopListRow(
+            title = stringResource(R.string.developer_option),
+            icon = R.drawable.ic_settings,
+            enabled = !busy,
+            onClick = onDeveloperOption,
+            showChevron = true,
+        )
     }
 }

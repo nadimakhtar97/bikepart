@@ -169,10 +169,10 @@ class UpdateWorkflowTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { it.setContent { ShopApp(updater = { updater }, reminders = { reminders }) } }
             await("Stock"); click("Stock"); click("More filters"); click("Category: Any")
-            compose.onNodeWithText("Find Category").performTextInput("brake")
+            compose.onNodeWithContentDescription("Find Category").performTextInput("brake")
             compose.runOnIdle { visible.value = UpdateState.Available(release) }
             compose.waitForIdle()
-            compose.onNodeWithText("Find Category").assertTextContains("brake")
+            compose.onNodeWithContentDescription("Find Category").assertTextContains("brake")
             compose.onNodeWithText("Update available").assertDoesNotExist()
             click("Close"); click("Show results"); click("Home")
             await("Update available")

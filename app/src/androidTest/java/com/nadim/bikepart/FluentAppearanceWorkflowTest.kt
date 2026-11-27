@@ -45,6 +45,7 @@ class FluentAppearanceWorkflowTest {
             }
             compose.onNodeWithText("Light").performScrollTo().performClick()
             compose.waitUntil(15_000) { compose.onAllNodes(hasText("Light") and isSelected() and isEnabled()).fetchSemanticsNodes().size == 1 }
+            compose.onNodeWithContentDescription("Back").performClick()
             compose.onNodeWithText("Stock").performClick(); await("Add product")
             compose.onNodeWithText("Add product").performClick(); await("Save product")
             val action = compose.onNodeWithText("Save product").performScrollTo()
@@ -168,6 +169,7 @@ class FluentAppearanceWorkflowTest {
                         matches
                     }
                     compose.onNodeWithText("System").assertIsSelected()
+                    compose.onNodeWithContentDescription("Back").performClick()
                     val pixels = compose.onNodeWithText("Check for updates").performScrollTo().captureToImage().toPixelMap()
                     val expected = if (dark) Color(0xFF479EF5) else Color(0xFF0F6CBD)
                     assertTrue("Auto must follow actual rendered device brightness", (0 until pixels.height).any { y ->
@@ -212,10 +214,10 @@ class FluentAppearanceWorkflowTest {
                         })
                     } }
                     await("Add product"); compose.onNodeWithText("Add product").performClick()
-                    compose.onNodeWithText("Scan catalog details").performScrollTo().performClick()
+                    compose.onNodeWithContentDescription("Scan catalog details").performScrollTo().performClick()
                     await("Pilot camera transport"); compose.runOnIdle { requireNotNull(frame)("pilot-${System.nanoTime()}") }
                     await("Link barcode"); compose.onNodeWithText("Link barcode").performScrollTo().performClick()
-                    compose.onNodeWithText("Find barcode target").performTextInput(title)
+                    compose.onNodeWithContentDescription("Find barcode target").performTextInput(title)
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     val target = compose.onNodeWithText("Product: $title").performScrollTo()
                     target.assertHeightIsAtLeast(48.dp).assertHasClickAction().performClick()

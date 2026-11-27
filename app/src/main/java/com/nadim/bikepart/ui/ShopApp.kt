@@ -60,9 +60,6 @@ import com.microsoft.fluentui.theme.FluentTheme
 import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.Background1
 import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralBackgroundColorTokens.CanvasBackground
 import com.microsoft.fluentui.theme.token.FluentAliasTokens.NeutralForegroundColorTokens.Foreground2
-import com.microsoft.fluentui.theme.token.FluentIcon
-import com.microsoft.fluentui.theme.token.FluentStyle
-import com.microsoft.fluentui.tokenized.SearchBar
 import com.microsoft.fluentui.tokenized.navigation.SideRail
 import com.microsoft.fluentui.tokenized.navigation.TabBar
 import com.microsoft.fluentui.tokenized.navigation.TabData
@@ -163,6 +160,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
             restore = { screens -> mutableStateListOf<Screen>().apply { addAll(screens) } },
         ),
     ) { mutableStateListOf<Screen>(Screen.Home) }
+    var stockQuery by rememberSaveable { mutableStateOf("") }
     var stockHealth by rememberSaveable { mutableStateOf<String?>(null) }
     var stockSession by rememberSaveable { mutableIntStateOf(0) }
     var destination by rememberSaveable { mutableStateOf<Screen>(Screen.Home) }
@@ -211,10 +209,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     val template = state?.templates?.find { it.id == templateId }
     fun beginCatalog(draft: CatalogDraft, target: Screen, id: String? = null) { formSession++; catalogPayload = draft.encode(); templateId = id; navigateTo(target) }
     val product = state?.products?.find { it.id == selectedId }
-    val fluentStyle = if (customization.accent) FluentStyle.Brand else FluentStyle.Neutral
 
     fun back() {
-        if (route is Screen.Scan) { navigateTo(scanReturn); return }
+        if (route is Screen.Scan) {
+            if (backStack.getOrNull(backStack.lastIndex - 1) == scanReturn) {
+                backStack.removeLastOrNull()
+                route = scanReturn
+                model.error.value = null
+            } else {
+                navigateTo(scanReturn)
+            }
+            return
+        }
         if (route is Screen.Cart) {
             val draft = cartDraft
             val isUntouchedNewCart = newCartId == selectedId && draft != null &&
@@ -245,35 +251,29 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
     }
     fun newCart() { model.write({ selectedId = createCart() }, { newCartId = selectedId; model.openCart(selectedId); destination = Screen.Carts; navigateTo(Screen.Cart) }) }
     fun addProduct() { catalogPayload = null; formSession++; navigateTo(Screen.Create) }
-    fun openStock(health: StockHealth?) {
+    fun openStock(health: StockHealth?, query: String = "") {
         stockState.removeState("stock:$stockSession")
         stockSession++
         stockHealth = health?.name
+        stockQuery = query
         selectTab(Screen.Stock)
     }
     BackHandler(route !in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More)) { if (!busy) back() }
     val selectedCart = state?.carts?.find { it.id == selectedId }
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    val qrVector = shopIconVector(R.drawable.ic_qr_code_scanner)
     val searchBarContent: @Composable RowScope.() -> Unit = {
-        SearchBar(
-            onValueChange = { query, _ ->
-                searchQuery = query
-                if (query.isNotBlank()) {
-                   // show products titles
-                }
-            },
-            style = fluentStyle,
-            searchHint = "Search products",
-            rightAccessoryIcon = FluentIcon(
-                light = qrVector,
-                dark = qrVector,
-                contentDescription = "Scan product",
-                onClick = { }
-            ),
+        ShopSearchField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = "Search products",
             enabled = !busy,
-            modifier = Modifier.fillMaxWidth()
+            onSubmit = {
+                val query = searchQuery.trim()
+                if (query.isNotEmpty()) openStock(null, query)
+            },
+            scanLabel = stringResource(R.string.search_scan_stock),
+            onScan = { scan(ScanPurpose.Catalog, Screen.Home) },
         )
     }
 
@@ -487,7 +487,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 shop = shop,
                                                 busy = busy,
                                                 onAdd = ::addProduct,
-                                                onStock = ::openStock,
+                                                onStock = { openStock(it) },
                                                 onNewSale = ::newCart,
                                                 onCarts = { selectTab(Screen.Carts) },
                                                 onReceive = { navigateTo(Screen.ReceiveProducts) },
@@ -507,12 +507,13 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 stateHolder = stockState,
                                                 session = stockSession,
                                                 initialHealth = stockHealth,
+                                                initialQuery = stockQuery,
                                                 loadPhoto = model::readPhoto,
                                                 onAdd = ::addProduct,
                                                 onOpen = {
                                                     selectedId = it; navigateTo(Screen.Detail)
                                                 },
-                                                onScan = { scan(ScanPurpose.Catalog, Screen.Home) },
+                                                onScan = { scan(ScanPurpose.Catalog, Screen.Stock) },
                                                 onProductAction = { item, action ->
                                                     selectedId = item.id
                                                     model.error.value = null
@@ -543,6 +544,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                     shop = shop,
                                                     busy = busy,
                                                     onOpenAppearance = { navigateTo(Screen.AppearanceSettings) },
+                                                    onDeveloperOption = { navigateTo(Screen.DeveloperOption) },
                                                     onCategories = { navigateTo(Screen.Categories) },
                                                     onFindingLookups = { navigateTo(Screen.FindingLookups) },
                                                     onArchived = { navigateTo(Screen.ArchivedProducts) },
@@ -590,6 +592,11 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 onBrand = model.themePreferences::setBrand,
                                                 onAccent = model.themePreferences::setAccent,
                                             )
+                                        }
+                                        is Screen.DeveloperOption -> NavEntry(key) {
+                                            DeveloperOptionRoute(busy = busy) { onAdded ->
+                                                model.write(action = { addDummyData() }, done = onAdded)
+                                            }
                                         }
                                         is Screen.Backups -> NavEntry(key) {
                                             BackupsRoute(

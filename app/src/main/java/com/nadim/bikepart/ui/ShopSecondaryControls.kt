@@ -47,10 +47,6 @@ internal fun ShopIconActionButton(
 }
 
 @Composable
-internal fun ShopScanButton(label: String, enabled: Boolean = true, onClick: () -> Unit) =
-    ShopIconActionButton(label, com.nadim.bikepart.R.drawable.ic_qr_code_scanner, enabled, onClick)
-
-@Composable
 internal fun ShopBackButton(onClick: () -> Unit, enabled: Boolean = true) {
     IconButton(onClick = onClick, enabled = enabled) {
         Icon(

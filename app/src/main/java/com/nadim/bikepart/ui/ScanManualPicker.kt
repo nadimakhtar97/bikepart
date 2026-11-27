@@ -21,7 +21,7 @@ internal fun ScanManualPicker(shop: ShopSnapshot, catalog: Boolean, busy: Boolea
     val results = remember(search, query) { search.find(ProductFilter(query = query)) }
     val templates = if (catalog) shop.templates.filter { !it.retired && it.catalog.title.contains(query, ignoreCase = true) } else emptyList()
     ShopSearchField(query, { query = it }, "Search products manually", enabled = !busy,
-        trailing = { ShopScanButton(if (catalog) "Scan catalog details" else "Scan for receiving", !busy, onScan) })
+        scanLabel = if (catalog) "Scan catalog details" else "Scan for receiving", onScan = onScan)
     if (catalog) ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = create, enabled = !busy) { Text(stringResource(R.string.manual_continue_product)) }
     if (results.isEmpty()) ShopEmptyState(stringResource(R.string.manual_no_matching_title), "Try a title, SKU, fitment or location.", com.nadim.bikepart.R.drawable.ic_stock)
     else ShopListGroup {

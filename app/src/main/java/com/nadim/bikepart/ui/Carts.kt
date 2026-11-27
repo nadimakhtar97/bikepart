@@ -183,7 +183,7 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
         ShopPrimaryButton(stringResource(R.string.scanner_add_to_cart), enabled = !busy, onClick = { add(product.id, quantity) })
     } }
     ShopSearchField(query, { query = it; selected = null; onChange() }, "Search products for cart", enabled = !busy,
-        trailing = { ShopScanButton(stringResource(R.string.scan_for_sale), !busy, onScan) })
+        scanLabel = stringResource(R.string.scan_for_sale), onScan = onScan)
     if (results.isEmpty()) Text(stringResource(R.string.manual_no_matching_title), style = MaterialTheme.typography.bodyMedium)
     else {
         ShopSectionHeader(stringResource(R.string.products), supporting = "${results.size} matching")

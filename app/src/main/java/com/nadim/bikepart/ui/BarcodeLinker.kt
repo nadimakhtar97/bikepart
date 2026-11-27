@@ -28,7 +28,7 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean, erro
         Text(stringResource(R.string.exact_barcode, code))
         Text(stringResource(R.string.barcode_link_note))
         owner?.let { Text(stringResource(R.string.current_target, shop.barcodeTargetLabel(it.target))) }
-        ShopTextField(
+        ShopSearchField(
             query, { query = it; selectedId = null; onChange() },
             stringResource(R.string.barcode_find_target), enabled = !busy
         )

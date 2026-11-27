@@ -56,7 +56,7 @@ class LayoutWorkflowTest {
                     compose.waitUntil(30_000) { compose.onAllNodesWithText("Stock").fetchSemanticsNodes().isNotEmpty() }
                     capture("home-${mode.name}-$scale")
                     compose.onNodeWithText("Stock").performClick()
-                    compose.onNodeWithText("Search products").performTextInput(title)
+                    compose.onNodeWithContentDescription("Search products").performTextInput(title)
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     // Test resizing a settled search, without a text cursor competing
                     // with scroll-to actions while Android changes the window bounds.
@@ -75,7 +75,7 @@ class LayoutWorkflowTest {
                         val more = compose.onNodeWithText("More").fetchSemanticsNode().boundsInRoot
                         more.top > home.bottom
                     }
-                    compose.onNodeWithText("Search products").performScrollTo().assertTextContains(title)
+                    compose.onNodeWithContentDescription("Search products").performScrollTo().assertTextContains(title)
                     compose.onNode(result).performScrollTo().assertIsDisplayed()
                     capture("stock-wide-${mode.name}-$scale")
                     val home = compose.onNodeWithText("Home").fetchSemanticsNode().boundsInRoot

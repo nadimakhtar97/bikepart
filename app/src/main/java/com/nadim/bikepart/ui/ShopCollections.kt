@@ -21,7 +21,6 @@ import com.microsoft.fluentui.tokenized.menu.Menu
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import com.nadim.bikepart.ui.theme.shopIconPainter as painterResource
-import com.nadim.bikepart.ui.theme.shopIconVector
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -151,33 +150,6 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
             },
             listItemTokens = tokens,
         )
-    }
-}
-
-@Composable
-internal fun ShopSearchField(value: String, onValueChange: (String) -> Unit, label: String,
-    modifier: Modifier = Modifier, enabled: Boolean = true, supporting: String? = null,
-    trailing: (@Composable () -> Unit)? = null) {
-    if (trailing == null) {
-        FluentTextField(
-            value = value, onValueChange = onValueChange, modifier = modifier.fillMaxWidth(),
-            enabled = enabled, label = label, assistiveText = supporting,
-            leadingRestIcon = shopIconVector(com.nadim.bikepart.R.drawable.ic_search),
-            leadingIconContentDescription = null, textFieldContentDescription = label
-        )
-    } else {
-        Row(
-            modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)
-        ) {
-            FluentTextField(
-                value = value, onValueChange = onValueChange, modifier = Modifier.weight(1f),
-                enabled = enabled, label = label, assistiveText = supporting,
-                leadingRestIcon = shopIconVector(com.nadim.bikepart.R.drawable.ic_search),
-                leadingIconContentDescription = null, textFieldContentDescription = label
-            )
-            trailing()
-        }
     }
 }
 

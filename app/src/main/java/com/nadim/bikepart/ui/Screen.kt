@@ -16,6 +16,8 @@ sealed class Screen : NavKey, java.io.Serializable {
     @Serializable
     data object AppearanceSettings : Screen()
     @Serializable
+    data object DeveloperOption : Screen()
+    @Serializable
     data object Backups : Screen()
     @Serializable
     data object Scan : Screen()

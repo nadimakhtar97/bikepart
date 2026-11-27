@@ -283,6 +283,7 @@
     <!-- Stock search -->
     <string name="search_products">Search products</string>
     <string name="search_products_supporting">Title, SKU, description, fields, fitment or location</string>
+    <string name="search_exit">Exit search</string>
     <string name="search_scan_stock">Scan stock</string>
     <string name="search_all_stock">All stock</string>
     <string name="search_more_filters">More filters</string>
@@ -623,4 +624,9 @@
     <string name="update_install_permission_needed">Install permission needed. Please allow installing unknown apps for Bikepart in Settings, then tap Install now again.</string>
     <string name="more_accent">Accent</string>
     <string name="more_choose_brand_theme">Choose brand theme</string>
+    <string name="developer_option">Developer Option</string>
+    <string name="developer_fill_dummy_data">Fill app with dummy data</string>
+    <string name="developer_add_dummy_data">Add dummy data</string>
+    <string name="developer_dummy_data_details">Add sample products, a template, an unfinished cart, and a completed sale to this shop. Existing records are kept.</string>
+    <string name="developer_dummy_data_added">Dummy data added.</string>
 </resources>
