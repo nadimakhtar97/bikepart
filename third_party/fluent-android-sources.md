@@ -54,3 +54,12 @@ by `FluentUI.Demo/.../V2ScaffoldActivity.kt`. To use that API without changing
 the published dependency set, each route calls the vendored scaffold directly.
 The app shell remains responsible for primary navigation only. See
 [ADR 0003](../docs/adr/0003-per-route-fluent-scaffolds.md).
+
+## Fluent SearchBar
+
+The shared shop search field adapts [Microsoft's tokenized SearchBar](https://github.com/microsoft/fluentui-android/blob/95205e33c8067d922bb45bd07490acc18c50755f/fluentui_topappbars/src/main/java/com/microsoft/fluentui/tokenized/SearchBar.kt)
+under the [MIT license](fluentui-android-MIT.txt). It uses Fluent's search tokens,
+icons, and focus/clear interactions. Screens own the query so they can restore
+it, clear it programmatically, and seed Stock from Home. The adaptation omits
+the people picker and microphone and applies 48dp action targets. The published
+Fluent dependencies retain their existing pins.

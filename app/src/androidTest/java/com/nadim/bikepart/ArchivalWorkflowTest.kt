@@ -15,6 +15,10 @@ import org.junit.Test
 
 class ArchivalWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
+
+    private fun awaitSearch(label: String) = compose.waitUntil(20_000) {
+        compose.onAllNodesWithContentDescription(label).fetchSemanticsNodes().isNotEmpty()
+    }
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
     private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     private fun click(text: String) {
@@ -47,11 +51,11 @@ class ArchivalWorkflowTest {
                 runBlocking { Shop.open(context).use { it.setAppearance(mode) } }
                 scenario = ActivityScenario.launch(MainActivity::class.java)
                 await("More"); click("More"); click("Archived products")
-                await("Search archived products")
-                compose.onNodeWithText("Search archived products").performTextReplacement("No archived match ${System.nanoTime()}")
+                awaitSearch("Search archived products")
+                compose.onNodeWithContentDescription("Search archived products").performTextReplacement("No archived match ${System.nanoTime()}")
                 compose.onNodeWithText("No matching archived products").performScrollTo().assertIsDisplayed()
                 capture("archive-empty-${mode.name}-$scale")
-                compose.onNodeWithText("Search archived products").performTextReplacement(title)
+                compose.onNodeWithContentDescription("Search archived products").performTextReplacement(title)
                 compose.onNode(hasText(title) and !hasSetTextAction()).performScrollTo().assertIsDisplayed()
                 capture("archive-list-${mode.name}-$scale")
                 click(title); await("Archived product")
@@ -78,7 +82,7 @@ class ArchivalWorkflowTest {
         var scenario: ActivityScenario<MainActivity>? = ActivityScenario.launch(MainActivity::class.java)
         try {
             await("Stock"); click("Stock")
-            compose.onNodeWithText("Search products").performTextReplacement(title)
+            compose.onNodeWithContentDescription("Search products").performTextReplacement(title)
             await(title); click(title)
             click("Archive product")
             await("Cannot archive while stock remains. Stock must be zero.")

@@ -65,7 +65,7 @@ internal fun LookupSelector(
     emptyMessage: String? = null,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    ShopTextField(query, { query = it }, label, enabled = !busy)
+    ShopSearchField(query, { query = it }, label, enabled = !busy)
     val matchingOptions =
         options.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) }
     val visibleOptions = options.filter {

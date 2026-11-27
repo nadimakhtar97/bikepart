@@ -30,7 +30,7 @@ class LabelWorkflowTest {
     }
     private fun open(title: String) {
         await("Stock"); click("Stock")
-        compose.onNodeWithText("Search products").performTextReplacement(title)
+        compose.onNodeWithContentDescription("Search products").performTextReplacement(title)
         click(title); click("Preview product labels"); await("Label copies")
     }
 

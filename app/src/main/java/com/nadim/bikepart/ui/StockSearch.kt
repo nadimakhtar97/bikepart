@@ -57,7 +57,7 @@ private fun SearchFilter(label: String, choices: List<Pair<String, String>>, sel
     }
     if (open) AlertDialog(onDismissRequest = { open = false }, title = { Text(label) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-            ShopTextField(query, { query = it }, stringResource(R.string.find, label))
+            ShopSearchField(query, { query = it }, stringResource(R.string.find, label))
             val matching = choices.filter { LookupNames.key(it.second).contains(LookupNames.key(query)) }
             LazyColumn(Modifier.heightIn(max = ShopSpacing.formWidth)) {
                 item { TextButton(onClick = { onSelect(null); open = false; query = "" }, modifier = Modifier
@@ -78,8 +78,8 @@ private fun SearchFilter(label: String, choices: List<Pair<String, String>>, sel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: PhotoLoader, onOpen: (String) -> Unit,
-    busy: Boolean = false, onScan: () -> Unit = {}, onProductAction: (Product, String) -> Unit = { _, _ -> }) {
-    var query by rememberSaveable { mutableStateOf("") }
+    busy: Boolean = false, onScan: () -> Unit = {}, onProductAction: (Product, String) -> Unit = { _, _ -> }, initialQuery: String = "") {
+    var query by rememberSaveable { mutableStateOf(initialQuery) }
     var expanded by rememberSaveable { mutableStateOf(false) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var make by rememberSaveable { mutableStateOf<String?>(null) }
@@ -104,7 +104,7 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
     }
     ShopSearchField(query, { query = it }, "Search products",
         enabled = !busy, supporting = "Title, SKU, description, fields, fitment or location",
-        trailing = { ShopScanButton(stringResource(R.string.search_scan_stock), !busy, onScan) })
+        scanLabel = stringResource(R.string.search_scan_stock), onScan = onScan)
     Row(Modifier
         .fillMaxWidth()
         .horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {

@@ -209,6 +209,7 @@ class FluentDynamicThemeWorkflowTest {
                     capture("dynamic-controls-brand-${mode.name.lowercase()}-$font")
                     compose.onNodeWithText("Accent").performClick(); compose.onNodeWithText("Accent").assertIsOff()
                     capture("dynamic-controls-neutral-${mode.name.lowercase()}-$font")
+                    compose.onNodeWithContentDescription("Back").performClick()
                     // Native Brand app bars become neutral in dark, and Neutral app bars stay neutral in both modes.
                     for (accent in listOf(false, true)) {
                         scenario.onActivity { activity -> androidx.lifecycle.ViewModelProvider(activity)[ShopViewModel::class.java]
@@ -262,11 +263,11 @@ class FluentDynamicThemeWorkflowTest {
                         })
                     } }
                     await("Add product"); compose.onNodeWithText("Add product").performClick()
-                    compose.onNodeWithText("Scan catalog details").performScrollTo().performClick()
+                    compose.onNodeWithContentDescription("Scan catalog details").performScrollTo().performClick()
                     await("Dynamic theme camera transport")
                     compose.runOnIdle { requireNotNull(frame)("dynamic-word-${System.nanoTime()}") }
                     await("Link barcode"); compose.onNodeWithText("Link barcode").performScrollTo().performClick()
-                    compose.onNodeWithText("Find barcode target").performTextInput(title)
+                    compose.onNodeWithContentDescription("Find barcode target").performTextInput(title)
                     androidx.test.espresso.Espresso.closeSoftKeyboard()
                     val target = compose.onNodeWithText("Product: $title").performScrollTo()
                     target.assertHeightIsAtLeast(48.dp).performClick(); target.assertIsSelected().assertIsDisplayed()

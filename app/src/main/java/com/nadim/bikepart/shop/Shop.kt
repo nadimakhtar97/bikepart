@@ -109,6 +109,38 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.sales().map { it.toSale(saleLines[it.id].orEmpty()) }, dao.arrivals().map { it.toArrival() }, dao.barcodeAliases().map { it.toAlias() }, dao.barcodeAssignments().map { it.toAssignment() }, LabelPreferences(LabelMedia.valueOf(state.labelMedia), state.labelCopies))
     }
 
+    /** Add a visibly labeled demo batch through the normal stock and checkout paths. */
+    internal suspend fun addDummyData(): Unit = activeTransaction {
+        val batch = "Demo ${UUID.randomUUID().toString().take(8)}"
+        val category = createCategory("$batch parts")
+        val make = createMake("$batch Motorcycles")
+        val models = setOf(createModel(make, "Road 125"))
+        val locations = setOf(createLocation("$batch shelf"))
+        val description = "Dummy data for development."
+
+        val pads = createProduct(
+            "$batch brake pads", category, description, "18", "650",
+            modelIds = models, locationIds = locations,
+        )
+        val cable = createProduct(
+            "$batch clutch cable", category, description, "3", "180",
+            modelIds = models, locationIds = locations,
+        )
+        createProduct("$batch spark plug", category, description, "0", "120")
+        val archived = createProduct("$batch discontinued lever", category, description, "0", "90")
+        archiveProduct(archived)
+        setLowStockThreshold(cable, "5")
+
+        saveTemplate(CatalogDraft("$batch brake pad template", category, description, modelIds = models))
+
+        val cart = createCart()
+        saveCart(cart, 0, "$batch pending customer", mapOf(cable to "1"))
+
+        val completedCart = createCart()
+        val version = saveCart(completedCart, 0, "$batch cash customer", mapOf(pads to "2"))
+        checkout(completedCart, version, "1500")
+    }
+
     suspend fun createProduct(title: String, categoryId: String, description: String, openingPieces: String, priceRupees: String, allowSimilar: Boolean = false, attributes: Map<String, AttributeValue> = emptyMap(), modelIds: Set<String> = emptySet(), locationIds: Set<String> = emptySet(), photo: PhotoChange = PhotoChange.Keep): String {
         val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
         return activeTransaction {

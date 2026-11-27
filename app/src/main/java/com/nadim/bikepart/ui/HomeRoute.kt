@@ -1,10 +1,18 @@
 package com.nadim.bikepart.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
 import com.nadim.bikepart.shop.StockHealth
+import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun HomeRoute(
@@ -27,7 +35,20 @@ internal fun HomeRoute(
                 showBack = false,
                 enabled = !busy,
                 searchMode = true,
-                searchBar = searchBar,
+                searchBar = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Row(
+                            Modifier.widthIn(max = ShopSpacing.formWidth)
+                                .fillMaxWidth()
+                                .padding(
+                                    start = ShopSpacing.content,
+                                    end = ShopSpacing.content,
+                                    bottom = ShopSpacing.small,
+                                ),
+                            content = searchBar,
+                        )
+                    }
+                },
             )
         },
     ) { padding ->

@@ -60,7 +60,7 @@ class FindingLabelWorkflowTest {
         click("Back", scroll = false)
         click("More", scroll = false)
         click("Manage fitment and locations")
-        compose.onNodeWithText("Find make, model or location").performTextInput(suffix)
+        compose.onNodeWithContentDescription("Find make, model or location").performTextInput(suffix)
         for (name in listOf(make, "$make · $model", location)) {
             click("Retire: $name")
             await("$name (retired)")

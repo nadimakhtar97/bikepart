@@ -27,7 +27,7 @@ class CartWorkflowTest {
     private fun label(customer: String) { compose.onNodeWithText("Customer label (optional)").performScrollTo().performTextReplacement(customer); waitSaved(customer); await("Saved on this phone") }
     private fun addProduct(title: String, pieces: String) {
         click("Add products")
-        compose.onNodeWithText("Search products for cart").performTextInput(title)
+        compose.onNodeWithContentDescription("Search products for cart").performTextInput(title)
         compose.onNode(hasText(title) and hasClickAction() and !hasSetTextAction()).performScrollTo().performClick()
         compose.onNodeWithText("Pieces to add").performScrollTo().performTextReplacement(pieces)
         androidx.test.espresso.Espresso.closeSoftKeyboard()
