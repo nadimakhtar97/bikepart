@@ -7,16 +7,16 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,8 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,7 +31,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.PopupProperties
 import com.nadim.bikepart.R
 import com.nadim.bikepart.shop.LookupNames
 import com.nadim.bikepart.ui.theme.LocalShopFluentStyle
@@ -45,24 +42,21 @@ import com.microsoft.fluentui.theme.token.controlTokens.BasicChipInfo
 import com.microsoft.fluentui.theme.token.controlTokens.BasicChipTokens
 import com.microsoft.fluentui.tokenized.controls.BasicChip
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SearchLookupDropdown(
     label: String,
-    addLabel: String,
+    emptyMessage: String,
     options: List<Pair<String, String>>,
     selected: Set<String>,
     busy: Boolean,
     onSelect: (String) -> Unit,
-    onCreate: ((String, (String) -> Unit) -> Unit)?,
-    error: String?,
     onRemove: (String) -> Unit,
     singleChoice: Boolean = false,
     selectedOptions: List<Pair<String, String>> = options.filter { it.first in selected },
 ) {
     var expanded by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
-    var adding by remember { mutableStateOf(false) }
-    var width by remember { mutableIntStateOf(0) }
     val focusManager = LocalFocusManager.current
     val hasSingleSelection = singleChoice && selectedOptions.isNotEmpty()
 
@@ -70,46 +64,36 @@ internal fun SearchLookupDropdown(
         focusManager.clearFocus()
         expanded = false
         query = ""
-        adding = false
     }
 
-    Box(Modifier.fillMaxWidth().onSizeChanged { width = it.width }) {
+    val menuExpanded = expanded && !hasSingleSelection
+    ExposedDropdownMenuBox(
+        expanded = menuExpanded,
+        onExpandedChange = { if (!it && !busy) dismiss() },
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         ShopSearchField(
             value = if (expanded) query else "",
-            onValueChange = { query = it; adding = false; expanded = true },
+            onValueChange = { query = it; expanded = true },
             label = label,
             enabled = !busy && !hasSingleSelection,
             onSearchFocusChanged = { focused -> if (!busy) expanded = focused },
+            // The search field already opens the menu on focus.
+            inputModifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, enabled = false),
         )
-        DropdownMenu(
-            expanded = expanded && !hasSingleSelection && width > 0,
+        ExposedDropdownMenu(
+            expanded = menuExpanded,
             onDismissRequest = { if (!busy) dismiss() },
-            modifier = Modifier.width(with(LocalDensity.current) { width.toDp() }).heightIn(max = 240.dp),
-            properties = PopupProperties(focusable = false),
+            modifier = Modifier.heightIn(max = 240.dp),
         ) {
             val queryKey = LookupNames.key(query)
             val matches = options.filter { LookupNames.key(it.second).contains(queryKey) }
-            if (onCreate != null && queryKey.isNotEmpty() && matches.none { LookupNames.key(it.second) == queryKey }) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.lookup_add_named, addLabel, query.trim())) },
-                    onClick = {
-                        adding = true
-                        onCreate(query) {
-                            if (it !in selected) onSelect(it)
-                            dismiss()
-                        }
-                    },
-                    enabled = !busy,
-                )
-            } else if (matches.isEmpty()) {
+            if (matches.isEmpty()) {
                 Text(
-                    stringResource(if (onCreate == null) R.string.lookup_no_matches else R.string.lookup_empty),
+                    emptyMessage,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(ShopSpacing.medium),
                 )
-            }
-            if (adding && error != null) Box(Modifier.padding(horizontal = ShopSpacing.medium)) {
-                FormError(error)
             }
             matches.forEach { (id, name) ->
                 DropdownMenuItem(

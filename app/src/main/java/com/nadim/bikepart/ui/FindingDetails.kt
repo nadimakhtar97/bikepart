@@ -28,7 +28,7 @@ internal val idSetSaver = listSaver<Set<String>, String>(save = { it.toList() },
 internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<String>, locations: Set<String>, busy: Boolean,
                            error: ShopError?,
                            assigned: Boolean,
-                           dropdownLookups: ProductLookups?,
+                           useDropdown: Boolean,
                            onAssigned: (Boolean) -> Unit,
                            onModels: (Set<String>) -> Unit,
                            onLocations: (Set<String>) -> Unit,
@@ -42,7 +42,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                 selected = !assigned,
                 enabled = !busy,
                 onClick = {
-                    if (dropdownLookups != null) make = ""
+                    if (useDropdown) make = ""
                     onAssigned(false)
                     onModels(emptySet())
                 })
@@ -63,10 +63,9 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                 onSelect = { make = it },
                 onCreate = null,
                 emptyMessage = stringResource(R.string.finding_no_matching_make),
-                dropdownCreate = dropdownLookups?.make,
+                useDropdown = useDropdown,
                 onDropdownRemove = { make = "" },
                 dropdownSingleChoice = true,
-                dropdownError = error?.message,
             )
             val selectedModels = shop.models.filter { it.id in models }.map { model ->
                 val parent = shop.makes.single { it.id == model.makeId }
@@ -84,12 +83,11 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                     onSelect = { onModels(if (it in models) models - it else models + it) },
                     onCreate = null,
                     emptyMessage = stringResource(R.string.finding_no_matching_model),
-                    dropdownCreate = dropdownLookups?.let { lookups -> { name, select -> lookups.model(make, name, select) } },
-                    dropdownError = error?.message,
+                    useDropdown = useDropdown,
                     dropdownSelectedOptions = selectedModels,
                 )
             }
-            if (dropdownLookups != null) {
+            if (useDropdown) {
                 if (make.isEmpty()) SelectedLookupChips(selectedModels, busy) { onModels(models - it) }
             } else {
                 selectedModels.forEach { (id, label) ->
@@ -117,8 +115,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                 onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
                 onCreate = null,
                 emptyMessage = stringResource(R.string.finding_no_matching_location),
-                dropdownCreate = dropdownLookups?.location,
-                dropdownError = error?.message,
+                useDropdown = useDropdown,
             )
             if (error?.field == ProductField.Location) FormError(error.message)
         }

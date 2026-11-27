@@ -116,15 +116,13 @@ internal fun ProductForm(
         if (product == null && !templateMode) {
             SearchLookupDropdown(
                 label = stringResource(R.string.form_search_category),
-                addLabel = stringResource(R.string.category_add),
+                emptyMessage = stringResource(R.string.form_no_matching_category),
                 options = shop.categories.map { it.id to it.name },
                 selected = setOf(category),
                 busy = busy,
                 onSelect = selectCategory,
-                onCreate = lookups.category,
                 onRemove = { selectCategory("") },
                 singleChoice = true,
-                error = error?.message,
             )
         } else {
             LookupSelector(
@@ -178,7 +176,7 @@ internal fun ProductForm(
         busy,
         findingError ?: error,
         assigned,
-        dropdownLookups = lookups.takeIf { product == null && !templateMode },
+        useDropdown = product == null && !templateMode,
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
     if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {

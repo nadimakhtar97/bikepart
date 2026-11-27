@@ -199,9 +199,7 @@
     <string name="form_search_category">Search categories</string>
     <string name="form_no_matching_category">No matching categories. Add categories in More &gt; Manage categories and fields.</string>
     <string name="lookup_remove_named">Remove %1$s</string>
-    <string name="lookup_no_matches">No matching options</string>
-    <string name="lookup_empty">Type a name to add an option</string>
-    <string name="lookup_add_named">%1$s “%2$s”</string>
+    <string name="lookup_no_matching_field_options">No matching options for %1$s.</string>
     <string name="category_add">Add category</string>
     <string name="category_create_title">Create category</string>
     <string name="form_description_label">Description</string>
