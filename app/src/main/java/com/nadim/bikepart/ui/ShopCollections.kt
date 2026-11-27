@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.SolidColor
 import com.microsoft.fluentui.theme.token.StateBrush
 import com.microsoft.fluentui.theme.token.controlTokens.ListItemInfo
 import com.microsoft.fluentui.theme.token.controlTokens.ListItemTokens
-import com.microsoft.fluentui.tokenized.controls.TextField as FluentTextField
 import com.microsoft.fluentui.tokenized.listitem.ListItem
 import com.microsoft.fluentui.tokenized.menu.Menu
 import androidx.compose.ui.graphics.compositeOver
@@ -154,7 +153,7 @@ internal fun ShopListRow(title: String, modifier: Modifier = Modifier, supportin
     }
 }
 
-/** Fluent V2 single-line field; multiline content keeps the tokenized Compose fallback. */
+/** Outlined form input using the shared Fluent-derived Material theme. */
 @Composable
 internal fun ShopTextField(
     value: String,
@@ -166,19 +165,21 @@ internal fun ShopTextField(
     error: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(),
     contentDescription: String = label,
+    singleLine: Boolean = true,
 ) {
-    FluentTextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth().semantics {
+            this.contentDescription = contentDescription
             if (error != null) error(error)
         },
         enabled = enabled,
-        label = label,
-        assistiveText = supporting,
+        label = { Text(label) },
+        supportingText = supporting?.let { { Text(it) } },
+        isError = error != null,
         keyboardOptions = keyboardOptions,
-        textFieldContentDescription = contentDescription,
-        trailingAccessoryIcon = null,
+        singleLine = singleLine,
     )
 }
 

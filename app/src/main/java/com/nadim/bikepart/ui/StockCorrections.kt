@@ -1,13 +1,11 @@
 package com.nadim.bikepart.ui
 
 import com.nadim.bikepart.R
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
@@ -31,8 +29,14 @@ internal fun StockCorrectionForm(product: Product, kind: CorrectionKind, busy: B
             error = error?.takeIf { it.field == ProductField.CorrectionQuantity }?.message,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
-        OutlinedTextField(reason, { reason = it; onChange() }, enabled = !busy, label = { Text(stringResource(R.string.correction_reason)) },
-            isError = error?.field == ProductField.CorrectionReason, modifier = Modifier.fillMaxWidth())
+        ShopTextField(
+            reason,
+            { reason = it; onChange() },
+            stringResource(R.string.correction_reason),
+            enabled = !busy,
+            error = error?.takeIf { it.field == ProductField.CorrectionReason }?.message,
+            singleLine = false,
+        )
         ShopPrimaryButton(stringResource(R.string.correction_save), enabled = !busy, onClick = { save(quantity, reason) })
     }
 }
