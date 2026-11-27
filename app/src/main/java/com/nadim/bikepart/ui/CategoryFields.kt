@@ -37,10 +37,6 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 internal data class AttributeSetup(val categoryId: String, val name: String, val type: AttributeType, val required: Boolean, val unit: String)
 
 internal class ProductLookups(
-    val category: (String, (String) -> Unit) -> Unit,
-    val make: (String, (String) -> Unit) -> Unit,
-    val model: (String, String, (String) -> Unit) -> Unit,
-    val location: (String, (String) -> Unit) -> Unit,
     val option: (String, String, (String) -> Unit) -> Unit,
 )
 
@@ -67,16 +63,14 @@ internal fun LookupSelector(
     onSelect: (String) -> Unit,
     onCreate: ((String) -> Unit)?,
     emptyMessage: String? = null,
-    dropdownCreate: ((String, (String) -> Unit) -> Unit)? = null,
-    dropdownError: String? = null,
-    useDropdown: Boolean = dropdownCreate != null,
+    useDropdown: Boolean = false,
     dropdownSingleChoice: Boolean = false,
     onDropdownRemove: (String) -> Unit = onSelect,
     dropdownSelectedOptions: List<Pair<String, String>> = options.filter { it.first in selected },
 ) {
     if (useDropdown) {
         SearchLookupDropdown(
-            label, addLabel, options, selected, busy, onSelect, dropdownCreate, dropdownError,
+            label, emptyMessage ?: stringResource(R.string.no_matching_choices), options, selected, busy, onSelect,
             onRemove = onDropdownRemove,
             singleChoice = dropdownSingleChoice,
             selectedOptions = dropdownSelectedOptions,
@@ -140,7 +134,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                         }
                         val canCreateOption = definition.productId != null
                         LookupSelector(
-                            if (canCreateOption) "Search or add " + definition.name + " option" else "Search " + definition.name + " options",
+                            if (canCreateOption && !useDropdown) "Search or add " + definition.name + " option" else "Search " + definition.name + " options",
                             "Add option",
                             shop.options.filter { it.definitionId == definition.id && (!it.retired || it.id in selected) }
                                 .map { it.id to (it.name + if (it.retired) " (retired)" else "") },
@@ -153,10 +147,7 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                                     onValue(definition.id, AttributeValue.Choices(next))
                                 }
                             } else null,
-                            dropdownCreate = if (canCreateOption) { name, done ->
-                                lookups.option(definition.id, name, done)
-                            } else null,
-                            dropdownError = error?.message,
+                            emptyMessage = stringResource(R.string.lookup_no_matching_field_options, definition.name),
                             useDropdown = useDropdown,
                             dropdownSingleChoice = definition.type == AttributeType.SingleChoice,
                         )

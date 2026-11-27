@@ -11,10 +11,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
@@ -25,10 +29,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +43,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -62,6 +69,7 @@ import com.nadim.bikepart.R as ShopR
 import com.nadim.bikepart.ui.theme.LocalShopFluentStyle
 import com.nadim.bikepart.ui.theme.ShopSpacing
 import com.nadim.bikepart.ui.theme.shopIconVector
+import kotlinx.coroutines.flow.collectLatest
 
 /** Fluent's tokenized search layout with query state owned by the screen. */
 @Composable
@@ -76,6 +84,7 @@ internal fun ShopSearchField(
     scanLabel: String? = null,
     onScan: () -> Unit = {},
     onSearchFocusChanged: (Boolean) -> Unit = {},
+    inputModifier: Modifier = Modifier,
 ) {
     val tokens = FluentTheme.controlTokens.tokens[ControlTokens.ControlType.SearchBarControlType]
         as SearchBarTokens
@@ -86,6 +95,18 @@ internal fun ShopSearchField(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
+    val searchBarRequester = remember { BringIntoViewRequester() }
+    val ime = WindowInsets.ime
+    val density = LocalDensity.current
+    LaunchedEffect(focused, ime, density) {
+        if (focused) {
+            // The text field reveals its own bounds. Reveal the surrounding controls too
+            // as the keyboard resizes the scroll viewport.
+            snapshotFlow { ime.getBottom(density) }.collectLatest {
+                searchBarRequester.bringIntoView()
+            }
+        }
+    }
     val textStyle = tokens.typography(info).merge(
         TextStyle(color = tokens.textColor(info), textDirection = TextDirection.ContentOrLtr)
     )
@@ -141,7 +162,7 @@ internal fun ShopSearchField(
                     focusManager.clearFocus()
                     onSubmit?.invoke()
                 }),
-                modifier = Modifier.weight(1f)
+                modifier = inputModifier.weight(1f)
                     .focusRequester(focusRequester)
                     .onFocusChanged {
                         focused = it.isFocused

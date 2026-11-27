@@ -428,37 +428,22 @@ class ShopWorkflowTest {
         } finally { shell("settings put system font_scale " + original) }
     }
 
-    @Test fun allTypedControlsAndInlineOptionsPersistThroughCancellationAndEditing() {
+    @Test fun typedControlsAndExistingOptionsPersistThroughEditing() {
         val category = "Typed parts " + System.nanoTime()
-        fun field(name: String, type: String) {
-            compose.waitUntil(10_000) { compose.onAllNodes(hasText("Add category field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithText("Add category field").performScrollTo().performClick()
-            compose.onNodeWithText("Field name").performScrollTo().performTextInput(name)
-            compose.onNodeWithText(type, useUnmergedTree = true).performScrollTo().performClick()
-            compose.onNodeWithText("Create field").performScrollTo().performClick()
-            compose.waitUntil(10_000) { compose.onAllNodesWithText("Create field").fetchSemanticsNodes().isEmpty() }
-        }
-        fun option(field: String, name: String) {
-            compose.onNodeWithContentDescription("Search or add " + field + " option").performScrollTo().performTextInput(name)
-            compose.onNodeWithText("Add option “$name”").performScrollTo().performClick()
-            compose.waitUntil(10_000) {
-                compose.onAllNodes(hasText(name) and hasClickAction()).fetchSemanticsNodes().isNotEmpty()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        scenario.close()
+        kotlinx.coroutines.runBlocking {
+            com.nadim.bikepart.shop.Shop.open(context).use { shop ->
+                val id = shop.createCategory(category)
+                shop.createAttribute(id, "Grade", com.nadim.bikepart.shop.AttributeType.Text)
+                shop.createAttribute(id, "Size", com.nadim.bikepart.shop.AttributeType.Decimal)
+                val shade = shop.createAttribute(id, "Shade", com.nadim.bikepart.shop.AttributeType.SingleChoice)
+                shop.createOption(shade, "Black")
+                val treatments = shop.createAttribute(id, "Treatments", com.nadim.bikepart.shop.AttributeType.MultipleChoice)
+                shop.createOption(treatments, "Zinc")
+                shop.createOption(treatments, "Oil")
             }
         }
-        compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Add product").performClick()
-        compose.onNodeWithContentDescription("Search categories").performTextInput(category)
-        compose.onNodeWithText("Add category “$category”").performScrollTo().performClick()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Add category field").fetchSemanticsNodes().isNotEmpty() }
-        field("Grade", "Text")
-        field("Size", "Decimal number")
-        field("Shade", "Single choice")
-        option("Shade", "Black")
-        field("Treatments", "Multiple choice")
-        option("Treatments", "Zinc")
-        option("Treatments", "Oil")
-        compose.onNodeWithText("Back").performClick()
-        scenario.close()
         scenario = ActivityScenario.launch(MainActivity::class.java)
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
@@ -486,12 +471,22 @@ class ShopWorkflowTest {
         compose.onNodeWithText("Grade: SAE 10W-40").assertExists()
     }
 
-    @Test fun inlineCategoryAndRequiredDecimalSurviveCancellingTheirProductDraft() {
+    @Test fun requiredDecimalSurvivesCancellingItsProductDraft() {
         val category = "Hardware " + System.nanoTime()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        scenario.close()
+        kotlinx.coroutines.runBlocking {
+            com.nadim.bikepart.shop.Shop.open(context).use { it.createCategory(category) }
+        }
+        scenario = ActivityScenario.launch(MainActivity::class.java)
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Add product").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add product").performClick()
-        compose.onNodeWithContentDescription("Search categories").performTextInput(category)
-        compose.onNodeWithText("Add category “$category”").performScrollTo().performClick()
+        val categorySearch = compose.onNodeWithContentDescription("Search categories")
+        categorySearch.performTextInput("Missing $category")
+        compose.onNodeWithText("No matching categories.", substring = true).assertExists()
+        compose.onNodeWithText("Add category “Missing $category”").assertDoesNotExist()
+        categorySearch.performTextReplacement(category)
+        compose.onNodeWithText(category, useUnmergedTree = true).performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText(category).fetchSemanticsNodes().isNotEmpty() }
         compose.waitUntil(10_000) { compose.onAllNodes(hasText("Add category field") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Add category field").performScrollTo().performClick()
