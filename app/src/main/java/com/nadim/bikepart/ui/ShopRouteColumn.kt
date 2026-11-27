@@ -75,6 +75,7 @@ internal fun ShopRouteAppBar(
     enabled: Boolean = true,
     searchMode: Boolean = false,
     searchBar: (@Composable RowScope.() -> Unit)? = null,
+    actions: (@Composable () -> Unit)? = null,
 ) {
     val colors = shopAppBarColors()
     val back = LocalShopRouteBack.current
@@ -92,7 +93,9 @@ internal fun ShopRouteAppBar(
             searchMode = searchMode,
             searchBar = searchBar,
             centerAlignAppBar = true,
-            rightAccessoryView = if (showBack) {
+            rightAccessoryView = if (actions != null) {
+                { actions() }
+            } else if (showBack) {
                 { Spacer(Modifier.width(ShopSpacing.touchTarget + ShopSpacing.small)) }
             } else null,
             logo = if (showBack) {

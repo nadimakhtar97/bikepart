@@ -238,6 +238,11 @@
     <string name="cart_pieces_label">Pieces</string>
     <string name="cart_invalid_quantity">Enter a positive whole-piece quantity.</string>
     <string name="cart_saved_line_total">Saved line total: ₹%s</string>
+    <string name="cart_actions">Cart actions</string>
+    <string name="cart_details">Details</string>
+    <string name="cart_hide_details">Hide details</string>
+    <string name="cart_increase_quantity">Increase quantity of %1$s</string>
+    <string name="cart_decrease_quantity">Decrease quantity of %1$s</string>
     <string name="cart_remove_line">Remove line</string>
     <string name="cart_saved_total">Saved cart total: ₹%s</string>
     <string name="cart_add_products">Add products</string>

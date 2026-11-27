@@ -14,7 +14,6 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.nadim.bikepart.CartDraft
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.R
@@ -40,111 +39,129 @@ internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOp
 }
 
 @Composable
-internal fun CartEditor(shop: ShopSnapshot, draft: CartDraft?, busy: Boolean, error: ShopError?,
-    edit: (String?, String?, String?) -> Unit, pause: () -> Unit, add: () -> Unit,
-    remove: (String) -> Unit, discard: () -> Unit, retry: () -> Unit, reload: () -> Unit, checkout: () -> Unit) {
-    if (draft == null) {
-        ErrorSnackbar(stringResource(R.string.cart_unavailable), blocking = true)
-        return
-    }
-    val cart = shop.carts.find { it.id == draft.cart.id } ?: draft.cart
-    var confirmDiscard by rememberSaveable(cart.id) { mutableStateOf(false) }
+internal fun CartEditor(
+    shop: ShopSnapshot,
+    cart: Cart,
+    draft: CartDraft,
+    busy: Boolean,
+    error: ShopError?,
+    edit: (String?, String?, String?) -> Unit,
+    add: () -> Unit,
+    remove: (String) -> Unit,
+    retry: () -> Unit,
+    reload: () -> Unit,
+) {
     val errorView = remember { BringIntoViewRequester() }
     LaunchedEffect(error) { if (error != null && error.definitionId == null) errorView.bringIntoView() }
-    ShopGroup {
-        // Autosave buffers typing while a commit is pending; structural actions wait.
-        ShopTextField(
-            draft.customer,
-            { edit(it, null, null) },
-            stringResource(R.string.cart_customer_label)
-        )
-        Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(when { busy -> "Saving cart…"; error != null -> "Changes not saved"; draft.dirty -> "Unsaved changes…"; else -> "Saved on this phone" },
-                modifier = Modifier
-                    .weight(1f)
-                    .semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            ShopStatusChip(when { error != null -> "Not saved"; busy -> "Saving"; draft.dirty -> "Unsaved"; else -> "Saved" },
-                when { error != null -> ShopStatusTone.Danger; draft.dirty || busy -> ShopStatusTone.Warning; else -> ShopStatusTone.Success })
+
+    ShopTextField(draft.customer, { edit(it, null, null) }, stringResource(R.string.cart_customer_label))
+    Text(
+        stringResource(when {
+            error != null -> R.string.cart_changes_not_saved
+            busy -> R.string.cart_saving
+            draft.dirty -> R.string.cart_unsaved_changes
+            else -> R.string.cart_saved
+        }),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    )
+    if (error != null) {
+        FlowRow(
+            Modifier.bringIntoViewRequester(errorView),
+            horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small),
+        ) {
+            TextButton(onClick = retry, enabled = !busy) { Text(stringResource(R.string.cart_retry_saving)) }
+            TextButton(onClick = reload, enabled = !busy) { Text(stringResource(R.string.cart_reload_saved)) }
         }
     }
-    if (error != null) ShopGroup {
-        Column(Modifier.bringIntoViewRequester(errorView)) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                TextButton(onClick = retry, enabled = !busy) { Text(stringResource(R.string.cart_retry_saving)) }
-                TextButton(onClick = reload, enabled = !busy) { Text(stringResource(R.string.cart_reload_saved)) }
-            }
-        }
-    }
-    if (cart.lines.isEmpty()) Text(stringResource(R.string.cart_no_products), style = MaterialTheme.typography.bodyMedium)
-    else {
-        ShopSectionHeader(stringResource(R.string.products), supporting = "${cart.lines.size} quoted ${if (cart.lines.size == 1) "line" else "lines"}")
-        ShopGroup(spacing = ShopSpacing.small) {
-            cart.lines.forEach { line ->
-                val product = shop.products.single { it.id == line.productId }
-                val quantityError = error?.field == ProductField.CartQuantity && error.definitionId == product.id
-                val quantityView = remember(product.id) { BringIntoViewRequester() }
-                LaunchedEffect(error) { if (quantityError) quantityView.bringIntoView() }
-                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    Column(Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.Top) {
-                            Column(Modifier.weight(1f)) {
-                                Text(product.title, style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                                Text(product.sku, style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+    if (cart.lines.isEmpty()) {
+        Text(stringResource(R.string.cart_no_products), style = MaterialTheme.typography.bodyMedium)
+        ShopPrimaryButton(stringResource(R.string.cart_add_products), enabled = !busy && !draft.dirty, onClick = add)
+    } else {
+        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = ShopSpacing.content)) {
+                ShopSectionHeader(stringResource(R.string.products))
+                cart.lines.forEach { line ->
+                    key(line.productId) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        val product = shop.products.single { it.id == line.productId }
+                        val quantityError = error?.field == ProductField.CartQuantity && error.definitionId == product.id
+                        val quantityView = remember { BringIntoViewRequester() }
+                        var showDetails by rememberSaveable { mutableStateOf(false) }
+                        val quantityText = draft.quantities[product.id].orEmpty()
+                        val quantity = quantityText.trim().toLongOrNull() ?: 0L
+                        val decreaseLabel = stringResource(R.string.cart_decrease_quantity, product.title)
+                        val increaseLabel = stringResource(R.string.cart_increase_quantity, product.title)
+                        val setQuantity: (String) -> Unit = { edit(null, product.id, it) }
+                        LaunchedEffect(quantityError) { if (quantityError) quantityView.bringIntoView() }
+
+                        Column(
+                            Modifier.fillMaxWidth().padding(vertical = ShopSpacing.small),
+                            verticalArrangement = Arrangement.spacedBy(ShopSpacing.small),
+                        ) {
+                            Text(product.title, style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                stringResource(R.string.saved_line_total, indianNumber(line.totalRupees)),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Row(
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small),
+                            ) {
+                                TextButton(
+                                    onClick = { setQuantity((quantity - 1).toString()) },
+                                    enabled = quantity > 1,
+                                    modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
+                                        .semantics { contentDescription = decreaseLabel },
+                                ) { Text("−") }
+                                ShopTextField(
+                                    value = quantityText,
+                                    onValueChange = setQuantity,
+                                    label = stringResource(R.string.cart_pieces_label),
+                                    error = if (quantityError) stringResource(R.string.cart_invalid_quantity) else null,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    contentDescription = "Pieces · ${product.title}",
+                                    modifier = Modifier.weight(1f).bringIntoViewRequester(quantityView),
+                                )
+                                TextButton(
+                                    onClick = { setQuantity((quantity + 1).toString()) },
+                                    enabled = quantity in 1L until Long.MAX_VALUE,
+                                    modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
+                                        .semantics { contentDescription = increaseLabel },
+                                ) { Text("+") }
+                            }
+                            if (showDetails) {
+                                Text(product.sku, style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.on_hand_pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.other_carts_pieces, shop.otherCartDemand(cart.id, product.id)), style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.quoted_unit_price, indianNumber(line.quotedPriceRupees)), style = MaterialTheme.typography.bodySmall)
+                            }
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                                TextButton(onClick = { showDetails = !showDetails }) {
+                                    Text(stringResource(if (showDetails) R.string.cart_hide_details else R.string.cart_details))
+                                }
+                                TextButton(
+                                    onClick = { remove(product.id) },
+                                    enabled = !busy && !draft.dirty,
+                                    modifier = Modifier.semantics { contentDescription = "Remove ${product.title}" },
+                                ) { Text(stringResource(R.string.cart_remove_line)) }
                             }
                         }
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(stringResource(R.string.on_hand_pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(stringResource(R.string.other_carts_pieces, shop.otherCartDemand(cart.id, product.id)), style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text(stringResource(R.string.quoted_unit_price, indianNumber(line.quotedPriceRupees)), style = MaterialTheme.typography.bodyMedium)
-                        ShopTextField(
-                            value = draft.quantities[product.id].orEmpty(),
-                            onValueChange = { edit(null, product.id, it) },
-                            label = stringResource(R.string.cart_pieces_label),
-                            error = if (quantityError) stringResource(R.string.cart_invalid_quantity) else null,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            contentDescription = "Pieces · ${product.title}",
-                            modifier = Modifier.bringIntoViewRequester(quantityView),
-                        )
-                        Text(stringResource(R.string.saved_line_total, indianNumber(line.totalRupees)), style = MaterialTheme.typography.bodyMedium)
-                        TextButton(onClick = { remove(product.id) }, enabled = !busy && !draft.dirty,
-                            modifier = Modifier.semantics { contentDescription = "Remove ${product.title}" }) { Text(stringResource(R.string.cart_remove_line)) }
                     }
                 }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                ShopListRow(
+                    stringResource(R.string.cart_add_products),
+                    icon = R.drawable.ic_add,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    enabled = !busy && !draft.dirty,
+                    onClick = add,
+                )
             }
         }
     }
-    ShopGroup {
-        Text(stringResource(R.string.saved_cart_total, indianNumber(cart.totalRupees)), style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { liveRegion = LiveRegionMode.Polite })
-    }
-    ShopListGroup {
-        ShopListRow(stringResource(R.string.cart_add_products), supporting = "Search or scan another product", icon = R.drawable.ic_add,
-            enabled = !busy && !draft.dirty, onClick = add)
-    }
-    ShopPrimaryButton(stringResource(R.string.cart_checkout), enabled = !busy && cart.lines.isNotEmpty(), onClick = checkout)
-    TextButton(onClick = pause, enabled = !busy, modifier = Modifier
-        .fillMaxWidth()
-        .heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.cart_save_return)) }
-    TextButton(onClick = { confirmDiscard = true }, enabled = !busy && !draft.dirty,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = ShopSpacing.touchTarget),
-        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text(stringResource(R.string.cart_discard)) }
-    if (confirmDiscard) AlertDialog(onDismissRequest = { if (!busy) confirmDiscard = false },
-        title = { Text(stringResource(R.string.discard, cart.name)) }, text = { Text(stringResource(R.string.cart_discard_stock_note)) },
-        confirmButton = { TextButton(onClick = { confirmDiscard = false; discard() }, enabled = !busy) { Text(stringResource(R.string.cart_discard_confirm)) } },
-        dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text(stringResource(R.string.cart_keep)) } })
 }
 
 @Composable

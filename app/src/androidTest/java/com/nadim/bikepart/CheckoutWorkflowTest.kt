@@ -23,7 +23,7 @@ class CheckoutWorkflowTest {
     }
     private fun click(text: String) {
         val node = compose.onNode(hasText(text) and hasClickAction())
-        if (text in listOf("Carts", "More", "Back")) node.performClick() else node.performScrollTo().performClick()
+        if (text in listOf("Carts", "More", "Back", "Checkout")) node.performClick() else node.performScrollTo().performClick()
     }
     private fun snapshot() = runBlocking { Shop.open(context).use { it.snapshot() } }
 
@@ -87,12 +87,12 @@ class CheckoutWorkflowTest {
         try {
             await("Carts"); click("Carts"); click("Open ${cart.name}")
             await("Saved on this phone")
-            compose.onNodeWithText("Customer label (optional)").performScrollTo().performTextReplacement("Ravi at checkout")
+            compose.onNodeWithContentDescription("Customer label (optional)").performScrollTo().performTextReplacement("Ravi at checkout")
             // Entry must flush this draft, even before the autosave debounce fires.
             click("Checkout"); await("Cash received (₹)")
             assertEquals("Ravi at checkout", snapshot().carts.single { it.id == cart.id }.customer)
             click("Complete cash sale"); await("Cash received must be a nonnegative whole number")
-            compose.onNodeWithText("Cash received (₹)").performTextReplacement("159")
+            compose.onNodeWithContentDescription("Cash received (₹)").performTextReplacement("159")
             click("Complete cash sale"); await("Cash received must cover the whole cart total")
             click("Exact amount"); await("Change: ₹0")
             click("Complete cash sale")
@@ -101,7 +101,7 @@ class CheckoutWorkflowTest {
             click("Edit cart"); await("Customer label (optional)")
             compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("1")
             click("Checkout"); await("Cart total: ₹80")
-            compose.onNodeWithText("Cash received (₹)").performScrollTo().performTextReplacement("100")
+            compose.onNodeWithContentDescription("Cash received (₹)").performScrollTo().performTextReplacement("100")
             await("Change: ₹20"); click("Complete cash sale"); await("Sale saved on this phone")
             val sale = snapshot().sales.single { it.cartId == cart.id }
             assertEquals(0L, snapshot().products.single { it.id == product }.quantity)
@@ -149,7 +149,7 @@ class CheckoutWorkflowTest {
                 await("Cash received (₹)")
                 compose.onNodeWithText("Cart total: ₹92,23,37,20,36,85,47,75,807").performScrollTo().assertIsDisplayed()
                 capture("checkout-total-${mode.name}-$scale")
-                compose.onNodeWithText("Cash received (₹)").performScrollTo().performClick().performTextReplacement("0")
+                compose.onNodeWithContentDescription("Cash received (₹)").performScrollTo().performClick().performTextReplacement("0")
                 click("Complete cash sale"); await("Cash received must cover the whole cart total")
                 capture("checkout-error-${mode.name}-$scale")
                 androidx.test.espresso.Espresso.closeSoftKeyboard()

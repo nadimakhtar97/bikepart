@@ -182,22 +182,40 @@ internal fun ShopTextField(
     )
 }
 
-internal data class ShopMenuAction(val label: String, val icon: Int, val onClick: () -> Unit)
+internal data class ShopMenuAction(
+    val label: String,
+    val icon: Int,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit,
+)
 
 @Composable
-internal fun ShopOverflowMenu(label: String, actions: List<ShopMenuAction>, enabled: Boolean = true) {
+internal fun ShopOverflowMenu(
+    label: String,
+    actions: List<ShopMenuAction>,
+    enabled: Boolean = true,
+    triggerColor: Color? = null,
+) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Box {
-        ShopIconActionButton(
-            label,
-            com.nadim.bikepart.R.drawable.ic_more_vert,
-            enabled
-        ) { expanded = true }
+        val icon = com.nadim.bikepart.R.drawable.ic_more_vert
+        if (triggerColor == null) {
+            ShopIconActionButton(label, icon, enabled) { expanded = true }
+        } else {
+            IconButton(
+                onClick = { expanded = true },
+                enabled = enabled,
+                modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget),
+                colors = IconButtonDefaults.iconButtonColors(contentColor = triggerColor),
+            ) {
+                Icon(painterResource(icon), contentDescription = label)
+            }
+        }
         Menu(opened = expanded, onDismissRequest = { expanded = false }) {
             Column(Modifier.widthIn(min = 200.dp)) {
                 actions.forEach { action ->
                     ListItem.Item(
-                        text = action.label, textMaxLines = 2, enabled = enabled,
+                        text = action.label, textMaxLines = 2, enabled = enabled && action.enabled,
                         leadingAccessoryContent = {
                             Icon(
                                 painterResource(action.icon),

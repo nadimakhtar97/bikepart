@@ -708,6 +708,14 @@ model.
 - Stock-health/category chips expose common selections; advanced filters use a
   scrollable sheet. Retain every existing lookup/decimal filter, active selection
   summaries, validation and explicit clearing.
+- The open Cart groups product lines and Add products on one surface. The
+  pinned footer shows the saved cart total and Checkout, stacking at narrow
+  widths, large text sizes or long totals. At large text sizes it yields space
+  to the keyboard while editing. An inline Pieces field supports direct entry
+  alongside increment and decrement controls. Decrement stops at one piece.
+  Each line has an explicit Remove line action and expandable details for SKU,
+  stock, other carts and quoted unit price. Cart actions in the app bar provide
+  Save and return to carts and Discard cart.
 - Sales history groups receipts newest-first by device-local calendar day, with
   Today / Yesterday / date headings, count and exact whole-rupee daily total.
   Totals must support the sum of multiple maximum-value receipts without overflow.
