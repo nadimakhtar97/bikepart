@@ -37,7 +37,7 @@ internal object RestoreValidation {
             val contents = LocalBackup.readForRestore(context, copy)
             val schema = ZipFile(copy).use { zip -> JSONObject(zip.getInputStream(zip.getEntry("schema.json")).bufferedReader(Charsets.UTF_8).readText()) }
             val version = schema.getInt("roomVersion")
-            require(version in 1..16) { context.getString(R.string.unsupported_shop_schema_version_update_the, version) }
+            require(version in 1..17) { context.getString(R.string.unsupported_shop_schema_version_update_the, version) }
             val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/$version.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
             require(schema.getString("roomIdentity") == trusted.getString("identityHash")) { context.getString(R.string.shop_schema_identity_does_not_match, version) }
             val entities = trusted.getJSONArray("entities")
@@ -212,6 +212,7 @@ internal object RestoreValidation {
         require(carts.none { cart -> sales.any { it.cartId == cart.id } } && carts.all { it.editVersion in 0..state.revision }) { context.getString(R.string.completed_cart_remains_unfinished_or_has) }
         val cartLines = dao.cartLines()
         carts.forEach { cart ->
+            require(cart.readStockReductions().keys.all { it in products }) { "Invalid product in cart stock changes." }
             cartLines.filter { it.cartId == cart.id }.fold(0L) { total, line ->
                 require(line.quantity > 0 && line.quotedPriceRupees >= 0 && !products.getValue(line.productId).archived) { context.getString(R.string.invalid_unfinished_cart_line) }
                 Math.addExact(total, Math.multiplyExact(line.quantity, line.quotedPriceRupees))

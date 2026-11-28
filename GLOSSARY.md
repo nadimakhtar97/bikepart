@@ -32,6 +32,9 @@ The starting quantity of a stocked product when the shop begins tracking it.
 **Buying price**:
 The latest known amount the shop pays per piece for a stocked product. An unknown buying price is recorded as ₹0.
 
+**On-hand stock**:
+The current quantity of a stocked product recorded by the shop. Quantities in unfinished carts do not reserve any of it.
+
 **Low-stock threshold**:
 An optional whole-number quantity set for a stocked product. Stock at or below this quantity is low; zero stock is always out of stock, even without a threshold.
 

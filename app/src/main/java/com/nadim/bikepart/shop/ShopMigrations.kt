@@ -17,6 +17,12 @@ internal val MIGRATION_15_16 = object : Migration(15, 16) {
     }
 }
 
+internal val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE carts ADD COLUMN stockReductions TEXT NOT NULL DEFAULT '{}'")
+    }
+}
+
 internal val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE TABLE product_photos_new (productId TEXT NOT NULL, sha256 TEXT NOT NULL, sizeBytes INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(productId, position), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")

@@ -488,7 +488,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         val manifest = JSONObject(LocalBackup.utf8(bytes))
         require(manifest.get("driveFormat") == 1) { context.getString(R.string.unsupported_drive_restore_version_update_the) }
         val local = manifest.getJSONObject("localManifest")
-        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..16) { context.getString(R.string.incomplete_or_unsupported_restore_point) }
+        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..17) { context.getString(R.string.incomplete_or_unsupported_restore_point) }
         for (key in listOf("datasetId", "captureId", "revision", "capturedAt")) require(manifest.getString(key) == local.getString(key)) { context.getString(R.string.restore_manifest_identity_mismatch, key) }
         require(manifest.getString("generation").isNotBlank()) { context.getString(R.string.missing_writer_identity) }
         val files = manifest.getJSONArray("files")

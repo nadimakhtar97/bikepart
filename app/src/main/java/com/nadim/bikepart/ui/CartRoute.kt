@@ -34,7 +34,7 @@ internal fun CartRoute(
     retry: () -> Unit,
     reload: () -> Unit,
     checkout: () -> Unit,
-    removeProduct: (String) -> Unit,
+    dismissStockNotice: () -> Unit,
     discard: () -> Unit,
 ) {
     val cart = draft?.let { shop.carts.find { cart -> cart.id == it.cart.id } ?: it.cart }
@@ -75,7 +75,7 @@ internal fun CartRoute(
             if (draft == null || cart == null) {
                 ErrorSnackbar(stringResource(R.string.cart_unavailable), blocking = true)
             } else {
-                CartEditor(shop, cart, draft, busy, error, edit, addProduct, removeProduct, retry, reload)
+                CartEditor(shop, cart, draft, busy, error, edit, addProduct, dismissStockNotice, retry, reload)
             }
         }
     }

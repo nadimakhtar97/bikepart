@@ -1,13 +1,13 @@
 package com.nadim.bikepart.shop
 
-
-import com.nadim.bikepart.R
 import android.content.Context
 import androidx.room.Room
 import androidx.room.withTransaction
+import com.nadim.bikepart.R
 import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.flow.map
+import org.json.JSONObject
 
 data class Category(val id: String, val name: String)
 data class Product(val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val quantity: Long, val attributes: Map<String, AttributeValue> = emptyMap(), val historicalAttributes: List<HistoricalAttribute> = emptyList(), val modelIds: Set<String> = emptySet(), val locationIds: Set<String> = emptySet(), val photo: PhotoReference? = null, val lowStockThreshold: Long? = null, val archived: Boolean = false, val additionalPhotos: List<PhotoReference> = emptyList(), val buyingPriceRupees: Long = 0)
@@ -89,6 +89,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             seedAttributes()
             dao.putState(StateRow(datasetId = UUID.randomUUID().toString()))
         }
+        if (reduceOverstockedCarts(dao.balances().associate { it.productId to it.quantity })) advanceRevision()
     }
 
     suspend fun snapshot(): ShopSnapshot = activeTransaction {
@@ -110,7 +111,8 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             dao.models().map { MotorcycleModel(it.id, it.makeId, it.name, it.retired) },
             dao.locations().map { StorageLocation(it.id, it.name, it.retired) },
             dao.templates().map { ProductTemplate(it.id, decodeCatalog(it.catalog), it.retired) }, dao.corrections().map { it.toCorrection() }, dao.allOpenings().associate { it.productId to OpeningStock(it.quantity, it.recordedAt, it.buyingPriceRupees) },
-            dao.carts().map { cart -> Cart(cart.id, cart.number, cart.customer, cart.editVersion, cartLines[cart.id].orEmpty().map { CartLine(it.productId, it.quantity, it.quotedPriceRupees) }) },
+            dao.carts().map { cart -> Cart(cart.id, cart.number, cart.customer, cart.editVersion, cartLines[cart.id].orEmpty().map { CartLine(it.productId, it.quantity, it.quotedPriceRupees) },
+                cart.readStockReductions()) },
             dao.sales().map { it.toSale(saleLines[it.id].orEmpty()) }, dao.arrivals().map { it.toArrival() }, dao.barcodeAliases().map { it.toAlias() }, dao.barcodeAssignments().map { it.toAssignment() }, LabelPreferences(LabelMedia.valueOf(state.labelMedia), state.labelCopies))
     }
 
@@ -565,6 +567,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val difference = Math.subtractExact(result, balance.quantity)
         dao.insertCorrection(CorrectionRow(operationId, productId, kind.name, amount, explanation, balance.quantity, result, difference.takeIf { it != 0L }, System.currentTimeMillis(), Math.addExact(requireNotNull(dao.state()).revision, 1)))
         dao.updateBalance(balance.copy(quantity = result))
+        if (result < balance.quantity) reduceOverstockedCarts(mapOf(productId to result))
         advanceRevision()
     }
 
@@ -640,6 +643,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         snapshots.forEach { dao.updateBalance(BalanceRow(it.productId, it.resultingBalance)) }
         // Removing the open cart is its completion; the unique sale retains its identity forever.
         dao.deleteCart(cartId)
+        reduceOverstockedCarts(snapshots.associate { it.productId to it.resultingBalance })
         advanceRevision()
         sale.toSale(snapshots)
     }
@@ -658,10 +662,15 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val cart = requireCurrentCart(id, expectedVersion)
         val old = dao.cartLines().filter { it.cartId == id }.associateBy { it.productId }
         val products = dao.products().associateBy { it.id }
-        val lines = quantities.map { (productId, input) ->
+        val balances = dao.balances().associateBy { it.productId }
+        val lines = quantities.mapNotNull { (productId, input) ->
             val product = requireNotNull(products[productId]) { context.getString(R.string.choose_an_existing_stocked_product) }
             require(!product.archived) { context.getString(R.string.this_product_is_archived_choose_an) }
-            val quantity = parseCartQuantity(context, input, productId)
+            val quantity = parseCartQuantity(context, input, productId, allowZero = true)
+            if (quantity == 0L) return@mapNotNull null
+            val available = balances.getValue(productId).quantity
+            if (quantity > available) throw ShopValidation(ProductField.CartQuantity,
+                context.getString(R.string.cart_stock_maximum, indianNumber(available)), productId)
             CartLineRow(id, productId, quantity, old[productId]?.quotedPriceRupees ?: product.priceRupees)
         }
         try {
@@ -686,10 +695,40 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val amount = parseCartQuantity(context, pieces, productId)
         val lines = dao.cartLines().filter { it.cartId == id }
         val quantities = lines.associate { it.productId to it.quantity.toString() }.toMutableMap()
-        val quantity = try { Math.addExact(lines.find { it.productId == productId }?.quantity ?: 0L, amount) }
-            catch (_: ArithmeticException) { throw ShopValidation(ProductField.CartQuantity, context.getString(R.string.cart_quantity_exceeds_the_supported_whole), productId) }
-        quantities[productId] = quantity.toString()
+        requireActiveProduct(productId)
+        val current = lines.find { it.productId == productId }?.quantity ?: 0L
+        val available = dao.balances().single { it.productId == productId }.quantity
+        val remaining = (available - current).coerceAtLeast(0)
+        if (amount > remaining) throw ShopValidation(ProductField.CartQuantity,
+            context.getString(R.string.cart_stock_remaining, indianNumber(remaining)), productId)
+        quantities[productId] = (current + amount).toString()
         saveCart(id, expectedVersion, cart.customer, quantities)
+    }
+
+    private suspend fun reduceOverstockedCarts(balances: Map<String, Long>): Boolean {
+        val affected = dao.cartLines().filter { line ->
+            balances[line.productId]?.let { line.quantity > it } == true
+        }.groupBy { it.cartId }
+        for ((id, lines) in affected) {
+            val cart = requireNotNull(dao.cart(id))
+            val notice = JSONObject(cart.stockReductions)
+            for (line in lines) {
+                val quantity = balances.getValue(line.productId)
+                if (quantity == 0L) dao.deleteCartLine(id, line.productId)
+                else dao.updateCartLine(line.copy(quantity = quantity))
+                notice.put(line.productId, quantity)
+            }
+            dao.updateCart(cart.copy(editVersion = Math.addExact(cart.editVersion, 1), stockReductions = notice.toString()))
+        }
+        return affected.isNotEmpty()
+    }
+
+    suspend fun dismissCartStockNotice(id: String, expectedVersion: Long) = activeTransaction {
+        val cart = requireCurrentCart(id, expectedVersion)
+        if (cart.stockReductions != "{}") {
+            dao.updateCart(cart.copy(stockReductions = "{}"))
+            advanceRevision()
+        }
     }
 
     suspend fun discardCart(id: String, expectedVersion: Long) = activeTransaction {
@@ -774,7 +813,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             }
         }
         internal fun openDatabase(context: Context, name: String): ShopDatabase =
-            Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16).build()
+            Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17).build()
 
         internal fun staged(context: Context, database: ShopDatabase, directory: java.io.File) =
             Shop(database, ProductPhotos(java.io.File(directory, "blobs"), context), directory, directory, context)
@@ -783,9 +822,9 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
 class SimilarProduct(message: String) : IllegalArgumentException(message)
 
-private fun parseCartQuantity(context: Context, value: String, productId: String): Long {
+private fun parseCartQuantity(context: Context, value: String, productId: String, allowZero: Boolean = false): Long {
     val quantity = try { parseWhole(context, value, ProductField.CartQuantity) } catch (_: ShopValidation) { null }
-    if (quantity == null || quantity == 0L) throw ShopValidation(ProductField.CartQuantity, context.getString(R.string.cart_quantity_must_be_a_positive), productId)
+    if (quantity == null || (!allowZero && quantity == 0L)) throw ShopValidation(ProductField.CartQuantity, context.getString(if (allowZero) R.string.cart_quantity_nonnegative else R.string.cart_quantity_must_be_a_positive), productId)
     return quantity
 }
 

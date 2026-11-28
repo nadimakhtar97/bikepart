@@ -11,13 +11,17 @@ import java.util.UUID
 
 class CheckoutTest {
     @Test fun invalidTenderStaleVersionAndEveryShortagePreserveTheWholeCart() = runBlocking {
-        withShop { shop, _, _ ->
+        withShop { shop, context, name ->
             val category = shop.snapshot().categories.first().id
-            val first = shop.createProduct("Bolt", category, "", "1", "80")
-            val second = shop.createProduct("Nut", category, "", "0", "5")
+            val first = shop.createProduct("Bolt", category, "", "2", "80")
+            val second = shop.createProduct("Nut", category, "", "3", "5")
             val cart = shop.createCart()
             rejects { shop.checkout(cart, 0, "0") }
             shop.saveCart(cart, 0, "Ravi", mapOf(first to "2", second to "3"))
+            // Simulate an older writer leaving a shortage after the cart was saved.
+            android.database.sqlite.SQLiteDatabase.openDatabase(context.getDatabasePath(name).path, null, 0).use { db ->
+                db.execSQL("UPDATE balances SET quantity = CASE WHEN productId = ? THEN 1 ELSE 0 END", arrayOf(first))
+            }
             val before = shop.snapshot()
             for (cash in listOf("", "-1", "1.5", "₹175", "١٧٥", "9223372036854775808", "174")) {
                 rejects { shop.checkout(cart, 1, cash) }
@@ -67,10 +71,11 @@ class CheckoutTest {
                         async { runCatching { other.checkout(second, 1, "80") } }).map { it.await() }
                 }
                 assertEquals(1, outcomes.count { it.isSuccess })
-                assertTrue(outcomes.single { it.isFailure }.exceptionOrNull() is CheckoutShortage)
+                assertTrue(outcomes.single { it.isFailure }.exceptionOrNull() is StaleCart)
                 val after = shop.snapshot()
                 assertEquals(1, after.sales.size)
-                assertEquals(1, after.carts.size)
+                assertTrue(after.carts.single().lines.isEmpty())
+                assertEquals(mapOf(product to 0L), after.carts.single().stockReductions)
                 assertEquals(0L, after.products.single().quantity)
                 assertEquals(0L, after.openings.getValue(product).quantity + after.sales.flatMap { it.lines }.sumOf { it.movement })
             }

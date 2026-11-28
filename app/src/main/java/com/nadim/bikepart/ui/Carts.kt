@@ -48,7 +48,7 @@ internal fun CartEditor(
     error: ShopError?,
     edit: (String?, String?, String?) -> Unit,
     add: () -> Unit,
-    remove: (String) -> Unit,
+    dismissStockNotice: () -> Unit,
     retry: () -> Unit,
     reload: () -> Unit,
 ) {
@@ -75,6 +75,19 @@ internal fun CartEditor(
         ) {
             TextButton(onClick = retry, enabled = !busy) { Text(stringResource(R.string.cart_retry_saving)) }
             TextButton(onClick = reload, enabled = !busy) { Text(stringResource(R.string.cart_reload_saved)) }
+        }
+    }
+
+    if (cart.stockReductions.isNotEmpty()) {
+        Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+            cart.stockReductions.forEach { (productId, quantity) ->
+                val title = shop.products.find { it.id == productId }?.title ?: productId
+                Text(if (quantity == 0L) stringResource(R.string.cart_stock_removed, title)
+                    else stringResource(R.string.cart_stock_reduced, title, indianNumber(quantity)))
+            }
+            TextButton(onClick = dismissStockNotice, enabled = !busy && !draft.dirty) {
+                Text(stringResource(R.string.cart_stock_dismiss))
+            }
         }
     }
 
@@ -114,7 +127,7 @@ internal fun CartEditor(
                             ) {
                                 TextButton(
                                     onClick = { setQuantity((quantity - 1).toString()) },
-                                    enabled = quantity > 1,
+                                    enabled = quantity > 0,
                                     modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
                                         .semantics { contentDescription = decreaseLabel },
                                 ) { Text(stringResource(R.string.decrease_quantity)) }
@@ -122,14 +135,14 @@ internal fun CartEditor(
                                     value = quantityText,
                                     onValueChange = setQuantity,
                                     label = stringResource(R.string.cart_pieces_label),
-                                    error = if (quantityError) stringResource(R.string.cart_invalid_quantity) else null,
+                                    error = error?.message?.takeIf { quantityError },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     contentDescription = context.getString(R.string.pieces_4, product.title),
                                     modifier = Modifier.weight(1f).bringIntoViewRequester(quantityView),
                                 )
                                 TextButton(
                                     onClick = { setQuantity((quantity + 1).toString()) },
-                                    enabled = quantity in 1L until Long.MAX_VALUE,
+                                    enabled = quantity in 1L until product.quantity,
                                     modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
                                         .semantics { contentDescription = increaseLabel },
                                 ) { Text(stringResource(R.string.increase_quantity)) }
@@ -140,15 +153,8 @@ internal fun CartEditor(
                                 Text(stringResource(R.string.other_carts_pieces, shop.otherCartDemand(cart.id, product.id)), style = MaterialTheme.typography.bodySmall)
                                 Text(stringResource(R.string.quoted_unit_price, indianNumber(line.quotedPriceRupees)), style = MaterialTheme.typography.bodySmall)
                             }
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
-                                TextButton(onClick = { showDetails = !showDetails }) {
-                                    Text(stringResource(if (showDetails) R.string.cart_hide_details else R.string.cart_details))
-                                }
-                                TextButton(
-                                    onClick = { remove(product.id) },
-                                    enabled = !busy && !draft.dirty,
-                                    modifier = Modifier.semantics { contentDescription = context.getString(R.string.lookup_remove_named, product.title) },
-                                ) { Text(stringResource(R.string.cart_remove_line)) }
+                            TextButton(onClick = { showDetails = !showDetails }) {
+                                Text(stringResource(if (showDetails) R.string.cart_hide_details else R.string.cart_details))
                             }
                         }
                     }

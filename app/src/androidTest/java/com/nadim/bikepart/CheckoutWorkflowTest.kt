@@ -22,7 +22,7 @@ class CheckoutWorkflowTest {
         catch (failure: Throwable) { throw AssertionError("Waiting for $text\n" + compose.onRoot().printToString(), failure) }
     }
     private fun click(text: String) {
-        val node = compose.onNode(hasText(text) and hasClickAction())
+        val node = compose.onNode((hasText(text) or hasContentDescription(text)) and hasClickAction())
         if (text in listOf("Carts", "More", "Back", "Checkout")) node.performClick() else node.performScrollTo().performClick()
     }
     private fun snapshot() = runBlocking { Shop.open(context).use { it.snapshot() } }
@@ -74,33 +74,28 @@ class CheckoutWorkflowTest {
         }
     }
 
-    @Test fun cashierFlushesPendingEditsHandlesShortageAndReopensTheSameReceipt() {
+    @Test fun cashierFlushesPendingEditsShowsStockReductionAndReopensTheSameReceipt() {
         val title = "Checkout bolt ${System.nanoTime()}"
         val pair = runBlocking { Shop.open(context).use { shop ->
-            val product = shop.createProduct(title, shop.snapshot().categories.first().id, "Historical detail", "1", "80")
+            val product = shop.createProduct(title, shop.snapshot().categories.first().id, "Historical detail", "2", "80")
             val id = shop.createCart()
             shop.saveCart(id, 0, "", mapOf(product to "2"))
+            shop.correctStock("count-$id", product, CorrectionKind.PhysicalCount, "1", "Counted one")
             product to shop.snapshot().carts.single { it.id == id }
         } }
         val (product, cart) = pair
         var scenario: ActivityScenario<MainActivity>? = ActivityScenario.launch(MainActivity::class.java)
         try {
             await("Carts"); click("Carts"); click("Open ${cart.name}")
-            await("Saved on this phone")
+            await("$title reduced to 1 pieces because stock changed")
             compose.onNodeWithContentDescription("Customer label (optional)").performScrollTo().performTextReplacement("Ravi at checkout")
             // Entry must flush this draft, even before the autosave debounce fires.
             click("Checkout"); await("Cash received (₹)")
             assertEquals("Ravi at checkout", snapshot().carts.single { it.id == cart.id }.customer)
             click("Complete cash sale"); await("Cash received must be a nonnegative whole number")
-            compose.onNodeWithContentDescription("Cash received (₹)").performTextReplacement("159")
+            compose.onNodeWithContentDescription("Cash received (₹)").performTextReplacement("79")
             click("Complete cash sale"); await("Cash received must cover the whole cart total")
             click("Exact amount"); await("Change: ₹0")
-            click("Complete cash sale")
-            await("$title: requested 2, available 1\nNo sale saved. Edit the cart quantities explicitly before retrying.")
-            assertNull(runBlocking { Shop.open(context).use { it.receipt(cart.id) } })
-            click("Edit cart"); await("Customer label (optional)")
-            compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("1")
-            click("Checkout"); await("Cart total: ₹80")
             compose.onNodeWithContentDescription("Cash received (₹)").performScrollTo().performTextReplacement("100")
             await("Change: ₹20"); click("Complete cash sale"); await("Sale saved on this phone")
             val sale = snapshot().sales.single { it.cartId == cart.id }
