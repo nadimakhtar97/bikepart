@@ -190,7 +190,7 @@
     <string name="category_name_label">Category name</string>
 
     <!-- Product form -->
-    <string name="form_catalog_only_note">Catalog details only. Enter stock, selling price and locations separately for each new product.</string>
+    <string name="form_catalog_only_note">Catalog details only. Enter stock, prices and locations separately for each new product.</string>
     <string name="form_basic_details">Product details</string>
     <string name="form_title_required">Title (required)</string>
     <string name="form_category_required">Category (required)</string>
@@ -203,11 +203,14 @@
     <string name="category_add">Add category</string>
     <string name="category_create_title">Create category</string>
     <string name="form_description_label">Description</string>
-    <string name="form_selling_price">Selling price</string>
+    <string name="form_prices">Prices</string>
+    <string name="form_buying_price_label">Buying price (whole rupees)</string>
+    <string name="product_buying_price">Buying price: ₹%1$s</string>
+    <string name="opening_buying_price">Opening buying price: ₹%1$s per piece</string>
     <string name="form_selling_price_label">Selling price (whole rupees)</string>
-    <string name="form_price_update_note">Price changes update this product\'s lines in every unfinished cart.</string>
+    <string name="form_price_update_note">Selling price changes update this product\'s lines in every unfinished cart.</string>
     <string name="form_prev_category_note">Previous category values will be retained as historical attributes.</string>
-    <string name="form_opening_stock_price">Opening stock and price</string>
+    <string name="form_opening_stock_price">Opening stock and prices</string>
     <string name="form_opening_stock_label">Opening stock (pieces)</string>
     <string name="form_stock_price_note">Stock is counted in whole pieces. Prices use whole rupees.</string>
     <string name="form_save_distinct">Save as a distinct product</string>
@@ -281,7 +284,6 @@
     <string name="arrival_current_stock">Current stock: %s pieces</string>
     <string name="arrival_save_note">Save the arrival to add these pieces to stock.</string>
     <string name="arrival_received_pieces">Received pieces</string>
-    <string name="arrival_purchase_cost">Purchase unit cost (₹)</string>
     <string name="arrival_save">Save arrival</string>
     <string name="arrival_history">Stock arrival history</string>
     <string name="arrival_received_summary">Received %1$s pieces · ₹%2$s per piece</string>

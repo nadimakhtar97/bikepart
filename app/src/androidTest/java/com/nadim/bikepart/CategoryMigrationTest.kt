@@ -37,6 +37,8 @@ class CategoryMigrationTest {
 
     @Test fun versionFourteenUpgradePreservesExistingProductPhoto() = runBlocking { verifyTypedUpgrade(14) }
 
+    @Test fun versionFifteenUpgradeRecoversBuyingPriceFromArrival() = runBlocking { verifyTypedUpgrade(15) }
+
     private suspend fun verifyTypedUpgrade(version: Int) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "upgrade-typed-${java.util.UUID.randomUUID()}.db"
@@ -66,7 +68,11 @@ class CategoryMigrationTest {
                 db.execSQL("INSERT INTO attribute_options (id, definitionId, name, normalizedName${if (version >= 3) ", retired" else ""}) VALUES ('o', 'f', 'Zinc', 'zinc'${if (version >= 3) ", 0" else ""})")
                 db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'd', NULL, '008.00', NULL)")
                 db.execSQL("INSERT INTO attribute_values (productId, definitionId, textValue, decimalValue, choiceIds) VALUES ('p', 'f', NULL, NULL, '[\"o\"]')")
-                if (version >= 5) db.execSQL("INSERT INTO product_photos VALUES ('p', '${"a".repeat(64)}', 3)")
+                if (version >= 15) {
+                    db.execSQL("INSERT INTO product_photos (productId, sha256, sizeBytes, position) VALUES ('p', ?, 3, 0)", arrayOf("a".repeat(64)))
+                } else if (version >= 5) {
+                    db.execSQL("INSERT INTO product_photos (productId, sha256, sizeBytes) VALUES ('p', ?, 3)", arrayOf("a".repeat(64)))
+                }
                 if (version >= 6) db.execSQL("INSERT INTO product_templates VALUES ('t', 'c', ?, 0)", arrayOf(CatalogDraft("Template bolt", "c", "Original template").encode()))
                 if (version >= 7) db.execSQL("INSERT INTO stock_corrections VALUES ('legacy-count', 'p', 'PhysicalCount', 12, 'Legacy recount', 12, 12, NULL, 123456, 7)")
                 if (version >= 9) {
@@ -99,7 +105,7 @@ class CategoryMigrationTest {
                 }
                 if (version >= 9) assertEquals(listOf(Cart("legacy-cart", 17, "Legacy customer", 3, listOf(CartLine("p", 2, 70)))), before.carts)
                 assertEquals(Appearance.Dark, before.appearance)
-                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values, photo = if (version >= 5) PhotoReference("a".repeat(64), 3) else null, lowStockThreshold = if (version >= 8) 7 else null), before.products.single())
+                assertEquals(Product("p", "BP-stable", "Bolt", "c", "Original", 80, 12, values, photo = if (version >= 5) PhotoReference("a".repeat(64), 3) else null, lowStockThreshold = if (version >= 8) 7 else null, buyingPriceRupees = if (version >= 12) 25 else 0), before.products.single())
                 assertEquals(listOf(OpeningStock(12, 123456)), shop.openingHistory("p"))
                 assertTrue(before.makes.isEmpty())
                 assertTrue(before.models.isEmpty())
@@ -174,6 +180,7 @@ class CategoryMigrationTest {
                 val after = shop.snapshot()
                 assertEquals(before.revision + 1, after.revision)
                 assertEquals(before.products.single().quantity + 3, after.products.single().quantity)
+                assertEquals(25L, after.products.single().buyingPriceRupees)
                 assertEquals(before.arrivals, after.arrivals.filter { it.operationId != "arrival-after-upgrade" })
                 assertEquals(before.products.single().id, after.arrivals.single { it.operationId == "arrival-after-upgrade" }.productId)
                 assertEquals(25L, after.arrivals.single { it.operationId == "arrival-after-upgrade" }.unitCostRupees)

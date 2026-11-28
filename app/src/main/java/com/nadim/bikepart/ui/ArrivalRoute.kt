@@ -13,7 +13,7 @@ internal fun ArrivalRoute(
     busy: Boolean,
     error: ShopError?,
     onChange: () -> Unit,
-    save: (String, String) -> Unit,
+    save: (String, String, String?) -> Unit,
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,

@@ -39,7 +39,7 @@ import com.nadim.bikepart.shop.encode
 import com.nadim.bikepart.ui.theme.ShopSpacing
 
 internal data class ProductFormInput(
-    val catalog: CatalogDraft, val openingPieces: String, val priceRupees: String,
+    val catalog: CatalogDraft, val openingPieces: String, val priceRupees: String, val buyingPriceRupees: String,
     val allowSimilar: Boolean, val categoryMappings: Map<String, String>, val locationIds: Set<String>,
     val photoUris: List<String>, val photoRemoved: Boolean,
 )
@@ -70,6 +70,7 @@ internal fun ProductForm(
     var description by rememberSaveable { mutableStateOf(product?.description ?: initialCatalog?.description ?: "") }
     var quantity by rememberSaveable { mutableStateOf(if (initialCatalog != null && !templateMode) "" else "0") }
     var price by rememberSaveable { mutableStateOf(product?.priceRupees?.toString() ?: "") }
+    var buyingPrice by rememberSaveable { mutableStateOf((product?.buyingPriceRupees ?: 0L).toString()) }
     var distinct by rememberSaveable { mutableStateOf(false) }
     var mappings by rememberSaveable(stateSaver = mappingDraftSaver) { mutableStateOf(emptyMap<String, String>()) }
     var values by rememberSaveable(stateSaver = attributeDraftSaver) { mutableStateOf(product?.attributes ?: initialCatalog?.attributes ?: emptyMap()) }
@@ -176,7 +177,15 @@ internal fun ProductForm(
         useDropdown = product == null && !templateMode,
         onAssigned = { assigned = it; findingError = null; onChange() },
         onModels = { models = it; findingError = null; onChange() }, onLocations = { locations = it; onChange() }, showLocations = !templateMode)
-    if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_selling_price)) {
+    val buyingPriceField: @Composable () -> Unit = {
+        ProductTextField(
+            buyingPrice, { buyingPrice = it; onChange() },
+            stringResource(R.string.form_buying_price_label), !busy,
+            error?.takeIf { it.field == ProductField.PurchaseCost }, number = true,
+        )
+    }
+    if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_prices)) {
+        buyingPriceField()
         ProductTextField(
             price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
             error?.takeIf { it.field == ProductField.SellingPrice }, number = true
@@ -191,19 +200,21 @@ internal fun ProductForm(
             ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
                 error?.takeIf { it.field == ProductField.OpeningStock }, number = true, modifier = fieldModifier)
         }
-        val priceField: @Composable (Modifier) -> Unit = { fieldModifier ->
-            ProductTextField(price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
-                error?.takeIf { it.field == ProductField.SellingPrice }, number = true, modifier = fieldModifier)
+        val priceFields: @Composable () -> Unit = {
+            Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
+                buyingPriceField()
+                ProductTextField(price, { price = it; onChange() }, stringResource(R.string.form_selling_price_label), !busy,
+                    error?.takeIf { it.field == ProductField.SellingPrice }, number = true)
+            }
         }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            // Roomier screens keep the two short numeric fields on one line; phones stay stacked
-            // so 200% font scale never clips their labels.
+            // Keep enough width for the price labels at large font sizes.
             if (maxWidth >= 480.dp && LocalDensity.current.fontScale < 1.5f) Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.medium)) {
                 Box(Modifier.weight(1f)) { stockField(Modifier.fillMaxWidth()) }
-                Box(Modifier.weight(1f)) { priceField(Modifier.fillMaxWidth()) }
+                Box(Modifier.weight(1f)) { priceFields() }
             } else Column(verticalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                 stockField(Modifier.fillMaxWidth())
-                priceField(Modifier.fillMaxWidth())
+                priceFields()
             }
         }
         Text(stringResource(R.string.form_stock_price_note), style = MaterialTheme.typography.bodyMedium)
@@ -237,7 +248,7 @@ internal fun ProductForm(
                     }
         }
         save(ProductFormInput(CatalogDraft(title, category, description, applicable, customFields, models, initialCatalog?.photo),
-            quantity, price, distinct, mappings, locations, photoUris, photoRemoved))
+            quantity, price, buyingPrice, distinct, mappings, locations, photoUris, photoRemoved))
     }
 }
 

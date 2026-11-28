@@ -447,8 +447,9 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                         input.catalog.modelIds,
                                                         input.locationIds,
                                                         photo,
+                                                        buyingPriceRupees = input.buyingPriceRupees,
+                                                        sellingPriceRupees = input.priceRupees,
                                                     )
-                                                    setSellingPrice(existing.id, input.priceRupees)
                                                 }
 
                                                 ProductFormMode.Create -> {
@@ -460,6 +461,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                         input.locationIds,
                                                         photo,
                                                         additionalPhotos = if (keepCatalogPhoto) selectedPhotos else selectedPhotos.drop(1),
+                                                        buyingPriceRupees = input.buyingPriceRupees,
                                                     )
                                                 }
                                             }
@@ -722,14 +724,15 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 busy = busy,
                                                 error = error,
                                                 onChange = { model.error.value = null },
-                                                save = { pieces, cost ->
+                                                save = { pieces, cost, sellingPrice ->
                                                     model.write(
                                                         {
                                                             receiveStock(
                                                                 arrivalOperation,
                                                                 requireNotNull(product).id,
                                                                 pieces,
-                                                                cost
+                                                                cost,
+                                                                sellingPrice,
                                                             )
                                                         },
                                                         { navigateTo(Screen.Detail) },
