@@ -29,17 +29,17 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     private suspend fun performStorageAction(transport: DriveTransport, action: DriveAction) {
         val reviewed = backupStorage.value
         backupStorage.value = null; cleanupComplete.value = false
-        storageProgress.value = "Verifying backup storage and protected recovery history…"
+        storageProgress.value = getApplication<android.app.Application>().getString(R.string.verifying_backup_storage_and_protected_recovery)
         try {
             when (action) {
                 DriveAction.InspectStorage -> backupStorage.value = shop!!.driveBackup.inspectStorage(transport)
                 DriveAction.CleanupStorage -> {
-                    storageProgress.value = "Cleaning reviewed history. Interrupted work can be inspected and continued safely."
-                    backupStorage.value = shop!!.driveBackup.cleanupStorage(transport, requireNotNull(reviewed) { "Inspect backup storage first." })
+                    storageProgress.value = getApplication<android.app.Application>().getString(R.string.cleaning_reviewed_history_interrupted_work_can)
+                    backupStorage.value = shop!!.driveBackup.cleanupStorage(transport, requireNotNull(reviewed) { getApplication<android.app.Application>().getString(R.string.inspect_backup_storage_first) })
                     clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
                     cleanupComplete.value = true
                 }
-                else -> error("Choose a backup storage action.")
+                else -> error(getApplication<android.app.Application>().getString(R.string.choose_a_backup_storage_action))
             }
         } finally { storageProgress.value = null }
     }
@@ -58,7 +58,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 phoneReplacement.value = shop!!.driveBackup.previewReplacement(transport)
             }
             DriveAction.ActivatePhone -> {
-                shop!!.driveBackup.activateReplacement(transport, requireNotNull(phoneReplacement.value) { "Review replacement first." }, oldInstallationRetired = true)
+                shop!!.driveBackup.activateReplacement(transport, requireNotNull(phoneReplacement.value) { getApplication<android.app.Application>().getString(R.string.review_replacement_first) }, oldInstallationRetired = true)
                 phoneReplacement.value = null
                 AutomaticBackup.reconcile(getApplication(), shop!!, policyChanged = true)
             }
@@ -67,7 +67,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 phoneReplacement.value = null
                 AutomaticBackup.reconcile(getApplication(), shop!!)
             }
-            else -> error("Choose a phone action.")
+            else -> error(getApplication<android.app.Application>().getString(R.string.choose_a_phone_action))
         }
     }
     val driveUploading = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -89,10 +89,10 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     fun driveAuthorizing() { driveBusy.value = true; driveError.value = null }
     fun driveFailure(message: String) { driveBusy.value = false; driveError.value = message }
     fun authorizedDrive(account: String, token: String, action: DriveAction, fullMetadataAccess: Boolean = false) {
-        val transport = GoogleDriveTransport(token, fullMetadataAccess)
+        val transport = GoogleDriveTransport(getApplication(), token, fullMetadataAccess)
         driveOperation {
             if (action != DriveAction.Connect) {
-                require(shop!!.driveBackup.status().target?.account == account) { "Backup account changed. Reconnect the chosen account." }
+                require(shop!!.driveBackup.status().target?.account == account) { getApplication<android.app.Application>().getString(R.string.backup_account_changed_reconnect_the_chosen) }
             }
             when (action) {
                 DriveAction.Publish -> shop!!.driveBackup.publish(transport) { revision, capturedAt ->
@@ -122,9 +122,9 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         busy.value = true
         driveOperation {
             try {
-                require(cartDraft.value?.dirty != true) { "Save or reload the unfinished cart before replacing the shop." }
+                require(cartDraft.value?.dirty != true) { getApplication<android.app.Application>().getString(R.string.save_or_reload_the_unfinished_cart) }
                 val previous = requireNotNull(shop)
-                recoveryCapture.value = previous.activateRestore(requireNotNull(stagedRestore) { "Validate a restore point first." }, confirmed = true)
+                recoveryCapture.value = previous.activateRestore(requireNotNull(stagedRestore) { getApplication<android.app.Application>().getString(R.string.validate_a_restore_point_first) }, confirmed = true)
                 localCapture.value = null
                 clearStagedRestore(); selectedRestore.value = null; restorePoints.value = null
                 phoneReplacement.value = null
@@ -133,7 +133,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 cartAutosave?.cancel(); cartDraft.value = null
                 // The observer reopens on the root change; don't report completion until it has done so.
                 val reopened = requireNotNull(readyShop.first { it !== previous }) {
-                    "Could not reopen the restored shop. Reopen the app to retry: ${openFailure?.message.orEmpty()}"
+                    getApplication<android.app.Application>().getString(R.string.could_not_reopen_the_restored_shop, openFailure?.message.orEmpty())
                 }
                 try { AutomaticBackup.reconcile(getApplication(), reopened, policyChanged = true) }
                 catch (cancelled: CancellationException) { throw cancelled }
@@ -150,7 +150,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
     }
     private suspend fun prepareSelectedRestore(transport: DriveTransport) {
         clearStagedRestore()
-        stagedRestore = shop!!.driveBackup.validateRestore(transport, requireNotNull(selectedRestore.value) { "Choose a restore point first." })
+        stagedRestore = shop!!.driveBackup.validateRestore(transport, requireNotNull(selectedRestore.value) { getApplication<android.app.Application>().getString(R.string.choose_a_restore_point_first) })
         restoreValidated.value = true
     }
     private fun clearStagedRestore() {
@@ -177,7 +177,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         viewModelScope.launch {
             try { block() }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (error: Exception) { driveError.value = error.message ?: "Drive backup failed. Retry or repair the connection." }
+            catch (error: Exception) { driveError.value = error.message ?: getApplication<android.app.Application>().getString(R.string.drive_backup_failed_retry_or_repair) }
             finally { driveStatus.value = shop?.driveBackup?.status(); driveBusy.value = false }
         }
     }
@@ -217,9 +217,9 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         if (draft == null || !draft.dirty) { finishCartSave(); return }
         var committedVersion = draft.cart.editVersion
         write({ committedVersion = saveCart(draft.cart.id, draft.cart.editVersion, draft.customer, draft.quantities) }, {
-            val committed = state.value?.carts?.find { it.id == draft.cart.id } ?: throw StaleCart()
+            val committed = state.value?.carts?.find { it.id == draft.cart.id } ?: throw StaleCart(getApplication<android.app.Application>().getString(R.string.this_cart_changed_reload_the_saved))
             // Never rebase a buffered draft over another writer's intervening edit.
-            if (committed.editVersion != committedVersion) throw StaleCart()
+            if (committed.editVersion != committedVersion) throw StaleCart(getApplication<android.app.Application>().getString(R.string.this_cart_changed_reload_the_saved))
             val latest = cartDraft.value ?: draft
             val pending = latest.customer != draft.customer || latest.quantities != draft.quantities
             cartDraft.value = latest.copy(cart = committed, dirty = pending)
@@ -258,7 +258,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 while (true) {
                     try { driveStatus.value = shop?.driveBackup?.status() }
                     catch (cancelled: CancellationException) { throw cancelled }
-                    catch (_: Exception) { driveError.value = "Could not read backup status. Check phone storage and retry." }
+                    catch (_: Exception) { driveError.value = getApplication<android.app.Application>().getString(R.string.could_not_read_backup_status_check) }
                     delay(2_000)
                 }
             }
@@ -290,7 +290,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) {
             openFailure = e; readyShop.value = null
-            error.value = ShopError("Could not open shop. Reopen the app to retry.")
+            error.value = ShopError(getApplication<android.app.Application>().getString(R.string.could_not_open_shop_reopen_the))
         }
     } }
     fun write(action: suspend Shop.() -> Unit, done: () -> Unit = {}, failed: () -> Unit = {}) {
@@ -303,8 +303,8 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             catch (e: CancellationException) { throw e }
             catch (e: SimilarProduct) { error.value = ShopError(requireNotNull(e.message), similar = true) }
             catch (e: ShopValidation) { error.value = ShopError(requireNotNull(e.message), field = e.field, definitionId = e.definitionId) }
-            catch (e: IllegalArgumentException) { error.value = ShopError(e.message ?: "Check the entered values") }
-            catch (e: Exception) { error.value = ShopError("Could not save. Try again.") }
+            catch (e: IllegalArgumentException) { error.value = ShopError(e.message ?: getApplication<android.app.Application>().getString(R.string.check_the_entered_values)) }
+            catch (e: Exception) { error.value = ShopError(getApplication<android.app.Application>().getString(R.string.could_not_save_try_again)) }
             finally { busy.value = false; if (!successful) failed() }
         }
     }
@@ -320,7 +320,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         viewModelScope.launch {
             try { localCapture.value = opened.captureLocalBackup() }
             catch (e: CancellationException) { throw e }
-            catch (_: Exception) { backupError.value = "Could not capture local backup. Check phone storage and product photos, then try again." }
+            catch (_: Exception) { backupError.value = getApplication<android.app.Application>().getString(R.string.could_not_capture_local_backup_check) }
             finally { backupBusy.value = false }
         }
     }
@@ -334,14 +334,14 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         viewModelScope.launch {
             try {
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    LocalBackup.inspect(capture.file)
+                    LocalBackup.inspect(getApplication<android.app.Application>(), capture.file)
                     requireNotNull(getApplication<android.app.Application>().contentResolver.openOutputStream(uri, "wt")).use { output ->
                         capture.file.inputStream().use { it.copyTo(output) }
                     }
                 }
                 backupSaved.value = true
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { backupError.value = "Could not save the copy. The verified local capture is still on this phone. Try another destination." }
+            catch (_: Exception) { backupError.value = getApplication<android.app.Application>().getString(R.string.could_not_save_the_copy_the) }
             finally { backupBusy.value = false }
         }
     }

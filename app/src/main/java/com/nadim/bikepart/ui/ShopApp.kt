@@ -87,12 +87,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 
-private data class MainDestination(val screen: Screen, val label: String, val outlined: Int, val filled: Int)
+private data class MainDestination(val screen: Screen, val label: Int, val outlined: Int, val filled: Int)
 private val destinations = listOf(
-    MainDestination(Screen.Home, "Home", R.drawable.ic_home, R.drawable.ic_home_filled),
-    MainDestination(Screen.Stock, "Stock", R.drawable.ic_stock, R.drawable.ic_stock_filled),
-    MainDestination(Screen.Carts, "Carts", R.drawable.ic_carts, R.drawable.ic_carts_filled),
-    MainDestination(Screen.More, "More", R.drawable.ic_more, R.drawable.ic_more_filled),
+    MainDestination(Screen.Home, R.string.dest_home, R.drawable.ic_home, R.drawable.ic_home_filled),
+    MainDestination(Screen.Stock, R.string.dest_stock, R.drawable.ic_stock, R.drawable.ic_stock_filled),
+    MainDestination(Screen.Carts, R.string.dest_carts, R.drawable.ic_carts, R.drawable.ic_carts_filled),
+    MainDestination(Screen.More, R.string.dest_more, R.drawable.ic_more, R.drawable.ic_more_filled),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -266,7 +266,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         ShopSearchField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            label = "Search products",
+            label = stringResource(R.string.search_products),
             enabled = !busy,
             onSubmit = {
                 val query = searchQuery.trim()
@@ -303,7 +303,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     if (route in listOf(Screen.Home, Screen.Stock, Screen.Carts, Screen.More) && !useRail) {
                         val tabs = destinations.map { item ->
                             TabData(
-                                title = item.label,
+                                title = stringResource(item.label),
                                 icon = shopIconVector(item.outlined),
                                 selectedIcon = shopIconVector(item.filled),
                                 onClick = { if (!busy) { if (item.screen == Screen.Stock) openStock(null) else selectTab(item.screen) } },
@@ -328,7 +328,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                     if (useRail) {
                         val tabs = destinations.map { item ->
                             TabData(
-                                title = item.label,
+                                title = stringResource(item.label),
                                 icon = shopIconVector(item.outlined),
                                 selectedIcon = shopIconVector(item.filled),
                                 onClick = { if (!busy) { if (item.screen == Screen.Stock) openStock(null) else selectTab(item.screen) } },
@@ -352,7 +352,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                             if (shop == null) {
                                 Scaffold(
                                     modifier = Modifier.fillMaxSize(),
-                                    topBar = { ShopRouteAppBar(title = "Home", showBack = false) },
+                                    topBar = { ShopRouteAppBar(title = stringResource(R.string.dest_home), showBack = false) },
                                 ) { loadingPadding ->
                                     Box(
                                         Modifier
@@ -412,7 +412,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                             resolver.openInputStream(uri.toUri())
                                                 ?: throw com.nadim.bikepart.shop.ShopValidation(
                                                     com.nadim.bikepart.shop.ProductField.Photo,
-                                                    "Photo unavailable. Choose it again or remove it.",
+                                                    context.getString(R.string.photo_unavailable_choose_it_again_or),
                                                 )
                                         }
                                     }

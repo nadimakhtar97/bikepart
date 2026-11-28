@@ -1,5 +1,7 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import android.content.Context
 import android.system.Os
 import android.system.OsConstants
@@ -18,7 +20,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 enum class RestoreBoundary { SafetySaved, MigrationsStarting, DatabaseStaged, AttachmentsStaged, GenerationStaged, RootPrepared, JournalWritten, JournalCommitted, Activated }
-class ShopReplaced : IllegalStateException("The shop was restored. Reopen it before continuing.")
+class ShopReplaced(message: String) : IllegalStateException(message)
 
 /** One journal entry selects the database, blobs and operational generation together.
  * Prepared roots and the previous state are retained; startup never guesses from partial files.
@@ -42,9 +44,9 @@ internal class ShopStorage(private val context: Context, val name: String) {
     fun drive(generation: String?) = File(context.noBackupFilesDir, "drive/$key" + (generation?.let { "/$it" } ?: ""))
     fun recoveryCopy(): LocalCapture? = if (journal.baseFile.isFile) {
         journal.openRead().use { JSONObject(it.bufferedReader().readText()) }.optString("recovery").takeIf { it.isNotEmpty() }
-            ?.let { runCatching { LocalBackup.inspect(File(it)) }.getOrNull() }
+            ?.let { runCatching { LocalBackup.inspect(context, File(it)) }.getOrNull() }
     } else null
-    fun checkActive(generation: String?) { if (active != generation) throw ShopReplaced() }
+    fun checkActive(generation: String?) { if (active != generation) throw ShopReplaced(context.getString(R.string.the_shop_was_restored_reopen_it)) }
 
     suspend fun <T> exclusive(block: suspend () -> T): T {
         if (currentCoroutineContext()[Held]?.gate === gate) return block()
@@ -56,13 +58,13 @@ internal class ShopStorage(private val context: Context, val name: String) {
         checkActive(generation)
         // Keep this copy outside the selected generation so it survives any later activation.
         val safety = shop.captureLocalBackup(File(base, "recovery"))
-        shop.validateLocalRestore(safety.file).use { check(it.snapshot == shop.snapshot()) { "Recovery copy verification failed." } }
+        shop.validateLocalRestore(safety.file).use { check(it.snapshot == shop.snapshot()) { context.getString(R.string.recovery_copy_verification_failed) } }
         boundary(RestoreBoundary.SafetySaved)
         // Reconstruct and migrate again from our retained archive; a preview is not a mutable DB capability.
         RestoreValidation.prepare(context, File(staged.directory, "capture.zip"), File(drive(generation), "restore")) {
             boundary(RestoreBoundary.MigrationsStarting)
         }.use { validated ->
-            check(validated.snapshot == staged.snapshot) { "Validated restore changed. Select and validate it again." }
+            check(validated.snapshot == staged.snapshot) { context.getString(R.string.validated_restore_changed_select_and_validate) }
             val next = UUID.randomUUID().toString()
             val root = File(base, next).apply { check(mkdirs()) }
             copySynced(File(validated.directory, "shop.db"), File(root, "shop.db"))
@@ -93,7 +95,7 @@ internal class ShopStorage(private val context: Context, val name: String) {
             }
             catch (error: Throwable) { journal.failWrite(output); throw error }
             try {
-                check(active == next) { "Could not commit the restore activation journal." }
+                check(active == next) { context.getString(R.string.could_not_commit_the_restore_activation) }
                 boundary(RestoreBoundary.JournalCommitted)
                 sync(base)
             } finally {

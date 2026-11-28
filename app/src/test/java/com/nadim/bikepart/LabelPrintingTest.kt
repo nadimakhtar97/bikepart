@@ -18,7 +18,7 @@ class LabelPrintingTest {
         val printer = LabelPrinter(journal)
         val result = printer.send("SKU · 10 copies", 10, byteArrayOf(9), CopyTransport { copiesSent++; stop = true }) { stop }
         assertEquals(1, copiesSent)
-        assertTrue(result.contains("cannot be retracted"))
+        assertEquals(PrintResult(R.string.cancelled_after_copies_sent_already_sent, 1), result)
         val restarted = LabelPrinter(journal)
         restarted.send("remaining", 9, byteArrayOf(9), CopyTransport { copiesSent++ }) { false }
         assertEquals(1, copiesSent)
@@ -47,7 +47,8 @@ class LabelPrintingTest {
         })
         var transfers = 0
         val broken = CopyTransport { transfers++; throw IOException("Disconnected") }
-        assertTrue(printer.send("SKU 123 · 3 copies", 3, byteArrayOf(1), broken) { false }.contains("Inspect"))
+        assertEquals(R.string.usb_transport_failed_after_copies_sent,
+            printer.send("SKU 123 · 3 copies", 3, byteArrayOf(1), broken) { false }.messageRes)
         assertNotNull(marker)
         printer.send("SKU 123 · 3 copies", 3, byteArrayOf(1), broken) { false }
         assertEquals(1, transfers)
@@ -55,7 +56,7 @@ class LabelPrintingTest {
         val output = mutableListOf<Byte>()
         val result = printer.send("SKU 123 · 2 remaining", 2, byteArrayOf(7), CopyTransport { output.addAll(it.toList()) }) { false }
         assertEquals(listOf<Byte>(7, 7), output)
-        assertTrue(result.contains("2 copies sent"))
+        assertEquals(PrintResult(R.string.copies_sent_over_usb_physical_output, 2), result)
         assertNotNull(marker) // USB acceptance is not physical output confirmation.
     }
 }

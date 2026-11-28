@@ -201,8 +201,8 @@ class FluentDynamicThemeWorkflowTest {
                     await("More"); compose.onNodeWithText("More").performClick()
                     compose.onNodeWithText("Appearance").performClick()
                     for (brand in com.nadim.bikepart.ui.theme.ShopBrand.entries) {
-                        compose.onNodeWithText(brand.label).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
-                        compose.onNodeWithText(brand.label).assertIsSelected().assertIsDisplayed()
+                        compose.onNodeWithText(context.getString(brand.label)).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+                        compose.onNodeWithText(context.getString(brand.label)).assertIsSelected().assertIsDisplayed()
                         capture("dynamic-${brand.name.lowercase()}-${mode.name.lowercase()}-$font")
                     }
                     compose.onNodeWithText("Accent").performScrollTo().assertIsOn().assertHeightIsAtLeast(48.dp)

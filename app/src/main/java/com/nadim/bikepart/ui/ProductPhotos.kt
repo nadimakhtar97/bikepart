@@ -98,10 +98,10 @@ internal fun ProductPhoto(
     LaunchedEffect(bitmap) { bitmap?.let { reportSize?.invoke(it.width, it.height) } }
     Surface(modifier = modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
         val image = bitmap
-        if (image != null) Image(image, "Product photo", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        if (image != null) Image(image, stringResource(R.string.product_photo), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
         else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(painterResource(R.drawable.ic_stock),
-                contentDescription = if (reference == null && selectedUri == null) "No product photo" else "Photo unavailable",
+                contentDescription = if (reference == null && selectedUri == null) stringResource(R.string.no_product_photo) else stringResource(R.string.photo_unavailable),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(32.dp))
         }
     }
@@ -167,7 +167,7 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
             }
             cameraLauncher.launch(intent)
         } catch (e: Exception) {
-            cameraError = "Could not open camera: ${e.localizedMessage ?: "Unknown error"}"
+            cameraError = context.getString(R.string.could_not_open_camera, e.localizedMessage ?: context.getString(R.string.unknown_error))
         }
     }
 
@@ -175,7 +175,7 @@ internal fun PhotoField(reference: PhotoReference?, uri: String?, removed: Boole
         if (granted) {
             launchCamera()
         } else {
-            cameraError = "Camera permission is required to take photos."
+            cameraError = context.getString(R.string.camera_permission_is_required_to_take)
         }
     }
 

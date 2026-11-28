@@ -20,11 +20,11 @@ internal fun StockCorrectionForm(product: Product, kind: CorrectionKind, busy: B
     ShopGroup {
         Text(product.title, style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.current_stock_pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.bodyMedium)
-        Text(if (kind == CorrectionKind.PhysicalCount) "Enter the total pieces counted. The difference is calculated against stock when saved." else "Enter the pieces to remove for ${kind.label.lowercase()}.", style = MaterialTheme.typography.bodyMedium)
+        Text(if (kind == CorrectionKind.PhysicalCount) stringResource(R.string.correction_physical_count_note) else stringResource(R.string.correction_remove_note, stringResource(kind.label).lowercase()), style = MaterialTheme.typography.bodyMedium)
         ShopTextField(
             quantity,
             { quantity = it; onChange() },
-            label = if (kind == CorrectionKind.PhysicalCount) "Counted pieces" else "Pieces to remove",
+            label = if (kind == CorrectionKind.PhysicalCount) stringResource(R.string.correction_counted_pieces) else stringResource(R.string.correction_pieces_to_remove),
             enabled = !busy,
             error = error?.takeIf { it.field == ProductField.CorrectionQuantity }?.message,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -46,14 +46,14 @@ internal fun CorrectionHistory(corrections: List<StockCorrection>) {
     if (corrections.isEmpty()) return
     ShopSection(stringResource(R.string.correction_history)) {
         corrections.asReversed().forEach { event ->
-            Text(event.kind.label + " · " + DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(event.recordedAt)), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.formatted_text_2, stringResource(event.kind.label), DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(event.recordedAt))), style = MaterialTheme.typography.titleMedium)
             Text(event.reason, style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.arrival_stock_change, indianNumber(event.previousBalance), indianNumber(event.resultingBalance)), style = MaterialTheme.typography.bodyMedium)
             val movement = event.movement
             Text(when {
-                movement == null -> "No stock change · counted ${indianNumber(event.quantity)} pieces"
-                movement < 0 -> "Removed ${indianNumber(-movement)} pieces"
-                else -> "Added ${indianNumber(movement)} pieces"
+                movement == null -> stringResource(R.string.correction_no_stock_change, indianNumber(event.quantity))
+                movement < 0 -> stringResource(R.string.correction_removed_pieces, indianNumber(-movement))
+                else -> stringResource(R.string.correction_added_pieces, indianNumber(movement))
             }, style = MaterialTheme.typography.bodyMedium)
             HorizontalDivider()
         }

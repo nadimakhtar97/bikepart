@@ -51,7 +51,10 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
         else -> null
     }
     val until = if (period == "custom") endDay?.let(LocalDate::parse) else if (period == "all") null else today
-    val days = remember(shop.sales, zone, from, until, query) { salesLog(shop.sales, zone, from, until, query) }
+    val cartNameFormat = stringResource(R.string.cart_3)
+    val days = remember(shop.sales, zone, from, until, query, cartNameFormat) {
+        salesLog(shop.sales, zone, from, until, query) { cartNameFormat.format(it) }
+    }
     ShopSearchField(query, { query = it }, stringResource(R.string.search_receipts))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         listOf("all" to R.string.all_time, "today" to R.string.today,
@@ -87,7 +90,7 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     if (shop.sales.isEmpty()) ShopEmptyState(stringResource(R.string.no_completed_cash_sales_yet),
-        "Completed sales and their receipts appear here after cash checkout.", R.drawable.ic_receipt)
+        stringResource(R.string.completed_sales_and_their_receipts_appear), R.drawable.ic_receipt)
     else if (days.isEmpty()) {
         ShopEmptyState(stringResource(R.string.no_matching_sales), stringResource(R.string.sales_filter_hint), R.drawable.ic_receipt)
         TextButton(onClick = { query = ""; period = "all" }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) {
@@ -106,11 +109,11 @@ internal fun SalesHistory(shop: ShopSnapshot, open: (String) -> Unit) {
             day.sales.forEach { sale ->
                 val time = Instant.ofEpochMilli(sale.recordedAt).atZone(zone)
                     .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-                ShopListRow(stringResource(R.string.cart)+sale.cartNumber,
+                ShopListRow(stringResource(R.string.cart_3, sale.cartNumber),
                     supporting = listOfNotNull(sale.customer.ifBlank { null }, time,
                         pluralStringResource(R.plurals.product_lines, sale.lines.size, sale.lines.size), sale.id).joinToString(" · "),
-                    meta = "₹"+indianNumber(sale.totalRupees),
-                    actionLabel = "Open receipt · Cart "+sale.cartNumber, onClick = { open(sale.cartId) })
+                    meta = stringResource(R.string.rupee_amount, indianNumber(sale.totalRupees)),
+                    actionLabel = stringResource(R.string.open_receipt_cart, sale.cartNumber), onClick = { open(sale.cartId) })
             }
         }
     }

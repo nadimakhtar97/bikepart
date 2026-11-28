@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
@@ -19,7 +21,7 @@ internal fun LabelsRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Product labels", showBack = true, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.title_product_labels), showBack = true, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             if (product != null) {

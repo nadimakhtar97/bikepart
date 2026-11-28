@@ -1,5 +1,7 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import android.content.Context
 import androidx.room.Room
 import androidx.room.withTransaction
@@ -12,13 +14,15 @@ data class Product(val id: String, val sku: String, val title: String, val categ
 data class HistoricalAttribute(val id: String, val definitionId: String, val value: AttributeValue)
 
 data class OpeningStock(val quantity: Long, val recordedAt: Long, val buyingPriceRupees: Long = 0)
-enum class Appearance { System, Light, Dark }
+enum class Appearance(@param:androidx.annotation.StringRes val label: Int) {
+    System(R.string.system), Light(R.string.light), Dark(R.string.dark)
+}
 data class ShopSnapshot(val categories: List<Category>, val products: List<Product>, val revision: Long, val appearance: Appearance, val attributes: List<CategoryAttribute> = emptyList(), val options: List<AttributeOption> = emptyList(), val datasetId: String = "", val makes: List<MotorcycleMake> = emptyList(), val models: List<MotorcycleModel> = emptyList(), val locations: List<StorageLocation> = emptyList(), val templates: List<ProductTemplate> = emptyList(), val corrections: List<StockCorrection> = emptyList(), val openings: Map<String, OpeningStock> = emptyMap(), val carts: List<Cart> = emptyList(), val sales: List<Sale> = emptyList(), val arrivals: List<StockArrival> = emptyList(), val barcodeAliases: List<BarcodeAlias> = emptyList(), val barcodeHistory: List<BarcodeAssignment> = emptyList(), val labelPreferences: LabelPreferences = LabelPreferences())
-enum class ProductField(val label: String) { Title("Title"), Category("Category"), OpeningStock("Opening stock"), SellingPrice("Selling price"), Attribute("Category field"), DefinitionName("Field name"), DefinitionType("Field type"), Fitment("Fitment"), Location("Location"), Photo("Photo"), CorrectionQuantity("Correction quantity"), CorrectionReason("Reason"), LowStockThreshold("Low-stock threshold"), CartQuantity("Cart quantity"), CashReceived("Cash received"), ArrivalQuantity("Arrival quantity"), PurchaseCost("Buying price"), LabelCopies("Label copies") }
+enum class ProductField(@param:androidx.annotation.StringRes val label: Int) { Title(R.string.title), Category(R.string.category_2), OpeningStock(R.string.opening_stock), SellingPrice(R.string.selling_price_2), Attribute(R.string.category_field), DefinitionName(R.string.field_name_label), DefinitionType(R.string.field_type), Fitment(R.string.finding_fitment_only), Location(R.string.location_2), Photo(R.string.photo), CorrectionQuantity(R.string.correction_quantity), CorrectionReason(R.string.correction_reason), LowStockThreshold(R.string.threshold_field_label), CartQuantity(R.string.cart_quantity), CashReceived(R.string.cash_received_3), ArrivalQuantity(R.string.arrival_quantity), PurchaseCost(R.string.buying_price), LabelCopies(R.string.label_copies_label) }
 class ShopValidation(val field: ProductField, message: String, val definitionId: String? = null) : IllegalArgumentException(message)
 
 class Shop private constructor(private val database: ShopDatabase, private val photos: ProductPhotos, private val backupDirectory: java.io.File, private val driveDirectory: java.io.File, private val context: Context, private val storage: ShopStorage? = null, private val generation: String? = null) : AutoCloseable {
-    val driveBackup = DriveBackup(this, driveDirectory)
+    val driveBackup = DriveBackup(this, driveDirectory, context)
     private val dao = database.dao()
     val snapshots = kotlinx.coroutines.flow.merge(dao.revisions().map { Unit },
         storage?.changes?.map { Unit } ?: kotlinx.coroutines.flow.emptyFlow()).map { snapshot() }
@@ -33,9 +37,9 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     /** Replacement is explicit; callers reopen after success (or a lost activation response). */
     suspend fun activateRestore(staged: ValidatedRestore, confirmed: Boolean,
         boundary: suspend (RestoreBoundary) -> Unit = {}): LocalCapture {
-        require(confirmed) { "Confirm replacement. Local changes absent from this restore point will be replaced." }
+        require(confirmed) { context.getString(R.string.confirm_replacement_local_changes_absent_from) }
         return driveBackup.exclusiveActivation {
-            requireNotNull(storage) { "Cannot activate an isolated preview." }.activate(this, staged, generation, boundary)
+            requireNotNull(storage) { context.getString(R.string.cannot_activate_an_isolated_preview) }.activate(this, staged, generation, boundary)
         }
     }
 
@@ -47,28 +51,28 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     /** The callback reports a pinned committed revision; ordinary writes may continue during staging. */
     suspend fun captureLocalBackup(directory: java.io.File = backupDirectory, onCaptured: suspend (Long) -> Unit = {}): LocalCapture {
         checkActive()
-        return captureBackup(database, photos, directory, onCaptured)
+        return captureBackup(context, database, photos, directory, onCaptured)
     }
 
     /** Incomplete attempts are never candidates. They are retried under a new identity. */
     suspend fun latestLocalBackup(): LocalCapture? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         backupDirectory.listFiles().orEmpty().filter { it.extension == "zip" }.mapNotNull { file ->
-            try { LocalBackup.inspect(file) } catch (_: Exception) { null }
+            try { LocalBackup.inspect(context, file) } catch (_: Exception) { null }
         }.maxWithOrNull(compareBy<LocalCapture> { it.revision }.thenBy { it.capturedAt })
     }
 
     /** Compare the confirmed assignment revision inside the same transaction as audit and ownership. */
     suspend fun linkBarcode(code: String, target: BarcodeTarget, namespace: String = "external",
         expectedAssignmentRevision: Long? = null) = activeTransaction {
-        requireExternalBarcode(namespace, code)
+        requireExternalBarcode(context, namespace, code)
         when (target.kind) {
             BarcodeTargetKind.Product -> requireActiveProduct(target.id)
-            BarcodeTargetKind.Template -> require(dao.templates().any { it.id == target.id && !it.retired }) { "Choose an active template." }
+            BarcodeTargetKind.Template -> require(dao.templates().any { it.id == target.id && !it.retired }) { context.getString(R.string.choose_an_active_template) }
         }
         val previous = dao.barcodeAliases().find { it.namespace == namespace && it.code == code }
         if (previous?.toAlias()?.target == target) return@activeTransaction
-        if (previous != null && expectedAssignmentRevision != previous.revision) throw BarcodeConflict(previous.toAlias())
-        require(previous != null || expectedAssignmentRevision == null) { "Barcode ownership changed. Scan again." }
+        if (previous != null && expectedAssignmentRevision != previous.revision) throw BarcodeConflict(previous.toAlias(), context.getString(R.string.this_barcode_already_belongs_to_another))
+        require(previous != null || expectedAssignmentRevision == null) { context.getString(R.string.barcode_ownership_changed_scan_again) }
         val revision = Math.addExact(requireNotNull(dao.state()).revision, 1)
         dao.putBarcodeAlias(BarcodeAliasRow(namespace, code, target.kind.name, target.id, revision))
         dao.insertBarcodeAssignment(BarcodeAssignmentRow(revision, namespace, code, previous?.kind, previous?.targetId,
@@ -77,9 +81,9 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     private suspend fun initialize() = activeTransaction {
-        require(dao.state()?.normalizerVersion?.let { it == LookupNames.VERSION } != false) { "Unsupported lookup normalizer version" }
+        require(dao.state()?.normalizerVersion?.let { it == LookupNames.VERSION } != false) { context.getString(R.string.unsupported_lookup_normalizer_version) }
         if (dao.state() == null) {
-            listOf("Brake pads", "Nuts", "Bolts", "Sealed oil bottles").forEachIndexed { index, name ->
+            listOf(context.getString(R.string.brake_pads), context.getString(R.string.nuts), context.getString(R.string.bolts), context.getString(R.string.sealed_oil_bottles)).forEachIndexed { index, name ->
                 dao.insertCategory(CategoryRow(UUID.randomUUID().toString(), name, LookupNames.key(name), index))
             }
             seedAttributes()
@@ -112,33 +116,33 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     /** Add a visibly labeled demo batch through the normal stock and checkout paths. */
     internal suspend fun addDummyData(): Unit = activeTransaction {
-        val batch = "Demo ${UUID.randomUUID().toString().take(8)}"
-        val category = createCategory("$batch parts")
-        val make = createMake("$batch Motorcycles")
-        val models = setOf(createModel(make, "Road 125"))
-        val locations = setOf(createLocation("$batch shelf"))
-        val description = "Dummy data for development."
+        val batch = context.getString(R.string.demo, UUID.randomUUID().toString().take(8))
+        val category = createCategory(context.getString(R.string.parts, batch))
+        val make = createMake(context.getString(R.string.motorcycles, batch))
+        val models = setOf(createModel(make, context.getString(R.string.road_125)))
+        val locations = setOf(createLocation(context.getString(R.string.shelf, batch)))
+        val description = context.getString(R.string.dummy_data_for_development)
 
         val pads = createProduct(
-            "$batch brake pads", category, description, "18", "650",
+            context.getString(R.string.brake_pads_2, batch), category, description, "18", "650",
             modelIds = models, locationIds = locations,
         )
         val cable = createProduct(
-            "$batch clutch cable", category, description, "3", "180",
+            context.getString(R.string.clutch_cable, batch), category, description, "3", "180",
             modelIds = models, locationIds = locations,
         )
-        createProduct("$batch spark plug", category, description, "0", "120")
-        val archived = createProduct("$batch discontinued lever", category, description, "0", "90")
+        createProduct(context.getString(R.string.spark_plug, batch), category, description, "0", "120")
+        val archived = createProduct(context.getString(R.string.discontinued_lever, batch), category, description, "0", "90")
         archiveProduct(archived)
         setLowStockThreshold(cable, "5")
 
-        saveTemplate(CatalogDraft("$batch brake pad template", category, description, modelIds = models))
+        saveTemplate(CatalogDraft(context.getString(R.string.brake_pad_template, batch), category, description, modelIds = models))
 
         val cart = createCart()
-        saveCart(cart, 0, "$batch pending customer", mapOf(cable to "1"))
+        saveCart(cart, 0, context.getString(R.string.pending_customer, batch), mapOf(cable to "1"))
 
         val completedCart = createCart()
-        val version = saveCart(completedCart, 0, "$batch cash customer", mapOf(pads to "2"))
+        val version = saveCart(completedCart, 0, context.getString(R.string.cash_customer, batch), mapOf(pads to "2"))
         checkout(completedCart, version, "1500")
     }
 
@@ -147,10 +151,10 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         return activeTransaction {
             validateProduct(title, categoryId)
             val values = validateAttributes(categoryId, attributes)
-            val quantity = parseWhole(openingPieces, ProductField.OpeningStock)
-            val price = parseWhole(priceRupees, ProductField.SellingPrice)
-            val buyingPrice = parseWhole(buyingPriceRupees, ProductField.PurchaseCost)
-            if (!allowSimilar && dao.products().any { LookupNames.key(it.title) == LookupNames.key(title) && it.categoryId == categoryId }) throw SimilarProduct()
+            val quantity = parseWhole(context, openingPieces, ProductField.OpeningStock)
+            val price = parseWhole(context, priceRupees, ProductField.SellingPrice)
+            val buyingPrice = parseWhole(context, buyingPriceRupees, ProductField.PurchaseCost)
+            if (!allowSimilar && dao.products().any { LookupNames.key(it.title) == LookupNames.key(title) && it.categoryId == categoryId }) throw SimilarProduct(context.getString(R.string.a_similar_product_already_exists_open))
             val id = UUID.randomUUID().toString()
             dao.insertProduct(ProductRow(id, "BP-${id.uppercase(Locale.ROOT)}", title.trim(), categoryId, description.trim(), price, buyingPriceRupees = buyingPrice))
             dao.insertValues(values.map { it.copy(productId = id) })
@@ -168,23 +172,23 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         activeTransaction {
             validateProduct(title, categoryId)
             val product = requireActiveProduct(id)
-            val buyingPrice = buyingPriceRupees?.let { parseWhole(it, ProductField.PurchaseCost) } ?: product.buyingPriceRupees
-            val sellingPrice = sellingPriceRupees?.let { parseWhole(it, ProductField.SellingPrice) } ?: product.priceRupees
+            val buyingPrice = buyingPriceRupees?.let { parseWhole(context, it, ProductField.PurchaseCost) } ?: product.buyingPriceRupees
+            val sellingPrice = sellingPriceRupees?.let { parseWhole(context, it, ProductField.SellingPrice) } ?: product.priceRupees
             val previous = dao.values().filter { it.productId == id }
             val existing = previous.filter { it.historyId.isEmpty() }.associate { it.definitionId to decodeValue(it) }
             val definitions = dao.attributes()
             val applicable = definitions.filter { it.productId == id || it.productId == null && it.categoryId == categoryId }.map { it.id }.toSet()
             val historical = previous.filter { it.historyId.isNotEmpty() || it.definitionId !in applicable }.map { if (it.historyId.isNotEmpty()) it else it.copy(historyId = UUID.randomUUID().toString()) }
             val input = (attributes ?: existing.filterKeys { it in applicable }).toMutableMap()
-            require(categoryMappings.isEmpty() || product.categoryId != categoryId) { "Mapping requires a category change" }
-            require(categoryMappings.values.toSet().size == categoryMappings.size) { "Map each target only once" }
+            require(categoryMappings.isEmpty() || product.categoryId != categoryId) { context.getString(R.string.mapping_requires_a_category_change) }
+            require(categoryMappings.values.toSet().size == categoryMappings.size) { context.getString(R.string.map_each_target_only_once) }
             for ((sourceId, targetId) in categoryMappings) {
                 val source = definitions.single { it.id == sourceId }
                 val target = definitions.single { it.id == targetId }
-                require(source.productId == null && source.categoryId == product.categoryId && sourceId in existing) { "Choose a previous category value" }
-                require(target.productId == null && target.categoryId == categoryId && !target.retired && source.type == target.type && source.unit == target.unit && !AttributeType.valueOf(source.type).isChoice) { "Map fields with the same text or decimal type and unit; choice fields must be selected explicitly" }
+                require(source.productId == null && source.categoryId == product.categoryId && sourceId in existing) { context.getString(R.string.choose_a_previous_category_value) }
+                require(target.productId == null && target.categoryId == categoryId && !target.retired && source.type == target.type && source.unit == target.unit && !AttributeType.valueOf(source.type).isChoice) { context.getString(R.string.map_fields_with_the_same_text) }
                 val mapped = existing.getValue(sourceId)
-                require(targetId !in input || input[targetId] == mapped) { "Mapping conflicts with the entered target value" }
+                require(targetId !in input || input[targetId] == mapped) { context.getString(R.string.mapping_conflicts_with_the_entered_target) }
                 input[targetId] = mapped
             }
             val values = validateAttributes(categoryId, input, id, existing)
@@ -212,17 +216,17 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val product = dao.products().single { it.id == id }
         if (product.archived) return@activeTransaction
         require(dao.balances().single { it.productId == id }.quantity == 0L) {
-            "Cannot archive while stock remains. Stock must be zero."
+            context.getString(R.string.cannot_archive_while_stock_remains_stock)
         }
         require(dao.cartLines().none { it.productId == id }) {
-            "Cannot archive while an unfinished cart contains this product. Remove its line or discard the cart first."
+            context.getString(R.string.cannot_archive_while_an_unfinished_cart)
         }
         dao.updateProduct(product.copy(archived = true))
         advanceRevision()
     }
 
     suspend fun setLowStockThreshold(id: String, pieces: String) = activeTransaction {
-        val threshold = pieces.takeIf { it.isNotBlank() }?.let { parseWhole(it, ProductField.LowStockThreshold) }
+        val threshold = pieces.takeIf { it.isNotBlank() }?.let { parseWhole(context, it, ProductField.LowStockThreshold) }
         val product = requireActiveProduct(id)
         if (product.lowStockThreshold != threshold) {
             dao.updateProduct(product.copy(lowStockThreshold = threshold))
@@ -233,7 +237,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     suspend fun saveTemplate(catalog: CatalogDraft, id: String? = null, photo: PhotoChange = PhotoChange.Keep): String {
         val imported = (photo as? PhotoChange.Import)?.let { photos.import(it) }
         return activeTransaction {
-            val previous = id?.let { key -> dao.templates().single { it.id == key }.also { require(!it.retired) { "That template is retired" } } }
+            val previous = id?.let { key -> dao.templates().single { it.id == key }.also { require(!it.retired) { context.getString(R.string.that_template_is_retired) } } }
             val old = previous?.let { decodeCatalog(it.catalog) }
             val definitions = dao.attributes()
             val moved = if (old != null && old.categoryId != catalog.categoryId) old.attributes.filterKeys { key ->
@@ -293,48 +297,48 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         validateProduct(draft.title, draft.categoryId)
         draft.requireDistinctCustomIdentities()
         val repeated = draft.customFields.groupBy { LookupNames.key(it.name) }.values.firstOrNull { it.size > 1 }?.last()
-        if (repeated != null) throw ShopValidation(ProductField.DefinitionName, "Custom field names must be distinct", repeated.id)
+        if (repeated != null) throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.custom_field_names_must_be_distinct), repeated.id)
         val definitions = draft.customFields.map { field ->
-            if (LookupNames.display(field.name).isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a custom field name", field.id)
-            require(field.options.all { it.definitionId == field.id && !it.retired && LookupNames.key(it.name).isNotEmpty() }) { "Choose valid custom options" }
-            require(field.options.map { LookupNames.key(it.name) }.distinct().size == field.options.size) { "Custom option names must be distinct" }
-            require(field.type.isChoice || field.options.isEmpty()) { "Only choice fields have options" }
+            if (LookupNames.display(field.name).isEmpty()) throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.enter_a_custom_field_name), field.id)
+            require(field.options.all { it.definitionId == field.id && !it.retired && LookupNames.key(it.name).isNotEmpty() }) { context.getString(R.string.choose_valid_custom_options) }
+            require(field.options.map { LookupNames.key(it.name) }.distinct().size == field.options.size) { context.getString(R.string.custom_option_names_must_be_distinct) }
+            require(field.type.isChoice || field.options.isEmpty()) { context.getString(R.string.only_choice_fields_have_options) }
             field.row(draft.categoryId, "catalog-draft")
         }
         val options = draft.customFields.flatMap { it.options }.map { OptionRow(it.id, it.definitionId, it.name, LookupNames.key(it.name)) }
-        require(dao.attributes().none { existing -> definitions.any { it.id == existing.id } }) { "Custom fields must be independently owned" }
+        require(dao.attributes().none { existing -> definitions.any { it.id == existing.id } }) { context.getString(R.string.custom_fields_must_be_independently_owned) }
         validateAttributes(draft.categoryId, draft.attributes, "catalog-draft", previous?.attributes.orEmpty(), allowIncomplete, definitions, options)
         val snapshot = snapshot()
         if (draft.modelIds.any { id -> snapshot.models.none { it.id == id && ((!it.retired && snapshot.makes.any { make -> make.id == it.makeId && !make.retired }) || id in previous?.modelIds.orEmpty()) } })
-            throw ShopValidation(ProductField.Fitment, "Choose active motorcycle models")
+            throw ShopValidation(ProductField.Fitment, context.getString(R.string.choose_active_motorcycle_models))
         draft.photo?.let { reference ->
-            require(reference == previous?.photo || dao.productPhotos().any { it.sha256 == reference.sha256 && it.sizeBytes == reference.sizeBytes } || dao.templates().any { decodeCatalog(it.catalog).photo == reference } || photos.read(reference) != null) { "Photo unavailable. Choose it again or remove it." }
+            require(reference == previous?.photo || dao.productPhotos().any { it.sha256 == reference.sha256 && it.sizeBytes == reference.sizeBytes } || dao.templates().any { decodeCatalog(it.catalog).photo == reference } || photos.read(reference) != null) { context.getString(R.string.photo_unavailable_choose_it_again_or) }
         }
     }
 
     suspend fun createMake(name: String): String = activeTransaction {
-        val display = lookupDisplay(name)
+        val display = lookupDisplay(context, name)
         dao.makes().find { it.normalizedName == LookupNames.key(display) }?.also {
-            require(!it.retired) { "That make is retired; choose another name" }
+            require(!it.retired) { context.getString(R.string.that_make_is_retired_choose_another) }
         }?.id ?: UUID.randomUUID().toString().also {
             dao.insertMake(MakeRow(it, display, LookupNames.key(display))); advanceRevision()
         }
     }
 
     suspend fun createModel(makeId: String, name: String): String = activeTransaction {
-        require(dao.makes().any { it.id == makeId && !it.retired }) { "Choose an active make" }
-        val display = lookupDisplay(name)
+        require(dao.makes().any { it.id == makeId && !it.retired }) { context.getString(R.string.choose_an_active_make) }
+        val display = lookupDisplay(context, name)
         dao.models().find { it.makeId == makeId && it.normalizedName == LookupNames.key(display) }?.also {
-            require(!it.retired) { "That model is retired; choose another name" }
+            require(!it.retired) { context.getString(R.string.that_model_is_retired_choose_another) }
         }?.id ?: UUID.randomUUID().toString().also {
             dao.insertModel(ModelRow(it, makeId, display, LookupNames.key(display))); advanceRevision()
         }
     }
 
     suspend fun createLocation(name: String): String = activeTransaction {
-        val display = lookupDisplay(name)
+        val display = lookupDisplay(context, name)
         dao.locations().find { it.normalizedName == LookupNames.key(display) }?.also {
-            require(!it.retired) { "That location is retired; choose another name" }
+            require(!it.retired) { context.getString(R.string.that_location_is_retired_choose_another) }
         }?.id ?: UUID.randomUUID().toString().also {
             dao.insertLocation(LocationRow(it, display, LookupNames.key(display))); advanceRevision()
         }
@@ -362,9 +366,9 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val models = dao.models().associateBy { it.id }
         val locations = dao.locations().associateBy { it.id }
         if (modelIds.any { modelId -> models[modelId]?.let { (!it.retired && makes[it.makeId]?.retired == false) || modelId in previousModels } != true })
-            throw ShopValidation(ProductField.Fitment, "Choose active motorcycle models; retired fitment may only be retained")
+            throw ShopValidation(ProductField.Fitment, context.getString(R.string.choose_active_motorcycle_models_retired_fitment))
         if (locationIds.any { locationId -> locations[locationId]?.let { !it.retired || locationId in previousLocations } != true })
-            throw ShopValidation(ProductField.Location, "Choose active locations; retired locations may only be retained")
+            throw ShopValidation(ProductField.Location, context.getString(R.string.choose_active_locations_retired_locations_may))
         dao.deleteFitments(id)
         dao.deleteLocations(id)
         dao.insertFitments(modelIds.map { FitmentRow(id, it) })
@@ -372,16 +376,16 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     suspend fun renameCategory(id: String, name: String) = activeTransaction {
-        require(LookupNames.display(name).isNotEmpty()) { "Enter a category name" }
+        require(LookupNames.display(name).isNotEmpty()) { context.getString(R.string.enter_a_category_name) }
         val key = LookupNames.key(name)
-        require(dao.categories().none { it.id != id && LookupNames.key(it.name) == key }) { "That category already exists" }
+        require(dao.categories().none { it.id != id && LookupNames.key(it.name) == key }) { context.getString(R.string.that_category_already_exists) }
         dao.updateCategory(dao.categories().single { it.id == id }.copy(name = LookupNames.display(name), normalizedName = key))
         advanceRevision()
     }
 
     suspend fun createCategory(name: String): String = activeTransaction {
         val display = LookupNames.display(name)
-        require(display.isNotEmpty()) { "Enter a category name" }
+        require(display.isNotEmpty()) { context.getString(R.string.enter_a_category_name) }
         dao.categories().find { LookupNames.key(it.name) == LookupNames.key(display) }?.id ?: run {
             val id = UUID.randomUUID().toString()
             dao.insertCategory(CategoryRow(id, display, LookupNames.key(display), dao.categories().size))
@@ -391,18 +395,18 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     suspend fun createAttribute(categoryId: String, name: String, type: AttributeType, required: Boolean = false, unit: String = ""): String = activeTransaction {
-        require(dao.categories().any { it.id == categoryId }) { "Choose a category" }
+        require(dao.categories().any { it.id == categoryId }) { context.getString(R.string.choose_a_category) }
         createDefinition(categoryId, null, name, type, required, unit)
     }
 
     private suspend fun createDefinition(categoryId: String, productId: String?, name: String, type: AttributeType, required: Boolean, unit: String): String {
         val display = LookupNames.display(name)
-        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a field name")
+        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.enter_a_field_name))
         val ownerKey = if (productId == null) "category:$categoryId" else "product:$productId"
         val existing = dao.attributes().find { it.ownerKey == ownerKey && it.normalizedName == LookupNames.key(display) }
         if (existing != null) {
             if (existing.retired || existing.type != type.name || existing.required != required || existing.unit != unit.trim())
-                throw ShopValidation(ProductField.DefinitionName, "A field with that name has different settings or is retired. Choose a distinct name.")
+                throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.a_field_with_that_name_has))
             return existing.id
         } else {
             val id = UUID.randomUUID().toString()
@@ -424,17 +428,17 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     suspend fun setAttributeRequired(id: String, required: Boolean) = activeTransaction {
         val field = dao.attributes().single { it.id == id }
-        require(!field.retired) { "That field is retired" }
+        require(!field.retired) { context.getString(R.string.that_field_is_retired) }
         if (field.required != required) { dao.updateAttribute(field.copy(required = required)); advanceRevision() }
     }
 
     suspend fun replaceAttribute(id: String, name: String, type: AttributeType, required: Boolean = false, unit: String = ""): String = activeTransaction {
         val field = dao.attributes().single { it.id == id }
-        if (field.retired || field.type == type.name) throw ShopValidation(ProductField.DefinitionType, "Choose a new field type for replacement", id)
+        if (field.retired || field.type == type.name) throw ShopValidation(ProductField.DefinitionType, context.getString(R.string.choose_a_new_field_type_for), id)
         val display = LookupNames.display(name)
-        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a replacement name", id)
+        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.enter_a_replacement_name), id)
         if (dao.attributes().any { it.ownerKey == field.ownerKey && it.normalizedName == LookupNames.key(display) })
-            throw ShopValidation(ProductField.DefinitionName, "Choose a distinct replacement name; the original meaning is retained", id)
+            throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.choose_a_distinct_replacement_name_the), id)
         val replacement = UUID.randomUUID().toString()
         dao.insertAttribute(field.copy(id = replacement, name = display, normalizedName = LookupNames.key(display), type = type.name, required = required, unit = unit.trim()))
         dao.updateAttribute(field.copy(retired = true))
@@ -449,21 +453,21 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     suspend fun promoteCustomAttribute(definitionId: String, name: String) = activeTransaction {
         val field = dao.attributes().single { it.id == definitionId }
-        require(field.productId != null && !field.retired) { "Choose an active product custom field" }
+        require(field.productId != null && !field.retired) { context.getString(R.string.choose_an_active_product_custom_field) }
         val categoryId = dao.products().single { it.id == field.productId }.categoryId
         val display = LookupNames.display(name)
-        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, "Enter a category field name", definitionId)
+        if (display.isEmpty()) throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.enter_a_category_field_name), definitionId)
         if (dao.attributes().any { it.productId == null && it.categoryId == categoryId && it.normalizedName == LookupNames.key(display) })
-            throw ShopValidation(ProductField.DefinitionName, "That category field already exists. Choose a distinct name and meaning; fields are never merged.", definitionId)
+            throw ShopValidation(ProductField.DefinitionName, context.getString(R.string.that_category_field_already_exists_choose), definitionId)
         dao.updateAttribute(field.copy(categoryId = categoryId, productId = null, ownerKey = "category:$categoryId", name = display, normalizedName = LookupNames.key(display)))
         advanceRevision()
     }
 
     suspend fun createOption(definitionId: String, name: String): String = activeTransaction {
-        require(dao.attributes().single { it.id == definitionId }.let { !it.retired && AttributeType.valueOf(it.type).isChoice }) { "Choose a choice field" }
+        require(dao.attributes().single { it.id == definitionId }.let { !it.retired && AttributeType.valueOf(it.type).isChoice }) { context.getString(R.string.choose_a_choice_field) }
         val display = LookupNames.display(name)
-        require(display.isNotEmpty()) { "Enter an option name" }
-        dao.options().find { it.definitionId == definitionId && it.normalizedName == LookupNames.key(display) }?.also { require(!it.retired) { "That option is retired; choose another name" } }?.id ?: run {
+        require(display.isNotEmpty()) { context.getString(R.string.enter_an_option_name) }
+        dao.options().find { it.definitionId == definitionId && it.normalizedName == LookupNames.key(display) }?.also { require(!it.retired) { context.getString(R.string.that_option_is_retired_choose_another) } }?.id ?: run {
             val id = UUID.randomUUID().toString()
             dao.insertOption(OptionRow(id, definitionId, display, LookupNames.key(display)))
             advanceRevision()
@@ -480,17 +484,17 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             }
             when (category.position) {
                 0 -> {
-                    val id = field("Position", AttributeType.SingleChoice)
-                    listOf("Front", "Rear").forEach { dao.insertOption(OptionRow(UUID.randomUUID().toString(), id, it, LookupNames.key(it))) }
+                    val id = field(context.getString(R.string.position), AttributeType.SingleChoice)
+                    listOf(context.getString(R.string.front), context.getString(R.string.rear)).forEach { dao.insertOption(OptionRow(UUID.randomUUID().toString(), id, it, LookupNames.key(it))) }
                 }
                 1, 2 -> {
-                    field("Thread diameter", AttributeType.Decimal, "mm")
-                    field("Thread pitch", AttributeType.Decimal, "mm")
-                    if (category.position == 2) field("Length", AttributeType.Decimal, "mm")
+                    field(context.getString(R.string.thread_diameter), AttributeType.Decimal, "mm")
+                    field(context.getString(R.string.thread_pitch), AttributeType.Decimal, "mm")
+                    if (category.position == 2) field(context.getString(R.string.length), AttributeType.Decimal, "mm")
                 }
                 3 -> {
-                    field("Bottle volume", AttributeType.Decimal, "ml")
-                    field("Viscosity grade", AttributeType.Text)
+                    field(context.getString(R.string.bottle_volume), AttributeType.Decimal, "ml")
+                    field(context.getString(R.string.viscosity_grade), AttributeType.Text)
                 }
             }
         }
@@ -498,28 +502,28 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     private suspend fun validateAttributes(categoryId: String, values: Map<String, AttributeValue>, productId: String? = null, existing: Map<String, AttributeValue> = emptyMap(), allowIncomplete: Boolean = false, customDefinitions: List<AttributeRow> = emptyList(), customOptions: List<OptionRow> = emptyList()): List<AttributeValueRow> {
         val definitions = dao.attributes().filter { it.productId != null && it.productId == productId || it.productId == null && it.categoryId == categoryId } + customDefinitions
-        require(values.keys.all { key -> definitions.any { it.id == key } }) { "Choose fields from the selected category" }
+        require(values.keys.all { key -> definitions.any { it.id == key } }) { context.getString(R.string.choose_fields_from_the_selected_category) }
         val options = dao.options() + customOptions
         return definitions.mapNotNull { definition ->
             val value = values[definition.id]
-            fun invalid(message: String): Nothing = throw ShopValidation(ProductField.Attribute, definition.name + ": " + message, definition.id)
-            if (definition.retired && value != null && value != existing[definition.id]) invalid("Retired field cannot be newly selected or changed")
-            if (!allowIncomplete && !definition.retired && definition.required && (value == null || value is AttributeValue.Text && value.text.isBlank() || value is AttributeValue.Choices && value.optionIds.isEmpty())) invalid("Required")
+            fun invalid(message: String): Nothing = throw ShopValidation(ProductField.Attribute, context.getString(R.string.formatted_text, definition.name, message), definition.id)
+            if (definition.retired && value != null && value != existing[definition.id]) invalid(context.getString(R.string.retired_field_cannot_be_newly_selected))
+            if (!allowIncomplete && !definition.retired && definition.required && (value == null || value is AttributeValue.Text && value.text.isBlank() || value is AttributeValue.Choices && value.optionIds.isEmpty())) invalid(context.getString(R.string.required))
             if (value == null) return@mapNotNull null
             when (value) {
                 is AttributeValue.Text -> {
-                    if (definition.type != AttributeType.Text.name) invalid("Enter the correct field type")
+                    if (definition.type != AttributeType.Text.name) invalid(context.getString(R.string.enter_the_correct_field_type))
                     AttributeValueRow("", definition.id, value.text, null, null)
                 }
                 is AttributeValue.Decimal -> {
-                    if (definition.type != AttributeType.Decimal.name) invalid("Enter the correct field type")
-                    try { exactDecimal(value.exact) } catch (e: IllegalArgumentException) { invalid(requireNotNull(e.message)) }
+                    if (definition.type != AttributeType.Decimal.name) invalid(context.getString(R.string.enter_the_correct_field_type))
+                    try { exactDecimal(value.exact) } catch (_: InvalidDecimal) { invalid(context.getString(R.string.enter_a_plain_decimal_with_up)) }
                     AttributeValueRow("", definition.id, null, value.exact.trim(), null)
                 }
                 is AttributeValue.Choices -> {
-                    if (!AttributeType.valueOf(definition.type).isChoice) invalid("Enter the correct field type")
-                    if (definition.type == AttributeType.SingleChoice.name && value.optionIds.size > 1) invalid("Choose one option")
-                    if (!value.optionIds.all { id -> options.any { it.id == id && it.definitionId == definition.id && (!it.retired || id in (existing[definition.id] as? AttributeValue.Choices)?.optionIds.orEmpty()) } }) invalid("Choose options from this field")
+                    if (!AttributeType.valueOf(definition.type).isChoice) invalid(context.getString(R.string.enter_the_correct_field_type))
+                    if (definition.type == AttributeType.SingleChoice.name && value.optionIds.size > 1) invalid(context.getString(R.string.choose_one_option))
+                    if (!value.optionIds.all { id -> options.any { it.id == id && it.definitionId == definition.id && (!it.retired || id in (existing[definition.id] as? AttributeValue.Choices)?.optionIds.orEmpty()) } }) invalid(context.getString(R.string.choose_options_from_this_field))
                     AttributeValueRow("", definition.id, null, null, org.json.JSONArray(value.optionIds.sorted()).toString())
                 }
             }
@@ -527,7 +531,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     suspend fun setLabelPreferences(media: LabelMedia, copies: String) = activeTransaction {
-        val count = parseLabelCopies(copies)
+        val count = parseLabelCopies(context, copies)
         val state = requireNotNull(dao.state())
         if (state.labelMedia != media.name || state.labelCopies != count) {
             dao.putState(state.copy(labelMedia = media.name, labelCopies = count, revision = Math.addExact(state.revision, 1)))
@@ -541,21 +545,21 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     /** Retry with the same operation identity and inputs; reuse for a different command is rejected. */
     suspend fun correctStock(operationId: String, productId: String, kind: CorrectionKind, quantity: String, reason: String) = activeTransaction {
-        require(operationId.isNotBlank()) { "A correction operation identity is required" }
-        val amount = parseWhole(quantity, ProductField.CorrectionQuantity)
-        if (kind != CorrectionKind.PhysicalCount && amount == 0L) throw ShopValidation(ProductField.CorrectionQuantity, "Enter a positive whole quantity to remove")
+        require(operationId.isNotBlank()) { context.getString(R.string.a_correction_operation_identity_is_required) }
+        val amount = parseWhole(context, quantity, ProductField.CorrectionQuantity)
+        if (kind != CorrectionKind.PhysicalCount && amount == 0L) throw ShopValidation(ProductField.CorrectionQuantity, context.getString(R.string.enter_a_positive_whole_quantity_to))
         val explanation = reason.trim()
-        if (explanation.isEmpty()) throw ShopValidation(ProductField.CorrectionReason, "Explain why this stock correction is needed")
+        if (explanation.isEmpty()) throw ShopValidation(ProductField.CorrectionReason, context.getString(R.string.explain_why_this_stock_correction_is))
         val previous = dao.correction(operationId)
         if (previous != null) {
-            require(previous.productId == productId && previous.kind == kind.name && previous.quantity == amount && previous.reason == explanation) { "This operation identity already belongs to a different correction" }
+            require(previous.productId == productId && previous.kind == kind.name && previous.quantity == amount && previous.reason == explanation) { context.getString(R.string.this_operation_identity_already_belongs_to) }
             return@activeTransaction
         }
         requireActiveProduct(productId)
         val balance = dao.balances().singleOrNull { it.productId == productId }
-            ?: throw IllegalArgumentException("Choose an existing stocked product")
+            ?: throw IllegalArgumentException(context.getString(R.string.choose_an_existing_stocked_product))
         val result = if (kind == CorrectionKind.PhysicalCount) amount else {
-            if (amount > balance.quantity) throw ShopValidation(ProductField.CorrectionQuantity, "Cannot remove more than the current stock")
+            if (amount > balance.quantity) throw ShopValidation(ProductField.CorrectionQuantity, context.getString(R.string.cannot_remove_more_than_the_current))
             Math.subtractExact(balance.quantity, amount)
         }
         val difference = Math.subtractExact(result, balance.quantity)
@@ -565,15 +569,15 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     suspend fun receiveStock(operationId: String, productId: String, pieces: String, unitCostRupees: String, sellingPriceRupees: String? = null) = activeTransaction {
-        require(operationId.isNotBlank()) { "An arrival operation identity is required" }
-        val quantity = parseWhole(pieces, ProductField.ArrivalQuantity)
-        if (quantity == 0L) throw ShopValidation(ProductField.ArrivalQuantity, "Enter a positive whole-piece quantity")
-        val cost = parseWhole(unitCostRupees, ProductField.PurchaseCost)
-        val requestedSellingPrice = sellingPriceRupees?.let { parseWhole(it, ProductField.SellingPrice) }
+        require(operationId.isNotBlank()) { context.getString(R.string.an_arrival_operation_identity_is_required) }
+        val quantity = parseWhole(context, pieces, ProductField.ArrivalQuantity)
+        if (quantity == 0L) throw ShopValidation(ProductField.ArrivalQuantity, context.getString(R.string.enter_a_positive_whole_piece_quantity))
+        val cost = parseWhole(context, unitCostRupees, ProductField.PurchaseCost)
+        val requestedSellingPrice = sellingPriceRupees?.let { parseWhole(context, it, ProductField.SellingPrice) }
         val previous = dao.arrival(operationId)
         if (previous != null) {
             require(previous.productId == productId && previous.quantity == quantity && previous.unitCostRupees == cost &&
-                previous.requestedSellingPriceRupees == requestedSellingPrice) { "This operation identity already belongs to a different arrival" }
+                previous.requestedSellingPriceRupees == requestedSellingPrice) { context.getString(R.string.this_operation_identity_already_belongs_to_2) }
             return@activeTransaction
         }
         val product = requireActiveProduct(productId)
@@ -581,7 +585,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val result = try {
             Math.multiplyExact(quantity, cost)
             Math.addExact(balance.quantity, quantity)
-        } catch (_: ArithmeticException) { throw ShopValidation(ProductField.ArrivalQuantity, "Arrival exceeds the supported quantity or cost limit") }
+        } catch (_: ArithmeticException) { throw ShopValidation(ProductField.ArrivalQuantity, context.getString(R.string.arrival_exceeds_the_supported_quantity_or)) }
         val sellingPrice = requestedSellingPrice ?: product.priceRupees
         repriceUnfinishedCarts(product, sellingPrice)
         dao.updateProduct(product.copy(priceRupees = sellingPrice, buyingPriceRupees = cost))
@@ -600,17 +604,22 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         receipt(cartId)?.let { return@activeTransaction it }
         val cart = requireCurrentCart(cartId, expectedVersion)
         val lines = dao.cartLines().filter { it.cartId == cartId }
-        require(lines.isNotEmpty()) { "Add products before checkout" }
+        require(lines.isNotEmpty()) { context.getString(R.string.add_products_before_checkout) }
         val total = lines.fold(0L) { sum, line -> Math.addExact(sum, Math.multiplyExact(line.quantity, line.quotedPriceRupees)) }
-        val cash = parseWhole(cashReceived, ProductField.CashReceived)
-        if (cash < total) throw ShopValidation(ProductField.CashReceived, "Cash received must cover the whole cart total")
+        val cash = parseWhole(context, cashReceived, ProductField.CashReceived)
+        if (cash < total) throw ShopValidation(ProductField.CashReceived, context.getString(R.string.cash_received_must_cover_the_whole))
         val products = dao.products().associateBy { it.id }
         val balances = dao.balances().associateBy { it.productId }
         val shortages = lines.mapNotNull { line ->
             val balance = balances.getValue(line.productId).quantity
             if (line.quantity > balance) StockShortage(line.productId, products.getValue(line.productId).title, line.quantity, balance) else null
         }
-        if (shortages.isNotEmpty()) throw CheckoutShortage(shortages)
+        if (shortages.isNotEmpty()) {
+            val details = shortages.joinToString("\n") {
+                context.getString(R.string.requested_available, it.title, indianNumber(it.requested), indianNumber(it.available))
+            }
+            throw CheckoutShortage(shortages, context.getString(R.string.nno_sale_saved_edit_the_cart, details))
+        }
         val categories = dao.categories().associateBy { it.id }
         val makes = dao.makes().associateBy { it.id }
         val models = dao.models().associateBy { it.id }
@@ -621,7 +630,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             val product = products.getValue(line.productId)
             val before = balances.getValue(product.id).quantity
             val fitment = fitments[product.id].orEmpty().map { models.getValue(it.modelId) }
-                .map { "${makes.getValue(it.makeId).name} · ${it.name}" }.sorted().joinToString("; ").ifEmpty { "Unknown fitment" }
+                .map { "${makes.getValue(it.makeId).name} · ${it.name}" }.sorted().joinToString("; ").ifEmpty { context.getString(R.string.finding_unknown_fitment) }
             SaleLineRow(sale.id, product.id, product.sku, product.title, categories.getValue(product.categoryId).name,
                 product.description, fitment, line.quantity, line.quotedPriceRupees, before,
                 Math.subtractExact(before, line.quantity), Math.negateExact(line.quantity))
@@ -650,15 +659,15 @@ class Shop private constructor(private val database: ShopDatabase, private val p
         val old = dao.cartLines().filter { it.cartId == id }.associateBy { it.productId }
         val products = dao.products().associateBy { it.id }
         val lines = quantities.map { (productId, input) ->
-            val product = requireNotNull(products[productId]) { "Choose an existing stocked product" }
-            require(!product.archived) { "This product is archived. Choose an active product." }
-            val quantity = parseCartQuantity(input, productId)
+            val product = requireNotNull(products[productId]) { context.getString(R.string.choose_an_existing_stocked_product) }
+            require(!product.archived) { context.getString(R.string.this_product_is_archived_choose_an) }
+            val quantity = parseCartQuantity(context, input, productId)
             CartLineRow(id, productId, quantity, old[productId]?.quotedPriceRupees ?: product.priceRupees)
         }
         try {
             lines.fold(0L) { total, line -> Math.addExact(total, Math.multiplyExact(line.quantity, line.quotedPriceRupees)) }
         } catch (_: ArithmeticException) {
-            throw ShopValidation(ProductField.CartQuantity, "Cart total exceeds the supported whole-rupee limit")
+            throw ShopValidation(ProductField.CartQuantity, context.getString(R.string.cart_total_exceeds_the_supported_whole))
         }
         val label = customer.trim()
         val changed = cart.customer != label || old.values.toSet() != lines.toSet()
@@ -674,11 +683,11 @@ class Shop private constructor(private val database: ShopDatabase, private val p
 
     suspend fun addCartProduct(id: String, expectedVersion: Long, productId: String, pieces: String) = activeTransaction {
         val cart = requireCurrentCart(id, expectedVersion)
-        val amount = parseCartQuantity(pieces, productId)
+        val amount = parseCartQuantity(context, pieces, productId)
         val lines = dao.cartLines().filter { it.cartId == id }
         val quantities = lines.associate { it.productId to it.quantity.toString() }.toMutableMap()
         val quantity = try { Math.addExact(lines.find { it.productId == productId }?.quantity ?: 0L, amount) }
-            catch (_: ArithmeticException) { throw ShopValidation(ProductField.CartQuantity, "Cart quantity exceeds the supported whole-number limit", productId) }
+            catch (_: ArithmeticException) { throw ShopValidation(ProductField.CartQuantity, context.getString(R.string.cart_quantity_exceeds_the_supported_whole), productId) }
         quantities[productId] = quantity.toString()
         saveCart(id, expectedVersion, cart.customer, quantities)
     }
@@ -690,13 +699,13 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     }
 
     private suspend fun requireCurrentCart(id: String, version: Long): CartRow {
-        val cart = dao.cart(id) ?: throw StaleCart()
-        if (cart.editVersion != version) throw StaleCart()
+        val cart = dao.cart(id) ?: throw StaleCart(context.getString(R.string.this_cart_changed_reload_the_saved))
+        if (cart.editVersion != version) throw StaleCart(context.getString(R.string.this_cart_changed_reload_the_saved))
         return cart
     }
 
     suspend fun setSellingPrice(id: String, rupees: String) = activeTransaction {
-        val price = parseWhole(rupees, ProductField.SellingPrice)
+        val price = parseWhole(context, rupees, ProductField.SellingPrice)
         val product = requireActiveProduct(id)
         if (product.priceRupees != price) {
             repriceUnfinishedCarts(product, price)
@@ -718,7 +727,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
                 }
             }
         } catch (_: ArithmeticException) {
-            throw ShopValidation(ProductField.SellingPrice, "Selling price makes an unfinished cart total exceed the supported whole-rupee limit")
+            throw ShopValidation(ProductField.SellingPrice, context.getString(R.string.selling_price_makes_an_unfinished_cart))
         }
         if (affected.isNotEmpty()) {
             dao.repriceCartLines(id, price)
@@ -735,14 +744,14 @@ class Shop private constructor(private val database: ShopDatabase, private val p
     suspend fun openingHistory(id: String): List<OpeningStock> = dao.openings(id).map { OpeningStock(it.quantity, it.recordedAt, it.buyingPriceRupees) }
 
     private suspend fun requireActiveProduct(id: String): ProductRow {
-        val product = requireNotNull(dao.products().find { it.id == id }) { "Choose an existing stocked product" }
-        require(!product.archived) { "This product is archived. Choose an active product." }
+        val product = requireNotNull(dao.products().find { it.id == id }) { context.getString(R.string.choose_an_existing_stocked_product) }
+        require(!product.archived) { context.getString(R.string.this_product_is_archived_choose_an) }
         return product
     }
 
     private suspend fun validateProduct(title: String, categoryId: String) {
-        if (title.isBlank()) throw ShopValidation(ProductField.Title, "Enter a product title")
-        if (dao.categories().none { it.id == categoryId }) throw ShopValidation(ProductField.Category, "Choose a category")
+        if (title.isBlank()) throw ShopValidation(ProductField.Title, context.getString(R.string.enter_a_product_title))
+        if (dao.categories().none { it.id == categoryId }) throw ShopValidation(ProductField.Category, context.getString(R.string.choose_a_category))
     }
 
     private suspend fun advanceRevision() {
@@ -758,7 +767,7 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             return storage.exclusive {
                 val generation = storage.active
                 val database = openDatabase(context, storage.database(generation))
-                Shop(database, ProductPhotos(storage.photos(generation)), storage.backups(generation), storage.drive(generation),
+                Shop(database, ProductPhotos(storage.photos(generation), context), storage.backups(generation), storage.drive(generation),
                     context.applicationContext, storage, generation).also {
                     try { it.initialize() } catch (error: Throwable) { database.close(); throw error }
                 }
@@ -768,22 +777,22 @@ class Shop private constructor(private val database: ShopDatabase, private val p
             Room.databaseBuilder(context.applicationContext, ShopDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16).build()
 
         internal fun staged(context: Context, database: ShopDatabase, directory: java.io.File) =
-            Shop(database, ProductPhotos(java.io.File(directory, "blobs")), directory, directory, context)
+            Shop(database, ProductPhotos(java.io.File(directory, "blobs"), context), directory, directory, context)
     }
 }
 
-class SimilarProduct : IllegalArgumentException("A similar product already exists. Open it from Stock or save a distinct product.")
+class SimilarProduct(message: String) : IllegalArgumentException(message)
 
-private fun parseCartQuantity(value: String, productId: String): Long {
-    val quantity = try { parseWhole(value, ProductField.CartQuantity) } catch (_: ShopValidation) { null }
-    if (quantity == null || quantity == 0L) throw ShopValidation(ProductField.CartQuantity, "Cart quantity must be a positive whole number within the supported limit", productId)
+private fun parseCartQuantity(context: Context, value: String, productId: String): Long {
+    val quantity = try { parseWhole(context, value, ProductField.CartQuantity) } catch (_: ShopValidation) { null }
+    if (quantity == null || quantity == 0L) throw ShopValidation(ProductField.CartQuantity, context.getString(R.string.cart_quantity_must_be_a_positive), productId)
     return quantity
 }
 
-internal fun parseWhole(value: String, field: ProductField): Long {
+internal fun parseWhole(context: Context, value: String, field: ProductField): Long {
     val text = value.trim()
-    if (!text.matches(Regex("[0-9]+"))) throw ShopValidation(field, "${field.label} must be a nonnegative whole number")
-    return text.toLongOrNull() ?: throw ShopValidation(field, "${field.label} exceeds the supported whole-number limit")
+    if (!text.matches(Regex("[0-9]+"))) throw ShopValidation(field, context.getString(R.string.must_be_a_nonnegative_whole_number, context.getString(field.label)))
+    return text.toLongOrNull() ?: throw ShopValidation(field, context.getString(R.string.exceeds_the_supported_whole_number_limit, context.getString(field.label)))
 }
 
 fun indianNumber(value: Long): String {

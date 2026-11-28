@@ -1,20 +1,22 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 
-enum class LabelMedia(val label: String, val widthMm: Int, val heightMm: Int) {
-    Package("Package · 50 × 30 mm", 50, 30),
-    SharedBin("Shared bin · 70 × 40 mm", 70, 40),
+enum class LabelMedia(@param:androidx.annotation.StringRes val label: Int, val widthMm: Int, val heightMm: Int) {
+    Package(R.string.package_50_30_mm, 50, 30),
+    SharedBin(R.string.shared_bin_70_40_mm, 70, 40),
 }
 
 data class LabelPreferences(val media: LabelMedia = LabelMedia.Package, val copies: Long = 1)
 
-fun parseLabelCopies(text: String): Long = parseWhole(text, ProductField.LabelCopies).also {
-    if (it == 0L) throw ShopValidation(ProductField.LabelCopies, "Label copies must be a positive whole number")
+fun parseLabelCopies(context: android.content.Context, text: String): Long = parseWhole(context, text, ProductField.LabelCopies).also {
+    if (it == 0L) throw ShopValidation(ProductField.LabelCopies, context.getString(R.string.label_copies_must_be_a_positive))
 }
 
 object LabelQr {

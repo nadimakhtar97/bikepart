@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.ShopError
@@ -19,7 +21,7 @@ internal fun CategoryDetailRoute(
         topBar = {
             ShopRouteAppBar(
                 title = shop.categories.firstOrNull { it.id == categoryId }?.name
-                    ?: "Category fields", showBack = true, enabled = !busy
+                    ?: stringResource(R.string.category_fields), showBack = true, enabled = !busy
             )
         },
     ) { padding ->

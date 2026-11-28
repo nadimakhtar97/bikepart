@@ -1,5 +1,6 @@
 package com.nadim.bikepart.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.SaveableStateHolder
@@ -28,7 +29,7 @@ internal fun StockRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Stock", showBack = false, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.dest_stock), showBack = false, enabled = !busy) },
         floatingActionButton = {
             if (!busy) {
                 FluentFloatingActionButton(
@@ -36,7 +37,7 @@ internal fun StockRoute(
                     state = FABState.Expanded,
                     size = FABSize.Large,
                     icon = shopIconVector(R.drawable.ic_add),
-                    text = "Add product",
+                    text = stringResource(R.string.fab_add_product),
                     modifier = Modifier.imePadding(),
                 )
             }

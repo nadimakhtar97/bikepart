@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
@@ -14,7 +16,7 @@ internal fun TemplateListRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Product templates", showBack = true, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.title_product_templates), showBack = true, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             TemplateList(

@@ -1,5 +1,7 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import com.ibm.icu.lang.UCharacter
 import com.ibm.icu.text.Normalizer2
 import java.math.BigDecimal
@@ -12,8 +14,8 @@ object LookupNames {
     fun key(value: String): String = UCharacter.foldCase(display(value), true)
 }
 
-enum class AttributeType(val label: String) {
-    Text("Text"), Decimal("Decimal number"), SingleChoice("Single choice"), MultipleChoice("Multiple choice");
+enum class AttributeType(@param:androidx.annotation.StringRes val label: Int) {
+    Text(R.string.text), Decimal(R.string.decimal_number), SingleChoice(R.string.single_choice), MultipleChoice(R.string.multiple_choice);
     val isChoice: Boolean get() = this == SingleChoice || this == MultipleChoice
 }
 data class CategoryAttribute(val id: String, val categoryId: String, val name: String,
@@ -27,11 +29,11 @@ sealed interface AttributeValue {
 }
 
 /** Plain ASCII decimal, at most 18 integral and 12 fractional digits; no rounding. */
+internal class InvalidDecimal : IllegalArgumentException()
+
 fun exactDecimal(input: String): BigDecimal {
     val text = input.trim()
-    require(text.matches(Regex("[+-]?[0-9]{1,18}(\\.[0-9]{1,12})?"))) {
-        "Enter a plain decimal with up to 18 whole and 12 decimal digits (no exponent)"
-    }
+    if (!text.matches(Regex("[+-]?[0-9]{1,18}(\\.[0-9]{1,12})?"))) throw InvalidDecimal()
     return BigDecimal(text)
 }
 

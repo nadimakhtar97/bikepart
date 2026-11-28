@@ -86,7 +86,7 @@ class RestoreActivationTest {
             shop.createProduct("Old schema", shop.snapshot().categories.first().id, "", "4", "50")
             val expected = shop.snapshot()
             val capture = shop.captureLocalBackup()
-            val tables = LocalBackup.read(capture.file).tables
+            val tables = LocalBackup.read(context, capture.file).tables
             val historical = rewriteCapture(capture.file, File(context.cacheDir, "$name.zip")) { entries, manifest, schema ->
                 removeBackupColumns(entries, schema, "shop_state", tables.getValue("shop_state"), setOf("labelMedia", "labelCopies"))
                 removeBackupColumns(entries, schema, "product_photos", tables.getValue("product_photos"), setOf("position"))

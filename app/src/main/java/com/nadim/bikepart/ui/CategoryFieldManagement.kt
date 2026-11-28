@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.nadim.bikepart.R
 import com.nadim.bikepart.ShopError
@@ -42,18 +43,18 @@ internal fun CategoryFieldManagement(
     val category = shop.categories.firstOrNull { it.id == categoryId }
     if (category == null) {
         ShopEmptyState(
-            "Category unavailable",
-            "Return to Categories and choose an active category.",
+            stringResource(R.string.category_unavailable),
+            stringResource(R.string.return_to_categories_and_choose_an),
             R.drawable.ic_category
         )
         return
     }
 
     val fields = shop.attributes.filter { it.categoryId == categoryId && it.productId == null }
-    ShopPageHeader(category.name, "Shared fields and choice options for this category.")
+    ShopPageHeader(category.name, stringResource(R.string.shared_fields_and_choice_options_for))
     ShopSectionHeader(
-        "Category fields",
-        supporting = if (fields.isEmpty()) "No shared fields yet" else "${fields.size} shared ${if (fields.size == 1) "field" else "fields"}",
+        stringResource(R.string.category_fields),
+        supporting = if (fields.isEmpty()) stringResource(R.string.no_shared_fields_yet) else pluralStringResource(R.plurals.shared_category_field_count, fields.size, fields.size),
     )
 
     var creating by rememberSaveable(categoryId) { mutableStateOf(false) }
@@ -61,9 +62,9 @@ internal fun CategoryFieldManagement(
         onClick = { creating = !creating },
         enabled = !busy,
         modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
-    ) { Text(if (creating) "Cancel" else "Add category field") }
+    ) { Text(if (creating) stringResource(R.string.cancel) else stringResource(R.string.catalog_add_category_field)) }
     if (creating) {
-        ShopSection("New category field") {
+        ShopSection(stringResource(R.string.new_category_field)) {
             FieldCreator(
                 categoryId,
                 busy,
@@ -77,8 +78,8 @@ internal fun CategoryFieldManagement(
 
     if (fields.isEmpty() && !creating) {
         ShopEmptyState(
-            "No category fields",
-            "Add a field to describe products in ${category.name}.",
+            stringResource(R.string.no_category_fields),
+            stringResource(R.string.add_a_field_to_describe_products, category.name),
             R.drawable.ic_category
         )
     }
@@ -87,14 +88,14 @@ internal fun CategoryFieldManagement(
         key(field.id) {
             ShopSection(field.name) {
                 Text(
-                    (if (field.required) "Required" else "Optional") + " · " + field.type.label +
-                            if (field.unit.isBlank()) "" else " · ${field.unit}",
+                    (if (field.required) stringResource(R.string.required) else stringResource(R.string.optional)) + " · " + stringResource(field.type.label) +
+                            if (field.unit.isBlank()) "" else stringResource(R.string.middle_dot_separator, field.unit),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (field.retired) {
                     Text(
-                        "Retired · retained for existing product details",
+                        stringResource(R.string.retired_retained_for_existing_product_details),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 } else {
@@ -106,7 +107,7 @@ internal fun CategoryFieldManagement(
                         ShopSecondaryButton(
                             onClick = { actions.required(field.id, !field.required) },
                             enabled = !busy,
-                        ) { Text(if (field.required) "Make optional" else "Make required") }
+                        ) { Text(if (field.required) stringResource(R.string.field_make_optional) else stringResource(R.string.field_make_required)) }
                         ShopSecondaryButton(
                             onClick = { actions.retire(field.id) },
                             enabled = !busy,
@@ -114,7 +115,7 @@ internal fun CategoryFieldManagement(
                         ShopSecondaryButton(
                             onClick = { replacing = !replacing; onChange() },
                             enabled = !busy,
-                        ) { Text(if (replacing) "Cancel replacement" else stringResource(R.string.catalog_replace_field_type)) }
+                        ) { Text(if (replacing) stringResource(R.string.cancel_replacement) else stringResource(R.string.catalog_replace_field_type)) }
                     }
                     if (replacing) {
                         Text(
@@ -134,21 +135,21 @@ internal fun CategoryFieldManagement(
 
                 if (field.type.isChoice) {
                     ShopSectionHeader(
-                        "Options",
-                        supporting = "Options belong to ${field.name}.",
+                        stringResource(R.string.options),
+                        supporting = stringResource(R.string.options_belong_to, field.name),
                     )
                     val options = shop.options.filter { it.definitionId == field.id }
                     if (options.isEmpty()) Text(
-                        "No options yet",
+                        stringResource(R.string.no_options_yet),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     options.forEach { option ->
                         ShopListRow(
                             option.name,
-                            supporting = if (option.retired) "Retired · kept for existing product values" else null,
+                            supporting = if (option.retired) stringResource(R.string.retired_kept_for_existing_product_values) else null,
                             icon = R.drawable.ic_category,
                             enabled = !busy && !option.retired && !field.retired,
-                            actionLabel = if (option.retired) option.name else "Retire option ${option.name}",
+                            actionLabel = if (option.retired) option.name else stringResource(R.string.retire_option_2, option.name),
                             onClick = if (option.retired || field.retired) null else ({
                                 actions.retireOption(
                                     option.id
@@ -163,7 +164,7 @@ internal fun CategoryFieldManagement(
                         ShopTextField(
                             value = optionName,
                             onValueChange = { optionName = it; onChange() },
-                            label = "New option for ${field.name}",
+                            label = stringResource(R.string.new_option_for, field.name),
                             enabled = !busy,
                             error = optionError?.message,
                         )
@@ -172,7 +173,7 @@ internal fun CategoryFieldManagement(
                                 actions.createOption(field.id, optionName) { optionName = "" }
                             },
                             enabled = !busy && LookupNames.key(optionName).isNotEmpty(),
-                        ) { Text("Add option") }
+                        ) { Text(stringResource(R.string.add_option)) }
                     }
                 }
             }

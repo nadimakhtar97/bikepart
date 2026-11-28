@@ -110,10 +110,17 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
             .forEach { definition ->
             key(definition.id) {
                 val value = values[definition.id]
-                val label = definition.name + (if (definition.unit.isBlank()) "" else " (" + definition.unit + ")") + (if (definition.required) " (required)" else " (optional)") + if (definition.productId == "catalog-draft") " · copy only" else if (definition.productId != null) " · product only" else ""
+                val nameWithUnit = if (definition.unit.isBlank()) definition.name
+                    else stringResource(R.string.formatted_values_2, definition.name, definition.unit)
+                val requirement = stringResource(R.string.formatted_values_2, nameWithUnit, stringResource(if (definition.required) R.string.required_2 else R.string.optional_2))
+                val label = when (definition.productId) {
+                    "catalog-draft" -> stringResource(R.string.copy_only, requirement)
+                    null -> requirement
+                    else -> stringResource(R.string.product_only, requirement)
+                }
                 val fieldError = error?.takeIf { it.definitionId == definition.id }
                 if (definition.retired) {
-                    Text(definition.name + " (retired): " + attributeDisplay(shop, value), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.retired_2, definition.name, attributeDisplay(shop, value)), style = MaterialTheme.typography.bodyMedium)
                 } else when (definition.type) {
                     AttributeType.Text, AttributeType.Decimal -> {
                         val text = when (value) { is AttributeValue.Text -> value.text; is AttributeValue.Decimal -> value.exact; else -> "" }
@@ -133,10 +140,10 @@ internal fun CategoryFields(shop: ShopSnapshot, categoryId: String, values: Map<
                         }
                         val canCreateOption = definition.productId != null
                         LookupSelector(
-                            if (canCreateOption && !useDropdown) "Search or add " + definition.name + " option" else "Search " + definition.name + " options",
-                            "Add option",
+                            if (canCreateOption && !useDropdown) stringResource(R.string.search_or_add_option, definition.name) else stringResource(R.string.search_options, definition.name),
+                            stringResource(R.string.add_option),
                             shop.options.filter { it.definitionId == definition.id && (!it.retired || it.id in selected) }
-                                .map { it.id to (it.name + if (it.retired) " (retired)" else "") },
+                                .map { it.id to (if (it.retired) stringResource(R.string.retired_suffix_2, it.name) else it.name) },
                             selected,
                             busy,
                             onSelect = { select(it) },
@@ -173,7 +180,7 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
     FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
         AttributeType.entries.forEach { item ->
             ShopChoiceChip(
-                label = item.label, selected = type == item,
+                label = stringResource(item.label), selected = type == item,
                 onClick = { type = item; onChange() }, enabled = !busy
             )
         }
@@ -193,11 +200,17 @@ internal fun FieldCreator(categoryId: String, busy: Boolean, error: ShopError? =
     ShopPrimaryButton(stringResource(R.string.field_create), enabled = !busy) { create(AttributeSetup(categoryId, name, type, required, unit)) }
 }
 
-internal fun attributeDisplay(shop: ShopSnapshot, value: AttributeValue?): String = when (value) {
-    is AttributeValue.Text -> value.text
-    is AttributeValue.Decimal -> value.exact
-    is AttributeValue.Choices -> shop.options.filter { it.id in value.optionIds }.joinToString { it.name + if (it.retired) " (retired)" else "" }
-    null -> "Not provided"
+@Composable
+internal fun attributeDisplay(shop: ShopSnapshot, value: AttributeValue?): String {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return when (value) {
+        is AttributeValue.Text -> value.text
+        is AttributeValue.Decimal -> value.exact
+        is AttributeValue.Choices -> shop.options.filter { it.id in value.optionIds }.joinToString {
+            if (it.retired) context.getString(R.string.retired_suffix_2, it.name) else it.name
+        }
+        null -> stringResource(R.string.not_provided)
+    }
 }
 
 internal val mappingDraftSaver = listSaver<Map<String, String>, String>(

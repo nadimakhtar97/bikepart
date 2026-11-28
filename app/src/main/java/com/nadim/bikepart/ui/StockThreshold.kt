@@ -33,7 +33,7 @@ internal fun ThresholdForm(product: Product, busy: Boolean, error: ShopError?, o
     val focusError = remember { BringIntoViewRequester() }
     LaunchedEffect(error) { if (error?.field == ProductField.LowStockThreshold) focusError.bringIntoView() }
     ShopSection(stringResource(R.string.threshold_section)) {
-        Text(product.lowStockThreshold?.let { "Threshold: ${indianNumber(it)} pieces" } ?: "Threshold: Not set",
+        Text(product.lowStockThreshold?.let { stringResource(R.string.threshold_value, indianNumber(it)) } ?: stringResource(R.string.threshold_not_set),
             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         Text(stringResource(R.string.threshold_note), style = MaterialTheme.typography.bodyMedium)
         ShopTextField(

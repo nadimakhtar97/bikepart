@@ -58,7 +58,7 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
     var granted by remember { mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         granted = it
-        if (!it) failure("Camera permission denied. Use manual search or resume to try again.")
+        if (!it) failure(context.getString(R.string.camera_permission_denied_use_manual_search))
     }
     LaunchedEffect(Unit) { if (!granted) permission.launch(Manifest.permission.CAMERA) }
     if (!granted) return
@@ -89,8 +89,8 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
                 }, ContextCompat.getMainExecutor(context))
             }, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 .background(Color.Black.copy(alpha = .6f), androidx.compose.foundation.shape.CircleShape)
-                .semantics { stateDescription = if (torchEnabled) "On" else "Off" }) {
-                Icon(painterResource(R.drawable.ic_flash), contentDescription = "Flash", tint = Color.White)
+                .semantics { stateDescription = if (torchEnabled) context.getString(R.string.camera_flash_on) else context.getString(R.string.camera_flash_off) }) {
+                Icon(painterResource(R.drawable.ic_flash), contentDescription = stringResource(R.string.camera_flash), tint = Color.White)
             }
         }
         Text(stringResource(R.string.camera_position_barcode), modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp),
@@ -107,7 +107,7 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
         var provider: ProcessCameraProvider? = null
         var cameraState: LiveData<CameraState>? = null
         val observer = Observer<CameraState> { state ->
-            if (state.error != null && !disposed.get()) failure("Camera unavailable. Use manual search or resume to try again.")
+            if (state.error != null && !disposed.get()) failure(context.getString(R.string.camera_unavailable_use_manual_search_or))
         }
         analysis.setAnalyzer(executor) { proxy ->
             if (disposed.get() || !processing.compareAndSet(false, true)) { proxy.close(); return@setAnalyzer }
@@ -119,15 +119,15 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
                     .addOnSuccessListener { codes ->
                         if (!disposed.get()) {
                             val values = codes.mapNotNull { it.rawValue }.distinct()
-                            if (values.size > 1) failure("More than one code is visible. Show one label and resume, or use manual search.")
+                            if (values.size > 1) failure(context.getString(R.string.more_than_one_code_is_visible))
                             else values.singleOrNull()?.let { payload(it) }
                         }
                     }
-                    .addOnFailureListener { if (!disposed.get()) failure("Recognition failed. Use manual search or resume to try again.") }
+                    .addOnFailureListener { if (!disposed.get()) failure(context.getString(R.string.recognition_failed_use_manual_search_or)) }
                     .addOnCompleteListener { processing.set(false); proxy.close() }
             } catch (_: Exception) {
                 processing.set(false); proxy.close()
-                if (!disposed.get()) failure("Recognition failed. Use manual search or resume to try again.")
+                if (!disposed.get()) failure(context.getString(R.string.recognition_failed_use_manual_search_or))
             }
         }
         future.addListener({
@@ -137,7 +137,7 @@ fun ScanCamera(onPayload: (String) -> Unit, onFailure: (String) -> Unit) {
                 boundCamera = camera
                 cameraState = camera.cameraInfo.cameraState
                 cameraState?.observe(owner, observer)
-            } catch (_: Exception) { if (!disposed.get()) failure("Camera unavailable. Use manual search or resume to try again.") }
+            } catch (_: Exception) { if (!disposed.get()) failure(context.getString(R.string.camera_unavailable_use_manual_search_or)) }
         }, executor)
         onDispose {
             disposed.set(true)

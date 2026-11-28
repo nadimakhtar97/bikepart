@@ -1,5 +1,6 @@
 package com.nadim.bikepart
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +27,7 @@ import com.microsoft.fluentui.tokenized.controls.TextField
 /** A compatibility probe; deliberately not connected to shop navigation. */
 @Composable
 fun FluentCompatibilityTrial() {
+    val applyLabel = stringResource(R.string.apply)
     var input by rememberSaveable { mutableStateOf("") }
     var applied by rememberSaveable { mutableStateOf("") }
     FluentTheme {
@@ -42,12 +44,12 @@ fun FluentCompatibilityTrial() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Label(
-                    text = "Fluent compatibility trial", textStyle = TypographyTokens.Title2,
+                    text = stringResource(R.string.fluent_compatibility_trial), textStyle = TypographyTokens.Title2,
                     modifier = Modifier.semantics { heading() }
                 )
                 TextField(
-                    value = input, onValueChange = { input = it }, label = "Trial input",
-                    textFieldContentDescription = "Trial input",
+                    value = input, onValueChange = { input = it }, label = stringResource(R.string.trial_input),
+                    textFieldContentDescription = stringResource(R.string.trial_input),
                     textFieldTokens = object : TextFieldTokens() {
                         @Composable
                         override fun dividerColor(textFieldInfo: TextFieldInfo) =
@@ -60,16 +62,16 @@ fun FluentCompatibilityTrial() {
                             }
                     }
                 )
-                Label(text = "Applied: $applied", textStyle = TypographyTokens.Body1)
+                Label(text = stringResource(R.string.applied, applied), textStyle = TypographyTokens.Body1)
             }
             // Fluent 0.3.3 adds EditableText to buttons, causing Android to announce
             // an EditText. Replace only its accessibility contract, retaining native visuals.
             Button(
-                onClick = { applied = input }, text = "Apply",
+                onClick = { applied = input }, text = applyLabel,
                 modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp)
                     .clearAndSetSemantics {
                         role = Role.Button
-                        text = AnnotatedString("Apply")
+                        text = AnnotatedString(applyLabel)
                         onClick { applied = input; true }
                     }
             )

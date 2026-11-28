@@ -86,15 +86,15 @@ class BackupWorker(context: Context, parameters: WorkerParameters) : CoroutineWo
                         .addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
                 }
                 if (authorization.hasResolution() || authorization.accessToken == null) {
-                    shop.driveBackup.recordFailure("Drive access needs repair. Use Connect or repair Drive, then Back up now.")
+                    shop.driveBackup.recordFailure(applicationContext.getString(R.string.drive_access_needs_repair_use_connect))
                     return@withContext Result.failure()
                 }
                 // Never open consent UI from background work or persist access tokens.
-                val transport = GoogleDriveTransport(requireNotNull(authorization.accessToken)) {
+                val transport = GoogleDriveTransport(applicationContext, requireNotNull(authorization.accessToken)) {
                     if (!status.allowMobileData) {
                         val current = network.getNetworkCapabilities(network.activeNetwork)
                         if (network.isActiveNetworkMetered || current?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) != true)
-                            throw java.io.IOException("Wi-Fi is unavailable. Automatic backup will retry on Wi-Fi.")
+                            throw java.io.IOException(applicationContext.getString(R.string.wi_fi_is_unavailable_automatic_backup))
                     }
                 }
                 shop.driveBackup.publish(transport, target) { revision, time ->
@@ -105,7 +105,7 @@ class BackupWorker(context: Context, parameters: WorkerParameters) : CoroutineWo
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) {
             try { Shop.open(applicationContext).use { it.driveBackup.recordFailure(
-                "Backup failed. Check network, phone and Drive storage, or Connect or repair Drive; then retry.") } }
+                applicationContext.getString(R.string.backup_failed_check_network_phone_and)) } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { /* Preserve the business database even if operational storage is full. */ }
             Result.retry()

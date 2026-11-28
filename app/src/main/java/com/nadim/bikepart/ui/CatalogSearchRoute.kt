@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
@@ -18,7 +20,7 @@ internal fun CatalogSearchRoute(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(
-                title = "Find catalog details",
+                title = stringResource(R.string.title_find_catalog),
                 showBack = true,
                 enabled = !busy
             )

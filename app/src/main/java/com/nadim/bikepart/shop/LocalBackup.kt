@@ -1,5 +1,7 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import android.database.Cursor
 import android.system.Os
 import android.system.OsConstants
@@ -26,8 +28,8 @@ data class BackupContents(val datasetId: String, val revision: Long, val tables:
 object LocalBackup {
     const val FORMAT_VERSION = 1
 
-    fun inspect(file: File): LocalCapture {
-        readContents(file, includeBlobs = false)
+    fun inspect(context: android.content.Context, file: File): LocalCapture {
+        readContents(context, file, includeBlobs = false)
         return ZipFile(file).use { zip ->
             val manifest = JSONObject(zip.getInputStream(zip.getEntry("manifest.json")).bufferedReader(Charsets.UTF_8).use { it.readText() })
             LocalCapture(file, manifest.getString("captureId"), manifest.getString("revision").toLong(), manifest.getString("capturedAt").toLong())
@@ -40,26 +42,26 @@ object LocalBackup {
         "stock_corrections", "carts", "cart_lines", "cart_sequence", "sales", "sale_lines", "stock_arrivals",
         "barcode_aliases", "barcode_assignments")
 
-    fun read(file: File): BackupContents = readContents(file, includeBlobs = true)
+    fun read(context: android.content.Context, file: File): BackupContents = readContents(context, file, includeBlobs = true)
 
-    internal fun readForRestore(file: File): BackupContents = readContents(file, includeBlobs = true, historicalSchema = true)
+    internal fun readForRestore(context: android.content.Context, file: File): BackupContents = readContents(context, file, includeBlobs = true, historicalSchema = true)
 
-    private fun readContents(file: File, includeBlobs: Boolean, historicalSchema: Boolean = false): BackupContents = ZipFile(file).use { zip ->
+    private fun readContents(context: android.content.Context, file: File, includeBlobs: Boolean, historicalSchema: Boolean = false): BackupContents = ZipFile(file).use { zip ->
         val names = zip.entries().asSequence().map { it.name }.toList()
-        require(names.size == names.toSet().size) { "Duplicate backup file" }
-        val manifest = JSONObject(utf8(zip.getInputStream(requireNotNull(zip.getEntry("manifest.json")) { "Missing backup manifest" }).use { it.readBytes() }))
-        require(manifest.get("exportVersion") == FORMAT_VERSION) { "Unsupported export version" }
-        require(manifest.get("complete") == true && manifest.getString("encoding") == "UTF-8") { "Incomplete backup or unsupported encoding" }
-        require(manifest.getString("revision").matches(Regex("0|[1-9][0-9]*")) && manifest.getString("revision").toLongOrNull() != null) { "Invalid capture revision" }
-        require(manifest.getString("capturedAt").toLongOrNull() != null) { "Invalid capture time" }
-        for (key in listOf("captureId", "datasetId")) require(runCatching { UUID.fromString(manifest.getString(key)).toString() == manifest.getString(key) }.getOrDefault(false)) { "Invalid $key" }
+        require(names.size == names.toSet().size) { context.getString(R.string.duplicate_backup_file) }
+        val manifest = JSONObject(utf8(zip.getInputStream(requireNotNull(zip.getEntry("manifest.json")) { context.getString(R.string.missing_backup_manifest) }).use { it.readBytes() }))
+        require(manifest.get("exportVersion") == FORMAT_VERSION) { context.getString(R.string.unsupported_export_version) }
+        require(manifest.get("complete") == true && manifest.getString("encoding") == "UTF-8") { context.getString(R.string.incomplete_backup_or_unsupported_encoding) }
+        require(manifest.getString("revision").matches(Regex("0|[1-9][0-9]*")) && manifest.getString("revision").toLongOrNull() != null) { context.getString(R.string.invalid_capture_revision) }
+        require(manifest.getString("capturedAt").toLongOrNull() != null) { context.getString(R.string.invalid_capture_time) }
+        for (key in listOf("captureId", "datasetId")) require(runCatching { UUID.fromString(manifest.getString(key)).toString() == manifest.getString(key) }.getOrDefault(false)) { context.getString(R.string.invalid, key) }
         val files = manifest.getJSONArray("files")
         val verified = mutableMapOf<String, ByteArray>()
         val sizes = mutableMapOf<String, Long>()
         for (i in 0 until files.length()) {
             val item = files.getJSONObject(i)
             val path = item.getString("path")
-            require(integer(item, "size") >= 0) { "Invalid file size: $path" }
+            require(integer(context, item, "size") >= 0) { context.getString(R.string.invalid_file_size, path) }
             require(path.matches(Regex("(tables/[a-z_]+\\.csv|blobs/[0-9a-f]{64}|schema\\.json)")))
             require(path !in sizes)
             val digest = MessageDigest.getInstance("SHA-256")
@@ -75,15 +77,15 @@ object LocalBackup {
                 }
             }
             val hash = digest.digest().joinToString("") { "%02x".format(it) }
-            require(size == item.getLong("size") && hash == item.getString("sha256")) { "Backup content failed verification: $path" }
+            require(size == item.getLong("size") && hash == item.getString("sha256")) { context.getString(R.string.backup_content_failed_verification, path) }
             if (path.startsWith("blobs/")) require(path == "blobs/$hash")
             sizes[path] = size
             val bytes = collected?.toByteArray() ?: byteArrayOf()
             verified[path] = bytes
         }
-        require(names.toSet() == verified.keys + "manifest.json") { "Unexpected backup contents" }
+        require(names.toSet() == verified.keys + "manifest.json") { context.getString(R.string.unexpected_backup_contents) }
         val schema = JSONObject(utf8(requireNotNull(verified["schema.json"])))
-        require(schema.get("roomVersion") is Int && schema.get("roomVersion") == manifest.get("roomVersion")) { "Schema version mismatch" }
+        require(schema.get("roomVersion") is Int && schema.get("roomVersion") == manifest.get("roomVersion")) { context.getString(R.string.schema_version_mismatch) }
         val tableMetadata = schema.getJSONArray("tables")
         require(tableMetadata.toString() == manifest.getJSONArray("tables").toString())
         val tables = mutableMapOf<String, BackupTable>()
@@ -93,13 +95,13 @@ object LocalBackup {
             require(name !in tables)
             val rows = decodeCsv(utf8(requireNotNull(verified["tables/$name.csv"])))
             val columns = rows.first().map { requireNotNull(it) }
-            require(columns.size == columns.toSet().size) { "Duplicate column in $name" }
+            require(columns.size == columns.toSet().size) { context.getString(R.string.duplicate_column_in, name) }
             require(columns == metadata.getJSONArray("columns").let { array -> (0 until array.length()).map { array.getJSONObject(it).getString("name") } })
-            require((rows.size - 1).toLong() == integer(metadata, "rowCount")) { "Invalid row count: $name" }
+            require((rows.size - 1).toLong() == integer(context, metadata, "rowCount")) { context.getString(R.string.invalid_row_count, name) }
             tables[name] = BackupTable(columns, rows.drop(1).map { row -> require(row.size == columns.size); columns.zip(row).toMap() })
         }
         require(historicalSchema || tables.keys == businessTables)
-        require(verified.keys == tables.keys.map { "tables/$it.csv" }.toSet() + "schema.json" + verified.keys.filter { it.startsWith("blobs/") }) { "Unexpected files outside the declared schema" }
+        require(verified.keys == tables.keys.map { "tables/$it.csv" }.toSet() + "schema.json" + verified.keys.filter { it.startsWith("blobs/") }) { context.getString(R.string.unexpected_files_outside_the_declared_schema) }
         val state = tables.getValue("shop_state").records.single()
         require(state["datasetId"] == manifest.getString("datasetId") && state["revision"] == manifest.getString("revision"))
         val dependencies = manifest.getJSONArray("dependencies")
@@ -108,8 +110,8 @@ object LocalBackup {
         for (i in 0 until dependencies.length()) {
             val dependency = dependencies.getJSONObject(i)
             val digest = dependency.getString("sha256")
-            require(sizes["blobs/$digest"] == integer(dependency, "size"))
-            require(expected.add(digest)) { "Duplicate blob dependency" }
+            require(sizes["blobs/$digest"] == integer(context, dependency, "size"))
+            require(expected.add(digest)) { context.getString(R.string.duplicate_blob_dependency) }
         }
         require(blobs.keys == expected)
         val references = tables["product_photos"]?.records.orEmpty().map { PhotoReference(requireNotNull(it["sha256"]), requireNotNull(it["sizeBytes"]).toLong()) } +
@@ -125,9 +127,9 @@ object LocalBackup {
         .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT).onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
         .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
 
-    internal fun integer(json: JSONObject, key: String): Long {
+    internal fun integer(context: android.content.Context, json: JSONObject, key: String): Long {
         val value = json.get(key)
-        require(value is Int || value is Long) { "$key must be a whole number" }
+        require(value is Int || value is Long) { context.getString(R.string.must_be_a_whole_number, key) }
         return (value as Number).toLong()
     }
 
@@ -168,14 +170,14 @@ private data class CapturedShop(val revision: Long, val time: Long, val dataset:
     val tables: Map<String, List<List<String?>>>, val photos: List<PhotoReference>)
 
 /** Only the in-memory read is transactional. Disk staging never holds the business transaction. */
-internal suspend fun captureBackup(database: ShopDatabase, photos: ProductPhotos, directory: File,
+internal suspend fun captureBackup(context: android.content.Context, database: ShopDatabase, photos: ProductPhotos, directory: File,
     onCaptured: suspend (Long) -> Unit): LocalCapture {
     val captured = database.withTransaction {
         val db = database.openHelper.writableDatabase
         val actual = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('android_metadata', 'room_master_table')").use { cursor ->
             buildSet { while (cursor.moveToNext()) add(cursor.getString(0)) }
         }
-        check(actual == LocalBackup.businessTables) { "Update backup coverage for the current schema" }
+        check(actual == LocalBackup.businessTables) { context.getString(R.string.update_backup_coverage_for_the_current) }
         val state = requireNotNull(database.dao().state())
         val metadata = JSONArray()
         val data = LocalBackup.businessTables.sorted().associateWith { name ->
@@ -215,7 +217,7 @@ internal suspend fun captureBackup(database: ShopDatabase, photos: ProductPhotos
         CapturedShop(state.revision, System.currentTimeMillis(), state.datasetId, schema, data, references)
     }
     return withContext(Dispatchers.IO) {
-        check(directory.isDirectory || directory.mkdirs()) { "Could not create local backup storage" }
+        check(directory.isDirectory || directory.mkdirs()) { context.getString(R.string.could_not_create_local_backup_storage) }
         val id = UUID.randomUUID().toString()
         val partial = File(directory, "$id.partial")
         val target = File(directory, "$id.zip")
@@ -249,7 +251,7 @@ internal suspend fun captureBackup(database: ShopDatabase, photos: ProductPhotos
                 zip.finish(); zip.flush(); output.fd.sync()
             }
         }
-        LocalBackup.inspect(partial)
+        LocalBackup.inspect(context, partial)
         currentCoroutineContext().ensureActive()
         Os.rename(partial.path, target.path)
         syncDirectory(directory)

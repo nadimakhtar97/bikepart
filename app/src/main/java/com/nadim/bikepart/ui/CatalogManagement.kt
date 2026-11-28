@@ -31,10 +31,10 @@ internal class CatalogActions(
 
 @Composable
 internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, actions: CatalogActions) {
-    ShopPageHeader(product.title, "Product-only custom fields.")
+    ShopPageHeader(product.title, stringResource(R.string.product_only_custom_fields))
     ShopSection(stringResource(R.string.catalog_custom_fields)) {
         Text(
-            "Shared category fields and their options are managed in More. These fields belong only to ${product.title}.",
+            stringResource(R.string.shared_category_fields_and_their_options, product.title),
             style = MaterialTheme.typography.bodyMedium
         )
         var creating by rememberSaveable { mutableStateOf(false) }
@@ -43,21 +43,21 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
         if (creating) FieldCreator(product.categoryId, busy, error?.takeIf { it.definitionId == null }, onChange) { setup -> actions.custom(setup) { creating = false } }
     }
     var search by rememberSaveable { mutableStateOf("") }
-    ShopSearchField(search, { search = it }, "Find definition", enabled = !busy)
+    ShopSearchField(search, { search = it }, stringResource(R.string.catalog_find_definition), enabled = !busy)
     shop.attributes.filter {
         it.productId == product.id && LookupNames.key(it.name).contains(LookupNames.key(search))
     }.forEach { field ->
         key(field.id) {
             ShopSection(field.name) {
-                Text((if (field.productId == null) "Category field" else "Product custom field") + " · " + field.type.label + if (field.retired) " · retired" else "", style = MaterialTheme.typography.bodyMedium)
+                Text((if (field.productId == null) stringResource(R.string.category_field) else stringResource(R.string.product_custom_field)) + " · " + stringResource(field.type.label) + if (field.retired) stringResource(R.string.retired) else "", style = MaterialTheme.typography.bodyMedium)
                 if (!field.retired) {
                     var expanded by rememberSaveable { mutableStateOf(false) }
                     var replacing by rememberSaveable { mutableStateOf(false) }
                     ShopSecondaryButton(onClick = { expanded = !expanded; onChange() }, enabled = !busy,
-                        modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.productId == null) "Manage ${field.name}" else "Manage custom ${field.name}") }
+                        modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.productId == null) stringResource(R.string.manage, field.name) else stringResource(R.string.manage_custom, field.name)) }
                     if (expanded) {
                         ShopSecondaryButton(onClick = { actions.required(field.id, !field.required) }, enabled = !busy,
-                            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.required) "Make optional" else "Make required") }
+                            modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(if (field.required) stringResource(R.string.field_make_optional) else stringResource(R.string.field_make_required)) }
                         ShopSecondaryButton(onClick = { actions.retire(field.id) }, enabled = !busy,
                             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.catalog_retire_field)) }
                         if (field.productId != null && !replacing) {
@@ -74,7 +74,7 @@ internal fun CatalogManagement(shop: ShopSnapshot, product: Product, busy: Boole
                             ShopPrimaryButton(stringResource(R.string.catalog_promote_to_category), enabled = !busy) { actions.promote(field.id, name) }
                         }
                         shop.options.filter { it.definitionId == field.id }.forEach { option ->
-                            if (option.retired) Text(option.name + " (retired)", style = MaterialTheme.typography.bodyMedium)
+                            if (option.retired) Text(option.name + stringResource(R.string.retired_suffix), style = MaterialTheme.typography.bodyMedium)
                             else ShopSecondaryButton(onClick = { actions.retireOption(option.id) }, enabled = !busy,
                                 modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire_option, option.name)) }
                         }

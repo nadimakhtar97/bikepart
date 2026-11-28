@@ -35,7 +35,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                            showLocations: Boolean = true
 ) {
     var make by rememberSaveable { mutableStateOf("") }
-    ShopSection(if (showLocations) "Fitment and locations" else "Fitment") {
+    ShopSection(if (showLocations) stringResource(R.string.title_fitment_locations) else stringResource(R.string.finding_fitment_only)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
             ShopChoiceChip(
                 label = stringResource(R.string.finding_unknown_fitment),
@@ -69,7 +69,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
             )
             val selectedModels = shop.models.filter { it.id in models }.map { model ->
                 val parent = shop.makes.single { it.id == model.makeId }
-                val retired = if (parent.retired || model.retired) " (retired)" else ""
+                val retired = if (parent.retired || model.retired) stringResource(R.string.retired_suffix) else ""
                 model.id to (parent.name + " · " + model.name + retired)
             }
             if (make.isNotEmpty()) key(make) {
@@ -97,7 +97,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                         enabled = !busy,
                         onClick = { onModels(models - id) },
                         modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
-                    ) { Text(stringResource(R.string.remove) + modelName) }
+                    ) { Text(stringResource(R.string.lookup_remove_named, modelName)) }
                 }
             }
             if (models.isEmpty()) Text(stringResource(R.string.finding_choose_model_note), style = MaterialTheme.typography.bodyMedium)
@@ -108,7 +108,7 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
                 label = stringResource(R.string.finding_search_location),
                 addLabel = stringResource(R.string.finding_add_location),
                 options = shop.locations.filter { !it.retired || it.id in locations && it.id in product?.locationIds.orEmpty() }
-                    .map { it.id to (it.name + if (it.retired) " (retired)" else "") },
+                    .map { it.id to (if (it.retired) stringResource(R.string.retired_suffix_2, it.name) else it.name) },
                 selected = locations,
                 busy = busy,
                 onSelect = { onLocations(if (it in locations) locations - it else locations + it) },
@@ -123,10 +123,10 @@ internal fun FindingFields(shop: ShopSnapshot, product: Product?, models: Set<St
 @Composable
 internal fun FindingSummary(shop: ShopSnapshot, product: Product) {
     ShopSection(stringResource(R.string.finding_fitment_locations)) {
-        Text(if (product.modelIds.isEmpty()) "Fitment: Unknown" else "Fitment: Assigned", style = MaterialTheme.typography.bodyMedium)
+        Text(if (product.modelIds.isEmpty()) stringResource(R.string.fitment_unknown) else stringResource(R.string.fitment_assigned), style = MaterialTheme.typography.bodyMedium)
         shop.models.filter { it.id in product.modelIds }.forEach { model ->
             val make = shop.makes.single { it.id == model.makeId }
-            Text(make.name + " · " + model.name + if (make.retired || model.retired) " (retired)" else "", style = MaterialTheme.typography.bodyMedium)
+            Text(make.name + " · " + model.name + if (make.retired || model.retired) stringResource(R.string.retired_suffix) else "", style = MaterialTheme.typography.bodyMedium)
         }
         shop.locations.filter { it.id in product.locationIds }.forEach {
             Text(stringResource(if (it.retired) R.string.location_retired else R.string.location, it.name), style = MaterialTheme.typography.bodyMedium)
@@ -151,7 +151,7 @@ internal fun FindingLookupSettings(
     var addingModel by rememberSaveable { mutableStateOf(false) }
     var addingLocation by rememberSaveable { mutableStateOf(false) }
     Text(stringResource(R.string.finding_retired_names_note), style = MaterialTheme.typography.bodyMedium)
-    ShopSearchField(search, { search = it }, "Find make, model or location", enabled = !busy)
+    ShopSearchField(search, { search = it }, stringResource(R.string.finding_find_lookup), enabled = !busy)
     fun matches(name: String) = LookupNames.key(name).contains(LookupNames.key(search))
     ShopSection(stringResource(R.string.finding_motorcycle_makes)) {
         ShopSecondaryButton(
@@ -220,6 +220,6 @@ internal fun FindingLookupSettings(
 
 @Composable
 private fun LookupRetirement(name: String, retired: Boolean, busy: Boolean, retire: () -> Unit) {
-    if (retired) Text(name + " (retired)", style = MaterialTheme.typography.bodyMedium)
+    if (retired) Text(name + stringResource(R.string.retired_suffix), style = MaterialTheme.typography.bodyMedium)
     else ShopSecondaryButton(enabled = !busy, onClick = retire, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.retire, name)) }
 }

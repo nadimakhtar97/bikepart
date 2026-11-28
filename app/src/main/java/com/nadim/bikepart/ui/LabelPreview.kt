@@ -81,6 +81,7 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
     onChange: () -> Unit,
     usbAccess: (android.content.Context, () -> Boolean) -> com.nadim.bikepart.printing.LabelUsbAccess,
     save: (LabelMedia, String) -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var mediaName by rememberSaveable(product.id) { mutableStateOf(shop.labelPreferences.media.name) }
     var copies by rememberSaveable(product.id) { mutableStateOf(shop.labelPreferences.copies.toString()) }
     // Only primitives enter saved instance state.
@@ -106,7 +107,7 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
                     onClick = { mediaName = option.name; changed() }),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 RadioButton(selected = media == option, onClick = null)
-                Text(option.label, Modifier.padding(start = ShopSpacing.small))
+                Text(stringResource(option.label), Modifier.padding(start = ShopSpacing.small))
             }
         } }
         Text(stringResource(R.string.load_the_mm_roll_changing_profile_requires, media.widthMm, media.heightMm))
@@ -121,12 +122,12 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
             modifier = Modifier.bringIntoViewRequester(copiesRequester)
         )
         ShopPrimaryButton(stringResource(R.string.label_preview_btn), enabled = !busy) {
-            try { previewCopies = parseLabelCopies(copies); previewMedia = media.name }
+            try { previewCopies = parseLabelCopies(context, copies); previewMedia = media.name }
             catch (e: ShopValidation) { validation = e.message }
         }
         ShopSecondaryButton(onClick = { save(media, copies) }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_save_preferences)) }
-        Text(stringResource(R.string.saved_default_copies, shop.labelPreferences.media.label, shop.labelPreferences.copies),
+        Text(stringResource(R.string.saved_default_copies, stringResource(shop.labelPreferences.media.label), shop.labelPreferences.copies),
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     }
     previewMedia?.let { name ->
@@ -135,9 +136,9 @@ internal fun LabelPreview(shop: ShopSnapshot, product: Product, busy: Boolean, e
         val bitmap = remember(product.title, product.sku, payload, selected) { renderProductLabel(product, payload, selected) }
         val artwork = remember(bitmap) { bitmap.asImageBitmap() }
         ShopSection(stringResource(R.string.label_preview_section)) {
-            Text(stringResource(R.string.copies, selected.label, previewCopies))
+            Text(stringResource(R.string.copies, stringResource(selected.label), previewCopies))
             val artworkShape = MaterialTheme.shapes.small
-            Image(artwork, contentDescription = "Product label QR: $payload", filterQuality = FilterQuality.None,
+            Image(artwork, contentDescription = stringResource(R.string.product_label_qr, payload), filterQuality = FilterQuality.None,
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(selected.widthMm.toFloat() / selected.heightMm)

@@ -35,7 +35,7 @@ import androidx.compose.ui.window.DialogProperties
 internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: ShopError?,
     onChange: () -> Unit, edit: () -> Unit, complete: (String) -> Unit) {
     var cash by rememberSaveable(cart.id) { mutableStateOf("") }
-    ShopPageHeader(cart.name, "Review the quoted lines, then record the cash received.")
+    ShopPageHeader(stringResource(R.string.cart_3, cart.number), stringResource(R.string.review_the_quoted_lines_then_record))
     ShopGroup(spacing = ShopSpacing.small) {
         if (cart.customer.isNotEmpty()) Text(cart.customer, style = MaterialTheme.typography.titleMedium)
         cart.lines.forEach { line ->
@@ -51,7 +51,7 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
         Text(stringResource(R.string.cart_total, indianNumber(cart.totalRupees)), style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     }
-    ShopGroup("Cash payment") {
+    ShopGroup(stringResource(R.string.cash_payment)) {
         ShopTextField(
             value = cash,
             onValueChange = { cash = it; onChange() },
@@ -63,11 +63,11 @@ internal fun CashCheckout(shop: ShopSnapshot, cart: Cart, busy: Boolean, error: 
         ShopSecondaryButton(onClick = { cash = cart.totalRupees.toString(); onChange() }, enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.exact_amount)) }
         val tender = cash.trim().takeIf { it.matches(Regex("[0-9]+")) }?.toLongOrNull()
-        Text(if (tender != null && tender >= cart.totalRupees) "Change: ₹${indianNumber(Math.subtractExact(tender, cart.totalRupees))}" else "Enter enough cash to calculate change.",
+        Text(if (tender != null && tender >= cart.totalRupees) stringResource(R.string.change, indianNumber(Math.subtractExact(tender, cart.totalRupees))) else stringResource(R.string.enter_enough_cash_to_calculate_change),
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.titleMedium)
 
     }
-    ShopPrimaryButton(if (busy) "Saving sale…" else "Complete cash sale", enabled = !busy, onClick = { complete(cash) })
+    ShopPrimaryButton(if (busy) stringResource(R.string.saving_sale) else stringResource(R.string.complete_cash_sale), enabled = !busy, onClick = { complete(cash) })
     TextButton(onClick = edit, enabled = !busy, modifier = Modifier
         .fillMaxWidth()
         .heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.edit_cart)) }

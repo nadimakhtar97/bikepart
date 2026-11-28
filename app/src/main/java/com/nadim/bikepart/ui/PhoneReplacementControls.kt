@@ -28,24 +28,24 @@ internal fun PhoneReplacementControls(model: ShopViewModel, onReview: () -> Unit
     var retireThis by rememberSaveable { mutableStateOf(false) }
     ShopSection(stringResource(R.string.phone_active_section)) {
         Text(when (status?.phoneState) {
-            ActivePhoneState.Active -> "This phone is the confirmed active backup writer."
-            ActivePhoneState.Mismatch -> "Another phone is active. Stop backups here and use that phone, or review replacement after retiring the old installation."
-            ActivePhoneState.Retired -> "This installation is retired. Use the replacement phone for shop work."
-            else -> "Active-phone identity is unconfirmed. Check the marker before backup or cleanup."
+            ActivePhoneState.Active -> stringResource(R.string.this_phone_is_the_confirmed_active)
+            ActivePhoneState.Mismatch -> stringResource(R.string.another_phone_is_active_stop_backups)
+            ActivePhoneState.Retired -> stringResource(R.string.this_installation_is_retired_use_the)
+            else -> stringResource(R.string.active_phone_identity_is_unconfirmed_check)
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         status?.writer?.let { Text(stringResource(R.string.writer_generation, it), style = MaterialTheme.typography.bodyMedium) }
-        Text(if (status?.automaticDeletionPaused != false) "Automatic backup deletion is paused while phone identity or takeover is uncertain."
-            else "Phone identity is confirmed. Eligible cleanup must check it again before deletion.", style = MaterialTheme.typography.bodyMedium)
+        Text(if (status?.automaticDeletionPaused != false) stringResource(R.string.automatic_backup_deletion_is_paused_while)
+            else stringResource(R.string.phone_identity_is_confirmed_eligible_cleanup), style = MaterialTheme.typography.bodyMedium)
         if (status?.takeoverPending == true) Text(stringResource(R.string.activation_may_have_reached_drive_check_active), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(R.string.stop_using_the_old_phone_verify_the), style = MaterialTheme.typography.bodyMedium)
         status?.origin?.let { origin ->
-            Text("Restored capture: ${DateFormat.getDateTimeInstance().format(Date(origin.capturedAt))} · revision ${origin.revision}\nDataset: ${origin.datasetId}\nCapture: ${origin.captureId}", style = MaterialTheme.typography.bodyMedium)
-            origin.account?.let { Text("Restore source: $it · folder ${origin.folderId}\nManifest: ${origin.manifestId}", style = MaterialTheme.typography.bodyMedium) }
+            Text(stringResource(R.string.restored_capture_revision_ndataset_ncapture, DateFormat.getDateTimeInstance().format(Date(origin.capturedAt)), origin.revision, origin.datasetId, origin.captureId), style = MaterialTheme.typography.bodyMedium)
+            origin.account?.let { Text(stringResource(R.string.restore_source_folder_nmanifest, it, origin.folderId.toString(), origin.manifestId.toString()), style = MaterialTheme.typography.bodyMedium) }
         }
         ShopSecondaryButton(onClick = onCheck, enabled = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired) { Text(stringResource(R.string.phone_check_active)) }
         ShopSecondaryButton(onClick = onReview, enabled = !busy && status?.target != null) { Text(stringResource(R.string.phone_review_replacement)) }
         preview?.let { selected ->
-            Text("Activate for account: ${selected.target.account}\nFolder: ${selected.target.folderName}\nFolder ID: ${selected.target.folderId}\nDataset: ${selected.datasetId}\nPrevious writer: ${selected.previousWriter}", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.activate_for_account_nfolder_nfolder_id, selected.target.account, selected.target.folderName, selected.target.folderId, selected.datasetId, selected.previousWriter), style = MaterialTheme.typography.bodyMedium)
             if (selected.origin == null) Text(stringResource(R.string.no_restore_provenance_is_recorded_for_this), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.activation_creates_a_fresh_writer_generation_a), style = MaterialTheme.typography.bodyMedium)
             Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget)

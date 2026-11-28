@@ -33,13 +33,13 @@ class RestoreValidationTest {
                 shop.discardCart(cart, 0)
                 val before = shop.snapshot()
                 val capture = shop.captureLocalBackup()
-                val values = LocalBackup.read(capture.file).tables.getValue("attribute_values")
+                val values = LocalBackup.read(context, capture.file).tables.getValue("attribute_values")
                 val historical = rewriteCapture(capture.file, File(fixtures, "history.zip")) { entries, _, _ ->
                     val row = values.records.single().toMutableMap().apply { put("productId", second); put("historyId", UUID.randomUUID().toString()) }
                     entries["tables/attribute_values.csv"] = LocalBackup.csv(listOf(values.columns, values.columns.map { row[it] }))
                 }
                 reject(shop, historical, "another product's historical custom value")
-                val templates = LocalBackup.read(capture.file).tables.getValue("product_templates")
+                val templates = LocalBackup.read(context, capture.file).tables.getValue("product_templates")
                 val collision = rewriteCapture(capture.file, File(fixtures, "template.zip")) { entries, _, _ ->
                     val row = templates.records.single().toMutableMap()
                     val catalog = JSONObject(row.getValue("catalog")!!)
@@ -48,7 +48,7 @@ class RestoreValidationTest {
                     entries["tables/product_templates.csv"] = LocalBackup.csv(listOf(templates.columns, templates.columns.map { row[it] }))
                 }
                 reject(shop, collision, "colliding template definition/option identities")
-                val counter = LocalBackup.read(capture.file).tables.getValue("cart_sequence")
+                val counter = LocalBackup.read(context, capture.file).tables.getValue("cart_sequence")
                 val invalidCounter = rewriteCapture(capture.file, File(fixtures, "counter.zip")) { entries, _, _ ->
                     val row = counter.records.single() + ("id" to "0")
                     entries["tables/cart_sequence.csv"] = LocalBackup.csv(listOf(counter.columns, counter.columns.map { row[it] }))
@@ -93,7 +93,7 @@ class RestoreValidationTest {
                     Triple("categories", "position", "4294967296"), Triple("shop_state", "appearance", "Unknown")
                 )
                 for ((index, mutation) in mutations.withIndex()) {
-                    val contents = LocalBackup.read(capture.file)
+                    val contents = LocalBackup.read(context, capture.file)
                     val table = contents.tables.getValue(mutation.first)
                     val rows = table.records.mapIndexed { rowIndex, row -> if (rowIndex == 0) row + (mutation.second to mutation.third) else row }
                     val file = rewriteCapture(capture.file, File(fixtures, "$index.zip")) { entries, _, _ ->
@@ -123,7 +123,7 @@ class RestoreValidationTest {
                 val unsupported = rewriteCapture(capture.file, File(fixtures, "version.zip")) { _, manifest, _ -> manifest.put("exportVersion", 99) }
                 reject(shop, unsupported, "unsupported format")
                 val duplicate = rewriteCapture(capture.file, File(fixtures, "duplicate.zip")) { entries, _, _ ->
-                    val table = LocalBackup.read(capture.file).tables.getValue("categories")
+                    val table = LocalBackup.read(context, capture.file).tables.getValue("categories")
                     val rows = table.records.toMutableList()
                     rows[1] = rows[1] + ("normalizedName" to rows[0]["normalizedName"])
                     entries["tables/categories.csv"] = LocalBackup.csv(listOf(table.columns) + rows.map { row -> table.columns.map { row[it] } })
@@ -149,7 +149,7 @@ class RestoreValidationTest {
                 )
                 val before = shop.snapshot()
                 val capture = shop.captureLocalBackup()
-                val tables = LocalBackup.read(capture.file).tables
+                val tables = LocalBackup.read(context, capture.file).tables
                 rewriteCapture(capture.file, fixture) { entries, manifest, schema ->
                     removeBackupColumns(entries, schema, "shop_state", tables.getValue("shop_state"), setOf("labelMedia", "labelCopies"))
                     removeBackupColumns(entries, schema, "product_photos", tables.getValue("product_photos"), setOf("position"))
@@ -160,7 +160,7 @@ class RestoreValidationTest {
                     schema.put("roomVersion", 13).put("roomIdentity", trusted.getString("identityHash"))
                     manifest.put("roomVersion", 13)
                     // A category created before lookup-normalizer v1 retains its legacy key.
-                    val categories = LocalBackup.read(capture.file).tables.getValue("categories")
+                    val categories = LocalBackup.read(context, capture.file).tables.getValue("categories")
                     entries["tables/categories.csv"] = LocalBackup.csv(listOf(categories.columns) + categories.records.mapIndexed { index, row -> categories.columns.map { if (index == 0 && it == "normalizedName") "legacy-category-key" else row[it] } })
                 }
                 shop.validateLocalRestore(fixture).use { assertEquals(before, it.snapshot) }

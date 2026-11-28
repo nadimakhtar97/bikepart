@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui.theme
 
+
+import com.nadim.bikepart.R
 import android.content.Context
 import com.microsoft.fluentui.theme.token.AliasTokens
 import com.microsoft.fluentui.theme.token.IAliasTokens
@@ -7,9 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /** Stable preference identities; labels follow the upstream demo's order. */
-enum class ShopBrand(val label: String) {
-    Fluent("Fluent Brand"), OneNote("OneNote"), Word("Word"), Excel("Excel"),
-    PowerPoint("PowerPoint"), M365("M365"), Teams("MS Teams");
+enum class ShopBrand(@param:androidx.annotation.StringRes val label: Int) {
+    Fluent(R.string.fluent_brand), OneNote(R.string.onenote), Word(R.string.word), Excel(R.string.excel),
+    PowerPoint(R.string.powerpoint), M365(R.string.m365), Teams(R.string.ms_teams);
 
     val aliasTokens: IAliasTokens by lazy {
         when (this) {

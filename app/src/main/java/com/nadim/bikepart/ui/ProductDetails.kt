@@ -83,22 +83,26 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         ShopSectionHeader(stringResource(R.string.product_correct_stock))
         ShopListGroup {
             CorrectionKind.entries.forEach { kind ->
-                ShopListRow("Record ${kind.label.lowercase()}",
+                ShopListRow(stringResource(R.string.correction_record, stringResource(kind.label).lowercase()),
                     supporting = when (kind) {
-                        CorrectionKind.PhysicalCount -> "Enter the total pieces counted"
-                        CorrectionKind.Damage -> "Remove damaged pieces from stock"
-                        CorrectionKind.Loss -> "Remove lost pieces from stock"
+                        CorrectionKind.PhysicalCount -> stringResource(R.string.product_physical_count_supporting)
+                        CorrectionKind.Damage -> stringResource(R.string.product_damage_supporting)
+                        CorrectionKind.Loss -> stringResource(R.string.product_loss_supporting)
                     },
                     icon = R.drawable.ic_inventory, enabled = !busy, onClick = { onCorrection(kind) })
             }
         }
     }
     ShopSection(stringResource(R.string.product_details_section)) {
-        Text(product.description.ifBlank { "No description" }, style = MaterialTheme.typography.bodyLarge)
+        Text(product.description.ifBlank { stringResource(R.string.product_no_description) }, style = MaterialTheme.typography.bodyLarge)
         shop.attributes.filter { it.appliesTo(product.categoryId, product.id) && (!it.retired || it.id in product.attributes) }.forEach { definition ->
             val value = product.attributes[definition.id]
-            val display = if (value == null && definition.required && !definition.retired) "Required · missing" else attributeDisplay(shop, value)
-            Text(definition.name + (if (definition.retired) " (retired)" else "") + ": " + display + (if (value != null && definition.unit.isNotBlank()) " " + definition.unit else ""), style = MaterialTheme.typography.bodyMedium)
+            val display = if (value == null && definition.required && !definition.retired) stringResource(R.string.required_missing) else attributeDisplay(shop, value)
+            val fieldName = if (definition.retired) stringResource(R.string.retired_suffix_2, definition.name) else definition.name
+            val detail = if (value != null && definition.unit.isNotBlank())
+                stringResource(R.string.formatted_values_3, fieldName, display, definition.unit)
+            else stringResource(R.string.formatted_text, fieldName, display)
+            Text(detail, style = MaterialTheme.typography.bodyMedium)
         }
         HorizontalDivider(color = colors.outlineVariant)
         Text(stringResource(R.string.sku, product.sku), style = MaterialTheme.typography.bodyMedium)
@@ -111,23 +115,23 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
     if (product.historicalAttributes.isNotEmpty()) ShopSection(stringResource(R.string.product_historical_attributes)) {
         product.historicalAttributes.forEach { (_, definitionId, value) ->
             val definition = shop.attributes.single { it.id == definitionId }
-            Text(definition.name + ": " + attributeDisplay(shop, value) + " " + definition.unit, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.formatted_values_3, definition.name, attributeDisplay(shop, value), definition.unit), style = MaterialTheme.typography.bodyMedium)
         }
     }
     CorrectionHistory(shop.corrections.filter { it.productId == product.id })
     FindingSummary(shop, product)
-    if (product.archived) ShopListRow(stringResource(R.string.product_preview_labels), supporting = "Package or shared-bin label",
+    if (product.archived) ShopListRow(stringResource(R.string.product_preview_labels), supporting = stringResource(R.string.product_preview_labels_supporting),
         icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
     if (!product.archived) {
         ShopSectionHeader(stringResource(R.string.product_actions))
         ShopListGroup {
-            ShopListRow(stringResource(R.string.product_receive_stock), supporting = "Add received pieces and purchase cost",
+            ShopListRow(stringResource(R.string.product_receive_stock), supporting = stringResource(R.string.product_receive_stock_supporting),
                 icon = R.drawable.ic_inventory, enabled = !busy, onClick = onReceive)
-            ShopListRow(stringResource(R.string.product_preview_labels), supporting = "Package or shared-bin label",
+            ShopListRow(stringResource(R.string.product_preview_labels), supporting = stringResource(R.string.product_preview_labels_supporting),
                 icon = R.drawable.ic_template, enabled = !busy, onClick = onLabels)
-            ShopListRow(stringResource(R.string.scanner_copy_catalog), supporting = "Start a new product with these details",
+            ShopListRow(stringResource(R.string.scanner_copy_catalog), supporting = stringResource(R.string.product_copy_catalog_supporting),
                 icon = R.drawable.ic_add, enabled = !busy, onClick = onCopy)
-            ShopListRow(stringResource(R.string.product_create_template), supporting = "Reuse these details later",
+            ShopListRow(stringResource(R.string.product_create_template), supporting = stringResource(R.string.product_create_template_supporting),
                 icon = R.drawable.ic_template, enabled = !busy, onClick = onTemplate)
             ShopListRow(
                 stringResource(R.string.product_manage_fields),

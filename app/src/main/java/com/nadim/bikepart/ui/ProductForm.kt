@@ -58,6 +58,7 @@ internal fun ProductForm(
     templateMode: Boolean = false,
     save: (ProductFormInput) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var photoUris by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
     val multiplePhotos = product == null && !templateMode
     var photoRemoved by rememberSaveable { mutableStateOf(false) }
@@ -104,7 +105,7 @@ internal fun ProductForm(
                 onChange()
             },
         )
-        ProductTextField(title, { title = it; distinct = false; onChange() }, "Title (required)", !busy, error?.takeIf { it.field == ProductField.Title })
+        ProductTextField(title, { title = it; distinct = false; onChange() }, stringResource(R.string.form_title_required), !busy, error?.takeIf { it.field == ProductField.Title })
         val selectCategory: (String) -> Unit = {
             category = it
             mappings = emptyMap()
@@ -135,16 +136,16 @@ internal fun ProductForm(
                 emptyMessage = stringResource(R.string.form_no_matching_category),
             )
         }
-        ProductTextField(description, { description = it; onChange() }, "Description", !busy)
+        ProductTextField(description, { description = it; onChange() }, stringResource(R.string.form_description_label), !busy)
     }
     if (templateMode && initialCatalog != null && initialCatalog.categoryId.isNotEmpty() && category != initialCatalog.categoryId) Text(stringResource(R.string.form_prev_category_note), style = MaterialTheme.typography.bodyMedium)
     if (category.isNotEmpty()) {
-        val categoryName = shop.categories.firstOrNull { it.id == category }?.name ?: "category"
+        val categoryName = shop.categories.firstOrNull { it.id == category }?.name ?: stringResource(R.string.category)
         ShopSecondaryButton(
             onClick = { onManageCategory(category) },
             enabled = !busy,
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget),
-        ) { Text("Manage $categoryName fields in More") }
+        ) { Text(stringResource(R.string.manage_fields_in_more, categoryName)) }
         CategoryFields(
             shop,
             category,
@@ -187,7 +188,7 @@ internal fun ProductForm(
     if (product != null && !product.archived && !templateMode) ShopSection(stringResource(R.string.form_prices)) {
         buyingPriceField()
         ProductTextField(
-            price, { price = it; onChange() }, "Selling price (whole rupees)", !busy,
+            price, { price = it; onChange() }, stringResource(R.string.form_selling_price_label), !busy,
             error?.takeIf { it.field == ProductField.SellingPrice }, number = true
         )
         Text(
@@ -197,7 +198,7 @@ internal fun ProductForm(
     }
     if (product == null && !templateMode) ShopSection(stringResource(R.string.form_opening_stock_price)) {
         val stockField: @Composable (Modifier) -> Unit = { fieldModifier ->
-            ProductTextField(quantity, { quantity = it; onChange() }, "Opening stock (pieces)", !busy,
+            ProductTextField(quantity, { quantity = it; onChange() }, stringResource(R.string.form_opening_stock_label), !busy,
                 error?.takeIf { it.field == ProductField.OpeningStock }, number = true, modifier = fieldModifier)
         }
         val priceFields: @Composable () -> Unit = {
@@ -233,9 +234,9 @@ internal fun ProductForm(
         Checkbox(checked = distinct, onCheckedChange = null)
         Text(stringResource(R.string.form_save_distinct), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(ShopSpacing.medium))
     }
-    ShopPrimaryButton(if (busy) "Saving…" else if (templateMode) "Save template" else "Save product", enabled = !busy) {
+    ShopPrimaryButton(if (busy) stringResource(R.string.form_saving) else if (templateMode) stringResource(R.string.form_save_template) else stringResource(R.string.form_save_product), enabled = !busy) {
         if (assigned && models.isEmpty()) {
-            findingError = ShopError("Choose at least one motorcycle model", ProductField.Fitment)
+            findingError = ShopError(context.getString(R.string.choose_at_least_one_motorcycle_model), ProductField.Fitment)
             return@ShopPrimaryButton
         }
         val applicable = values.filterKeys { id ->
@@ -273,7 +274,7 @@ private fun CategoryMapping(shop: ShopSnapshot, product: Product, categoryId: St
         shop.attributes.filter { it.productId == null && it.categoryId == product.categoryId && it.id in product.attributes }.forEach { source ->
             val targets = shop.attributes.filter { it.productId == null && it.categoryId == categoryId && !it.retired && it.type == source.type && it.unit == source.unit && !it.type.isChoice }
             if (targets.isNotEmpty()) {
-                Text(stringResource(R.string.copy) + source.name, style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.copy_2, source.name), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small)) {
                     targets.forEach { target ->
                         ShopChoiceChip(

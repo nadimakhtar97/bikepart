@@ -1,5 +1,6 @@
 package com.nadim.bikepart.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,7 +21,7 @@ internal fun CartsRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Carts", showBack = false, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.dest_carts), showBack = false, enabled = !busy) },
         floatingActionButton = {
             if (!busy) {
                 FluentFloatingActionButton(
@@ -28,7 +29,7 @@ internal fun CartsRoute(
                     state = FABState.Expanded,
                     size = FABSize.Large,
                     icon = shopIconVector(R.drawable.ic_add),
-                    text = "New sale",
+                    text = stringResource(R.string.fab_new_sale),
                     modifier = Modifier.imePadding(),
                 )
             }

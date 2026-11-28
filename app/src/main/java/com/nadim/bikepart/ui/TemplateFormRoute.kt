@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.CatalogDraft
@@ -14,7 +16,7 @@ internal fun TemplateFormRoute(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(
-                title = if (editing) "Edit template" else "New template",
+                title = if (editing) stringResource(R.string.title_edit_template) else stringResource(R.string.title_new_template),
                 showBack = true,
                 enabled = !context.busy,
             )

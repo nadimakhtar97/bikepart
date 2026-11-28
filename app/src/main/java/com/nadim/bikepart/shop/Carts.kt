@@ -11,7 +11,7 @@ data class Cart(val id: String, val number: Long, val customer: String, val edit
     val totalRupees: Long get() = lines.fold(0L) { total, line -> Math.addExact(total, line.totalRupees) }
 }
 
-class StaleCart : IllegalArgumentException("This cart changed. Reload the saved cart before editing again.")
+class StaleCart(message: String) : IllegalArgumentException(message)
 
 /** Demand is informational, may exceed Long across carts, and never reduces on-hand stock. */
 fun ShopSnapshot.otherCartDemand(cartId: String, productId: String): String = carts.asSequence()

@@ -12,11 +12,11 @@ internal data class SaleDay(val date: LocalDate, val sales: List<Sale>) {
 }
 
 internal fun salesLog(sales: List<Sale>, zone: ZoneId, from: LocalDate? = null, until: LocalDate? = null,
-    query: String = ""): List<SaleDay> = sales.asSequence()
+    query: String = "", cartName: (Long) -> String = Long::toString): List<SaleDay> = sales.asSequence()
     .filter { sale ->
         val day = Instant.ofEpochMilli(sale.recordedAt).atZone(zone).toLocalDate()
         (from == null || day >= from) && (until == null || day <= until) &&
-            (query.isBlank() || listOf(sale.id, "Cart ${sale.cartNumber}", sale.customer).any { it.contains(query.trim(), ignoreCase = true) })
+            (query.isBlank() || listOf(sale.id, cartName(sale.cartNumber), sale.customer).any { it.contains(query.trim(), ignoreCase = true) })
     }
     .sortedWith(compareByDescending<Sale> { it.recordedAt }.thenBy { it.id })
     .groupBy { Instant.ofEpochMilli(it.recordedAt).atZone(zone).toLocalDate() }

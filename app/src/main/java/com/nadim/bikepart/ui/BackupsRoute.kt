@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.LocalCapture
@@ -19,7 +21,7 @@ internal fun BackupsRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Shop backups", showBack = true, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.title_shop_backups), showBack = true, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             DriveBackupControls(model, shop.revision)

@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.sizeIn
@@ -51,7 +53,7 @@ internal fun ShopBackButton(onClick: () -> Unit, enabled: Boolean = true) {
     IconButton(onClick = onClick, enabled = enabled) {
         Icon(
             imageVector = shopIconVector(com.nadim.bikepart.R.drawable.ic_arrow_back),
-            contentDescription = "Back",
+            contentDescription = stringResource(R.string.back),
             tint = shopAppBarColors().navigation,
         )
     }
