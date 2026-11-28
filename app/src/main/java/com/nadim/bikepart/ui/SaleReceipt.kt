@@ -56,7 +56,7 @@ internal fun SaleReceipt(sale: Sale, history: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-    ShopSectionHeader(stringResource(R.string.products), supporting = "${sale.lines.size} ${if (sale.lines.size == 1) "line" else "lines"}")
+    ShopSectionHeader(stringResource(R.string.products), supporting = pluralStringResource(R.plurals.cart_line_count, sale.lines.size, sale.lines.size))
     ShopGroup(spacing = ShopSpacing.small) {
         sale.lines.forEach { line ->
             Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerLow) {

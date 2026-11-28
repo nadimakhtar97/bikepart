@@ -43,7 +43,7 @@ internal fun CartRoute(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(
-                title = cart?.name ?: "Unfinished bill",
+                title = cart?.let { stringResource(R.string.cart_3, it.number) } ?: stringResource(R.string.title_unfinished_bill),
                 showBack = true,
                 enabled = !busy,
                 actions = if (draft != null) {
@@ -83,7 +83,7 @@ internal fun CartRoute(
     if (confirmDiscard && cart != null) {
         AlertDialog(
             onDismissRequest = { if (!busy) confirmDiscard = false },
-            title = { Text(stringResource(R.string.discard, cart.name)) },
+            title = { Text(stringResource(R.string.discard, stringResource(R.string.cart_3, cart.number))) },
             text = { Text(stringResource(R.string.cart_discard_stock_note)) },
             confirmButton = {
                 TextButton(
@@ -100,6 +100,7 @@ internal fun CartRoute(
 
 @Composable
 private fun CartCheckoutBar(totalRupees: Long, enabled: Boolean, checkout: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Surface(color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -110,7 +111,7 @@ private fun CartCheckoutBar(totalRupees: Long, enabled: Boolean, checkout: () ->
                 val totalStyle = MaterialTheme.typography.titleMedium
                 val density = LocalDensity.current
                 val halfWidth = (maxWidth - ShopSpacing.content) / 2
-                val amountWidth = rememberTextMeasurer().measure("₹${indianNumber(totalRupees)}", totalStyle, softWrap = false).size.width
+                val amountWidth = rememberTextMeasurer().measure(context.getString(R.string.rupee_amount, indianNumber(totalRupees)), totalStyle, softWrap = false).size.width
                 val stack = maxWidth < 320.dp || density.fontScale >= 1.5f || amountWidth > with(density) { halfWidth.toPx() }
                 val total: @Composable (Modifier) -> Unit = { modifier ->
                     Text(

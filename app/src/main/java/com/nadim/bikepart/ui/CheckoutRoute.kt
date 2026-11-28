@@ -24,7 +24,7 @@ internal fun CheckoutRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Cash checkout", showBack = true, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.title_cash_checkout), showBack = true, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             when {

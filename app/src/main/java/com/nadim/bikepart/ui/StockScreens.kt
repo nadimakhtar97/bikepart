@@ -28,8 +28,8 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 internal fun StockScreen(shop: ShopSnapshot, onAdd: () -> Unit, onOpen: (String) -> Unit, loadPhoto: PhotoLoader, initialHealth: String? = null, busy: Boolean = false,
     onScan: () -> Unit = {}, onProductAction: (Product, String) -> Unit = { _, _ -> }, initialQuery: String = "") {
     if (shop.products.none { !it.archived }) {
-        if (shop.products.isEmpty()) ShopEmptyState(stringResource(R.string.stock_no_products_title), "Add a product to start tracking your stock.", R.drawable.ic_stock)
-        else ShopEmptyState(stringResource(R.string.home_no_active_title), "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+        if (shop.products.isEmpty()) ShopEmptyState(stringResource(R.string.stock_no_products_title), stringResource(R.string.stock_no_products_desc), R.drawable.ic_stock)
+        else ShopEmptyState(stringResource(R.string.home_no_active_title), stringResource(R.string.home_no_active_desc), R.drawable.ic_stock)
     } else {
         ShopPageHeader(stringResource(R.string.stock_find_product))
         StockSearch(shop, initialHealth, loadPhoto, onOpen, busy, onScan, onProductAction, initialQuery)

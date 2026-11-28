@@ -12,9 +12,7 @@ data class Sale(val id: String, val cartId: String, val cartNumber: Long, val cu
     val changeRupees: Long, val lines: List<SaleLine>)
 
 data class StockShortage(val productId: String, val title: String, val requested: Long, val available: Long)
-class CheckoutShortage(val shortages: List<StockShortage>) : IllegalArgumentException(
-    shortages.joinToString("\n") { "${it.title}: requested ${indianNumber(it.requested)}, available ${indianNumber(it.available)}" } +
-        "\nNo sale saved. Edit the cart quantities explicitly before retrying.")
+class CheckoutShortage(val shortages: List<StockShortage>, message: String) : IllegalArgumentException(message)
 
 internal fun SaleRow.toSale(lines: List<SaleLineRow>) = Sale(id, cartId, cartNumber, customer, recordedAt, revision,
     totalRupees, cashRupees, changeRupees, lines.map { SaleLine(it.productId, it.sku, it.title, it.category,

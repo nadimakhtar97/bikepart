@@ -1,5 +1,7 @@
 package com.nadim.bikepart.printing
 
+
+import com.nadim.bikepart.R
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -73,11 +75,11 @@ class UsbLabelPrinter(private val context: Context, private val cancelled: () ->
 
     fun device(): UsbDevice {
         if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_USB_HOST))
-            throw IOException("This phone does not support USB host/OTG.")
+            throw IOException(context.getString(R.string.this_phone_does_not_support_usb))
         val devices = manager.deviceList.values.filter {
             it.productName?.uppercase()?.replace(Regex("[^A-Z0-9]"), "")?.let { name -> name == "TE244" || name == "TSCTE244" } == true
         }
-        if (devices.size != 1) throw IOException("Connect exactly one TE244 using USB/OTG and turn it on. No supported TE244 is available.")
+        if (devices.size != 1) throw IOException(context.getString(R.string.connect_exactly_one_te244_using_usb))
         return devices.single()
     }
 
@@ -90,19 +92,19 @@ class UsbLabelPrinter(private val context: Context, private val cancelled: () ->
     }
 
     fun open(device: UsbDevice, cancelled: () -> Boolean = { false }): UsbConnection {
-        if (!hasPermission(device)) throw IOException("USB permission is required. Allow access, then confirm printing again.")
+        if (!hasPermission(device)) throw IOException(context.getString(R.string.usb_permission_is_required_allow_access))
         val interfaces = (0 until device.interfaceCount).map { device.getInterface(it) }
         val candidates = interfaces.flatMap { usbInterface ->
             (0 until usbInterface.endpointCount).map { usbInterface.getEndpoint(it) }
                 .filter { it.type == UsbConstants.USB_ENDPOINT_XFER_BULK && it.direction == UsbConstants.USB_DIR_OUT }
                 .map { usbInterface to it }
         }
-        if (candidates.size != 1) throw IOException("Unsupported TE244 USB transport. Record firmware and USB descriptors for setup review.")
+        if (candidates.size != 1) throw IOException(context.getString(R.string.unsupported_te244_usb_transport_record_firmware))
         val (usbInterface, endpoint) = candidates.single()
-        val connection = manager.openDevice(device) ?: throw IOException("TE244 unavailable. Reconnect USB/OTG and check permission.")
+        val connection = manager.openDevice(device) ?: throw IOException(context.getString(R.string.te244_unavailable_reconnect_usb_otg_and))
         if (!connection.claimInterface(usbInterface, true)) {
             connection.close()
-            throw IOException("TE244 USB interface is busy or unavailable.")
+            throw IOException(context.getString(R.string.te244_usb_interface_is_busy_or))
         }
         return UsbConnection(connection, usbInterface, endpoint, cancelled)
     }

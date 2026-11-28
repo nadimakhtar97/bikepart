@@ -3,6 +3,7 @@ package com.nadim.bikepart.ui
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.nadim.bikepart.R
 import com.nadim.bikepart.shop.*
@@ -32,32 +33,32 @@ internal fun HomeScreen(shop: ShopSnapshot, onAdd: () -> Unit, onStock: (StockHe
     }
     if (activeProducts.isEmpty()) {
         if (shop.products.isEmpty()) ShopEmptyState(stringResource(R.string.home_empty_title),
-            "Record its opening stock and whole-rupee selling price.", R.drawable.ic_stock)
-        else ShopEmptyState(stringResource(R.string.home_no_active_title), "Add a product for current work. Archived products and their history are available under More.", R.drawable.ic_stock)
+            stringResource(R.string.home_empty_desc), R.drawable.ic_stock)
+        else ShopEmptyState(stringResource(R.string.home_no_active_title), stringResource(R.string.home_no_active_desc), R.drawable.ic_stock)
     }
     if (activeProducts.isNotEmpty()) {
         ShopSectionHeader(stringResource(R.string.home_stock_attention),
-            supporting = if (lowStock + outOfStock == 0) "Nothing needs attention today" else "Counts at or below your thresholds")
+            supporting = if (lowStock + outOfStock == 0) stringResource(R.string.home_nothing_needs_attention) else stringResource(R.string.home_counts_at_threshold))
         ShopListGroup {
-            ShopListRow("Low stock: $lowStock ${if (lowStock == 1) "product" else "products"}",
-                supporting = "Positive stock at or below the set threshold",
+            ShopListRow(pluralStringResource(R.plurals.low_stock_product_count, lowStock, lowStock),
+                supporting = stringResource(R.string.home_low_stock_supporting),
                 leading = { ShopStatusIconTile(R.drawable.ic_warning, ShopStatusTone.Warning) },
                 onClick = { onStock(StockHealth.LowStock) })
-            ShopListRow("Out of stock: $outOfStock ${if (outOfStock == 1) "product" else "products"}",
-                supporting = "No pieces currently on hand",
+            ShopListRow(pluralStringResource(R.plurals.out_of_stock_product_count, outOfStock, outOfStock),
+                supporting = stringResource(R.string.home_out_of_stock_supporting),
                 leading = { ShopStatusIconTile(R.drawable.ic_no_stock, ShopStatusTone.Danger) },
                 onClick = { onStock(StockHealth.OutOfStock) })
         }
     }
-    ShopSectionHeader(stringResource(R.string.home_recent_sales), actionLabel = if (shop.sales.isNotEmpty()) "View all" else null, onAction = onSales)
+    ShopSectionHeader(stringResource(R.string.home_recent_sales), actionLabel = if (shop.sales.isNotEmpty()) stringResource(R.string.home_view_all) else null, onAction = onSales)
     if (recentSales.isEmpty()) Text(stringResource(R.string.home_no_recent_sales), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     else ShopListGroup {
         recentSales.forEach { sale ->
-            ShopListRow("Cart ${sale.cartNumber}",
-                supporting = listOfNotNull(sale.customer.ifBlank { null }, "${sale.lines.size} lines").joinToString(" · "),
-                meta = "₹${indianNumber(sale.totalRupees)}", status = { ShopStatusChip(stringResource(R.string.shared_paid), ShopStatusTone.Success) },
-                actionLabel = "Open receipt · Cart ${sale.cartNumber}", onClick = { onSale(sale.cartId) })
+            ShopListRow(stringResource(R.string.cart_3, sale.cartNumber),
+                supporting = listOfNotNull(sale.customer.ifBlank { null }, stringResource(R.string.lines_2, sale.lines.size)).joinToString(" · "),
+                meta = stringResource(R.string.rupee_amount, indianNumber(sale.totalRupees)), status = { ShopStatusChip(stringResource(R.string.shared_paid), ShopStatusTone.Success) },
+                actionLabel = stringResource(R.string.open_receipt_cart, sale.cartNumber), onClick = { onSale(sale.cartId) })
         }
     }
 }

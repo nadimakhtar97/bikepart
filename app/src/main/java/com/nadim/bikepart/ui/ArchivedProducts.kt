@@ -29,12 +29,12 @@ internal fun ArchivedProducts(shop: ShopSnapshot, loadPhoto: PhotoLoader, onOpen
     var query by rememberSaveable { mutableStateOf("") }
     var limit by rememberSaveable(query) { mutableIntStateOf(40) }
     val archived = shop.products.filter { it.archived }
-    if (archived.isEmpty()) ShopEmptyState(stringResource(R.string.archived_no_products_title), "Products archived at zero stock remain here with their details and history.", R.drawable.ic_stock)
+    if (archived.isEmpty()) ShopEmptyState(stringResource(R.string.archived_no_products_title), stringResource(R.string.archived_no_products_desc), R.drawable.ic_stock)
     else {
-        ShopSearchField(query, { query = it }, "Search archived products")
+        ShopSearchField(query, { query = it }, stringResource(R.string.archived_search_placeholder))
         val found = archived.filter { LookupNames.key(it.title + " " + it.sku).contains(LookupNames.key(query)) }
-        ShopSectionHeader("${found.size} archived products", supporting = "Title or permanent SKU")
-        if (found.isEmpty()) ShopEmptyState(stringResource(R.string.archived_no_matching_title), "Try a title or permanent SKU.", R.drawable.ic_stock)
+        ShopSectionHeader(stringResource(R.string.archived_products, found.size), supporting = stringResource(R.string.archived_title_or_sku))
+        if (found.isEmpty()) ShopEmptyState(stringResource(R.string.archived_no_matching_title), stringResource(R.string.archived_no_matching_desc), R.drawable.ic_stock)
         else ShopListGroup {
             found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto) { onOpen(product.id) } }
         }

@@ -1,8 +1,10 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import java.math.BigDecimal
 
-enum class StockHealth(val label: String) { InStock("In stock"), LowStock("Low stock"), OutOfStock("Out of stock") }
+enum class StockHealth(@param:androidx.annotation.StringRes val label: Int) { InStock(R.string.in_stock), LowStock(R.string.low_stock_2), OutOfStock(R.string.out_of_stock_2) }
 
 val Product.stockHealth: StockHealth get() = when {
     quantity == 0L -> StockHealth.OutOfStock

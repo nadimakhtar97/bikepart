@@ -42,13 +42,13 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == usb.permissionAction) {
                     feedback = if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false))
-                        "USB access granted. Confirm media and copies, then tap Print confirmed labels."
-                    else "USB permission denied. No labels sent. Allow USB access to print."
+                        context.getString(R.string.usb_access_granted_confirm_media_and)
+                    else context.getString(R.string.usb_permission_denied_no_labels_sent)
                     confirmed = false
                 } else if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
                     cancelled.set(true)
                     confirmed = false
-                    feedback = "USB disconnected. Inspect any output before choosing remaining copies and reconnecting."
+                    feedback = context.getString(R.string.usb_disconnected_inspect_any_output_before)
                 }
             }
         }
@@ -65,7 +65,7 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
             Text(stringResource(R.string.check_the_physical_labels_after_interrupted_output))
             ShopSecondaryButton(enabled = !sending, onClick = {
                 try { printer.inspected(); pending = null; confirmed = false; inspected() }
-                catch (_: Exception) { feedback = "Could not save inspection. Printing remains blocked." }
+                catch (_: Exception) { feedback = context.getString(R.string.could_not_save_inspection_printing_remains) }
             }, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_inspected_btn)) }
         }
         Row(Modifier.fillMaxWidth().heightIn(min = ShopSpacing.touchTarget).toggleable(
@@ -83,17 +83,18 @@ internal fun LabelPrintControls(media: LabelMedia, copies: Long, sku: String, ar
                     feedback = withContext(Dispatchers.IO) {
                         val connection = usb.connect()
                         if (connection == null) {
-                            "USB permission requested. Nothing has been sent. Confirm printing again after allowing access."
+                            context.getString(R.string.usb_permission_requested_nothing_has_been)
                         } else connection.use { transport ->
-                            printer.send("$sku · ${media.label} · $copies copies", copies, TsplLabel.encode(media, artwork), transport) { cancelled.get() }
+                            val result = printer.send(context.getString(R.string.copies_2, sku, context.getString(media.label), copies), copies, TsplLabel.encode(media, artwork), transport) { cancelled.get() }
+                            context.getString(result.messageRes, result.copiesSent)
                         }
                     }
                 } catch (e: Exception) {
-                    feedback = e.message ?: "Printer unavailable. Check USB/OTG and permission."
+                    feedback = e.message ?: context.getString(R.string.printer_unavailable_check_usb_otg_and)
                 } finally { pending = printer.pending(); sending = false }
             }
         }
-        if (sending) ShopSecondaryButton(onClick = { cancelled.set(true); feedback = "Cancelling unsent copies. Output already sent cannot be retracted." },
+        if (sending) ShopSecondaryButton(onClick = { cancelled.set(true); feedback = context.getString(R.string.cancelling_unsent_copies_output_already_sent) },
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.label_cancel_unsent)) }
         ErrorSnackbar(feedback)
     }

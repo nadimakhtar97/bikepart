@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -31,7 +33,7 @@ internal fun HomeRoute(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(
-                title = "Home",
+                title = stringResource(R.string.dest_home),
                 showBack = false,
                 enabled = !busy,
                 searchMode = true,

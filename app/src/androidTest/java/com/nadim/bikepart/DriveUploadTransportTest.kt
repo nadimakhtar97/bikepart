@@ -8,14 +8,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DriveUploadTransportTest {
+    private val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
     @Test fun storageRequiresTheMetadataGrantAndEveryListingPageAndNeverTreats404AsDeleted() = runBlocking {
-        val withoutGrant = GoogleDriveTransport("token") { _, _, _, _ -> error("A limited token must not start an inventory") }
+        val withoutGrant = GoogleDriveTransport(context, "token") { _, _, _, _ -> error("A limited token must not start an inventory") }
         try { withoutGrant.inventory("folder"); fail("Limited file access cannot prove a full inventory") }
         catch (error: IllegalStateException) { assertTrue(error.message!!.contains("metadata access")) }
         var incomplete = true
         var repeatToken = false
         var deletedStatus = 204
-        val transport = GoogleDriveTransport("token", true) { url, method, _, _ ->
+        val transport = GoogleDriveTransport(context, "token", true) { url, method, _, _ ->
             val body = when {
                 method == "DELETE" -> return@GoogleDriveTransport DriveHttpResponse(deletedStatus, byteArrayOf(), null, null)
                 url.contains("/files/folder?") -> """{"id":"folder","mimeType":"application/vnd.google-apps.folder","ownedByMe":true,"capabilities":{"canListChildren":true}}"""
@@ -45,7 +46,7 @@ class DriveUploadTransportTest {
     @Test fun markerReplacementUpdatesOnlyTheSelectedRemoteFileAndRejectsPermissionFailure() = runBlocking {
         val bytes = "{\"datasetId\":\"shop\",\"generation\":\"new-writer\"}".toByteArray()
         var forbidden = false
-        val transport = GoogleDriveTransport("memory-token") { url, method, body, headers ->
+        val transport = GoogleDriveTransport(context, "memory-token") { url, method, body, headers ->
             assertEquals("https://www.googleapis.com/upload/drive/v3/files/marker-id?uploadType=media", url)
             assertEquals("PATCH", method)
             assertEquals("application/json; charset=UTF-8", headers["Content-Type"])
@@ -63,7 +64,7 @@ class DriveUploadTransportTest {
     }
     @Test fun automaticNetworkPolicyIsCheckedBeforeOpeningEveryDriveRequest() = runBlocking {
         var checks = 0
-        val transport = GoogleDriveTransport("unused-token") {
+        val transport = GoogleDriveTransport(context, "unused-token") {
             checks++
             throw IOException("Wi-Fi unavailable")
         }
@@ -79,7 +80,7 @@ class DriveUploadTransportTest {
         var acknowledged = 0
         var interrupted = false
         val received = java.io.ByteArrayOutputStream()
-        val transport = GoogleDriveTransport("memory-token") { _, method, body, headers ->
+        val transport = GoogleDriveTransport(context, "memory-token") { _, method, body, headers ->
             if (method == "POST") DriveHttpResponse(200, byteArrayOf(), "https://www.googleapis.com/upload/session", null)
             else if (headers["Content-Range"] == "bytes */600000") DriveHttpResponse(308, byteArrayOf(), null, "bytes=0-${acknowledged - 1}")
             else {
@@ -97,7 +98,7 @@ class DriveUploadTransportTest {
 
     @Test fun expiredSessionRestartsUsingTheSameRemoteIdentityAndJournalsTheNewSession() = runBlocking {
         val sessions = mutableListOf<String?>()
-        val transport = GoogleDriveTransport("memory-token") { _, method, body, headers ->
+        val transport = GoogleDriveTransport(context, "memory-token") { _, method, body, headers ->
             when {
                 method == "POST" -> {
                     val metadata = org.json.JSONObject(body!!.toString(Charsets.UTF_8))

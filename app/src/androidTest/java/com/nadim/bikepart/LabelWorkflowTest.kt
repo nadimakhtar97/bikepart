@@ -25,7 +25,7 @@ class LabelWorkflowTest {
     private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     private fun click(text: String) {
         val node = compose.onNode(hasText(text) and hasClickAction() and !hasSetTextAction())
-        if (text !in listOf("Stock", "Back")) node.performScrollTo()
+        if (text != "Stock") node.performScrollTo()
         node.performClick()
     }
     private fun open(title: String) {
@@ -153,7 +153,8 @@ class LabelWorkflowTest {
             compose.onNodeWithText("Label copies").assertTextContains("3")
             compose.onNodeWithText("Shared bin · 70 × 40 mm").assertIsSelected()
             val renamed = "$title renamed with a much longer product title"
-            click("Back"); click("Edit details")
+            compose.onNodeWithContentDescription(context.getString(R.string.back)).performClick()
+            click("Edit details")
             compose.onNodeWithText("Title (required)").performScrollTo().performTextReplacement(renamed)
             click("Save product"); await(renamed)
             click("Preview product labels"); click("Preview label")
@@ -183,7 +184,7 @@ class LabelWorkflowTest {
                 ActivityScenario.launch(MainActivity::class.java).use {
                     open(title)
                     for (media in LabelMedia.entries) {
-                        click(media.label); click("Preview label")
+                        click(context.getString(media.label)); click("Preview label")
                         val payload = ItemQr.product(snapshot().datasetId, id)
                         compose.onNodeWithContentDescription("Product label QR: $payload").performScrollTo().assertIsDisplayed()
                         compose.waitForIdle(); android.os.SystemClock.sleep(300)

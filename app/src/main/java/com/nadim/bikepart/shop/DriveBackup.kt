@@ -1,5 +1,7 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import android.util.AtomicFile
 import java.io.File
 import java.util.UUID
@@ -46,7 +48,7 @@ interface DriveTransport {
 }
 
 /** Operational journal is outside Room/business exports and Android automatic backup. */
-class DriveBackup internal constructor(private val shop: Shop, private val directory: File) {
+class DriveBackup internal constructor(private val shop: Shop, private val directory: File, private val context: android.content.Context) {
     internal suspend fun <T> exclusiveActivation(block: suspend () -> T): T = withContext(Dispatchers.IO) { lock.withLock { block() } }
     companion object {
         private val lock = Mutex()
@@ -110,26 +112,26 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
     suspend fun previewReplacement(drive: DriveTransport): PhoneReplacement = withContext(Dispatchers.IO) { lock.withLock {
         shop.checkActive()
         val state = read()
-        val target = requireNotNull(statusTarget()) { "Connect the owner's account and backup folder first." }
+        val target = requireNotNull(statusTarget()) { context.getString(R.string.connect_the_owner_s_account_and) }
         val dataset = shop.snapshot().datasetId
         if (!state.has("generation")) { state.put("generation", UUID.randomUUID().toString()); write(state) }
         state.put("phoneState", ActivePhoneState.Unknown.name); write(state)
         val marker = marker(drive, target.folderId)
-        require(marker.third.getString("datasetId") == dataset) { "This folder belongs to another shop. Restore the intended shop before activating this phone." }
+        require(marker.third.getString("datasetId") == dataset) { context.getString(R.string.this_folder_belongs_to_another_shop) }
         PhoneReplacement(target, dataset, marker.third.getString("generation"), shop.restoreOrigin(), marker.first,
             LocalBackup.hash(marker.second), state.getString("connection"), state.getString("generation"))
     } }
 
     suspend fun activateReplacement(drive: DriveTransport, preview: PhoneReplacement, oldInstallationRetired: Boolean) = withContext(Dispatchers.IO) { lock.withLock {
-        require(oldInstallationRetired) { "Retire the old installation before activating this phone. An offline old phone can still edit locally." }
+        require(oldInstallationRetired) { context.getString(R.string.retire_the_old_installation_before_activating) }
         shop.checkActive()
         val state = read()
         require(statusTarget() == preview.target && shop.snapshot().datasetId == preview.datasetId &&
-            state.getString("connection") == preview.connection && state.getString("generation") == preview.localWriter) { "Shop or connection changed. Review replacement again." }
+            state.getString("connection") == preview.connection && state.getString("generation") == preview.localWriter) { context.getString(R.string.shop_or_connection_changed_review_replacement) }
         // Publication may have reconfirmed this writer since preview. Invalidate that observation before network I/O.
         state.put("phoneState", ActivePhoneState.Unknown.name); write(state)
         val observed = marker(drive, preview.target.folderId)
-        require(observed.first == preview.markerId && LocalBackup.hash(observed.second) == preview.markerHash) { "Active phone changed since review. Review replacement again; recovery history is preserved." }
+        require(observed.first == preview.markerId && LocalBackup.hash(observed.second) == preview.markerHash) { context.getString(R.string.active_phone_changed_since_review_review) }
         // Journal the new writer before the request. A lost response never permits an old job to acknowledge it.
         archiveJob(state)
         for (key in listOf("job", "covered", "successAt", "capturedAt", "manifest")) state.remove(key)
@@ -138,7 +140,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         state.put("generation", generation).put("marker", preview.markerId).put("markerInitialized", true)
             .put("phoneState", ActivePhoneState.Unknown.name)
             .put("takeover", JSONObject().put("previousWriter", preview.previousWriter).put("markerHash", preview.markerHash))
-            .put("failure", "Phone activation is uncertain. Use Check active phone before backing up. Recovery history is preserved.")
+            .put("failure", context.getString(R.string.phone_activation_is_uncertain_use_check_2))
         write(state)
         drive.replace(preview.markerId, phoneBytes(preview.datasetId, generation))
         verifyPhone(drive, state, reconcileTakeover = true)
@@ -151,10 +153,10 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
 
     /** Local owner action only; uninstall/clear the old installation to retire its offline editing data. */
     suspend fun retireInstallation(confirmed: Boolean) = withContext(Dispatchers.IO) { lock.withLock {
-        require(confirmed) { "Confirm retirement of this installation." }
+        require(confirmed) { context.getString(R.string.confirm_retirement_of_this_installation) }
         shop.checkActive()
         val state = read(); state.put("retired", true).put("phoneState", ActivePhoneState.Retired.name)
-            .put("failure", "This installation is retired. Stop using it for shop work; uninstall it or clear its app data after checking the replacement.")
+            .put("failure", context.getString(R.string.this_installation_is_retired_stop_using))
         write(state)
     } }
 
@@ -170,25 +172,25 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
 
     private suspend fun marker(drive: DriveTransport, folder: String): Triple<String, ByteArray, JSONObject> {
         val entries = drive.list(folder).filter { it.name == "active-phone.json" }
-        check(entries.size == 1) { "Active-phone marker is missing or duplicated. Repair the folder; recovery history is preserved." }
+        check(entries.size == 1) { context.getString(R.string.active_phone_marker_is_missing_or) }
         val id = entries.single().id
-        val bytes = requireNotNull(drive.download(id)) { "Active-phone marker is missing. Repair the folder." }
+        val bytes = requireNotNull(drive.download(id)) { context.getString(R.string.active_phone_marker_is_missing_repair) }
         val content = JSONObject(LocalBackup.utf8(bytes))
-        require(content.getString("datasetId").isNotBlank() && content.getString("generation").isNotBlank()) { "Invalid active-phone marker. Repair the folder." }
+        require(content.getString("datasetId").isNotBlank() && content.getString("generation").isNotBlank()) { context.getString(R.string.invalid_active_phone_marker_repair_the) }
         return Triple(id, bytes, content)
     }
 
     private suspend fun verifyPhone(drive: DriveTransport, state: JSONObject, initialize: Boolean = false, reconcileTakeover: Boolean = false) {
         shop.checkActive()
-        check(!state.optBoolean("retired") && state.optString("phoneState") != ActivePhoneState.Retired.name) { "This installation is retired. Use the replacement phone for backups." }
+        check(!state.optBoolean("retired") && state.optString("phoneState") != ActivePhoneState.Retired.name) { context.getString(R.string.this_installation_is_retired_use_the_2) }
         state.put("phoneState", ActivePhoneState.Unknown.name); write(state)
-        check(!state.has("takeover") || reconcileTakeover) { "Phone activation is uncertain. Use Check active phone; recovery history is preserved." }
-        val folder = requireNotNull(state.optJSONObject("target")) { "Connect a Google account and folder first." }.getString("folderId")
+        check(!state.has("takeover") || reconcileTakeover) { context.getString(R.string.phone_activation_is_uncertain_use_check) }
+        val folder = requireNotNull(state.optJSONObject("target")) { context.getString(R.string.connect_a_google_account_and_folder) }.getString("folderId")
         val dataset = shop.snapshot().datasetId
         val generation = state.getString("generation")
         val candidates = drive.list(folder).filter { it.name == "active-phone.json" }
         if (initialize && candidates.isEmpty() && !state.optBoolean("markerInitialized")) {
-            check(drive.list(folder).none { it.name.startsWith("complete-") }) { "Existing shop backups require replacement activation." }
+            check(drive.list(folder).none { it.name.startsWith("complete-") }) { context.getString(R.string.existing_shop_backups_require_replacement_activation) }
             val id = state.optString("marker").ifEmpty { drive.newId().also { state.put("marker", it); write(state) } }
             val bytes = drive.download(id)
             if (bytes == null) drive.upload(id, folder, "active-phone.json", phoneBytes(dataset, generation), null) { _, _ -> }
@@ -197,9 +199,9 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         if ((state.has("marker") && remote.first != state.getString("marker")) ||
             remote.third.getString("datasetId") != dataset || remote.third.getString("generation") != generation) {
             state.put("phoneState", ActivePhoneState.Mismatch.name); write(state)
-            error("This is not the active shop phone. Stop backups on this installation. Use the replacement phone, or review Activate replacement phone after retiring the old installation.")
+            error(context.getString(R.string.this_is_not_the_active_shop))
         }
-        check(drive.list(folder).filter { it.name == "active-phone.json" }.singleOrNull()?.id == remote.first) { "Active-phone identity is uncertain. Repair the folder before backup or cleanup." }
+        check(drive.list(folder).filter { it.name == "active-phone.json" }.singleOrNull()?.id == remote.first) { context.getString(R.string.active_phone_identity_is_uncertain_repair) }
         state.put("marker", remote.first).put("markerInitialized", true).put("phoneState", ActivePhoneState.Active.name)
         state.remove("takeover"); state.remove("failure"); write(state)
     }
@@ -208,15 +210,15 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         publishCapture(drive, expectedTarget, onCapture)
     } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
     catch (error: Exception) {
-        recordFailure(error.message ?: "Backup failed. Check phone storage and Drive access, then retry.")
+        recordFailure(error.message ?: context.getString(R.string.backup_failed_check_phone_storage_and))
         throw error
     }
 
     private suspend fun publishCapture(drive: DriveTransport, expectedTarget: DriveTarget?, onCapture: (Long, Long) -> Unit): DrivePoint = withContext(Dispatchers.IO) { lock.withLock {
         shop.checkActive()
         val state = read()
-        val target = requireNotNull(state.optJSONObject("target")) { "Connect a Google account and folder first." }
-        check(expectedTarget == null || (expectedTarget.account == target.getString("account") && expectedTarget.folderId == target.getString("folderId"))) { "Backup account or folder changed. Retry with the chosen connection." }
+        val target = requireNotNull(state.optJSONObject("target")) { context.getString(R.string.connect_a_google_account_and_folder) }
+        check(expectedTarget == null || (expectedTarget.account == target.getString("account") && expectedTarget.folderId == target.getString("folderId"))) { context.getString(R.string.backup_account_or_folder_changed_retry) }
         val folder = target.getString("folderId")
         val dataset = shop.snapshot().datasetId
         if (!state.has("generation")) { state.put("generation", UUID.randomUUID().toString()); write(state) }
@@ -241,10 +243,10 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             state.put("job", job); write(state)
         }
         val activeJob = job
-        check(activeJob.getString("connection") == state.getString("connection") && activeJob.getString("datasetId") == dataset && activeJob.getString("generation") == generation && activeJob.getString("folderId") == folder && activeJob.getString("account") == target.getString("account")) { "Backup identity changed. Reconnect before retrying." }
+        check(activeJob.getString("connection") == state.getString("connection") && activeJob.getString("datasetId") == dataset && activeJob.getString("generation") == generation && activeJob.getString("folderId") == folder && activeJob.getString("account") == target.getString("account")) { context.getString(R.string.backup_identity_changed_reconnect_before_retrying) }
         onCapture(activeJob.getLong("revision"), activeJob.getLong("capturedAt"))
         val captureFile = File(activeJob.getString("capture"))
-        LocalBackup.inspect(captureFile)
+        LocalBackup.inspect(context, captureFile)
         val files = activeJob.getJSONArray("files")
         ZipFile(captureFile).use { zip ->
             for (index in 0 until files.length()) {
@@ -257,7 +259,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
                     if (session == null) item.remove("session") else item.put("session", session)
                     item.put("offset", offset); write(state)
                 }
-                verify(requireNotNull(drive.download(id)) { "Uploaded content cannot be read." }, item)
+                verify(requireNotNull(drive.download(id)) { context.getString(R.string.uploaded_content_cannot_be_read) }, item)
             }
         }
         // Revalidate all dependencies immediately before publication, including resumed files.
@@ -272,7 +274,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         if (drive.download(manifestId) == null) drive.upload(manifestId, folder, "complete-${activeJob.getString("captureId")}.json", bytes, activeJob.optString("manifestSession").ifEmpty { null }) { session, _ ->
             if (session == null) activeJob.remove("manifestSession") else activeJob.put("manifestSession", session); write(state)
         }
-        check(requireNotNull(drive.download(manifestId)).contentEquals(bytes)) { "Completion manifest content does not match." }
+        check(requireNotNull(drive.download(manifestId)).contentEquals(bytes)) { context.getString(R.string.completion_manifest_content_does_not_match) }
         checkPhone()
         val point = DrivePoint(manifestId, activeJob.getLong("revision"), activeJob.getLong("capturedAt"))
         state.remove("failure")
@@ -289,8 +291,8 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             try {
                 downloadPoint(drive, entry.id) { file, manifest, hash ->
                     val local = manifest.getJSONObject("localManifest")
-                    require(entry.name == "complete-${manifest.getString("captureId")}.json") { "Completion file identity does not match." }
-                    val contents = LocalBackup.readForRestore(file)
+                    require(entry.name == "complete-${manifest.getString("captureId")}.json") { context.getString(R.string.completion_file_identity_does_not_match) }
+                    val contents = LocalBackup.readForRestore(context, file)
                     fun count(table: String) = contents.tables[table]?.records?.size ?: 0
                     RestorePoint(DrivePoint(entry.id, manifest.getLong("revision"), manifest.getLong("capturedAt")),
                         contents.datasetId, local.getString("captureId"), count("products"), count("sales"), count("carts"), contents.blobs.size, hash, target)
@@ -325,7 +327,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
     /** Cleanup never uses discovery's best-effort filtering: one uncertain file pauses the whole operation. */
     suspend fun inspectStorage(drive: DriveTransport, now: Long = System.currentTimeMillis()): BackupStorage = withContext(Dispatchers.IO) { lock.withLock {
         val state = read()
-        check(state.has("generation")) { "Publish the first backup or review replacement-phone activation before inspecting storage." }
+        check(state.has("generation")) { context.getString(R.string.publish_the_first_backup_or_review) }
         verifyPhone(drive, state, reconcileTakeover = true)
         storage(drive, state, now).summary
     } }
@@ -350,12 +352,12 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
     }
 
     private suspend fun storage(drive: DriveTransport, state: JSONObject, now: Long, verified: Map<String, StoredPoint> = emptyMap()): StorageScan {
-        val target = requireNotNull(statusTarget()) { "Connect Drive first." }
+        val target = requireNotNull(statusTarget()) { context.getString(R.string.connect_drive_first) }
         val inventory = drive.inventory(target.folderId)
-        check(inventory.ownerCanListAll) { "Folder ownership or listing permissions are uncertain. Repair Drive access; cleanup is paused." }
+        check(inventory.ownerCanListAll) { context.getString(R.string.folder_ownership_or_listing_permissions_are) }
         val entries = inventory.entries.associateBy { it.id }
         check(entries.size == inventory.entries.size && entries.keys.none { it.isBlank() } && entries.values.all { it.size != null && it.size >= 0 }) {
-            "Drive inventory is incomplete or ambiguous. Cleanup is paused."
+            context.getString(R.string.drive_inventory_is_incomplete_or_ambiguous)
         }
         val points = entries.values.filter { it.name.startsWith("complete-") }.map { entry ->
             val cached = verified[entry.id]
@@ -364,20 +366,20 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
                 val files = JSONObject(cached.manifest).getJSONArray("files")
                 for (index in 0 until files.length()) {
                     val item = files.getJSONObject(index)
-                    require(entries[item.getString("id")]?.size == item.getLong("size")) { "A required file was omitted or changed. Cleanup is paused." }
+                    require(entries[item.getString("id")]?.size == item.getLong("size")) { context.getString(R.string.a_required_file_was_omitted_or) }
                 }
                 return@map cached
             }
             downloadPoint(drive, entry.id) { file, manifest, hash ->
                 // Checksums alone do not establish a usable recovery point. Validate isolated shop invariants too.
                 val dataset = shop.validateLocalRestore(file).use { it.snapshot.datasetId }
-                require(dataset == shop.snapshot().datasetId && entry.name == "complete-${manifest.getString("captureId")}.json") { "Unrecognized backup identity. Cleanup is paused." }
-                require(entry.size == manifest.toString().toByteArray(Charsets.UTF_8).size.toLong()) { "Backup manifest size changed. Refresh storage." }
+                require(dataset == shop.snapshot().datasetId && entry.name == "complete-${manifest.getString("captureId")}.json") { context.getString(R.string.unrecognized_backup_identity_cleanup_is_paused) }
+                require(entry.size == manifest.toString().toByteArray(Charsets.UTF_8).size.toLong()) { context.getString(R.string.backup_manifest_size_changed_refresh_storage) }
                 val files = manifest.getJSONArray("files")
                 val dependencies = (0 until files.length()).associate { index ->
                     val item = files.getJSONObject(index)
                     val id = item.getString("id")
-                    require(entries[id]?.size == item.getLong("size")) { "A required file was omitted or changed. Cleanup is paused." }
+                    require(entries[id]?.size == item.getLong("size")) { context.getString(R.string.a_required_file_was_omitted_or) }
                     id to item.getString("sha256")
                 }
                 StoredPoint(DrivePoint(entry.id, manifest.getLong("revision"), manifest.getLong("capturedAt")),
@@ -385,9 +387,9 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
                     (dependencies.keys + entry.id).associateWith { entries.getValue(it).version })
             }
         }
-        check(points.map { it.captureId }.distinct().size == points.size) { "Duplicated snapshot identity. Repair backup history before cleanup." }
+        check(points.map { it.captureId }.distinct().size == points.size) { context.getString(R.string.duplicated_snapshot_identity_repair_backup_history) }
         // Two complete inventories detect page churn. The owner-granted dedicated folder is required too.
-        check(drive.inventory(target.folderId).let { it.ownerCanListAll && it.entries.toSet() == inventory.entries.toSet() }) { "Drive listing changed or was incomplete. Refresh storage; cleanup is paused." }
+        check(drive.inventory(target.folderId).let { it.ownerCanListAll && it.entries.toSet() == inventory.entries.toSet() }) { context.getString(R.string.drive_listing_changed_or_was_incomplete) }
         val retained = BackupRetention.retained(points, now)
         val protected = pendingReferences(state, target).toMutableSet()
         val keep = points.filter { it.captureId in retained || it.point.manifestId == state.optString("manifest") ||
@@ -402,7 +404,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         val retiring = cleanup?.optJSONArray("files") ?: JSONArray()
         val retiredFiles = (0 until retiring.length()).map { retiring.getJSONObject(it).getString("id") }.toSet() - referenced - protected
         val deletable = eligibleFiles + retiredFiles
-        check(deletable.mapNotNull { entries[it] }.all { it.canDelete }) { "Deletion permission is uncertain. Repair Drive access; cleanup is paused." }
+        check(deletable.mapNotNull { entries[it] }.all { it.canDelete }) { context.getString(R.string.deletion_permission_is_uncertain_repair_drive) }
         val signature = buildString {
             append(state.getString("connection")); append(state.getString("generation")); append(target)
             entries.values.sortedBy { it.id }.forEach { append(it) }
@@ -424,9 +426,9 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         verifyPhone(drive, state, reconcileTakeover = true)
         var scan = storage(drive, state, now)
         val verified = scan.points.associateBy { it.point.manifestId }
-        require(reviewed.target == scan.summary.target && reviewed.fingerprint == scan.summary.fingerprint) { "Backup storage changed. Inspect and confirm cleanup again." }
+        require(reviewed.target == scan.summary.target && reviewed.fingerprint == scan.summary.fingerprint) { context.getString(R.string.backup_storage_changed_inspect_and_confirm) }
         if (!state.has("cleanup")) {
-            require(reviewed.eligible.isNotEmpty()) { "No older history is eligible for deletion." }
+            require(reviewed.eligible.isNotEmpty()) { context.getString(R.string.no_older_history_is_eligible_for) }
             val manifests = JSONArray()
             val files = linkedMapOf<String, String>()
             scan.points.filter { point -> reviewed.eligible.any { it.manifestId == point.point.manifestId } }.forEach { point ->
@@ -445,8 +447,8 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             scan = storage(drive, state, now, verified)
             val id = item.getString("id")
             if (id !in scan.entries) continue // A complete, permission-checked inventory reconciles a lost response.
-            check(scan.summary.eligible.any { it.manifestId == id } && id !in scan.protected) { "History became protected. Cleanup is paused; inspect again." }
-            check(LocalBackup.hash(requireNotNull(drive.download(id))) == item.getString("hash")) { "Backup changed. Cleanup is paused." }
+            check(scan.summary.eligible.any { it.manifestId == id } && id !in scan.protected) { context.getString(R.string.history_became_protected_cleanup_is_paused) }
+            check(LocalBackup.hash(requireNotNull(drive.download(id))) == item.getString("hash")) { context.getString(R.string.backup_changed_cleanup_is_paused) }
             verifyPhone(drive, state) // Never authorize deletion from the cached status.
             drive.delete(id) // Manifest first: dependencies never disappear beneath a published point.
         }
@@ -456,7 +458,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
             scan = storage(drive, state, now, verified)
             val id = item.getString("id")
             if (id !in scan.entries || id in scan.protected || scan.points.any { id in it.files }) continue
-            check(LocalBackup.hash(requireNotNull(drive.download(id))) == item.getString("hash")) { "Old content changed. Cleanup is paused." }
+            check(LocalBackup.hash(requireNotNull(drive.download(id))) == item.getString("hash")) { context.getString(R.string.old_content_changed_cleanup_is_paused) }
             verifyPhone(drive, state)
             drive.delete(id)
         }
@@ -466,7 +468,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
 
     /** Redownload and bind validation to the exact preview, even if Drive changed after discovery. */
     suspend fun validateRestore(drive: DriveTransport, selected: RestorePoint): ValidatedRestore = withContext(Dispatchers.IO) { lock.withLock {
-        require(statusTarget() == selected.target) { "Drive connection changed. Refresh restore points." }
+        require(statusTarget() == selected.target) { context.getString(R.string.drive_connection_changed_refresh_restore_points) }
         downloadPoint(drive, selected.point.manifestId, selected.manifestHash) { file, manifest, _ ->
             shop.validateLocalRestore(file).also {
                 it.provenance.put("sourceWriter", manifest.getString("generation"))
@@ -481,19 +483,19 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
     private suspend fun <T> downloadPoint(drive: DriveTransport, id: String, expectedHash: String? = null,
         use: suspend (File, JSONObject, String) -> T): T {
         check(directory.isDirectory || directory.mkdirs())
-        val bytes = requireNotNull(drive.download(id)) { "Restore manifest is missing. Refresh restore points." }
-        require(expectedHash == null || LocalBackup.hash(bytes) == expectedHash) { "Restore point changed since preview. Refresh and select it again." }
+        val bytes = requireNotNull(drive.download(id)) { context.getString(R.string.restore_manifest_is_missing_refresh_restore) }
+        require(expectedHash == null || LocalBackup.hash(bytes) == expectedHash) { context.getString(R.string.restore_point_changed_since_preview_refresh) }
         val manifest = JSONObject(LocalBackup.utf8(bytes))
-        require(manifest.get("driveFormat") == 1) { "Unsupported Drive restore version. Update the app." }
+        require(manifest.get("driveFormat") == 1) { context.getString(R.string.unsupported_drive_restore_version_update_the) }
         val local = manifest.getJSONObject("localManifest")
-        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..16) { "Incomplete or unsupported restore point." }
-        for (key in listOf("datasetId", "captureId", "revision", "capturedAt")) require(manifest.getString(key) == local.getString(key)) { "Restore manifest identity mismatch: $key." }
-        require(manifest.getString("generation").isNotBlank()) { "Missing writer identity." }
+        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..16) { context.getString(R.string.incomplete_or_unsupported_restore_point) }
+        for (key in listOf("datasetId", "captureId", "revision", "capturedAt")) require(manifest.getString(key) == local.getString(key)) { context.getString(R.string.restore_manifest_identity_mismatch, key) }
+        require(manifest.getString("generation").isNotBlank()) { context.getString(R.string.missing_writer_identity) }
         val files = manifest.getJSONArray("files")
         val declared = local.getJSONArray("files")
-        require(files.length() == declared.length()) { "Restore dependencies differ from the portable manifest." }
+        require(files.length() == declared.length()) { context.getString(R.string.restore_dependencies_differ_from_the_portable) }
         val expected = (0 until declared.length()).associate { declared.getJSONObject(it).let { item -> item.getString("path") to item } }
-        require(expected.size == declared.length()) { "Duplicate restore dependency." }
+        require(expected.size == declared.length()) { context.getString(R.string.duplicate_restore_dependency) }
         val ids = mutableSetOf(id)
         val paths = mutableSetOf<String>()
         val temporary = File(directory, "download-${UUID.randomUUID()}.zip")
@@ -503,10 +505,10 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
                     val item = files.getJSONObject(index)
                     val path = item.getString("path")
                     val identity = item.getString("id")
-                    require(identity.isNotBlank() && ids.add(identity) && paths.add(path)) { "Duplicate restore file identity." }
-                    val original = requireNotNull(expected[path]) { "Unexpected restore dependency: $path." }
-                    require(LocalBackup.integer(item, "size") == LocalBackup.integer(original, "size") && item.getString("sha256") == original.getString("sha256")) { "Restore file metadata mismatch: $path." }
-                    val content = requireNotNull(drive.download(identity)) { "Required restore file is missing: $path." }
+                    require(identity.isNotBlank() && ids.add(identity) && paths.add(path)) { context.getString(R.string.duplicate_restore_file_identity) }
+                    val original = requireNotNull(expected[path]) { context.getString(R.string.unexpected_restore_dependency, path) }
+                    require(LocalBackup.integer(context, item, "size") == LocalBackup.integer(context, original, "size") && item.getString("sha256") == original.getString("sha256")) { context.getString(R.string.restore_file_metadata_mismatch, path) }
+                    val content = requireNotNull(drive.download(identity)) { context.getString(R.string.required_restore_file_is_missing, path) }
                     verify(content, item)
                     zip.putNextEntry(java.util.zip.ZipEntry(path)); zip.write(content); zip.closeEntry()
                 }
@@ -516,6 +518,6 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         } finally { temporary.delete() }
     }
     private fun verify(bytes: ByteArray, item: JSONObject) {
-        check(bytes.size.toLong() == item.getLong("size") && LocalBackup.hash(bytes) == item.getString("sha256")) { "Drive content failed verification. Repair the connection; the previous backup is preserved." }
+        check(bytes.size.toLong() == item.getLong("size") && LocalBackup.hash(bytes) == item.getString("sha256")) { context.getString(R.string.drive_content_failed_verification_repair_the) }
     }
 }

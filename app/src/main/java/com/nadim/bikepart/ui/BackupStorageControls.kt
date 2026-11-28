@@ -22,6 +22,7 @@ import java.util.Date
 
 @Composable
 internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, onCleanup: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val storage by model.backupStorage.collectAsState()
     val status by model.driveStatus.collectAsState()
     val busy by model.driveBusy.collectAsState()
@@ -29,7 +30,7 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
     val progress by model.storageProgress.collectAsState()
     var confirm by rememberSaveable(storage?.fingerprint) { mutableStateOf(false) }
     val canInspect = !busy && status?.target != null && status?.phoneState != ActivePhoneState.Retired
-    fun bytes(value: Long) = "${NumberFormat.getIntegerInstance().format(value)} bytes"
+    fun bytes(value: Long) = context.getString(R.string.bytes, NumberFormat.getIntegerInstance().format(value))
     ShopSection(stringResource(R.string.storage_section)) {
         Text(stringResource(R.string.keep_the_latest_seven_complete_captures_plus), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(R.string.google_will_ask_for_read_only_drive), style = MaterialTheme.typography.bodyMedium)
@@ -46,7 +47,7 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
             }
             if (reviewed.cleanupPending) Text(stringResource(R.string.a_reviewed_cleanup_was_interrupted_continue_to), style = MaterialTheme.typography.bodyMedium)
             if (reviewed.eligible.isNotEmpty() || reviewed.cleanupPending) ShopSecondaryButton(enabled = canInspect, onClick = { confirm = true }) {
-                Text(if (reviewed.cleanupPending) "Continue reviewed cleanup" else "Remove eligible older backups")
+                Text(if (reviewed.cleanupPending) stringResource(R.string.continue_reviewed_cleanup) else stringResource(R.string.remove_eligible_older_backups))
             } else Text(stringResource(R.string.no_older_backup_history_is_eligible_for), style = MaterialTheme.typography.bodyMedium)
         }
     }
@@ -54,7 +55,7 @@ internal fun BackupStorageControls(model: ShopViewModel, onInspect: () -> Unit, 
         title = { Text(stringResource(R.string.storage_dialog_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(ShopSpacing.content)) {
-                Text("Account: ${storage!!.target.account}\nFolder: ${storage!!.target.folderName}")
+                Text(stringResource(R.string.account_nfolder, storage!!.target.account, storage!!.target.folderName))
                 Text(stringResource(R.string.permanently_remove_only_the_reviewed_eligible_history))
                 Text(stringResource(R.string.recent_and_daily_history_pending_captures_and))
                 Text(stringResource(R.string.cleanup_pauses_if_identity_permissions_or_history))

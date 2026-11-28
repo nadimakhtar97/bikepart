@@ -80,7 +80,7 @@ class LocalBackupTest {
                 shop.setLabelPreferences(LabelMedia.SharedBin, "3")
                 val expected = shop.snapshot()
                 val capture = shop.captureLocalBackup(destination)
-                val portable = LocalBackup.read(capture.file)
+                val portable = LocalBackup.read(context, capture.file)
                 assertEquals("123456789012345678.123456789012", portable.tables.getValue("attribute_values").records.single { it["definitionId"] == decimal }["decimalValue"])
                 assertEquals("", portable.tables.getValue("products").records.single()["description"])
                 assertEquals(2, portable.blobs.size) // The cover is shared with the template.
@@ -123,7 +123,7 @@ class LocalBackupTest {
                 File(photoRoot, before.products.single().photo!!.sha256).delete()
                 try { shop.captureLocalBackup(destination); fail("Missing dependency must fail") } catch (_: IllegalStateException) { }
                 assertEquals(listOf(good.file), destination.listFiles()!!.filter { it.extension == "zip" })
-                assertEquals(before.revision, LocalBackup.read(good.file).revision)
+                assertEquals(before.revision, LocalBackup.read(context, good.file).revision)
                 assertEquals(before, shop.snapshot())
                 val corrupt = File(destination, "corrupt.zip")
                 java.util.zip.ZipFile(good.file).use { source ->
@@ -135,12 +135,12 @@ class LocalBackupTest {
                         }
                     }
                 }
-                try { LocalBackup.read(corrupt); fail("Corrupt bytes must fail") } catch (_: IllegalArgumentException) { }
+                try { LocalBackup.read(context, corrupt); fail("Corrupt bytes must fail") } catch (_: IllegalArgumentException) { }
                 // A new identity is required after incomplete output and a newer shop write.
                 shop.editProduct(before.products.single().id, "No photo", before.categories.first().id, "", photo = PhotoChange.Remove)
                 val retry = shop.captureLocalBackup(destination)
                 assertNotEquals(good.id, retry.id)
-                assertEquals(before.revision + 1, LocalBackup.read(retry.file).revision)
+                assertEquals(before.revision + 1, LocalBackup.read(context, retry.file).revision)
             }
         } finally { context.deleteDatabase(name); destination.deleteRecursively() }
     }
@@ -175,7 +175,7 @@ class LocalBackupTest {
                     }
                 }
                 assertNotEquals(abandoned, capture.id)
-                val backup = LocalBackup.read(capture.file)
+                val backup = LocalBackup.read(context, capture.file)
                 assertEquals(before.revision, backup.revision)
                 assertEquals("Original", backup.tables.getValue("products").records.single()["title"])
                 assertEquals("12", backup.tables.getValue("balances").records.single()["quantity"])
@@ -199,7 +199,7 @@ class LocalBackupTest {
                     photo = PhotoChange.Import { "photo bytes".byteInputStream() })
                 val before = shop.snapshot()
                 val capture = shop.captureLocalBackup(destination)
-                val backup = LocalBackup.read(capture.file)
+                val backup = LocalBackup.read(context, capture.file)
                 assertEquals(before.revision, backup.revision)
                 assertEquals(before.datasetId, backup.datasetId)
                 val product = backup.tables.getValue("products").records.single()

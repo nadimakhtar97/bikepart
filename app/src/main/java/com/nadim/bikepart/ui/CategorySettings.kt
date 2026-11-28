@@ -30,8 +30,9 @@ internal fun CategorySettings(
     onRename: (String, String) -> Unit,
     onCreate: (String) -> Unit,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var creating by rememberSaveable { mutableStateOf(false) }
-    ShopPageHeader("Categories", "Open a category to manage its shared fields and choice options.")
+    ShopPageHeader(stringResource(R.string.title_categories), stringResource(R.string.open_a_category_to_manage_its))
     ShopSecondaryButton(
         onClick = { creating = true },
         enabled = !busy,
@@ -56,13 +57,13 @@ internal fun CategorySettings(
                     shop.attributes.count { it.categoryId == category.id && it.productId == null && !it.retired }
                 ShopListRow(
                     category.name,
-                    supporting = "$productCount active products · $fieldCount shared fields",
+                    supporting = stringResource(R.string.active_products_shared_fields, productCount, fieldCount),
                     icon = R.drawable.ic_category,
                     trailing = {
                         IconButton(onClick = { editing = true }, enabled = !busy) {
                             Icon(
                                 painterResource(R.drawable.ic_edit),
-                                contentDescription = "Rename ${category.name}",
+                                contentDescription = context.getString(R.string.rename, category.name),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -70,7 +71,7 @@ internal fun CategorySettings(
                     },
                     showChevron = true,
                     enabled = !busy,
-                    actionLabel = "Manage fields for ${category.name}",
+                    actionLabel = stringResource(R.string.manage_fields_for, category.name),
                     onClick = { onOpen(category.id) },
                 )
                 if (editing) AlertDialog(

@@ -38,17 +38,17 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
     val account by model.driveAccount.collectAsState()
     var selectedAccount by rememberSaveable { mutableStateOf("") }
     var action by rememberSaveable { mutableStateOf(DriveAction.Connect) }
-    var folderName by rememberSaveable { mutableStateOf("Bikepart shop backups") }
+    var folderName by rememberSaveable { mutableStateOf(context.getString(R.string.bikepart_shop_backups)) }
     val client = remember(context) { Identity.getAuthorizationClient(context) }
     fun accept(result: com.google.android.gms.auth.api.identity.AuthorizationResult) {
         val token = result.accessToken
-        if (token == null) model.driveFailure("Google did not grant Drive access. Try connecting again.")
+        if (token == null) model.driveFailure(context.getString(R.string.google_did_not_grant_drive_access))
         else model.authorizedDrive(selectedAccount, token, action,
             fullMetadataAccess = result.grantedScopes.contains("https://www.googleapis.com/auth/drive.metadata.readonly"))
     }
     val resolution = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         try { accept(client.getAuthorizationResultFromIntent(result.data)) }
-        catch (_: Exception) { model.driveFailure("Drive authorization was cancelled or failed. Reconnect to try again.") }
+        catch (_: Exception) { model.driveFailure(context.getString(R.string.drive_authorization_was_cancelled_or_failed)) }
     }
     fun authorize(email: String, requested: DriveAction) {
         selectedAccount = email; action = requested
@@ -60,38 +60,38 @@ internal fun DriveBackupControls(model: ShopViewModel, revision: Long) {
             .setRequestedScopes(scopes).build()
         client.authorize(request).addOnSuccessListener { result ->
             if (result.hasResolution()) resolution.launch(IntentSenderRequest.Builder(requireNotNull(result.pendingIntent)).build()) else accept(result)
-        }.addOnFailureListener { model.driveFailure("Google authorization failed. Check Google Play services and reconnect.") }
+        }.addOnFailureListener { model.driveFailure(context.getString(R.string.google_authorization_failed_check_google_play)) }
     }
     val chooseAccount = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
-        if (email != null) authorize(email, DriveAction.Connect) else model.driveFailure("No Google account selected.")
+        if (email != null) authorize(email, DriveAction.Connect) else model.driveFailure(context.getString(R.string.no_google_account_selected))
     }
     ShopSection(stringResource(R.string.drive_backup_section)) {
-        Text(status?.target?.let { "Account: ${it.account}\nFolder: ${it.folderName}\nFolder ID: ${it.folderId}" } ?: "Choose the owner's Google account and a dedicated visible Drive folder.", style = MaterialTheme.typography.bodyMedium)
+        Text(status?.target?.let { stringResource(R.string.account_nfolder_nfolder_id, it.account, it.folderName, it.folderId) } ?: stringResource(R.string.choose_the_owner_s_google_account), style = MaterialTheme.typography.bodyMedium)
         Text(when {
-            status?.coveredRevision != null -> "Verified backup · revision ${status!!.coveredRevision} · captured ${DateFormat.getDateTimeInstance().format(Date(status!!.capturedAt!!))}"
-            else -> "No verified Drive backup for this connection."
+            status?.coveredRevision != null -> stringResource(R.string.verified_backup_revision_captured, requireNotNull(status!!.coveredRevision), DateFormat.getDateTimeInstance().format(Date(status!!.capturedAt!!)))
+            else -> stringResource(R.string.drive_no_verified)
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         Text(when {
-            status?.phoneState == ActivePhoneState.Retired -> "Installation retired · use the replacement phone"
-            status?.phoneState == ActivePhoneState.Mismatch || status?.takeoverPending == true -> "Phone identity needs owner action"
-            storageProgress != null -> "Checking backup storage or cleaning reviewed history…"
-            uploading || busy -> "Uploading or preparing backup…"
-            status?.failure != null -> "Backup failed · action required or retry pending"
-            status?.coveredRevision == revision -> "Up to date"
-            else -> "Pending backup"
+            status?.phoneState == ActivePhoneState.Retired -> stringResource(R.string.installation_retired_use_the_replacement_phone)
+            status?.phoneState == ActivePhoneState.Mismatch || status?.takeoverPending == true -> stringResource(R.string.phone_identity_needs_owner_action)
+            storageProgress != null -> stringResource(R.string.checking_backup_storage_or_cleaning_reviewed)
+            uploading || busy -> stringResource(R.string.uploading_or_preparing_backup)
+            status?.failure != null -> stringResource(R.string.backup_failed_action_required_or_retry)
+            status?.coveredRevision == revision -> stringResource(R.string.up_to_date)
+            else -> stringResource(R.string.pending_backup)
         }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
         if (status?.coveredRevision?.let { it < revision } != false) Text(stringResource(R.string.shop_changes_are_waiting_for_backup_changes), style = MaterialTheme.typography.bodyMedium)
         val currentCapture = capture ?: status?.pendingRevision?.let { it to requireNotNull(status?.pendingCapturedAt) }
         if (currentCapture != null) {
             val (capturedRevision, time) = currentCapture
-            Text("${if (busy || uploading) "Uploading capture" else "Pending backup"} · revision $capturedRevision · captured ${DateFormat.getDateTimeInstance().format(Date(time))}.", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.revision_captured, if (busy || uploading) stringResource(R.string.uploading_capture) else stringResource(R.string.pending_backup), capturedRevision, DateFormat.getDateTimeInstance().format(Date(time))), style = MaterialTheme.typography.bodyMedium)
             if (revision > capturedRevision) Text(stringResource(R.string.newer_shop_changes_are_waiting_for_another), style = MaterialTheme.typography.bodyMedium)
         }
         (error ?: status?.failure)?.let { ErrorSnackbar(it) }
         Text(stringResource(R.string.drive_auto_backup_note), style = MaterialTheme.typography.bodyMedium)
         ShopSecondaryButton(enabled = !busy && !uploading, onClick = { model.setBackupMobileData(status?.allowMobileData != true) }) {
-            Text(if (status?.allowMobileData == true) "Use Wi-Fi only" else "Allow mobile data for automatic backups")
+            Text(if (status?.allowMobileData == true) stringResource(R.string.drive_use_wifi_only) else stringResource(R.string.drive_allow_mobile))
         }
         ShopSecondaryButton(enabled = !busy, onClick = {
             chooseAccount.launch(AccountManager.newChooseAccountIntent(null, null, arrayOf("com.google"), null, null, null, null))
@@ -141,7 +141,7 @@ private fun RestorePreviewControls(model: ShopViewModel, onRefresh: () -> Unit, 
         points?.forEach { point ->
             ShopSecondaryButton(enabled = !busy, onClick = { model.selectRestorePoint(point) }, shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.semantics { this.selected = selected == point }) {
-                Text("${DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt))} · revision ${point.point.revision}\n${point.products} products · ${point.sales} sales · ${point.carts} unfinished carts · ${point.photos} photos")
+                Text(stringResource(R.string.revision_n_products_sales_unfinished_carts, DateFormat.getDateTimeInstance().format(Date(point.point.capturedAt)), point.point.revision, point.products, point.sales, point.carts, point.photos))
             }
         }
         selected?.let { point ->

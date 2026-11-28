@@ -11,7 +11,7 @@ import com.nadim.bikepart.shop.Sale
 internal fun ReceiptRoute(sale: Sale?, onOpenSales: () -> Unit) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Receipt", showBack = true) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.title_receipt), showBack = true) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             if (sale != null) {

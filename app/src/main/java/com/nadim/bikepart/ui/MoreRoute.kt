@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
@@ -20,7 +22,7 @@ internal fun MoreRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "More", showBack = false, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.dest_more), showBack = false, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             MoreScreen(

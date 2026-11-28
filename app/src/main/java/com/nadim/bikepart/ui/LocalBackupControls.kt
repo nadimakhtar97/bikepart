@@ -29,19 +29,19 @@ internal fun LocalBackupControls(capture: LocalCapture?, currentRevision: Long, 
         if (uri != null && path != null) onSave(uri, LocalCapture(File(path), selectedId, selectedRevision, selectedTime))
         selectedPath = null
     }
-    ShopSection(if (recovery) "Before-restore recovery copy" else "Local backup") {
-        Text(if (recovery) "The shop saved before replacement. Save this copy to keep it elsewhere." else "Saved on this phone. This does not confirm a Drive backup.", style = MaterialTheme.typography.bodyMedium)
-        Text(if (busy && !recovery) "Preparing local backup…" else capture?.let {
-            "${if (recovery) "Recovery capture" else "Local capture complete"} · revision ${it.revision} · ${DateFormat.getDateTimeInstance().format(Date(it.capturedAt))}"
-        } ?: "No complete local capture yet.", style = MaterialTheme.typography.bodyMedium,
+    ShopSection(if (recovery) stringResource(R.string.local_backup_recovery_title) else stringResource(R.string.local_backup_title)) {
+        Text(if (recovery) stringResource(R.string.local_backup_recovery_desc) else stringResource(R.string.local_backup_desc), style = MaterialTheme.typography.bodyMedium)
+        Text(if (busy && !recovery) stringResource(R.string.local_backup_preparing) else capture?.let {
+            stringResource(R.string.revision, if (recovery) stringResource(R.string.recovery_capture) else stringResource(R.string.local_capture_complete), it.revision, DateFormat.getDateTimeInstance().format(Date(it.capturedAt)))
+        } ?: stringResource(R.string.local_backup_no_capture), style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (!recovery && capture != null && currentRevision > capture.revision) Text(stringResource(R.string.local_backup_newer_changes), style = MaterialTheme.typography.bodyMedium)
         if (error != null) ErrorSnackbar(error)
-        if (saved) Text(if (recovery) "Recovery copy saved." else "Backup copy saved.", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        if (saved) Text(if (recovery) stringResource(R.string.local_recovery_copy_saved) else stringResource(R.string.local_backup_copy_saved), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         if (!recovery) ShopPrimaryButton(stringResource(R.string.local_backup_capture_btn), enabled = !busy, onClick = onCapture)
         if (capture != null) ShopSecondaryButton(enabled = !busy && selectedPath == null, onClick = {
             selectedPath = capture.file.path; selectedId = capture.id; selectedRevision = capture.revision; selectedTime = capture.capturedAt
             save.launch("shop-backup-${capture.id}.zip")
-        }) { Text(if (recovery) "Save recovery copy…" else "Save a copy…") }
+        }) { Text(if (recovery) stringResource(R.string.local_save_recovery_copy) else stringResource(R.string.local_save_copy)) }
     }
 }

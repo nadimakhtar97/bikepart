@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -22,18 +23,18 @@ import com.nadim.bikepart.ui.theme.ShopSpacing
 
 @Composable
 internal fun CartList(shop: ShopSnapshot, busy: Boolean, onNew: () -> Unit, onOpen: (String) -> Unit) {
-    ShopPageHeader(stringResource(R.string.cart_list_header), "Carts do not reserve stock. Product price changes update matching lines in every unfinished cart.")
+    ShopPageHeader(stringResource(R.string.cart_list_header), stringResource(R.string.cart_list_subtitle))
     if (shop.carts.isEmpty()) {
-        ShopEmptyState(stringResource(R.string.cart_no_carts_title), "Start a sale to create an automatically saved customer bill.", R.drawable.ic_carts)
+        ShopEmptyState(stringResource(R.string.cart_no_carts_title), stringResource(R.string.cart_no_carts_desc), R.drawable.ic_carts)
         return
     }
-    ShopSectionHeader("${shop.carts.size} unfinished ${if (shop.carts.size == 1) "cart" else "carts"}")
+    ShopSectionHeader(pluralStringResource(R.plurals.unfinished_cart_count, shop.carts.size, shop.carts.size))
     ShopListGroup {
         shop.carts.forEach { cart ->
-            ShopListRow(cart.name,
-                supporting = listOfNotNull(cart.customer.ifBlank { null }, "${cart.lines.size} ${if (cart.lines.size == 1) "line" else "lines"}").joinToString(" · "),
-                meta = "₹${indianNumber(cart.totalRupees)}", status = { ShopStatusChip(stringResource(R.string.shared_unfinished)) },
-                enabled = !busy, actionLabel = "Open ${cart.name}", onClick = { onOpen(cart.id) })
+            ShopListRow(stringResource(R.string.cart_3, cart.number),
+                supporting = listOfNotNull(cart.customer.ifBlank { null }, pluralStringResource(R.plurals.cart_line_count, cart.lines.size, cart.lines.size)).joinToString(" · "),
+                meta = stringResource(R.string.rupee_amount, indianNumber(cart.totalRupees)), status = { ShopStatusChip(stringResource(R.string.shared_unfinished)) },
+                enabled = !busy, actionLabel = stringResource(R.string.open, stringResource(R.string.cart_3, cart.number)), onClick = { onOpen(cart.id) })
         }
     }
 }
@@ -51,6 +52,7 @@ internal fun CartEditor(
     retry: () -> Unit,
     reload: () -> Unit,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val errorView = remember { BringIntoViewRequester() }
     LaunchedEffect(error) { if (error != null && error.definitionId == null) errorView.bringIntoView() }
 
@@ -115,14 +117,14 @@ internal fun CartEditor(
                                     enabled = quantity > 1,
                                     modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
                                         .semantics { contentDescription = decreaseLabel },
-                                ) { Text("−") }
+                                ) { Text(stringResource(R.string.decrease_quantity)) }
                                 ShopTextField(
                                     value = quantityText,
                                     onValueChange = setQuantity,
                                     label = stringResource(R.string.cart_pieces_label),
                                     error = if (quantityError) stringResource(R.string.cart_invalid_quantity) else null,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    contentDescription = "Pieces · ${product.title}",
+                                    contentDescription = context.getString(R.string.pieces_4, product.title),
                                     modifier = Modifier.weight(1f).bringIntoViewRequester(quantityView),
                                 )
                                 TextButton(
@@ -130,7 +132,7 @@ internal fun CartEditor(
                                     enabled = quantity in 1L until Long.MAX_VALUE,
                                     modifier = Modifier.sizeIn(minWidth = ShopSpacing.touchTarget, minHeight = ShopSpacing.touchTarget)
                                         .semantics { contentDescription = increaseLabel },
-                                ) { Text("+") }
+                                ) { Text(stringResource(R.string.increase_quantity)) }
                             }
                             if (showDetails) {
                                 Text(product.sku, style = MaterialTheme.typography.bodySmall)
@@ -145,7 +147,7 @@ internal fun CartEditor(
                                 TextButton(
                                     onClick = { remove(product.id) },
                                     enabled = !busy && !draft.dirty,
-                                    modifier = Modifier.semantics { contentDescription = "Remove ${product.title}" },
+                                    modifier = Modifier.semantics { contentDescription = context.getString(R.string.lookup_remove_named, product.title) },
                                 ) { Text(stringResource(R.string.cart_remove_line)) }
                             }
                         }
@@ -179,7 +181,7 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
     if (product != null) Column(Modifier.bringIntoViewRequester(selectedView)) { ShopSection(stringResource(R.string.cart_selected_product)) {
         Text(product.title, style = MaterialTheme.typography.titleLarge, maxLines = 3,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-        Text(product.sku + " · " + shop.categories.single { it.id == product.categoryId }.name,
+        Text(stringResource(R.string.formatted_text_2, product.sku, shop.categories.single { it.id == product.categoryId }.name),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         StockHealthIndicator(product)
         Text(stringResource(R.string.on_hand_pieces, indianNumber(product.quantity)))
@@ -199,11 +201,11 @@ internal fun CartProductPicker(shop: ShopSnapshot, cart: Cart, busy: Boolean, er
         )
         ShopPrimaryButton(stringResource(R.string.scanner_add_to_cart), enabled = !busy, onClick = { add(product.id, quantity) })
     } }
-    ShopSearchField(query, { query = it; selected = null; onChange() }, "Search products for cart", enabled = !busy,
+    ShopSearchField(query, { query = it; selected = null; onChange() }, stringResource(R.string.cart_product_picker_search), enabled = !busy,
         scanLabel = stringResource(R.string.scan_for_sale), onScan = onScan)
     if (results.isEmpty()) Text(stringResource(R.string.manual_no_matching_title), style = MaterialTheme.typography.bodyMedium)
     else {
-        ShopSectionHeader(stringResource(R.string.products), supporting = "${results.size} matching")
+        ShopSectionHeader(stringResource(R.string.products), supporting = stringResource(R.string.matching, results.size))
         ShopListGroup {
             results.take(limit).forEach { item ->
                 StockProductRow(shop, item, loadPhoto, enabled = !busy) { selected = item.id; quantity = "1"; onChange() }

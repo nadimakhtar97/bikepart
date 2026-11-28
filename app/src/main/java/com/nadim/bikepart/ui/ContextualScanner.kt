@@ -16,7 +16,7 @@ import androidx.compose.ui.semantics.*
 import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 
-enum class ScanPurpose(val label: String) { Sale("Sale"), Receiving("Receive stock"), Catalog("Create product"), ProductDetail("Product Detail") }
+enum class ScanPurpose(val label: Int) { Sale(R.string.sale), Receiving(R.string.title_receive_stock), Catalog(R.string.create_product), ProductDetail(R.string.product_detail) }
 
 @Composable
 internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: Boolean, error: ShopError?,
@@ -74,12 +74,16 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
         ShopSecondaryButton(onClick = { attempt++; manual() }, enabled = !busy) { Text(stringResource(R.string.scanner_manual_search)) }
         if (started) Text(stringResource(R.string.scanner_recognition_paused), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         transportError?.let { ErrorSnackbar(it) }
-        resolution?.exceptionOrNull()?.message?.let { ErrorSnackbar(it) }
+        resolution?.exceptionOrNull()?.let { failure ->
+            val message = if (failure is com.nadim.bikepart.shop.ScanFailure) stringResource(failure.messageRes)
+                else failure.message
+            ErrorSnackbar(message)
+        }
         raw?.takeIf { it.isNotEmpty() && !it.startsWith("bikepart:", ignoreCase = true) }?.let { code ->
             ShopSecondaryButton(onClick = { linking = true; onChange() }, enabled = !busy,
                 modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget)) { Text(stringResource(R.string.scanner_link_barcode)) }
             for (assignment in shop.barcodeHistory.filter { it.namespace == "external" && it.code == code }) {
-                Text("Barcode history · revision ${assignment.revision}: ${assignment.previousTarget?.let { shop.barcodeTargetLabel(it) } ?: "Unassigned"} → ${shop.barcodeTargetLabel(assignment.target)}")
+                Text(stringResource(R.string.barcode_history_revision, assignment.revision, assignment.previousTarget?.let { shop.barcodeTargetLabel(it) } ?: stringResource(R.string.unassigned), shop.barcodeTargetLabel(assignment.target)))
             }
         }
         when (val target = resolution?.getOrNull()) {
@@ -119,7 +123,7 @@ internal fun ContextualScanner(shop: ShopSnapshot, purpose: ScanPurpose, busy: B
             null -> Unit
         }
         ShopSecondaryButton(modifier = Modifier.heightIn(min = com.nadim.bikepart.ui.theme.ShopSpacing.touchTarget), onClick = { attempt++; raw = null; transportError = null; quantity = ""; started = true; running = true; onChange() }, enabled = !busy) {
-            Text(if (started) "Resume scanning" else "Start camera")
+            Text(if (started) stringResource(R.string.scanner_resume) else stringResource(R.string.scanner_start_camera))
         }
         }
         }

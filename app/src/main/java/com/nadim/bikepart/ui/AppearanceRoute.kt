@@ -81,7 +81,7 @@ private fun AppearanceSettings(
                     )
                     .padding(horizontal = ShopSpacing.small), verticalAlignment = Alignment.CenterVertically) {
                     ShopAppearanceIndicator(selected = appearance == mode, enabled = !busy, interaction = interaction)
-                    Text(mode.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = ShopSpacing.medium))
+                    Text(stringResource(mode.label), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = ShopSpacing.medium))
                 }
             }
         }
@@ -142,7 +142,7 @@ private fun AppearanceSettings(
                     verticalAlignment = Alignment.CenterVertically) {
                     ShopAppearanceIndicator(selected = customization.brand == brand, enabled = !busy,
                         interaction = interaction)
-                    Text(brand.label, style = MaterialTheme.typography.bodyMedium,
+                    Text(stringResource(brand.label), style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = ShopSpacing.medium))
                 }
             }

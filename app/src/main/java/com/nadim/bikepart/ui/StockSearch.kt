@@ -40,7 +40,7 @@ internal fun StockHealthIndicator(product: Product) {
     }
     Row(horizontalArrangement = Arrangement.spacedBy(ShopSpacing.small), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Icon(painterResource(icon), contentDescription = null)
-        Text(product.stockHealth.label, style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(product.stockHealth.label), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -49,7 +49,7 @@ internal fun StockHealthIndicator(product: Product) {
 private fun SearchFilter(label: String, choices: List<Pair<String, String>>, selected: String?, onSelect: (String?) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
-    val selectedLabel = choices.find { it.first == selected }?.second ?: "Any"
+    val selectedLabel = choices.find { it.first == selected }?.second ?: stringResource(R.string.any_2)
     ShopSecondaryButton(onClick = { open = true }, modifier = Modifier
         .fillMaxWidth()
         .heightIn(min = ShopSpacing.touchTarget)) {
@@ -102,8 +102,8 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         val current = search
         if (current != null) value = withContext(Dispatchers.Default) { CatalogResult(shop, filter, if (decimalError) emptyList() else current.find(filter)) }
     }
-    ShopSearchField(query, { query = it }, "Search products",
-        enabled = !busy, supporting = "Title, SKU, description, fields, fitment or location",
+    ShopSearchField(query, { query = it }, stringResource(R.string.search_products),
+        enabled = !busy, supporting = stringResource(R.string.search_products_supporting),
         scanLabel = stringResource(R.string.search_scan_stock), onScan = onScan)
     Row(Modifier
         .fillMaxWidth()
@@ -121,7 +121,7 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         )
         StockHealth.entries.forEach { state ->
             ShopChoiceChip(
-                label = state.label,
+                label = stringResource(state.label),
                 selected = health == state,
                 onClick = { health = if (health == state) null else state },
                 leading = if (health == state) ({
@@ -137,7 +137,7 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
         ShopChoiceChip(
             selected = category != null, onClick = { expanded = true },
             label = category?.let { id -> shop.categories.find { it.id == id }?.name }
-                ?: "All categories",
+                ?: stringResource(R.string.all_categories),
             trailing = {
                 Icon(
                     painterResource(R.drawable.ic_expand_more),
@@ -153,10 +153,10 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
             modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.search_clear_and_filters)) }
     }
     val active = listOfNotNull(
-        make?.let { id -> "Make: " + (shop.makes.find { it.id == id }?.name ?: "Unknown fitment") },
-        model?.let { id -> "Model: " + shop.models.find { it.id == id }?.name },
-        location?.let { id -> "Location: " + (shop.locations.find { it.id == id }?.name ?: "No location assigned") },
-        definition?.let { id -> (shop.attributes.find { it.id == id }?.name ?: "Decimal field") + ": " + decimal })
+        make?.let { id -> stringResource(R.string.make_2, shop.makes.find { it.id == id }?.name ?: stringResource(R.string.finding_unknown_fitment)) },
+        model?.let { id -> stringResource(R.string.model_2, shop.models.find { it.id == id }?.name.toString()) },
+        location?.let { id -> stringResource(R.string.location, shop.locations.find { it.id == id }?.name ?: stringResource(R.string.no_location_assigned)) },
+        definition?.let { id -> stringResource(R.string.formatted_text, shop.attributes.find { it.id == id }?.name ?: stringResource(R.string.decimal_field), decimal) })
     if (active.isNotEmpty()) Text(active.joinToString(" · "), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     if (decimalError && !expanded) ErrorSnackbar(stringResource(R.string.search_decimal_error))
@@ -173,11 +173,11 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
                   ShopSectionHeader(stringResource(R.string.search_catalog_filters))
                   TextButton(onClick = { category = null; make = null; model = null; location = null; health = null; definition = null; decimal = "" },
                       modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.search_clear_filters)) }
-                  SearchFilter("Category", shop.categories.map { it.id to it.name }, category) { category = it; definition = null; decimal = "" }
-                  SearchFilter("Make", listOf("unknown" to "Unknown fitment") + shop.makes.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, make) { make = it; model = null }
-                  if (make != "unknown") SearchFilter("Model", shop.models.filter { make == null || it.makeId == make }.map { item -> item.id to (shop.makes.single { it.id == item.makeId }.name + " · " + item.name + if (item.retired) " (retired)" else "") }, model) { model = it }
-                  SearchFilter("Location", listOf("none" to "No location assigned") + shop.locations.map { it.id to (it.name + if (it.retired) " (retired)" else "") }, location) { location = it }
-                  SearchFilter("Decimal field", shop.attributes.filter { it.type == AttributeType.Decimal && (category == null || it.categoryId == category) }.map { it.id to (it.name + " · " + it.unit + " · " + (it.productId?.let { id -> shop.products.find { it.id == id }?.title } ?: shop.categories.single { c -> c.id == it.categoryId }.name)) }, definition) { definition = it; decimal = "" }
+                  SearchFilter(stringResource(R.string.category_2), shop.categories.map { it.id to it.name }, category) { category = it; definition = null; decimal = "" }
+                  SearchFilter(stringResource(R.string.make), listOf("unknown" to stringResource(R.string.finding_unknown_fitment)) + shop.makes.map { it.id to (if (it.retired) stringResource(R.string.retired_suffix_2, it.name) else it.name) }, make) { make = it; model = null }
+                  if (make != "unknown") SearchFilter(stringResource(R.string.model), shop.models.filter { make == null || it.makeId == make }.map { item -> item.id to (shop.makes.single { it.id == item.makeId }.name + " · " + item.name + if (item.retired) stringResource(R.string.retired_suffix) else "") }, model) { model = it }
+                  SearchFilter(stringResource(R.string.location_2), listOf("none" to stringResource(R.string.no_location_assigned)) + shop.locations.map { it.id to (if (it.retired) stringResource(R.string.retired_suffix_2, it.name) else it.name) }, location) { location = it }
+                  SearchFilter(stringResource(R.string.decimal_field), shop.attributes.filter { it.type == AttributeType.Decimal && (category == null || it.categoryId == category) }.map { it.id to (it.name + " · " + it.unit + " · " + (it.productId?.let { id -> shop.products.find { it.id == id }?.title } ?: shop.categories.single { c -> c.id == it.categoryId }.name)) }, definition) { definition = it; decimal = "" }
                   if (definition != null) {
                       ErrorSnackbar(if (decimalError) stringResource(R.string.search_decimal_error) else null)
                       ShopTextField(
@@ -195,10 +195,10 @@ internal fun StockSearch(shop: ShopSnapshot, initialHealth: String?, loadPhoto: 
     if (found == null) Text(stringResource(R.string.search_searching), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     else {
         Text(stringResource(R.string.matching_products, found.size), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        if (found.isEmpty()) ShopEmptyState(stringResource(R.string.manual_no_matching_title), "Try another description or clear the filters to browse all stock.", R.drawable.ic_stock)
+        if (found.isEmpty()) ShopEmptyState(stringResource(R.string.manual_no_matching_title), stringResource(R.string.search_no_matching_desc), R.drawable.ic_stock)
         else ShopListGroup {
             found.take(limit).forEach { product -> StockProductRow(shop, product, loadPhoto, enabled = !busy,
-                menu = { ShopOverflowMenu(stringResource(R.string.actions_for)+product.title, listOf(
+                menu = { ShopOverflowMenu(stringResource(R.string.actions_for_2, product.title), listOf(
                     ShopMenuAction(stringResource(R.string.product_edit_details), R.drawable.ic_edit) { onProductAction(product, "edit") },
                     ShopMenuAction(stringResource(R.string.product_receive_stock), R.drawable.ic_inventory) { onProductAction(product, "receive") },
                     ShopMenuAction(stringResource(R.string.scanner_copy_catalog), R.drawable.ic_content_copy) { onProductAction(product, "copy") },
@@ -221,7 +221,7 @@ internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: Ph
         val density = LocalDensity.current
         val priceStyle = MaterialTheme.typography.titleMedium
         val measurer = rememberTextMeasurer()
-        val price = "₹${indianNumber(product.priceRupees)}"
+        val price = stringResource(R.string.rupee_amount, indianNumber(product.priceRupees))
         BoxWithConstraints {
             val priceMax = (maxWidth - 24.dp) * 0.4f
             // A price that cannot fit its share of the row moves under the title so
@@ -236,12 +236,12 @@ internal fun StockProductRow(shop: ShopSnapshot, product: Product, loadPhoto: Ph
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(product.title, style = MaterialTheme.typography.titleMedium, maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                    Text(shop.categories.single { it.id == product.categoryId }.name + " · " + indianNumber(product.quantity) + " pieces",
+                    Text(stringResource(R.string.pieces_5, shop.categories.single { it.id == product.categoryId }.name, indianNumber(product.quantity)),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         if (product.archived) ShopStatusChip(stringResource(R.string.shared_archived))
                         else if (product.stockHealth != StockHealth.InStock) {
-                            ShopStatusChip(product.stockHealth.label, when (product.stockHealth) {
+                            ShopStatusChip(stringResource(product.stockHealth.label), when (product.stockHealth) {
                                 StockHealth.LowStock -> ShopStatusTone.Warning
                                 StockHealth.OutOfStock -> ShopStatusTone.Danger
                                 StockHealth.InStock -> ShopStatusTone.Neutral

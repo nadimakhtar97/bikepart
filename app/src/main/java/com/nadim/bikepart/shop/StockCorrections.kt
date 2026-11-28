@@ -1,7 +1,9 @@
 package com.nadim.bikepart.shop
 
-enum class CorrectionKind(val label: String) {
-    PhysicalCount("Physical count"), Damage("Damage"), Loss("Loss")
+import com.nadim.bikepart.R
+
+enum class CorrectionKind(@param:androidx.annotation.StringRes val label: Int) {
+    PhysicalCount(R.string.physical_count), Damage(R.string.damage), Loss(R.string.loss)
 }
 
 data class StockCorrection(

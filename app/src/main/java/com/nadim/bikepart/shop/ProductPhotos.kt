@@ -1,5 +1,7 @@
 package com.nadim.bikepart.shop
 
+
+import com.nadim.bikepart.R
 import android.system.Os
 import android.system.OsConstants
 import java.io.File
@@ -29,9 +31,9 @@ internal const val MAX_PHOTO_BYTES = 20L * 1024 * 1024
 /** Publishes complete, synced files without replacing an existing content identity.
  * Unreferenced blobs are retained: deletion needs the future backup pin registry.
  */
-internal class ProductPhotos(private val directory: File) {
+internal class ProductPhotos(private val directory: File, private val context: android.content.Context) {
     suspend fun import(source: PhotoChange.Import): PhotoReference = withContext(Dispatchers.IO) {
-        check(directory.isDirectory || directory.mkdirs()) { "Could not create photo storage" }
+        check(directory.isDirectory || directory.mkdirs()) { context.getString(R.string.could_not_create_photo_storage) }
         val temporary = File.createTempFile("import-", ".tmp", directory)
         try {
             val digest = MessageDigest.getInstance("SHA-256")
@@ -44,11 +46,11 @@ internal class ProductPhotos(private val directory: File) {
                         val count = input.read(buffer)
                         if (count < 0) break
                         size += count
-                        if (size > MAX_PHOTO_BYTES) throw ShopValidation(ProductField.Photo, "Choose a photo no larger than 20 MB")
+                        if (size > MAX_PHOTO_BYTES) throw ShopValidation(ProductField.Photo, context.getString(R.string.choose_a_photo_no_larger_than))
                         digest.update(buffer, 0, count)
                         output.write(buffer, 0, count)
                     }
-                    if (size == 0L) throw ShopValidation(ProductField.Photo, "The selected photo is empty")
+                    if (size == 0L) throw ShopValidation(ProductField.Photo, context.getString(R.string.the_selected_photo_is_empty))
                     output.fd.sync()
                 }
             }
@@ -63,7 +65,7 @@ internal class ProductPhotos(private val directory: File) {
                     }
                 }
             }
-            check(read(reference) != null) { "Stored photo failed verification" }
+            check(read(reference) != null) { context.getString(R.string.stored_photo_failed_verification) }
             // Persist the directory entries too, including newly created ancestors.
             for (folder in listOf(directory, directory.parentFile, directory.parentFile?.parentFile).filterNotNull()) {
                 val descriptor = Os.open(folder.path, OsConstants.O_RDONLY, 0)

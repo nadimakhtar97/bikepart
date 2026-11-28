@@ -1,5 +1,6 @@
 package com.nadim.bikepart.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -21,7 +22,7 @@ internal fun CorrectionRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = kind.label, showBack = true, enabled = !busy) },
+        topBar = { ShopRouteAppBar(title = stringResource(kind.label), showBack = true, enabled = !busy) },
     ) { padding ->
         ShopRouteColumn(modifier = Modifier.imePadding(), contentPadding = padding) {
             if (product != null) key(operationId) {

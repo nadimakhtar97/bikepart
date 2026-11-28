@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
@@ -12,7 +14,7 @@ internal fun ArchivedProductsRoute(
 ) {
     Scaffold(
         modifier = ShopRouteScaffoldModifier,
-        topBar = { ShopRouteAppBar(title = "Archived products", showBack = true) },
+        topBar = { ShopRouteAppBar(title = stringResource(R.string.title_archived_products), showBack = true) },
     ) { padding ->
         ShopRouteColumn(contentPadding = padding) {
             ArchivedProducts(shop, loadPhoto, onOpenProduct)

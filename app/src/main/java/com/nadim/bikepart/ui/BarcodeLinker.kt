@@ -33,8 +33,8 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean,
         )
         val products = shop.products.filter { !it.archived && (it.title.contains(query, true) || it.sku.contains(query, true)) }
         val templates = shop.templates.filter { !it.retired && it.catalog.title.contains(query, true) }
-        val targets = products.map { BarcodeTarget(BarcodeTargetKind.Product, it.id) to "Product: ${it.title}" } +
-            templates.map { BarcodeTarget(BarcodeTargetKind.Template, it.id) to "Template: ${it.catalog.title}" }
+        val targets = products.map { BarcodeTarget(BarcodeTargetKind.Product, it.id) to stringResource(R.string.product, it.title) } +
+            templates.map { BarcodeTarget(BarcodeTargetKind.Template, it.id) to stringResource(R.string.template, it.catalog.title) }
         for ((target, label) in targets.take(limit)) {
             ShopSecondaryButton(onClick = { selectedId = target.id; selectedKind = target.kind.name; confirmedRevision = owner?.revision; onChange() },
                 enabled = !busy, shape = MaterialTheme.shapes.medium,
@@ -64,11 +64,21 @@ internal fun BarcodeLinker(shop: ShopSnapshot, code: String, busy: Boolean,
         if (targets.isEmpty()) Text(stringResource(R.string.barcode_no_targets))
         selected?.let { target ->
             Text(stringResource(R.string.selected_target, shop.barcodeTargetLabel(target)))
-            if (conflict) Text("Conflict: this barcode already belongs to ${shop.barcodeTargetLabel(requireNotNull(owner).target)}. Confirm moving it to ${shop.barcodeTargetLabel(target)}.")
-            ShopPrimaryButton(if (conflict) "Confirm reassignment" else "Save barcode link", enabled = !busy) {
+            if (conflict) Text(stringResource(R.string.conflict_this_barcode_already_belongs_to, shop.barcodeTargetLabel(requireNotNull(owner).target), shop.barcodeTargetLabel(target)))
+            ShopPrimaryButton(if (conflict) stringResource(R.string.barcode_confirm_reassignment) else stringResource(R.string.barcode_save_link), enabled = !busy) {
                 save(target, confirmedRevision)
             }
         }
         ShopSecondaryButton(onClick = cancel, enabled = !busy, modifier = Modifier.heightIn(min = ShopSpacing.touchTarget)) { Text(stringResource(R.string.barcode_cancel_link)) }
     }
+}
+
+@Composable
+internal fun ShopSnapshot.barcodeTargetLabel(target: BarcodeTarget): String = when (target.kind) {
+    BarcodeTargetKind.Product -> products.find { it.id == target.id }?.let {
+        stringResource(R.string.formatted_text_2, it.title, it.sku)
+    } ?: target.id
+    BarcodeTargetKind.Template -> templates.find { it.id == target.id }?.let {
+        stringResource(R.string.template, it.catalog.title)
+    } ?: target.id
 }

@@ -1,5 +1,9 @@
 package com.nadim.bikepart.shop
 
+import com.nadim.bikepart.R
+
+internal class ScanFailure(@param:androidx.annotation.StringRes val messageRes: Int) : IllegalArgumentException()
+
 /** Stable identities only. Stock, price, SKU and location never enter a shared label. */
 object ItemQr {
     data class Identity(val datasetId: String, val kind: String, val id: String)
@@ -11,7 +15,7 @@ object ItemQr {
         "bikepart:1:$dataset:$kind:$id".also { parse(it) }
     fun parse(payload: String): Identity {
         val match = encoding.matchEntire(payload)
-            ?: throw IllegalArgumentException("Unsupported or malformed shop QR. Use manual search.")
+            ?: throw ScanFailure(R.string.unsupported_or_malformed_shop_qr_use)
         return Identity(match.groupValues[1], match.groupValues[2], match.groupValues[3])
     }
 }
@@ -25,14 +29,14 @@ sealed interface ScanTarget {
 fun ShopSnapshot.resolveScan(payload: String, namespace: String = "external"): ScanTarget {
     val identity = if (payload.startsWith("bikepart:", ignoreCase = true)) ItemQr.parse(payload) else {
         val alias = barcodeAliases.singleOrNull { it.namespace == namespace && it.code == payload }
-            ?: throw IllegalArgumentException("Unknown barcode. Use manual search or explicitly link it.")
+            ?: throw ScanFailure(R.string.unknown_barcode_use_manual_search_or)
         ItemQr.Identity(datasetId, if (alias.target.kind == BarcodeTargetKind.Product) "product" else "template", alias.target.id)
     }
-    require(identity.datasetId == datasetId) { "This QR belongs to another shop dataset. Use manual search." }
+    if (identity.datasetId != datasetId) throw ScanFailure(R.string.this_qr_belongs_to_another_shop)
     return when (identity.kind) {
         "product" -> ScanTarget.StockedProduct(products.singleOrNull { it.id == identity.id && !it.archived }
-            ?: throw IllegalArgumentException("Product is unknown or archived. Use manual search."))
+            ?: throw ScanFailure(R.string.product_is_unknown_or_archived_use))
         else -> ScanTarget.Template(templates.singleOrNull { it.id == identity.id && !it.retired }
-            ?: throw IllegalArgumentException("Template is unknown or retired. Use manual search."))
+            ?: throw ScanFailure(R.string.template_is_unknown_or_retired_use))
     }
 }

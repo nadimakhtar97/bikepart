@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.ShopSnapshot
@@ -19,7 +21,7 @@ internal fun FindingLookupsRoute(
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(
-                title = "Fitment and locations",
+                title = stringResource(R.string.title_fitment_locations),
                 showBack = true,
                 enabled = !busy
             )

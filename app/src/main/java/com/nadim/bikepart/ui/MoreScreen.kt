@@ -31,26 +31,26 @@ internal fun MoreScreen(
     updates()
     ShopSectionHeader(stringResource(R.string.more_shop))
     ShopListGroup {
-        ShopListRow(stringResource(R.string.more_sales_history), supporting = "Completed cash sales and receipts", icon = R.drawable.ic_receipt,
+        ShopListRow(stringResource(R.string.more_sales_history), supporting = stringResource(R.string.more_sales_history_supporting), icon = R.drawable.ic_receipt,
             enabled = !busy, onClick = onSales)
-        ShopListRow(stringResource(R.string.more_product_templates), supporting = "Reusable catalog details", icon = R.drawable.ic_template,
+        ShopListRow(stringResource(R.string.more_product_templates), supporting = stringResource(R.string.more_product_templates_supporting), icon = R.drawable.ic_template,
             enabled = !busy, onClick = onTemplates)
-        ShopListRow(stringResource(R.string.more_archived_products), supporting = "Retained details and history", icon = R.drawable.ic_archive,
+        ShopListRow(stringResource(R.string.more_archived_products), supporting = stringResource(R.string.more_archived_products_supporting), icon = R.drawable.ic_archive,
             enabled = !busy, onClick = onArchived)
     }
     ShopSectionHeader(stringResource(R.string.more_backup_recovery))
     ShopListGroup {
-        ShopListRow(stringResource(R.string.more_shop_backups), supporting = "Drive, local copies and phone recovery", icon = R.drawable.ic_cloud,
+        ShopListRow(stringResource(R.string.more_shop_backups), supporting = stringResource(R.string.more_shop_backups_supporting), icon = R.drawable.ic_cloud,
             enabled = !busy, onClick = onBackups)
     }
     ShopSectionHeader(stringResource(R.string.more_catalog))
     ShopListGroup {
         ShopListRow(
             stringResource(R.string.more_edit_categories),
-            supporting = "${shop.categories.size} categories · shared fields and options",
+            supporting = stringResource(R.string.categories_shared_fields_and_options, shop.categories.size),
             icon = R.drawable.ic_category,
             enabled = !busy, onClick = onCategories)
-        ShopListRow(stringResource(R.string.more_manage_fitment), supporting = "${shop.makes.size} makes · ${shop.locations.size} locations",
+        ShopListRow(stringResource(R.string.more_manage_fitment), supporting = stringResource(R.string.makes_locations, shop.makes.size, shop.locations.size),
             icon = R.drawable.ic_two_wheeler, enabled = !busy, onClick = onFindingLookups)
     }
     ShopListGroup {

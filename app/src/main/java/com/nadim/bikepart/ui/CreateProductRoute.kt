@@ -1,5 +1,7 @@
 package com.nadim.bikepart.ui
 
+import com.nadim.bikepart.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import com.microsoft.fluentui.compose.Scaffold
 import com.nadim.bikepart.shop.CatalogDraft
@@ -10,7 +12,7 @@ internal fun CreateProductRoute(context: ProductFormRouteContext, catalog: Catal
         modifier = ShopRouteScaffoldModifier,
         topBar = {
             ShopRouteAppBar(
-                title = "New product",
+                title = stringResource(R.string.title_new_product),
                 showBack = true,
                 enabled = !context.busy
             )
