@@ -90,6 +90,9 @@ class RestoreActivationTest {
             val historical = rewriteCapture(capture.file, File(context.cacheDir, "$name.zip")) { entries, manifest, schema ->
                 removeBackupColumns(entries, schema, "shop_state", tables.getValue("shop_state"), setOf("labelMedia", "labelCopies"))
                 removeBackupColumns(entries, schema, "product_photos", tables.getValue("product_photos"), setOf("position"))
+                removeBackupColumns(entries, schema, "products", tables.getValue("products"), setOf("buyingPriceRupees"))
+                removeBackupColumns(entries, schema, "opening_stock", tables.getValue("opening_stock"), setOf("buyingPriceRupees"))
+                removeBackupColumns(entries, schema, "stock_arrivals", tables.getValue("stock_arrivals"), setOf("requestedSellingPriceRupees"))
                 val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/13.json").bufferedReader().use { org.json.JSONObject(it.readText()).getJSONObject("database") }
                 schema.put("roomVersion", 13).put("roomIdentity", trusted.getString("identityHash"))
                 manifest.put("roomVersion", 13)

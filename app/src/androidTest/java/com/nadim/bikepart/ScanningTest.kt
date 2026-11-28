@@ -46,7 +46,9 @@ class ScanningTest {
         try {
             lateinit var productId: String
             Shop.open(context, name).use { shop ->
-                productId = shop.createProduct("Bin bolt", shop.snapshot().categories.first().id, "", "4", "80")
+                productId = shop.createProduct("Bin bolt", shop.snapshot().categories.first().id, "", "4", "80", buyingPriceRupees = "20")
+                val cart = shop.createCart()
+                val cartVersion = shop.saveCart(cart, 0, "", mapOf(productId to "2"))
                 val before = shop.snapshot()
                 val payload = ItemQr.product(before.datasetId, productId)
                 assertEquals(productId, (before.resolveScan(payload) as ScanTarget.StockedProduct).product.id)
@@ -60,18 +62,39 @@ class ScanningTest {
                     try { shop.receiveStock("invalid", productId, pieces, cost); fail("Accepted $pieces/$cost") } catch (_: IllegalArgumentException) { }
                     assertEquals(before, shop.snapshot())
                 }
-                shop.receiveStock("arrival", productId, "3", "25")
+                shop.receiveStock("arrival", productId, "3", "25", "90")
                 val after = shop.snapshot()
                 assertEquals(7L, after.products.single().quantity)
                 assertEquals(before.revision + 1, after.revision)
                 assertEquals(25L, after.arrivals.single().unitCostRupees)
+                assertEquals(25L, after.products.single().buyingPriceRupees)
+                assertEquals(90L, after.products.single().priceRupees)
+                assertEquals(20L, after.openings.getValue(productId).buyingPriceRupees)
+                assertEquals(180L, after.carts.single().totalRupees)
+                assertEquals(cartVersion + 1, after.carts.single().editVersion)
             }
             Shop.open(context, name).use { shop ->
                 val before = shop.snapshot()
-                shop.receiveStock("arrival", productId, "3", "25")
+                shop.receiveStock("arrival", productId, "3", "25", "90")
                 assertEquals(before, shop.snapshot())
                 try { shop.receiveStock("arrival", productId, "4", "25"); fail("Changed retry") } catch (_: IllegalArgumentException) { }
                 assertEquals(before, shop.snapshot())
+                try { shop.receiveStock("arrival", productId, "3", "25", "95"); fail("Changed selling price on retry") } catch (_: IllegalArgumentException) { }
+                assertEquals(before, shop.snapshot())
+                try {
+                    shop.receiveStock("overflow-price", productId, "3", "30", Long.MAX_VALUE.toString())
+                    fail("Accepted a selling price that overflows the unfinished cart")
+                } catch (error: ShopValidation) {
+                    assertEquals(ProductField.SellingPrice, error.field)
+                }
+                assertEquals(before, shop.snapshot())
+                val product = before.products.single()
+                shop.editProduct(productId, product.title, product.categoryId, "", buyingPriceRupees = "0")
+                assertEquals(0L, shop.snapshot().products.single().buyingPriceRupees)
+                assertEquals(before.arrivals, shop.snapshot().arrivals)
+                assertEquals(before.openings, shop.snapshot().openings)
+                val cart = shop.snapshot().carts.single()
+                shop.discardCart(cart.id, cart.editVersion)
                 shop.correctStock("empty", productId, CorrectionKind.PhysicalCount, "0", "Empty bin")
                 shop.archiveProduct(productId)
                 val archived = shop.snapshot()

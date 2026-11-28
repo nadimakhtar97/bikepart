@@ -153,6 +153,9 @@ class RestoreValidationTest {
                 rewriteCapture(capture.file, fixture) { entries, manifest, schema ->
                     removeBackupColumns(entries, schema, "shop_state", tables.getValue("shop_state"), setOf("labelMedia", "labelCopies"))
                     removeBackupColumns(entries, schema, "product_photos", tables.getValue("product_photos"), setOf("position"))
+                    removeBackupColumns(entries, schema, "products", tables.getValue("products"), setOf("buyingPriceRupees"))
+                    removeBackupColumns(entries, schema, "opening_stock", tables.getValue("opening_stock"), setOf("buyingPriceRupees"))
+                    removeBackupColumns(entries, schema, "stock_arrivals", tables.getValue("stock_arrivals"), setOf("requestedSellingPriceRupees"))
                     val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/13.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
                     schema.put("roomVersion", 13).put("roomIdentity", trusted.getString("identityHash"))
                     manifest.put("roomVersion", 13)
@@ -180,7 +183,7 @@ class RestoreValidationTest {
                 val decimal = shop.createAttribute(category, "Diameter", AttributeType.Decimal)
                 val product = shop.createProduct("पुर्जा, \"A\"", category, "Line\nsecond", "12", "80",
                     attributes = mapOf(decimal to AttributeValue.Decimal("123456789012345678.123456789012")),
-                    photo = PhotoChange.Import { "shared-photo".byteInputStream() })
+                    photo = PhotoChange.Import { "shared-photo".byteInputStream() }, buyingPriceRupees = "35")
                 shop.saveTemplate(shop.snapshot().copyCatalog(product))
                 shop.receiveStock("arrival", product, "3", "40")
                 shop.correctStock("count", product, CorrectionKind.PhysicalCount, "14", "Count")

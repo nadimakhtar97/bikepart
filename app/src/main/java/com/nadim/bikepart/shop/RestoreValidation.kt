@@ -35,7 +35,7 @@ internal object RestoreValidation {
             val contents = LocalBackup.readForRestore(copy)
             val schema = ZipFile(copy).use { zip -> JSONObject(zip.getInputStream(zip.getEntry("schema.json")).bufferedReader(Charsets.UTF_8).readText()) }
             val version = schema.getInt("roomVersion")
-            require(version in 1..15) { "Unsupported shop schema version $version. Update the app before restoring." }
+            require(version in 1..16) { "Unsupported shop schema version $version. Update the app before restoring." }
             val trusted = context.assets.open("com.nadim.bikepart.shop.ShopDatabase/$version.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
             require(schema.getString("roomIdentity") == trusted.getString("identityHash")) { "Shop schema identity does not match version $version." }
             val entities = trusted.getJSONArray("entities")
@@ -151,7 +151,7 @@ internal object RestoreValidation {
         val balances = dao.balances().associate { it.productId to it.quantity }
         require(balances.keys == products.keys && balances.values.all { it >= 0 }) { "Every product needs one nonnegative balance." }
         products.values.forEach { product ->
-            require(product.sku == "BP-${product.id.uppercase(java.util.Locale.ROOT)}" && product.title.isNotBlank() && product.priceRupees >= 0 && product.lowStockThreshold?.let { it >= 0 } != false) { "Invalid product identity, title, price or threshold." }
+            require(product.sku == "BP-${product.id.uppercase(java.util.Locale.ROOT)}" && product.title.isNotBlank() && product.priceRupees >= 0 && product.buyingPriceRupees >= 0 && product.lowStockThreshold?.let { it >= 0 } != false) { "Invalid product identity, title, price or threshold." }
         }
         val attributes = dao.attributes().associateBy { it.id }
         val options = dao.options()
@@ -225,7 +225,7 @@ internal object RestoreValidation {
         }
         dao.arrivals().forEach { row ->
             revision(row.revision)
-            require(row.quantity > 0 && row.unitCostRupees >= 0) { "Invalid stock arrival quantity or cost." }
+            require(row.quantity > 0 && row.unitCostRupees >= 0 && row.requestedSellingPriceRupees?.let { it >= 0 } != false) { "Invalid stock arrival quantity or cost." }
             Math.multiplyExact(row.quantity, row.unitCostRupees)
             movement(row.productId, row.revision, row.previousBalance, row.resultingBalance, row.quantity)
         }
@@ -252,7 +252,7 @@ internal object RestoreValidation {
             require(sale.totalRupees == total && sale.cashRupees >= total && sale.changeRupees == Math.subtractExact(sale.cashRupees, total)) { "Sale totals, cash or change do not reconcile." }
         }
         val openings = dao.allOpenings().associateBy { it.productId }
-        openings.values.forEach { require(it.quantity > 0) { "Invalid opening stock." } }
+        openings.values.forEach { require(it.quantity > 0 && it.buyingPriceRupees >= 0) { "Invalid opening stock." } }
         products.values.forEach { product ->
             var balance = openings[product.id]?.quantity ?: 0L
             movements[product.id].orEmpty().sortedBy { it.revision }.forEach { event ->

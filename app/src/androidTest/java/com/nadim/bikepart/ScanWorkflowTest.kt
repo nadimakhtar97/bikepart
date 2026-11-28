@@ -30,7 +30,7 @@ class ScanWorkflowTest {
         catch (e: androidx.compose.ui.test.ComposeTimeoutException) { throw AssertionError("Waiting for $text\n${compose.onRoot().printToString()}", e) }
     }
     private fun click(text: String) {
-        val node = compose.onNode(hasText(text) and hasClickAction())
+        val node = compose.onNode((hasText(text) or hasContentDescription(text)) and hasClickAction())
         if (text !in listOf("Back", "Stock", "Home", "More", "Carts")) node.performScrollTo()
         node.performClick()
     }
@@ -210,12 +210,43 @@ class ScanWorkflowTest {
         }
     }
 
+    @Test fun newProductAndEditDetailsSaveBuyingPriceBesideSellingPrice() {
+        val title = "Buying price bolt ${System.nanoTime()}"
+        val buying = compose.onNode(hasContentDescription("Buying price (whole rupees)") and hasSetTextAction())
+        val selling = compose.onNode(hasContentDescription("Selling price (whole rupees)") and hasSetTextAction())
+        launch().use {
+            await("Add product")
+            click("Add product")
+            compose.onNodeWithText("Title (required)").performTextInput(title)
+            compose.onNodeWithContentDescription("Search categories").performScrollTo().performTextInput("Bolts")
+            compose.onNode(hasText("Bolts") and !hasSetTextAction(), useUnmergedTree = true).performClick()
+            compose.onNode(hasContentDescription("Opening stock (pieces)") and hasSetTextAction())
+                .performScrollTo().performTextReplacement("4")
+            buying.performScrollTo().assertIsDisplayed().assertTextContains("0").performTextReplacement("45")
+            selling.performScrollTo().assertIsDisplayed().performTextReplacement("80")
+            click("Save product")
+            await("Buying price: ₹45")
+            click("Edit details")
+            buying.performScrollTo().assertIsDisplayed().assertTextContains("45").performTextReplacement("0")
+            selling.performScrollTo().assertTextContains("80")
+            val before = snapshot()
+            click("Save product")
+            await("Buying price: ₹0")
+            val after = snapshot()
+            val product = after.products.single { it.title == title }
+            assertEquals(0L, product.buyingPriceRupees)
+            assertEquals(80L, product.priceRupees)
+            assertEquals(45L, after.openings.getValue(product.id).buyingPriceRupees)
+            assertEquals(before.revision + 1, after.revision)
+        }
+    }
+
     @Test fun receivingScanSelectsProductAndOnlySaveCommitsArrival() = receivingScan(false)
     @Test fun externalAliasReceivingRequiresExplicitArrivalSave() = receivingScan(true)
     private fun receivingScan(external: Boolean) {
         val token = System.nanoTime()
         val title = "Received washer $token"
-        val id = runBlocking { Shop.open(context).use { it.createProduct(title, it.snapshot().categories.first().id, "", "2", "80") } }
+        val id = runBlocking { Shop.open(context).use { it.createProduct(title, it.snapshot().categories.first().id, "", "2", "80", buyingPriceRupees = "20") } }
         val payload = scanCode(id, false, external)
         val scenario = launch()
         try {
@@ -227,11 +258,17 @@ class ScanWorkflowTest {
             click("Enter quantity and cost"); await("Received pieces")
             assertEquals(before, snapshot())
             compose.onNodeWithText("Received pieces").performScrollTo().performTextReplacement("3")
-            compose.onNodeWithText("Purchase unit cost (₹)").performScrollTo().performTextReplacement("25")
+            compose.onNodeWithText("Buying price (whole rupees)").performScrollTo()
+                .assertIsDisplayed().assertTextContains("20").performTextReplacement("25")
+            compose.onNode(hasContentDescription("Selling price (whole rupees)") and hasSetTextAction())
+                .performScrollTo().assertIsDisplayed().assertTextContains("80").performTextReplacement("95")
             click("Save arrival"); await("Stock arrival history")
             val after = snapshot()
             assertEquals(before.revision + 1, after.revision)
-            assertEquals(5L, after.products.single { it.id == id }.quantity)
+            val received = after.products.single { it.id == id }
+            assertEquals(5L, received.quantity)
+            assertEquals(25L, received.buyingPriceRupees)
+            assertEquals(95L, received.priceRupees)
             assertEquals(25L, after.arrivals.single { it.productId == id }.unitCostRupees)
             scenario.close()
             ActivityScenario.launch(MainActivity::class.java).use { reopened ->
@@ -353,7 +390,7 @@ class ScanWorkflowTest {
                     click("Back"); await("Receive stock"); click("Receive stock"); click("Scan for receiving")
                     await("Substituted camera transport"); emit(payload); click("Enter quantity and cost")
                     compose.onNodeWithText("Received pieces").performScrollTo().performClick().performTextInput("0")
-                    compose.onNodeWithText("Purchase unit cost (₹)").performScrollTo().performTextInput("2")
+                    compose.onNodeWithText("Buying price (whole rupees)").performScrollTo().performTextReplacement("2")
                     click("Save arrival"); await("Enter a positive whole-piece quantity")
                     compose.onNodeWithText("Save arrival").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                     capture("scan-arrival-${appearance.name}-$scale")

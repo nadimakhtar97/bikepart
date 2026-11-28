@@ -486,7 +486,7 @@ class DriveBackup internal constructor(private val shop: Shop, private val direc
         val manifest = JSONObject(LocalBackup.utf8(bytes))
         require(manifest.get("driveFormat") == 1) { "Unsupported Drive restore version. Update the app." }
         val local = manifest.getJSONObject("localManifest")
-        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..15) { "Incomplete or unsupported restore point." }
+        require(local.getBoolean("complete") && local.getInt("exportVersion") == LocalBackup.FORMAT_VERSION && local.getInt("roomVersion") in 1..16) { "Incomplete or unsupported restore point." }
         for (key in listOf("datasetId", "captureId", "revision", "capturedAt")) require(manifest.getString(key) == local.getString(key)) { "Restore manifest identity mismatch: $key." }
         require(manifest.getString("generation").isNotBlank()) { "Missing writer identity." }
         val files = manifest.getJSONArray("files")

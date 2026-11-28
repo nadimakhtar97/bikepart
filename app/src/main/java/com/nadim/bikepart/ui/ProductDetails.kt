@@ -47,6 +47,7 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
             color = colors.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
         Text(stringResource(R.string.pieces, indianNumber(product.quantity)), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.product_buying_price, indianNumber(product.buyingPriceRupees)), style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.selling_price, indianNumber(product.priceRupees)), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(2.dp))
         if (product.archived) Text(stringResource(R.string.product_archived_label), style = MaterialTheme.typography.labelLarge,
@@ -101,7 +102,11 @@ internal fun ProductDetails(shop: ShopSnapshot, product: Product, onEdit: () -> 
         }
         HorizontalDivider(color = colors.outlineVariant)
         Text(stringResource(R.string.sku, product.sku), style = MaterialTheme.typography.bodyMedium)
-        Text(stringResource(R.string.opening_stock_pieces, indianNumber(shop.openings[product.id]?.quantity ?: 0L)), style = MaterialTheme.typography.bodyMedium)
+        val opening = shop.openings[product.id]
+        Text(stringResource(R.string.opening_stock_pieces, indianNumber(opening?.quantity ?: 0L)), style = MaterialTheme.typography.bodyMedium)
+        if (opening != null) {
+            Text(stringResource(R.string.opening_buying_price, indianNumber(opening.buyingPriceRupees)), style = MaterialTheme.typography.bodyMedium)
+        }
     }
     if (product.historicalAttributes.isNotEmpty()) ShopSection(stringResource(R.string.product_historical_attributes)) {
         product.historicalAttributes.forEach { (_, definitionId, value) ->

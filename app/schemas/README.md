@@ -1,5 +1,17 @@
 # Shop schema history
 
+## Version 16 — buying prices
+
+The 15 → 16 migration initializes each product from its latest stock arrival
+by committed revision, or ₹0 when the buying price is unknown. Historical
+opening stock starts with an unknown buying price. New opening stock retains
+its original buying price when the current product price changes.
+
+Receive stock saves the quantity, buying price, optional selling price change
+and any resulting unfinished-cart repricing in one transaction. The arrival
+records an explicitly requested selling price for retry validation. Portable
+format 1 carries the new columns and migrates older captures during restore.
+
 ## Version 15 — multiple product photos
 
 The 14 → 15 migration keeps existing photos at position zero and adds an ordered

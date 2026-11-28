@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.Flow
 internal data class CategoryRow(@PrimaryKey val id: String, val name: String, val normalizedName: String, val position: Int)
 
 @Entity(tableName = "products", foreignKeys = [ForeignKey(entity = CategoryRow::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId"), Index(value = ["sku"], unique = true)])
-internal data class ProductRow(@PrimaryKey val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val lowStockThreshold: Long? = null, @ColumnInfo(defaultValue = "0") val archived: Boolean = false)
+internal data class ProductRow(@PrimaryKey val id: String, val sku: String, val title: String, val categoryId: String, val description: String, val priceRupees: Long, val lowStockThreshold: Long? = null, @ColumnInfo(defaultValue = "0") val archived: Boolean = false, @ColumnInfo(defaultValue = "0") val buyingPriceRupees: Long = 0)
 
 @Entity(tableName = "balances", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)])
 internal data class BalanceRow(@PrimaryKey val productId: String, val quantity: Long)
 
 // Zero opening stock has a balance but no invented movement.
 @Entity(tableName = "opening_stock", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)])
-internal data class OpeningRow(@PrimaryKey val productId: String, val quantity: Long, val recordedAt: Long)
+internal data class OpeningRow(@PrimaryKey val productId: String, val quantity: Long, val recordedAt: Long, @ColumnInfo(defaultValue = "0") val buyingPriceRupees: Long = 0)
 
 @Entity(tableName = "shop_state")
 internal data class StateRow(@PrimaryKey val id: Int = 1, val datasetId: String, val revision: Long = 0, val appearance: String = "System", @ColumnInfo(defaultValue = "1") val normalizerVersion: Int = LookupNames.VERSION, @ColumnInfo(defaultValue = "'Package'") val labelMedia: String = "Package", @ColumnInfo(defaultValue = "1") val labelCopies: Long = 1)
@@ -149,7 +149,7 @@ internal interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putState(row: StateRow)
 }
 
-@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class, BarcodeAliasRow::class, BarcodeAssignmentRow::class], version = 15, exportSchema = true)
+@Database(entities = [CategoryRow::class, ProductRow::class, BalanceRow::class, OpeningRow::class, StateRow::class, AttributeRow::class, OptionRow::class, AttributeValueRow::class, MakeRow::class, ModelRow::class, LocationRow::class, FitmentRow::class, ProductLocationRow::class, ProductPhotoRow::class, TemplateRow::class, CorrectionRow::class, CartRow::class, CartLineRow::class, CartSequenceRow::class, SaleRow::class, SaleLineRow::class, ArrivalRow::class, BarcodeAliasRow::class, BarcodeAssignmentRow::class], version = 16, exportSchema = true)
 internal abstract class ShopDatabase : RoomDatabase() { abstract fun dao(): ShopDao }
 
 @Entity(tableName = "barcode_aliases", primaryKeys = ["namespace", "code"])
@@ -163,4 +163,4 @@ internal data class BarcodeAssignmentRow(@PrimaryKey val revision: Long, val nam
 @Entity(tableName = "stock_arrivals", foreignKeys = [ForeignKey(entity = ProductRow::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId")])
 internal data class ArrivalRow(@PrimaryKey val operationId: String, val productId: String, val quantity: Long,
     val unitCostRupees: Long, val previousBalance: Long, val resultingBalance: Long,
-    val recordedAt: Long, val revision: Long)
+    val recordedAt: Long, val revision: Long, val requestedSellingPriceRupees: Long? = null)

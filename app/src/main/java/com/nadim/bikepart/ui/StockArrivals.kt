@@ -11,9 +11,11 @@ import com.nadim.bikepart.ShopError
 import com.nadim.bikepart.shop.*
 
 @Composable
-internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String, String) -> Unit) {
+internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?, onChange: () -> Unit, save: (String, String, String?) -> Unit) {
     var pieces by rememberSaveable { mutableStateOf("") }
-    var cost by rememberSaveable { mutableStateOf("") }
+    var cost by rememberSaveable { mutableStateOf(product.buyingPriceRupees.toString()) }
+    val initialSellingPrice = rememberSaveable { product.priceRupees.toString() }
+    var sellingPrice by rememberSaveable { mutableStateOf(initialSellingPrice) }
     ShopSection(stringResource(R.string.arrival_details)) {
         Text(product.title, style = MaterialTheme.typography.titleMedium)
         Text(product.sku)
@@ -30,13 +32,24 @@ internal fun StockArrivalForm(product: Product, busy: Boolean, error: ShopError?
         ShopTextField(
             cost,
             { cost = it; onChange() },
-            stringResource(R.string.arrival_purchase_cost),
+            stringResource(R.string.form_buying_price_label),
             enabled = !busy,
             error = error?.takeIf { it.field == ProductField.PurchaseCost }?.message,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
 
-        ShopPrimaryButton(stringResource(R.string.arrival_save), enabled = !busy) { save(pieces, cost) }
+        ShopTextField(
+            sellingPrice,
+            { sellingPrice = it; onChange() },
+            stringResource(R.string.form_selling_price_label),
+            enabled = !busy,
+            error = error?.takeIf { it.field == ProductField.SellingPrice }?.message,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        )
+
+        ShopPrimaryButton(stringResource(R.string.arrival_save), enabled = !busy) {
+            save(pieces, cost, sellingPrice.takeUnless { it == initialSellingPrice })
+        }
     }
 }
 

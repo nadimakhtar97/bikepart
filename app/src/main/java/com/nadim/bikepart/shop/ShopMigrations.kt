@@ -3,6 +3,20 @@ package com.nadim.bikepart.shop
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+internal val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE products ADD COLUMN buyingPriceRupees INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE opening_stock ADD COLUMN buyingPriceRupees INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE stock_arrivals ADD COLUMN requestedSellingPriceRupees INTEGER")
+        db.execSQL("""
+            UPDATE products SET buyingPriceRupees = COALESCE((
+                SELECT unitCostRupees FROM stock_arrivals
+                WHERE productId = products.id ORDER BY revision DESC, operationId DESC LIMIT 1
+            ), 0)
+        """.trimIndent())
+    }
+}
+
 internal val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE TABLE product_photos_new (productId TEXT NOT NULL, sha256 TEXT NOT NULL, sizeBytes INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(productId, position), FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
