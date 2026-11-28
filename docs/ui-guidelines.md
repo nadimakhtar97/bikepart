@@ -716,9 +716,9 @@ model.
   pinned footer shows the saved cart total and Checkout, stacking at narrow
   widths, large text sizes or long totals. At large text sizes it yields space
   to the keyboard while editing. An inline Pieces field supports direct entry
-  alongside increment and decrement controls. Decrement stops at one piece.
-  Each line has an explicit Remove line action and expandable details for SKU,
-  stock, other carts and quoted unit price. Cart actions in the app bar provide
+  alongside increment and decrement controls. See the [cart stock decision](adr/0005-cap-unfinished-carts-at-on-hand-stock.md)
+  for the approved zero-quantity removal and stock-limit behavior. Each line has
+  expandable details for SKU, stock, other carts and quoted unit price. Cart actions in the app bar provide
   Save and return to carts and Discard cart.
 - Sales history groups receipts newest-first by device-local calendar day, with
   Today / Yesterday / date headings, count and exact whole-rupee daily total.
