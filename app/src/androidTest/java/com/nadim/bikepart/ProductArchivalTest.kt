@@ -73,7 +73,7 @@ class ProductArchivalTest {
         } finally { context.deleteDatabase(name) }
     }
 
-    @Test fun archivalRechecksChangedStockAndUnfinishedCartReferencesWithoutPartialWrites() = runBlocking {
+    @Test fun archivalRechecksChangedStockAndAllowsArchivalAfterCartReduction() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "archive-guards-${UUID.randomUUID()}.db"
         try {
@@ -84,13 +84,11 @@ class ProductArchivalTest {
                     var before = shop.snapshot()
                     rejects("stock") { stale.archiveProduct(product) }
                     assertEquals(before, shop.snapshot())
-                    shop.correctStock("lost", product, CorrectionKind.Loss, "1", "Lost one")
                     val cart = shop.createCart()
                     shop.addCartProduct(cart, 0, product, "1")
+                    shop.correctStock("lost", product, CorrectionKind.Loss, "1", "Lost one")
                     before = shop.snapshot()
-                    rejects("unfinished cart") { stale.archiveProduct(product) }
-                    assertEquals(before, shop.snapshot())
-                    shop.saveCart(cart, 1, "", emptyMap())
+                    assertTrue(before.carts.single().lines.isEmpty())
                     stale.archiveProduct(product)
                     assertTrue(shop.snapshot().products.single().archived)
                     assertEquals(0L, shop.snapshot().products.single().quantity)

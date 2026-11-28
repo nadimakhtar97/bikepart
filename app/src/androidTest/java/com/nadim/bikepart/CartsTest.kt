@@ -12,7 +12,7 @@ import java.util.UUID
 class CartsTest {
     @Test fun staleEditsInvalidQuantitiesAndOverflowLeaveSavedCartIntact() = runBlocking {
         withShop { shop, context, name ->
-            val product = shop.createProduct("Bolt", shop.snapshot().categories.first().id, "", "1", "80")
+            val product = shop.createProduct("Bolt", shop.snapshot().categories.first().id, "", Long.MAX_VALUE.toString(), "80")
             val cart = shop.createCart()
             shop.saveCart(cart, 0, "Ravi", mapOf(product to "2"))
             Shop.open(context, name).use { other ->
@@ -23,13 +23,14 @@ class CartsTest {
                 assertEquals(before, shop.snapshot())
             }
             val before = shop.snapshot()
-            for (input in listOf("", "0", "-1", "1.5", "+1", "1,000", "9223372036854775808", "１２")) {
+            for (input in listOf("", "-1", "1.5", "+1", "1,000", "9223372036854775808", "１２")) {
                 rejects { shop.saveCart(cart, 2, "Invalid", mapOf(product to input)) }
                 rejects { shop.addCartProduct(cart, 2, product, input) }
             }
+            rejects { shop.addCartProduct(cart, 2, product, "0") }
             rejects { shop.saveCart(cart, 2, "Overflow", mapOf(product to Long.MAX_VALUE.toString())) }
             assertEquals(before, shop.snapshot())
-            val expensive = shop.createProduct("Expensive", shop.snapshot().categories.first().id, "", "0", Long.MAX_VALUE.toString())
+            val expensive = shop.createProduct("Expensive", shop.snapshot().categories.first().id, "", "1", Long.MAX_VALUE.toString())
             rejects { shop.saveCart(cart, 2, "Sum overflow", mapOf(product to "1", expensive to "1")) }
             shop.setSellingPrice(product, "0")
             shop.saveCart(cart, 3, "", emptyMap())
@@ -41,7 +42,7 @@ class CartsTest {
             val other = shop.createCart()
             shop.saveCart(other, 0, "", mapOf(product to "1"))
             assertEquals("9223372036854775808", shop.snapshot().otherCartDemand("another-customer", product))
-            assertEquals(1L, shop.snapshot().products.single { it.id == product }.quantity)
+            assertEquals(Long.MAX_VALUE, shop.snapshot().products.single { it.id == product }.quantity)
             shop.discardCart(cart, 5)
             rejects { shop.saveCart(cart, 4, "", emptyMap()) }
         }
@@ -86,6 +87,35 @@ class CartsTest {
         }
     }
 
+    @Test fun stockCorrectionsReducePausedCartsAndKeepNoticesAcrossReopen() = runBlocking {
+        withShop { shop, context, name ->
+            val product = shop.createProduct("Bolt", shop.snapshot().categories.first().id, "", "5", "80")
+            val first = shop.createCart()
+            val second = shop.createCart()
+            shop.saveCart(first, 0, "First", mapOf(product to "4"))
+            shop.addCartProduct(second, 0, product, "5")
+            val before = shop.snapshot()
+            rejects { shop.addCartProduct(first, 1, product, "2") }
+            rejects { shop.saveCart(first, 1, "", mapOf(product to "6")) }
+            assertEquals(before, shop.snapshot())
+
+            shop.correctStock("count", product, CorrectionKind.PhysicalCount, "2", "Counted two")
+            rejects { shop.saveCart(first, 1, "Stale edit", mapOf(product to "4")) }
+            Shop.open(context, name).use { reopened ->
+                val reduced = reopened.snapshot()
+                assertEquals(listOf(2L, 2L), reduced.carts.map { it.lines.single().quantity })
+                assertTrue(reduced.carts.all { it.stockReductions == mapOf(product to 2L) })
+                reopened.dismissCartStockNotice(first, 2)
+                reopened.saveCart(first, 2, "First", mapOf(product to "0"))
+                assertTrue(reopened.snapshot().carts.single { it.id == first }.lines.isEmpty())
+                reopened.correctStock("loss", product, CorrectionKind.Loss, "2", "Lost both pieces")
+                val paused = reopened.snapshot().carts.single { it.id == second }
+                assertTrue(paused.lines.isEmpty())
+                assertEquals(mapOf(product to 0L), paused.stockReductions)
+            }
+        }
+    }
+
     private suspend fun rejects(action: suspend () -> Unit) {
         try { action(); fail("Expected rejected cart edit") } catch (_: IllegalArgumentException) { }
     }
@@ -101,7 +131,7 @@ class CartsTest {
         val name = "carts-${UUID.randomUUID()}.db"
         try {
             Shop.open(context, name).use { shop ->
-                val product = shop.createProduct("Bolt", shop.snapshot().categories.first().id, "", "1", "80")
+                val product = shop.createProduct("Bolt", shop.snapshot().categories.first().id, "", "3", "80")
                 val first = shop.createCart()
                 val second = shop.createCart()
                 shop.saveCart(first, 0, "Ravi", mapOf(product to "2"))
@@ -114,7 +144,7 @@ class CartsTest {
                 assertEquals(285L, cart.totalRupees)
                 assertEquals(95L, cart.lines.single().quotedPriceRupees)
                 assertEquals("1", snapshot.otherCartDemand(first, product))
-                assertEquals(1L, snapshot.products.single().quantity)
+                assertEquals(3L, snapshot.products.single().quantity)
             }
             Shop.open(context, name).use { shop ->
                 val snapshot = shop.snapshot()
@@ -126,7 +156,7 @@ class CartsTest {
                 shop.saveCart(first.id, first.editVersion + 1, "Ravi", mapOf(product to "2"))
                 assertEquals(190L, shop.snapshot().carts.single { it.id == first.id }.totalRupees)
                 shop.discardCart(first.id, first.editVersion + 2)
-                assertEquals(1L, shop.snapshot().products.single().quantity)
+                assertEquals(3L, shop.snapshot().products.single().quantity)
                 assertEquals("Cart 3", shop.createCart().let { id -> shop.snapshot().carts.single { it.id == id }.name })
             }
         } finally { context.deleteDatabase(name) }

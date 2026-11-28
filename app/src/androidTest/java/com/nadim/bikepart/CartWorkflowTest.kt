@@ -17,25 +17,44 @@ import org.junit.Test
 class CartWorkflowTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
-    private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
+    private fun await(text: String) {
+        try {
+            compose.waitUntil(15_000) {
+                compose.onAllNodes(hasText(text) or hasContentDescription(text)).fetchSemanticsNodes().isNotEmpty()
+            }
+        } catch (error: ComposeTimeoutException) {
+            throw AssertionError("Waiting for $text\n${compose.onRoot().printToString()}", error)
+        }
+    }
     private fun click(text: String) {
-        val node = compose.onNode(hasText(text) and hasClickAction())
+        val target = (hasText(text) or hasContentDescription(text)) and hasClickAction()
+        val node = compose.onNode(target)
         when (text) {
             "Save and return to carts", "Discard cart" -> {
+                androidx.test.espresso.Espresso.closeSoftKeyboard()
                 compose.onNodeWithContentDescription("Cart actions").performClick()
                 node.performClick()
             }
-            "Carts", "Home", "Back", "New sale" -> node.performClick()
-            else -> node.performScrollTo().performClick()
+            else -> {
+                compose.waitUntil(15_000) { compose.onAllNodes(target).fetchSemanticsNodes().size == 1 }
+                if (text !in listOf("Carts", "Home", "Back", "New sale")) node.performScrollTo()
+                node.performClick()
+            }
         }
     }
     private fun snapshot() = runBlocking { Shop.open(context).use { it.snapshot() } }
     private fun waitSaved(customer: String) { compose.waitUntil(15_000) { snapshot().carts.any { it.customer == customer } } }
     private fun label(customer: String) { compose.onNodeWithContentDescription("Customer label (optional)").performScrollTo().performTextReplacement(customer); waitSaved(customer); await("Saved on this phone") }
-    private fun addProduct(title: String, pieces: String) {
+    private fun addProduct(title: String, pieces: String, excess: String? = null) {
         click("Add products")
         compose.onNodeWithContentDescription("Search products for cart").performTextInput(title)
         compose.onNode(hasText(title) and hasClickAction() and !hasSetTextAction()).performScrollTo().performClick()
+        if (excess != null) {
+            compose.onNodeWithContentDescription("Pieces to add").performScrollTo().performTextReplacement(excess)
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
+            click("Add to cart")
+            await("You can add up to 5 more pieces")
+        }
         compose.onNodeWithContentDescription("Pieces to add").performScrollTo().performTextReplacement(pieces)
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         click("Add to cart")
@@ -47,7 +66,7 @@ class CartWorkflowTest {
         val title = "Counter bolt $token"
         val customer = "Ravi $token"
         val secondCustomer = "Meena $token"
-        val product = runBlocking { Shop.open(context).use { it.createProduct(title, it.snapshot().categories.first().id, "", "1", "80") } }
+        val product = runBlocking { Shop.open(context).use { it.createProduct(title, it.snapshot().categories.first().id, "", "5", "80") } }
         var scenario: ActivityScenario<MainActivity>? = null
         val cartIds = mutableSetOf<String>()
         try {
@@ -55,9 +74,9 @@ class CartWorkflowTest {
             await("New sale"); click("New sale")
             await("Customer label (optional)"); label(customer)
             val first = snapshot().carts.single { it.customer == customer }; cartIds += first.id
-            addProduct(title, "2")
+            addProduct(title, "2", excess = "6")
             click("Details")
-            compose.onNodeWithText("On hand: 1 pieces").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("On hand: 5 pieces").performScrollTo().assertIsDisplayed()
             compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("3")
             await("Saved cart total: ₹240")
             compose.onNodeWithContentDescription("Increase quantity of $title").performScrollTo().performClick()
@@ -92,17 +111,21 @@ class CartWorkflowTest {
             assertEquals("Changed elsewhere $token", snapshot().carts.single { it.id == first.id }.customer)
             click("Reload saved cart"); await("Saved on this phone")
             compose.onNodeWithContentDescription("Customer label (optional)").assertTextContains("Changed elsewhere $token")
-            compose.onNodeWithContentDescription("Remove $title").performScrollTo().performClick(); await("No products in this cart. Add a product to begin.")
+            compose.onNodeWithText("Remove line").assertDoesNotExist()
+            compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("1")
+            await("Saved cart total: ₹95")
+            compose.onNodeWithContentDescription("Decrease quantity of $title").performScrollTo().performClick()
+            await("No products in this cart. Add a product to begin.")
             addProduct(title, "2"); await("Saved cart total: ₹190")
             compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().performTextReplacement("0")
-            await("Cart quantity must be a positive whole number within the supported limit")
-            assertEquals(190L, snapshot().carts.single { it.id == first.id }.totalRupees)
-            click("Reload saved cart"); await("Saved on this phone")
-            click("Discard cart"); compose.onNodeWithText("Discard").performClick()
-            await("New sale")
-            assertFalse(snapshot().carts.any { it.id == first.id })
+            await("No products in this cart. Add a product to begin.")
+            assertEquals(0L, snapshot().carts.single { it.id == first.id }.totalRupees)
+            await("Saved on this phone")
+            click("Discard cart")
+            compose.onNode(hasText("Discard") and hasClickAction()).performClick()
+            compose.waitUntil(15_000) { snapshot().carts.none { it.id == first.id } }
             click("Open ${second.name}"); await("Saved cart total: ₹95")
-            assertEquals(1L, snapshot().products.single { it.id == product }.quantity)
+            assertEquals(5L, snapshot().products.single { it.id == product }.quantity)
             // Hold the real writer lock so typing during a commit is deterministic.
             val storage = ShopStorage(context, "shop.db")
             android.database.sqlite.SQLiteDatabase.openDatabase(context.getDatabasePath(storage.database(storage.active)).path, null, 0).use { writer ->
@@ -135,7 +158,7 @@ class CartWorkflowTest {
         lateinit var empty: Cart
         val appearance = runBlocking { Shop.open(context).use { shop ->
             val original = shop.snapshot().appearance
-            id = shop.createProduct(title, shop.snapshot().categories.first().id, "", "0", Long.MAX_VALUE.toString())
+            id = shop.createProduct(title, shop.snapshot().categories.first().id, "", "1", Long.MAX_VALUE.toString())
             val cartId = shop.createCart()
             shop.saveCart(cartId, 0, "Workshop customer with a long optional label $token", mapOf(id to "1"))
             cart = shop.snapshot().carts.single { it.id == cartId }
@@ -163,8 +186,8 @@ class CartWorkflowTest {
                 click("Open ${cart.name}"); await("Customer label (optional)")
                 capture("carts-label-${mode.name}-$scale")
                 compose.onNodeWithContentDescription("Pieces · $title").performScrollTo().assertIsDisplayed()
-                compose.onNodeWithContentDescription("Pieces · $title").performClick().performTextReplacement("0")
-                await("Cart quantity must be a positive whole number within the supported limit")
+                compose.onNodeWithContentDescription("Pieces · $title").performClick().performTextReplacement("2")
+                await("Current stock allows up to 1 pieces")
                 compose.onNodeWithContentDescription("Pieces · $title").assertIsFocused()
                 capture("carts-error-keyboard-${mode.name}-$scale")
                 androidx.test.espresso.Espresso.closeSoftKeyboard()

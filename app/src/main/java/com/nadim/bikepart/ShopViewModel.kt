@@ -222,12 +222,33 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
             if (committed.editVersion != committedVersion) throw StaleCart(getApplication<android.app.Application>().getString(R.string.this_cart_changed_reload_the_saved))
             val latest = cartDraft.value ?: draft
             val pending = latest.customer != draft.customer || latest.quantities != draft.quantities
-            cartDraft.value = latest.copy(cart = committed, dirty = pending)
+            val quantities = latest.quantities.filter { (id, value) ->
+                committed.lines.any { it.productId == id } || value != draft.quantities[id]
+            }
+            cartDraft.value = latest.copy(cart = committed, quantities = quantities, dirty = pending)
             if (pending) {
                 cartAutosave?.cancel()
                 cartAutosave = viewModelScope.launch { yield(); flushCart() }
             } else finishCartSave()
         }, failed = { afterCartSave = null })
+    }
+
+    private fun refreshCartAfterStockChange(snapshot: ShopSnapshot) {
+        val draft = cartDraft.value ?: return
+        if (draft.dirty) return
+        val saved = snapshot.carts.find { it.id == draft.cart.id } ?: return
+        val reducedAgain = draft.cart.lines.any { line ->
+            val reduced = saved.stockReductions[line.productId] ?: return@any false
+            reduced < line.quantity &&
+                (saved.lines.find { it.productId == line.productId }?.quantity ?: 0) == reduced
+        }
+        if (saved.stockReductions != draft.cart.stockReductions || reducedAgain) {
+            cartDraft.value = draft.copy(
+                cart = saved,
+                customer = if (draft.cart.customer == saved.customer) draft.customer else saved.customer,
+                quantities = saved.lines.associate { it.productId to it.quantity.toString() },
+            )
+        }
     }
 
     private fun finishCartSave() {
@@ -272,6 +293,7 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
                 try {
                     current.snapshots.collect {
                         state.value = it
+                        if (!busy.value) refreshCartAfterStockChange(it)
                         readyShop.value = current
                         viewModelScope.launch {
                             try { AutomaticBackup.reconcile(application, current) }
@@ -299,7 +321,15 @@ class ShopViewModel(application: android.app.Application) : AndroidViewModel(app
         error.value = null
         viewModelScope.launch {
             var successful = false
-            try { action(requireNotNull(shop)); state.value = requireNotNull(shop).snapshot(); done(); successful = true }
+            try {
+                val current = requireNotNull(shop)
+                action(current)
+                val snapshot = current.snapshot()
+                state.value = snapshot
+                done()
+                refreshCartAfterStockChange(snapshot)
+                successful = true
+            }
             catch (e: CancellationException) { throw e }
             catch (e: SimilarProduct) { error.value = ShopError(requireNotNull(e.message), similar = true) }
             catch (e: ShopValidation) { error.value = ShopError(requireNotNull(e.message), field = e.field, definitionId = e.definitionId) }

@@ -223,7 +223,7 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
         if (route is Screen.Cart) {
             val draft = cartDraft
             val isUntouchedNewCart = newCartId == selectedId && draft != null &&
-                draft.customer.isBlank() && draft.quantities.isEmpty()
+                draft.cart.editVersion == 0L && draft.customer.isBlank() && draft.quantities.isEmpty()
             if (isUntouchedNewCart) {
                 model.write({ discardCart(draft.cart.id, draft.cart.editVersion) }, {
                     newCartId = ""; selectTab(Screen.Carts)
@@ -753,23 +753,18 @@ fun ShopApp(model: ShopViewModel = viewModel(), camera: ScanCameraContent = { re
                                                 reload = model::reloadCart,
                                                 checkout = {
                                                     model.flushCart {
-                                                        checkoutVersion =
-                                                            requireNotNull(model.cartDraft.value).cart.editVersion
-                                                        model.error.value = null
-                                                        navigateTo(Screen.Checkout)
+                                                        val saved = requireNotNull(model.cartDraft.value).cart
+                                                        if (saved.lines.isNotEmpty()) {
+                                                            checkoutVersion = saved.editVersion
+                                                            model.error.value = null
+                                                            navigateTo(Screen.Checkout)
+                                                        }
                                                     }
                                                 },
-                                                removeProduct = { productId ->
+                                                dismissStockNotice = {
                                                     cartDraft?.let { draft ->
                                                         model.write(
-                                                            {
-                                                                saveCart(
-                                                                    draft.cart.id,
-                                                                    draft.cart.editVersion,
-                                                                    draft.customer,
-                                                                    draft.quantities - productId
-                                                                )
-                                                            },
+                                                            { dismissCartStockNotice(draft.cart.id, draft.cart.editVersion) },
                                                             { model.openCart(draft.cart.id) },
                                                         )
                                                     }

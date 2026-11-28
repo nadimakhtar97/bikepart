@@ -22,7 +22,7 @@ class ArchivalWorkflowTest {
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
     private fun await(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     private fun click(text: String) {
-        val matcher = hasText(text) and hasClickAction() and !hasSetTextAction()
+        val matcher = (hasText(text) or hasContentDescription(text)) and hasClickAction() and !hasSetTextAction()
         compose.waitUntil(15_000) { compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty() }
         val node = compose.onNode(matcher)
         if (text in listOf("Stock", "More", "Back")) node.performClick() else node.performScrollTo().performClick()
@@ -74,7 +74,7 @@ class ArchivalWorkflowTest {
         }
     }
 
-    @Test fun staffSeeLiveBlockersAndReopenArchivedDetailsAndHistory() {
+    @Test fun staffSeeStockBlockerAndReopenArchivedDetailsAndHistory() {
         val title = "Archival bolt ${System.nanoTime()}"
         val product = runBlocking { Shop.open(context).use { shop ->
             shop.createProduct(title, shop.snapshot().categories.first().id, "Original archival detail", "1", "80")
@@ -86,27 +86,29 @@ class ArchivalWorkflowTest {
             await(title); click(title)
             click("Archive product")
             await("Cannot archive while stock remains. Stock must be zero.")
-            val cart = runBlocking { Shop.open(context).use { shop ->
-                shop.correctStock("archive-ui-$product", product, CorrectionKind.PhysicalCount, "0", "No pieces remain")
+            runBlocking { Shop.open(context).use { shop ->
                 val id = shop.createCart()
                 shop.addCartProduct(id, 0, product, "1")
-                id
+                shop.correctStock("archive-ui-$product", product, CorrectionKind.PhysicalCount, "0", "No pieces remain")
             } }
-            click("Archive product")
-            await("Cannot archive while an unfinished cart contains this product. Remove its line or discard the cart first.")
-            runBlocking { Shop.open(context).use { it.discardCart(cart, 1) } }
             click("Archive product"); await("Archived product")
             compose.onNodeWithText("Edit details").assertDoesNotExist()
             compose.onNodeWithText("Archive product").assertDoesNotExist()
             compose.onNodeWithText("Original archival detail").performScrollTo().assertIsDisplayed()
             scenario!!.recreate(); await("Archived product")
-            click("Back"); click("Back"); click("Stock")
+            click("Back"); click("Stock")
             compose.onNodeWithText(title).assertDoesNotExist()
             scenario!!.close(); scenario = ActivityScenario.launch(MainActivity::class.java)
             await("More"); click("More"); click("Archived products"); await(title); click(title)
             await("Archived product")
             compose.onNodeWithText("No pieces remain", substring = true).performScrollTo().assertIsDisplayed()
             runBlocking { Shop.open(context).use { assertTrue(it.snapshot().products.single { row -> row.id == product }.archived) } }
-        } finally { scenario?.close() }
+        } finally {
+            scenario?.close()
+            runBlocking { Shop.open(context).use { shop ->
+                shop.snapshot().carts.filter { it.stockReductions.containsKey(product) }
+                    .forEach { shop.discardCart(it.id, it.editVersion) }
+            } }
+        }
     }
 }

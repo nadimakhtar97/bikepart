@@ -1,5 +1,14 @@
 # Shop schema history
 
+## Version 17 — cart stock reductions
+
+The 16 → 17 migration adds an empty stock-change notice to each cart. On
+first open, existing cart lines above on-hand stock are reduced in one
+transaction. A zero balance removes the line. Stock corrections and checkout
+save subsequent reductions and notices with the stock movement. Changing an
+affected cart advances its edit version so stale edits cannot overwrite it.
+Portable format 1 includes the notice and migrates older captures on restore.
+
 ## Version 16 — buying prices
 
 The 15 → 16 migration initializes each product from its latest stock arrival

@@ -266,7 +266,12 @@
     <string name="cart_hide_details">Hide details</string>
     <string name="cart_increase_quantity">Increase quantity of %1$s</string>
     <string name="cart_decrease_quantity">Decrease quantity of %1$s</string>
-    <string name="cart_remove_line">Remove line</string>
+    <string name="cart_quantity_nonnegative">Cart quantity must be a nonnegative whole number within the supported limit</string>
+    <string name="cart_stock_maximum">Current stock allows up to %1$s pieces</string>
+    <string name="cart_stock_remaining">You can add up to %1$s more pieces</string>
+    <string name="cart_stock_reduced">%1$s reduced to %2$s pieces because stock changed</string>
+    <string name="cart_stock_removed">%1$s removed because it went out of stock</string>
+    <string name="cart_stock_dismiss">Dismiss stock changes</string>
     <string name="cart_saved_total">Saved cart total: ₹%s</string>
     <string name="cart_add_products">Add products</string>
     <string name="cart_add_products_supporting">Search or scan another product</string>

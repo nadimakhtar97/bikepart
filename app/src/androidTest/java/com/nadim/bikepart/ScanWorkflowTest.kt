@@ -175,7 +175,7 @@ class ScanWorkflowTest {
             await("New sale"); click("New sale"); await("Add products")
             cartId = snapshot().carts.single { it.id !in priorCartIds }.id
             click("Add products")
-            click("Scan for sale"); await("Scan purpose: Sale")
+            click("Scan for sale"); await("Scan Barcode")
             await("Substituted camera transport")
             val before = snapshot()
             val staleFrame = frame!!
@@ -184,7 +184,11 @@ class ScanWorkflowTest {
             assertEquals(before, snapshot())
             click("Add to cart"); await("Cart quantity must be a positive whole number within the supported limit")
             assertEquals(before, snapshot())
-            compose.onNodeWithText("Pieces to add").performScrollTo().performTextReplacement("3")
+            compose.onNodeWithContentDescription("Pieces to add").performScrollTo().performTextReplacement("5")
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
+            click("Add to cart"); await("You can add up to 4 more pieces")
+            assertEquals(before, snapshot())
+            compose.onNodeWithContentDescription("Pieces to add").performScrollTo().performTextReplacement("3")
             androidx.test.espresso.Espresso.closeSoftKeyboard()
             click("Add to cart"); await("Saved on this phone")
             val after = snapshot()
@@ -194,7 +198,8 @@ class ScanWorkflowTest {
             compose.runOnIdle { staleFrame(payload) }
             assertEquals(after, snapshot())
             click("Add products"); click("Scan for sale")
-            await("Substituted camera transport")
+            await("Recognition paused")
+            click("Resume scanning"); await("Substituted camera transport")
             emit("bikepart:2:bad"); await("Unsupported or malformed shop QR. Use manual search.")
             emit(payload)
             compose.onAllNodesWithText("Pieces to add").assertCountEquals(0)
